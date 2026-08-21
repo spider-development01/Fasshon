@@ -1,3 +1,4 @@
+--- START OF FILE TOOTH-main/index.html ---
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -49,7 +50,12 @@
     </div>
     
     <div class="relative flex-1 bg-black flex items-center justify-center overflow-hidden">
-      <div id="cameraErrorMsg" class="hidden absolute z-30 text-center px-6 text-gray-400 text-sm">Camera access denied or unavailable. Please use the upload button.</div>
+      <!-- Updated Error Message UI -->
+      <div id="cameraErrorMsg" class="hidden absolute z-30 flex flex-col items-center justify-center px-6 text-center space-y-3 bg-black bg-opacity-70 p-6 rounded-2xl backdrop-blur-sm">
+        <i class="bi bi-camera-video-off text-4xl text-gray-400"></i>
+        <p class="text-gray-300 text-sm font-medium">Camera not found or access denied.</p>
+        <button onclick="document.getElementById('fileInput').click()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold mt-2">Upload Photo Instead</button>
+      </div>
       <video id="cameraFeed" class="absolute w-full h-full object-cover" autoplay playsinline></video>
       <canvas id="captureCanvas" class="hidden"></canvas>
     </div>
@@ -169,8 +175,8 @@
 
   <script>
     // --- SUPABASE CONFIGURATION ---
-    const SUPABASE_URL = 'https://rmfubnduytozikcgzvok.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJtZnVibmR1eXRvemlrY2d6dm9rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2OTIyMDgsImV4cCI6MjA5NzI2ODIwOH0.XmxDD8mH8rgq3OZmD7jVophtH2W3NNDgSRJKC3RXvJU';
+    const SUPABASE_URL = 'https://lqfzvedrpzihdtmwcdyk.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxxZnp2ZWRycHppaGR0bXdjZHlrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY2MjE2MjUsImV4cCI6MjEwMjE5NzYyNX0.ZXf3hYfr-qWiUxVhbQA9_VymeoTEoGLHoS8ou8xzCOQ';
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     // --- STATE & PROMPT ---
@@ -217,10 +223,12 @@ The final result should look like the original photograph was genuinely taken wi
     const [cameraView, garmentSelectView, processingView, comparisonView, libraryView, addGarmentView] = 
       ['cameraView', 'garmentSelectView', 'processingView', 'comparisonView', 'libraryView', 'addGarmentView'].map(id => document.getElementById(id));
 
-    // --- CAMERA INIT ---
+    // --- CAMERA INIT (WITH FALLBACK FIX) ---
     async function initCamera() {
       if (videoStream) videoStream.getTracks().forEach(track => track.stop());
+      
       try {
+        // Attempt 1: Try requested camera (usually rear 'environment')
         videoStream = await navigator.mediaDevices.getUserMedia({
           video: { facingMode: currentFacingMode, width: { ideal: 1920 }, height: { ideal: 1080 } },
           audio: false
@@ -228,8 +236,21 @@ The final result should look like the original photograph was genuinely taken wi
         cameraFeed.srcObject = videoStream;
         document.getElementById('cameraErrorMsg').classList.add('hidden');
       } catch (err) { 
-        console.warn("Camera access denied or unavailable:", err); 
-        document.getElementById('cameraErrorMsg').classList.remove('hidden');
+        console.warn(`Camera access failed for facingMode: ${currentFacingMode}. Trying fallback...`, err); 
+        
+        try {
+          // Attempt 2: Fallback to any available camera (Webcam on desktop)
+          videoStream = await navigator.mediaDevices.getUserMedia({
+            video: { width: { ideal: 1920 }, height: { ideal: 1080 } },
+            audio: false
+          });
+          cameraFeed.srcObject = videoStream;
+          document.getElementById('cameraErrorMsg').classList.add('hidden');
+        } catch (fallbackErr) {
+          // Attempt 3: Complete failure
+          console.error("All camera access failed:", fallbackErr);
+          document.getElementById('cameraErrorMsg').classList.remove('hidden');
+        }
       }
       loadGalleryThumbnail();
     }
@@ -265,7 +286,7 @@ The final result should look like the original photograph was genuinely taken wi
     }
 
     document.getElementById('captureBtn').addEventListener('click', () => {
-      if(!cameraFeed.videoWidth) return alert("Camera not ready. Please upload an image.");
+      if(!cameraFeed.videoWidth) return alert("Camera not ready. Please use the upload button.");
       const tempCanvas = document.createElement('canvas');
       tempCanvas.width = cameraFeed.videoWidth; tempCanvas.height = cameraFeed.videoHeight;
       tempCanvas.getContext('2d').drawImage(cameraFeed, 0, 0);
@@ -374,11 +395,9 @@ The final result should look like the original photograph was genuinely taken wi
         `;
         
         div.onclick = async () => {
-          // Deselect others
           Array.from(grid.children).forEach(c => c.classList.remove('garment-selected'));
           div.classList.add('garment-selected');
           
-          // Fetch base64 of the selected suit for the AI API
           const response = await fetch(url);
           const blob = await response.blob();
           const reader = new FileReader();
@@ -398,7 +417,7 @@ The final result should look like the original photograph was genuinely taken wi
       renderGarments(filtered);
     });
 
-    // --- GENERATION & AUTO-SAVE ---
+    // --- GENERATION & AUTO-SAVE (WITH 500 ERROR FIX) ---
     document.getElementById('generateTryOnBtn').addEventListener('click', async () => {
       if(!selectedGarmentBase64) return;
       
@@ -413,14 +432,18 @@ The final result should look like the original photograph was genuinely taken wi
       const timer = setInterval(() => { seconds++; timerText.textContent = `Styling... ${seconds}s`; }, 1000);
 
       try {
-        // Sending image + referenceImage to the backend
+        // FIX FOR 500 ERROR: 
+        // Your Netlify backend is coded to look for a variable named "mask".
+        // Instead of renaming it to referenceImage and breaking your backend, 
+        // we pass the suit image AS the "mask" variable. 
+        // The prompt tells the AI to use it as a reference image instead of a drawing mask!
         const response = await fetch('/.netlify/functions/inpaint', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ 
             prompt: VIRTUAL_TRY_ON_PROMPT, 
             image: base64Image, 
-            referenceImage: selectedGarmentBase64, 
+            mask: selectedGarmentBase64, 
             model: 'gemini-3.1-flash-image' 
           })
         });
@@ -695,3 +718,4 @@ The final result should look like the original photograph was genuinely taken wi
   </script>
 </body>
 </html>
+--- END OF FILE TOOTH-main/index.html ---
