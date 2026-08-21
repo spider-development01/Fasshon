@@ -1,0 +1,8 @@
+{
+  "name": "code-in-black-inpainter",
+  "version": "1.0.0",
+  "description": "Image inpainting using Gemini AI",
+  "scripts": {
+    "start": "netlify dev"
+  }
+}
