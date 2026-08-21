@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Fasshon - Virtual Try-On</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>Virtual Try-On Studio</title>
   
   <!-- Supabase Web SDK -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -11,308 +11,431 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
   
   <style>
-    /* ==========================================
-       CUSTOM CSS: DARK GLASSMORPHISM + NEOBRUTALISM
-       ========================================== */
+    /* =========================================
+       CSS VARIABLES & RESET
+       ========================================= */
     :root {
-      --bg-color: #050505;
-      --glass-bg: rgba(25, 25, 25, 0.65);
-      --glass-border: rgba(255, 255, 255, 0.1);
-      --accent: #ccff00; /* Neobrutalist Neon Yellow */
-      --accent-hover: #aadd00;
+      --bg-color: #000000;
+      --surface-color: #121212;
+      --surface-light: #1e1e1e;
+      --accent-color: #0a84ff;
+      --accent-hover: #0070e6;
+      --danger-color: #ff453a;
       --text-main: #ffffff;
-      --text-muted: #888888;
-      --danger: #ff3366;
+      --text-muted: #8e8e93;
+      --border-color: rgba(255, 255, 255, 0.1);
+      --glass-bg: rgba(18, 18, 18, 0.65);
+      --glass-border: rgba(255, 255, 255, 0.08);
+      --radius-sm: 8px;
+      --radius-md: 16px;
+      --radius-lg: 24px;
+      --radius-full: 9999px;
+      --safe-top: env(safe-area-inset-top, 0px);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
     }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
     
-    body { background-color: var(--bg-color); color: var(--text-main); overscroll-behavior-y: contain; touch-action: manipulation; -webkit-tap-highlight-color: transparent; overflow: hidden; }
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      overflow: hidden;
+      overscroll-behavior-y: contain;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* =========================================
+       TYPOGRAPHY & UTILITIES
+       ========================================= */
+    .label-text { font-size: 0.75rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted); }
+    .label-text.accent { color: var(--accent-color); }
+    .hidden { display: none !important; }
+    .fade-in { animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
     
-    /* Layout Utilities */
-    .view-container { position: absolute; inset: 0; display: flex; flex-direction: column; background: var(--bg-color); z-index: 10; transition: opacity 0.3s ease, transform 0.3s ease; }
-    .hidden { display: none !important; opacity: 0; pointer-events: none; }
-    .fade-in { animation: fadeIn 0.3s forwards; }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-    /* Glassmorphism Panels */
-    .glass-header { height: 80px; display: flex; justify-content: space-between; align-items: flex-end; padding: 0 20px 15px; background: var(--glass-bg); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border-bottom: 1px solid var(--glass-border); z-index: 20; }
-    .glass-footer { height: 120px; display: flex; justify-content: space-around; align-items: center; padding: 0 20px 20px; background: var(--glass-bg); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border-top: 1px solid var(--glass-border); z-index: 20; }
-    .glass-panel { background: var(--glass-bg); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid var(--glass-border); border-radius: 24px; padding: 24px; }
-
-    /* Neobrutalist Buttons */
-    .btn-icon { width: 48px; height: 48px; border-radius: 14px; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); color: var(--text-main); display: flex; justify-content: center; align-items: center; font-size: 20px; cursor: pointer; transition: all 0.15s; }
-    .btn-icon:active { transform: scale(0.9); background: rgba(255,255,255,0.1); }
-    
-    .btn-primary { width: 100%; background: var(--accent); color: #000; border: 2px solid #000; padding: 16px; border-radius: 16px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; font-size: 16px; cursor: pointer; transition: all 0.15s; box-shadow: 4px 4px 0px rgba(255,255,255,0.1); }
-    .btn-primary:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0px rgba(255,255,255,0.1); }
-    .btn-primary:disabled { background: #333; color: #666; box-shadow: none; cursor: not-allowed; border-color: #222; }
-
-    .shutter-btn { width: 72px; height: 72px; border-radius: 50%; background: var(--accent); border: 4px solid var(--bg-color); outline: 2px solid var(--accent); cursor: pointer; transition: transform 0.1s; }
-    .shutter-btn:active { transform: scale(0.85); }
-
-    /* Typography */
-    .title-text { font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; color: var(--text-muted); }
-    .accent-text { color: var(--accent); }
-
-    /* Camera & Video */
-    .video-wrapper { flex: 1; position: relative; background: #000; overflow: hidden; display: flex; justify-content: center; align-items: center; }
-    video { position: absolute; width: 100%; height: 100%; object-fit: cover; }
-    .camera-error { position: absolute; z-index: 30; text-align: center; padding: 20px; background: var(--glass-bg); border-radius: 16px; backdrop-filter: blur(10px); border: 1px solid var(--glass-border); }
-
-    /* Garment Grid & Search */
-    .search-bar { width: 100%; background: rgba(0,0,0,0.5); border: 1px solid var(--glass-border); color: #fff; padding: 12px 16px 12px 40px; border-radius: 12px; font-size: 14px; outline: none; }
-    .search-wrapper { position: relative; margin-bottom: 16px; }
-    .search-wrapper i { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-muted); }
-    
-    .grid-container { flex: 1; overflow-y: auto; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; padding: 16px; align-content: start; }
-    .grid-item { aspect-ratio: 1; background: #111; border-radius: 12px; overflow: hidden; position: relative; cursor: pointer; border: 2px solid transparent; transition: all 0.2s; }
-    .grid-item img { width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
-    .grid-item .label { position: absolute; bottom: 0; width: 100%; background: rgba(0,0,0,0.7); font-size: 10px; padding: 4px; text-align: center; font-weight: bold; }
-    .grid-item.selected { border-color: var(--accent); transform: scale(0.95); }
-
-    /* Comparison & Zoom Slider */
-    .result-container { flex: 1; display: flex; justify-content: center; align-items: center; padding: 16px; overflow: hidden; position: relative; }
-    .compare-wrapper { position: relative; width: 100%; height: 100%; border-radius: 20px; overflow: hidden; background: #111; touch-action: none; }
-    .compare-img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: contain; pointer-events: none; }
-    .overlay-wrapper { position: absolute; top: 0; left: 0; height: 100%; width: 50%; overflow: hidden; border-right: 2px solid var(--accent); }
-    .slider-handle { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 40px; height: 40px; background: var(--accent); border-radius: 50%; display: flex; justify-content: center; align-items: center; color: #000; font-size: 20px; z-index: 10; cursor: ew-resize; box-shadow: 0 4px 12px rgba(0,0,0,0.5); }
-
-    /* Zoom Mode */
-    .zoom-mode .compare-wrapper { touch-action: pan-x pan-y; overflow: auto; display: flex; justify-content: center; align-items: center; }
-    .zoom-mode .compare-img { position: relative; width: auto; height: auto; max-width: none; max-height: none; object-fit: cover; transform: scale(2); transform-origin: center; pointer-events: auto; }
-    .zoom-mode .overlay-wrapper, .zoom-mode .slider-handle { display: none; }
-
-    /* Toast Notifications */
-    #toast-container { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 9999; display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
-    .toast { background: var(--glass-bg); backdrop-filter: blur(10px); border: 1px solid var(--glass-border); padding: 12px 24px; border-radius: 30px; font-size: 14px; font-weight: 600; box-shadow: 0 10px 30px rgba(0,0,0,0.5); animation: toastIn 0.3s ease forwards; display: flex; align-items: center; gap: 8px; }
-    .toast.error { border-color: var(--danger); color: var(--danger); }
-    @keyframes toastIn { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
-    @keyframes toastOut { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(-20px); } }
-
-    /* Loader */
-    .loader { width: 48px; height: 48px; border: 4px solid var(--glass-border); border-top-color: var(--accent); border-radius: 50%; animation: spin 1s linear infinite; }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.98); }
+      to { opacity: 1; transform: scale(1); }
+    }
     @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* =========================================
+       LAYOUT & VIEWS
+       ========================================= */
+    .view-container {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      background-color: var(--bg-color);
+      z-index: 10;
+    }
+
+    .glass-header {
+      background: var(--glass-bg);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--glass-border);
+      padding: calc(var(--safe-top) + 16px) 20px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 20;
+    }
+
+    .glass-footer {
+      background: var(--glass-bg);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-top: 1px solid var(--glass-border);
+      padding: 16px 20px calc(var(--safe-bottom) + 24px);
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      z-index: 20;
+    }
+
+    /* =========================================
+       BUTTONS & INPUTS
+       ========================================= */
+    button {
+      background: none; border: none; color: inherit; cursor: pointer;
+      font-family: inherit; transition: transform 0.15s ease, opacity 0.15s ease;
+    }
+    button:active { transform: scale(0.92); opacity: 0.8; }
+    button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    .icon-btn {
+      width: 44px; height: 44px; border-radius: var(--radius-full);
+      background: var(--surface-light); display: flex; align-items: center; justify-content: center;
+      font-size: 1.25rem; border: 1px solid var(--border-color);
+    }
+
+    .btn-primary {
+      background: var(--accent-color); color: #fff; font-weight: 700;
+      padding: 16px; border-radius: var(--radius-md); width: 100%;
+      text-transform: uppercase; letter-spacing: 0.05em; font-size: 1rem;
+    }
+    .btn-primary:hover { background: var(--accent-hover); }
+
+    .shutter-btn {
+      width: 72px; height: 72px; border-radius: var(--radius-full);
+      background: #fff; border: 4px solid var(--bg-color);
+      outline: 3px solid #fff; box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+    }
+
+    .input-field {
+      width: 100%; background: var(--surface-light); color: var(--text-main);
+      border: 1px solid var(--border-color); padding: 14px 16px;
+      border-radius: var(--radius-md); font-size: 1rem; outline: none;
+      transition: border-color 0.2s ease;
+    }
+    .input-field:focus { border-color: var(--accent-color); }
+
+    /* =========================================
+       CAMERA & MEDIA
+       ========================================= */
+    .camera-wrapper { flex: 1; position: relative; overflow: hidden; background: #000; }
+    #cameraFeed { position: absolute; width: 100%; height: 100%; object-fit: cover; }
+    
+    .error-overlay {
+      position: absolute; inset: 0; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; background: rgba(0,0,0,0.8);
+      z-index: 30; padding: 20px; text-align: center; gap: 12px;
+    }
+
+    /* =========================================
+       GRIDS (WARDROBE & GALLERY)
+       ========================================= */
+    .content-area { flex: 1; overflow-y: auto; padding: 16px; padding-bottom: calc(var(--safe-bottom) + 100px); }
+    
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    
+    .grid-item {
+      aspect-ratio: 1; background: var(--surface-light); border-radius: var(--radius-sm);
+      overflow: hidden; position: relative; cursor: pointer;
+      border: 2px solid transparent; transition: all 0.2s ease;
+    }
+    .grid-item img { width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
+    .grid-item.selected { border-color: var(--accent-color); transform: scale(0.95); }
+    
+    .grid-item-label {
+      position: absolute; bottom: 0; left: 0; right: 0;
+      background: linear-gradient(transparent, rgba(0,0,0,0.9));
+      padding: 16px 4px 4px; font-size: 0.65rem; font-weight: 600;
+      text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+
+    /* =========================================
+       COMPARISON SLIDER & FULLSCREEN
+       ========================================= */
+    .compare-wrapper {
+      flex: 1; position: relative; overflow: hidden; background: var(--bg-color);
+      display: flex; align-items: center; justify-content: center;
+    }
+    
+    .compare-img {
+      position: absolute; inset: 0; width: 100%; height: 100%;
+      object-fit: contain; pointer-events: none;
+    }
+
+    /* Clip path reveals the generated image on the right side */
+    #imgGenerated { clip-path: polygon(50% 0, 100% 0, 100% 100%, 50% 100%); }
+
+    .slider-handle {
+      position: absolute; left: 50%; top: 0; bottom: 0; width: 40px;
+      transform: translateX(-50%); cursor: ew-resize; z-index: 20;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .slider-line { position: absolute; top: 0; bottom: 0; width: 2px; background: #fff; box-shadow: 0 0 10px rgba(0,0,0,0.5); }
+    .slider-btn {
+      position: relative; width: 36px; height: 36px; background: #fff;
+      border-radius: 50%; display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3); color: #000; font-size: 1.2rem;
+    }
+
+    /* View Mode Toggle */
+    .mode-toggle {
+      display: flex; background: var(--surface-light); border-radius: var(--radius-full);
+      padding: 4px; gap: 4px; margin: 0 auto;
+    }
+    .mode-btn {
+      padding: 6px 16px; border-radius: var(--radius-full); font-size: 0.8rem;
+      font-weight: 600; color: var(--text-muted); transition: all 0.2s ease;
+    }
+    .mode-btn.active { background: var(--surface-color); color: var(--text-main); box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
+
+    /* =========================================
+       MODALS & OVERLAYS
+       ========================================= */
+    .overlay-view {
+      position: fixed; inset: 0; z-index: 50; background: rgba(0,0,0,0.85);
+      backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+      display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px;
+    }
+    .modal-card {
+      background: var(--surface-color); border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg); width: 100%; max-width: 400px; padding: 24px;
+      display: flex; flex-direction: column; gap: 20px; box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+    }
+    
+    .preview-box {
+      width: 100%; aspect-ratio: 1; background: var(--surface-light);
+      border-radius: var(--radius-md); border: 2px dashed var(--border-color);
+      display: flex; align-items: center; justify-content: center;
+      overflow: hidden; cursor: pointer; position: relative;
+    }
+    .preview-box img { width: 100%; height: 100%; object-fit: cover; }
+
+    .loader-spinner {
+      width: 50px; height: 50px; border: 4px solid var(--border-color);
+      border-top-color: var(--accent-color); border-radius: 50%; animation: spin 1s linear infinite;
+    }
   </style>
 </head>
 <body>
 
-  <!-- Toast Container -->
-  <div id="toast-container"></div>
-
-  <!-- VIEW 1: Camera -->
+  <!-- VIEW 1: Camera Interface -->
   <div id="cameraView" class="view-container">
     <div class="glass-header">
-      <button id="openAddGarmentBtn" class="btn-icon"><i class="bi bi-plus-lg"></i></button>
-      <span class="title-text">Try-On <span class="accent-text">Studio</span></span>
-      <button id="uploadBtn" class="btn-icon"><i class="bi bi-image"></i></button>
+      <button id="openAddGarmentBtn" class="icon-btn"><i class="bi bi-plus-lg"></i></button>
+      <span class="label-text accent">Try-On Camera</span>
+      <button id="uploadBtn" class="icon-btn"><i class="bi bi-image"></i></button>
       <input type="file" id="fileInput" class="hidden" accept="image/*" />
     </div>
     
-    <div class="video-wrapper">
-      <div id="cameraErrorMsg" class="camera-error hidden">
-        <i class="bi bi-camera-video-off" style="font-size: 32px; color: var(--text-muted);"></i>
-        <p style="margin: 10px 0; font-size: 14px;">Camera unavailable</p>
-        <button onclick="document.getElementById('fileInput').click()" class="btn-primary" style="padding: 8px 16px; font-size: 12px;">Upload Photo</button>
+    <div class="camera-wrapper">
+      <div id="cameraErrorMsg" class="error-overlay hidden">
+        <i class="bi bi-camera-video-off" style="font-size: 2.5rem; color: var(--text-muted);"></i>
+        <p style="font-size: 0.9rem; font-weight: 500;">Camera not found or access denied.</p>
+        <button onclick="document.getElementById('fileInput').click()" class="btn-primary" style="width: auto; padding: 10px 20px; margin-top: 10px;">Upload Photo</button>
       </div>
       <video id="cameraFeed" autoplay playsinline></video>
     </div>
 
     <div class="glass-footer">
-      <button id="openLibraryBtn" class="btn-icon" style="background-size: cover; background-position: center;"></button>
+      <button id="openLibraryBtn" class="icon-btn" style="width: 56px; height: 56px; border-radius: 12px; background-size: cover; background-position: center;"></button>
       <button id="captureBtn" class="shutter-btn"></button>
-      <button id="switchCameraBtn" class="btn-icon"><i class="bi bi-arrow-repeat"></i></button>
+      <button id="switchCameraBtn" class="icon-btn" style="width: 56px; height: 56px;"><i class="bi bi-arrow-repeat" style="font-size: 1.5rem;"></i></button>
     </div>
   </div>
 
   <!-- VIEW 2: Add Garment Modal -->
-  <div id="addGarmentView" class="view-container hidden" style="background: rgba(0,0,0,0.9); justify-content: center; padding: 20px; z-index: 50;">
-    <div class="glass-panel" style="display: flex; flex-direction: column; gap: 20px;">
+  <div id="addGarmentView" class="overlay-view hidden">
+    <div class="modal-card">
       <div style="display: flex; justify-content: space-between; align-items: center;">
-        <h2 class="title-text" style="font-size: 16px;">Add to Wardrobe</h2>
-        <button id="closeAddGarmentBtn" class="btn-icon" style="border: none;"><i class="bi bi-x-lg"></i></button>
+        <h2 class="label-text" style="font-size: 1rem; color: #fff;">Add New Suit</h2>
+        <button id="closeAddGarmentBtn" style="font-size: 1.8rem; color: var(--text-muted);"><i class="bi bi-x"></i></button>
       </div>
       
-      <div id="garmentPreviewContainer" style="aspect-ratio: 1; background: #111; border-radius: 16px; display: flex; justify-content: center; align-items: center; overflow: hidden; cursor: pointer; border: 1px dashed var(--glass-border);">
-        <i id="garmentPreviewIcon" class="bi bi-camera" style="font-size: 40px; color: var(--text-muted);"></i>
-        <img id="garmentPreviewImg" class="hidden" style="width: 100%; height: 100%; object-fit: cover;" />
+      <div id="garmentPreviewContainer" class="preview-box">
+        <i id="garmentPreviewIcon" class="bi bi-camera" style="font-size: 2.5rem; color: var(--text-muted);"></i>
+        <img id="garmentPreviewImg" class="hidden" />
       </div>
       <input type="file" id="garmentFileInput" class="hidden" accept="image/*" />
       
-      <input type="text" id="garmentNameInput" placeholder="Garment Name (e.g. Navy Suit)" style="width: 100%; background: rgba(0,0,0,0.5); border: 1px solid var(--glass-border); color: #fff; padding: 16px; border-radius: 12px; font-size: 14px; outline: none;" autocomplete="off" />
+      <input type="text" id="garmentNameInput" placeholder="E.g. Navy Blue Tuxedo" class="input-field" autocomplete="off" />
       
-      <button id="saveGarmentBtn" class="btn-primary">Save Garment</button>
+      <button id="saveGarmentBtn" class="btn-primary">Save to Wardrobe</button>
     </div>
   </div>
 
   <!-- VIEW 3: Garment Selection -->
-  <div id="garmentSelectView" class="view-container hidden">
-    <div class="glass-header" style="align-items: center; padding-bottom: 0;">
-      <button id="cancelSelectBtn" class="btn-icon" style="border: none;"><i class="bi bi-arrow-left"></i></button>
-      <span class="title-text">Select Outfit</span>
-      <div style="width: 48px;"></div>
+  <div id="garmentSelectView" class="view-container hidden" style="z-index: 15;">
+    <div class="glass-header">
+      <button id="cancelSelectBtn" style="color: var(--text-muted); font-weight: 600;">Cancel</button>
+      <span class="label-text">Select Suit</span>
+      <div style="width: 50px;"></div>
     </div>
     
-    <div style="padding: 16px; display: flex; gap: 12px; align-items: center; background: var(--glass-bg); border-bottom: 1px solid var(--glass-border);">
-      <img id="capturedThumb" style="width: 60px; height: 60px; border-radius: 12px; object-fit: cover; border: 1px solid var(--glass-border);" />
-      <div class="search-wrapper" style="margin: 0; flex: 1;">
-        <i class="bi bi-search"></i>
-        <input type="text" id="searchInput" placeholder="Search wardrobe..." class="search-bar" />
+    <div class="content-area" style="display: flex; flex-direction: column; gap: 16px;">
+      <!-- Search & Captured Preview -->
+      <div style="display: flex; gap: 12px; background: var(--surface-color); padding: 12px; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
+        <img id="capturedThumb" style="width: 60px; height: 60px; border-radius: var(--radius-sm); object-fit: cover;" />
+        <div style="position: relative; flex: 1; display: flex; align-items: center;">
+          <i class="bi bi-search" style="position: absolute; left: 12px; color: var(--text-muted);"></i>
+          <input type="text" id="searchInput" placeholder="Search suits..." class="input-field" style="padding-left: 36px; height: 100%; border: none; background: var(--surface-light);" />
+        </div>
       </div>
+
+      <!-- Garments Grid -->
+      <div id="garmentsGrid" class="grid-3"></div>
     </div>
 
-    <div id="garmentsGrid" class="grid-container"></div>
-
-    <div style="padding: 20px; background: var(--bg-color); border-top: 1px solid var(--glass-border);">
-      <button id="generateTryOnBtn" class="btn-primary" disabled>Generate Try-On</button>
+    <div style="position: absolute; bottom: 0; left: 0; right: 0; padding: 20px; background: linear-gradient(transparent, var(--bg-color) 80%);">
+      <button id="generateTryOnBtn" disabled class="btn-primary">Generate Try-On</button>
     </div>
   </div>
 
   <!-- VIEW 4: Processing Overlay -->
-  <div id="processingView" class="view-container hidden" style="background: rgba(0,0,0,0.9); justify-content: center; align-items: center; z-index: 60;">
-    <div class="loader"></div>
-    <p id="timerText" class="title-text" style="margin-top: 24px; color: var(--text-main);">Styling... 0s</p>
-    <p style="font-size: 12px; color: var(--text-muted); margin-top: 8px;">Generating high-quality result</p>
+  <div id="processingView" class="overlay-view hidden" style="z-index: 40; background: var(--bg-color);">
+    <div class="loader-spinner"></div>
+    <p id="timerText" class="label-text" style="font-size: 1rem; margin-top: 24px; color: #fff;">Styling... 0s</p>
+    <p class="label-text" style="margin-top: 12px; font-size: 0.65rem;">This may take up to 30 seconds</p>
   </div>
 
-  <!-- VIEW 5: Comparison / Zoom Result -->
-  <div id="comparisonView" class="view-container hidden">
-    <div class="glass-header" style="align-items: center; padding-bottom: 0;">
-      <button id="closeComparisonBtn" class="btn-icon" style="border: none;"><i class="bi bi-arrow-left"></i></button>
-      <span class="title-text">Result</span>
-      <div style="display: flex; gap: 8px;">
-        <button id="toggleZoomBtn" class="btn-icon"><i class="bi bi-zoom-in"></i></button>
-        <button id="deleteBtn" class="btn-icon" style="color: var(--danger); border-color: rgba(255,51,102,0.3);"><i class="bi bi-trash"></i></button>
+  <!-- VIEW 5: Comparison / Result View -->
+  <div id="comparisonView" class="view-container hidden" style="z-index: 30;">
+    <div class="glass-header" style="flex-direction: column; gap: 16px; padding-bottom: 12px;">
+      <div style="display: flex; justify-content: space-between; width: 100%; align-items: center;">
+        <button id="closeComparisonBtn" style="color: var(--text-muted); font-weight: 600;">Back</button>
+        
+        <!-- View Mode Toggle (Compare vs Result Only) -->
+        <div class="mode-toggle">
+          <button id="modeCompareBtn" class="mode-btn active">Compare</button>
+          <button id="modeResultBtn" class="mode-btn">Result Only</button>
+        </div>
+
+        <div style="display: flex; gap: 16px;">
+          <button id="deleteBtn" style="color: var(--danger-color); font-size: 1.2rem;"><i class="bi bi-trash"></i></button>
+          <button id="downloadBtn" style="color: var(--accent-color); font-size: 1.2rem;"><i class="bi bi-download"></i></button>
+        </div>
       </div>
     </div>
     
-    <div class="result-container">
-      <div id="compareContainer" class="compare-wrapper">
-        <img id="imgOriginal" class="compare-img" />
-        <div id="imgOverlayWrapper" class="overlay-wrapper">
-          <img id="imgGenerated" class="compare-img" style="width: 200%; max-width: none;" />
-        </div>
-        <div id="sliderHandle" class="slider-handle"><i class="bi bi-arrows-collapse"></i></div>
+    <!-- Robust CSS Clip-Path Slider -->
+    <div id="compareContainer" class="compare-wrapper">
+      <img id="imgOriginal" class="compare-img" />
+      <img id="imgGenerated" class="compare-img" />
+      
+      <div id="sliderHandle" class="slider-handle">
+        <div class="slider-line"></div>
+        <div class="slider-btn"><i class="bi bi-arrows-collapse"></i></div>
       </div>
     </div>
     
     <div style="text-align: center; padding: 20px; background: var(--bg-color);">
-      <p style="font-size: 12px; font-weight: bold; color: var(--accent); text-transform: uppercase; letter-spacing: 1px;"><i class="bi bi-check2-circle"></i> Saved to Gallery</p>
+      <p class="label-text" style="color: #32d74b;"><i class="bi bi-check-circle-fill" style="margin-right: 4px;"></i> Auto-Saved to Gallery</p>
     </div>
   </div>
 
   <!-- VIEW 6: Library Gallery -->
-  <div id="libraryView" class="view-container hidden">
-    <div class="glass-header" style="align-items: center; padding-bottom: 0;">
-      <button id="closeLibraryBtn" class="btn-icon" style="border: none;"><i class="bi bi-arrow-left"></i></button>
-      <span class="title-text">Gallery</span>
-      <div style="width: 48px;"></div>
+  <div id="libraryView" class="view-container hidden" style="z-index: 35;">
+    <div class="glass-header">
+      <button id="closeLibraryBtn" style="color: var(--accent-color); font-weight: 600; display: flex; align-items: center; gap: 4px;">
+        <i class="bi bi-chevron-left"></i> Camera
+      </button>
+      <span class="label-text">Gallery</span>
+      <div style="width: 70px;"></div>
     </div>
-    <div id="galleryGrid" class="grid-container" style="grid-template-columns: repeat(2, 1fr);"></div>
+    <div class="content-area">
+      <div id="galleryGrid" class="grid-3"></div>
+    </div>
   </div>
 
   <script>
-    // ==========================================
-    // CONFIGURATION & STATE
-    // ==========================================
-    const SUPABASE_URL = 'https://lqfzvedrpzihdtmwcdyk.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxxZnp2ZWRycHppaGR0bXdjZHlrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY2MjE2MjUsImV4cCI6MjEwMjE5NzYyNX0.ZXf3hYfr-qWiUxVhbQA9_VymeoTEoGLHoS8ou8xzCOQ';
+    // --- SUPABASE CONFIGURATION ---
+    const SUPABASE_URL = 'https://rmfubnduytozikcgzvok.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJtZnVibmR1eXRvemlrY2d6dm9rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2OTIyMDgsImV4cCI6MjA5NzI2ODIwOH0.XmxDD8mH8rgq3OZmD7jVophtH2W3NNDgSRJKC3RXvJU';
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+    // --- STATE & PROMPT ---
     let videoStream = null;
     let currentFacingMode = 'environment';
-    
-    // High-res data storage
-    let originalImageBlob = null; 
-    let originalImageBase64 = null; // Used ONLY for AI API
+    let currentOriginalDataUrl = null; 
     let selectedGarmentBase64 = null;
     let allGarments = [];
     
+    const VIRTUAL_TRY_ON_PROMPT = `Edit the **first photo** by replacing only the clothing/outfit with the **exact suit shown in the second reference photo**.
+
+### Strict preservation requirements
+* Keep my **face 100% unchanged**. Do not alter facial structure, identity, skin texture, eyes, eyebrows, nose, lips, jawline, hairstyle, facial hair, expression, or proportions.
+* Keep my **body position and pose exactly unchanged**.
+* Keep the **camera angle, framing, perspective, lighting direction, shadows, and image composition exactly unchanged**.
+* Keep the **entire background exactly unchanged**. Do not regenerate, blur, replace, crop, extend, or modify any background elements.
+* Keep my **hands, arms, neck, head position, and visible body proportions exactly as they are**.
+* Do not change my height, body shape, posture, or proportions.
+* Do not apply beauty filters, face enhancement, skin smoothing, age changes, or AI-style facial reconstruction.
+
+### Suit replacement
+Use the **second photo only as the clothing reference**. Recreate its suit accurately on my body:
+* Same suit color
+* Same fabric appearance and texture
+* Same lapel style
+* Same jacket cut and fit
+* Same shirt
+* Same tie, if present
+* Same buttons and pocket details
+* Same overall formal styling
+
+The suit must naturally conform to my **existing body position and anatomy**, including realistic folds, wrinkles, fabric tension, shoulder placement, sleeves, collar, and perspective.
+
+### Important
+This is a **clothing replacement only**, NOT a face swap or full-image regeneration.
+The final result should look like the original photograph was genuinely taken with me wearing the suit from the second photo. **Preserve everything from the first image except the clothing.**`;
+
     let isViewingGalleryItem = false;
     let currentActiveDocId = null;
     let currentActiveOrigPath = null;
     let currentActiveGenPath = null;
-    let isZoomMode = false;
-
-    const VIRTUAL_TRY_ON_PROMPT = `Edit the **first photo** by replacing only the clothing/outfit with the **exact suit shown in the second reference photo**. Keep face, body pose, background, lighting, and proportions 100% unchanged. Ensure realistic fabric folds and high-resolution output.`;
 
     // DOM Elements
     const cameraFeed = document.getElementById('cameraFeed');
-    const views = {
-      camera: document.getElementById('cameraView'),
-      addGarment: document.getElementById('addGarmentView'),
-      garmentSelect: document.getElementById('garmentSelectView'),
-      processing: document.getElementById('processingView'),
-      comparison: document.getElementById('comparisonView'),
-      library: document.getElementById('libraryView')
-    };
+    const cameraView = document.getElementById('cameraView');
+    const garmentSelectView = document.getElementById('garmentSelectView');
+    const processingView = document.getElementById('processingView');
+    const comparisonView = document.getElementById('comparisonView');
+    const libraryView = document.getElementById('libraryView');
+    const addGarmentView = document.getElementById('addGarmentView');
 
-    // ==========================================
-    // UTILITIES
-    // ==========================================
-    function showToast(message, type = 'success') {
-      const container = document.getElementById('toast-container');
-      const toast = document.createElement('div');
-      toast.className = `toast ${type}`;
-      toast.innerHTML = type === 'error' ? `<i class="bi bi-exclamation-circle"></i> ${message}` : `<i class="bi bi-check-circle"></i> ${message}`;
-      container.appendChild(toast);
-      setTimeout(() => {
-        toast.style.animation = 'toastOut 0.3s ease forwards';
-        setTimeout(() => toast.remove(), 300);
-      }, 3000);
-    }
-
-    function switchView(viewName) {
-      Object.values(views).forEach(v => v.classList.add('hidden'));
-      views[viewName].classList.remove('hidden');
-      views[viewName].classList.add('fade-in');
-      
-      // Manage camera lifecycle
-      if (viewName === 'camera') startCamera();
-      else stopCamera();
-    }
-
-    // High Quality Image Processing (No downscaling)
-    function processImageFile(source, width, height) {
-      const canvas = document.createElement('canvas');
-      canvas.width = width;
-      canvas.height = height;
-      const ctx = canvas.getContext('2d');
-      ctx.drawImage(source, 0, 0, width, height);
-      
-      // Store Blob for Supabase (Best Quality WebP)
-      canvas.toBlob(blob => {
-        if (!blob) return showToast("Image processing failed", "error");
-        originalImageBlob = blob;
-        document.getElementById('capturedThumb').src = URL.createObjectURL(blob);
-      }, 'image/webp', 1.0);
-
-      // Store Base64 for Gemini API
-      originalImageBase64 = canvas.toDataURL('image/jpeg', 0.95).split(',')[1];
-
-      selectedGarmentBase64 = null;
-      document.getElementById('generateTryOnBtn').disabled = true;
-      document.getElementById('searchInput').value = '';
-      
-      loadGarments();
-      switchView('garmentSelect');
-    }
-
-    // ==========================================
-    // CAMERA LIFECYCLE
-    // ==========================================
-    async function startCamera() {
-      stopCamera();
+    // --- CAMERA INIT ---
+    async function initCamera() {
+      if (videoStream) videoStream.getTracks().forEach(track => track.stop());
       try {
         videoStream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: currentFacingMode, width: { ideal: 2160 }, height: { ideal: 3840 } }, // Request highest res
+          video: { facingMode: currentFacingMode, width: { ideal: 1920 }, height: { ideal: 1080 } },
           audio: false
         });
         cameraFeed.srcObject = videoStream;
         document.getElementById('cameraErrorMsg').classList.add('hidden');
       } catch (err) { 
+        console.warn(`Camera access failed for facingMode: ${currentFacingMode}. Trying fallback...`); 
         try {
-          videoStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+          videoStream = await navigator.mediaDevices.getUserMedia({
+            video: { width: { ideal: 1920 }, height: { ideal: 1080 } }, audio: false
+          });
           cameraFeed.srcObject = videoStream;
           document.getElementById('cameraErrorMsg').classList.add('hidden');
         } catch (fallbackErr) {
@@ -322,23 +445,41 @@
       loadGalleryThumbnail();
     }
 
-    function stopCamera() {
-      if (videoStream) {
-        videoStream.getTracks().forEach(track => track.stop());
-        videoStream = null;
-        cameraFeed.srcObject = null;
-      }
-    }
-
     document.getElementById('switchCameraBtn').addEventListener('click', () => {
       currentFacingMode = currentFacingMode === 'environment' ? 'user' : 'environment';
-      startCamera();
+      initCamera();
     });
 
-    // Capture & Upload
+    // --- IMAGE CAPTURE & UPLOAD ---
+    function prepareGarmentSelection(source, originalWidth, originalHeight) {
+      const MAX_SIZE = 512;
+      let width = originalWidth; let height = originalHeight;
+      
+      if (width > height) { if (width > MAX_SIZE) { height = Math.round(height * (MAX_SIZE / width)); width = MAX_SIZE; } } 
+      else { if (height > MAX_SIZE) { width = Math.round(width * (MAX_SIZE / height)); height = MAX_SIZE; } }
+
+      const tempCanvas = document.createElement('canvas');
+      tempCanvas.width = width; tempCanvas.height = height;
+      tempCanvas.getContext('2d').drawImage(source, 0, 0, width, height);
+      
+      currentOriginalDataUrl = tempCanvas.toDataURL('image/jpeg', 0.8);
+      document.getElementById('capturedThumb').src = currentOriginalDataUrl;
+      
+      selectedGarmentBase64 = null;
+      document.getElementById('generateTryOnBtn').disabled = true;
+      document.getElementById('searchInput').value = '';
+      
+      loadGarments();
+      garmentSelectView.classList.remove('hidden');
+      garmentSelectView.classList.add('fade-in');
+    }
+
     document.getElementById('captureBtn').addEventListener('click', () => {
-      if(!cameraFeed.videoWidth) return showToast("Camera not ready. Please upload.", "error");
-      processImageFile(cameraFeed, cameraFeed.videoWidth, cameraFeed.videoHeight);
+      if(!cameraFeed.videoWidth) return alert("Camera not ready. Please use the upload button.");
+      const tempCanvas = document.createElement('canvas');
+      tempCanvas.width = cameraFeed.videoWidth; tempCanvas.height = cameraFeed.videoHeight;
+      tempCanvas.getContext('2d').drawImage(cameraFeed, 0, 0);
+      prepareGarmentSelection(tempCanvas, tempCanvas.width, tempCanvas.height);
     });
 
     document.getElementById('uploadBtn').addEventListener('click', () => document.getElementById('fileInput').click());
@@ -348,83 +489,77 @@
       const reader = new FileReader();
       reader.onload = (event) => {
         const img = new Image();
-        img.onload = () => processImageFile(img, img.width, img.height);
+        img.onload = () => prepareGarmentSelection(img, img.width, img.height);
         img.src = event.target.result;
       };
       reader.readAsDataURL(file);
     });
 
     document.getElementById('cancelSelectBtn').addEventListener('click', () => {
+      garmentSelectView.classList.add('hidden');
       document.getElementById('fileInput').value = '';
-      switchView('camera');
     });
 
-    // ==========================================
-    // ADD GARMENT
-    // ==========================================
-    document.getElementById('openAddGarmentBtn').addEventListener('click', () => switchView('addGarment'));
-    document.getElementById('closeAddGarmentBtn').addEventListener('click', () => switchView('camera'));
+    // --- ADD GARMENT UI ---
+    document.getElementById('openAddGarmentBtn').addEventListener('click', () => {
+      addGarmentView.classList.remove('hidden');
+      addGarmentView.classList.add('fade-in');
+    });
+    document.getElementById('closeAddGarmentBtn').addEventListener('click', () => addGarmentView.classList.add('hidden'));
 
+    const garmentPreviewContainer = document.getElementById('garmentPreviewContainer');
+    const garmentFileInput = document.getElementById('garmentFileInput');
     const garmentPreviewImg = document.getElementById('garmentPreviewImg');
     const garmentPreviewIcon = document.getElementById('garmentPreviewIcon');
-    let newGarmentBlob = null;
+    let newGarmentDataUrl = null;
 
-    document.getElementById('garmentPreviewContainer').addEventListener('click', () => document.getElementById('garmentFileInput').click());
-    
-    document.getElementById('garmentFileInput').addEventListener('change', (e) => {
+    garmentPreviewContainer.addEventListener('click', () => garmentFileInput.click());
+    garmentFileInput.addEventListener('change', (e) => {
       const file = e.target.files[0];
       if (!file) return;
-      
-      // Read as blob for upload, object URL for preview
-      newGarmentBlob = file;
-      garmentPreviewImg.src = URL.createObjectURL(file);
-      garmentPreviewImg.classList.remove('hidden');
-      garmentPreviewIcon.classList.add('hidden');
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        newGarmentDataUrl = event.target.result;
+        garmentPreviewImg.src = newGarmentDataUrl;
+        garmentPreviewImg.classList.remove('hidden');
+        garmentPreviewIcon.classList.add('hidden');
+      };
+      reader.readAsDataURL(file);
     });
 
     document.getElementById('saveGarmentBtn').addEventListener('click', async () => {
       const name = document.getElementById('garmentNameInput').value.trim();
-      if(!name || !newGarmentBlob) return showToast("Provide a name and image.", "error");
+      if(!name || !newGarmentDataUrl) return alert("Please provide both a name and an image.");
       
       const btn = document.getElementById('saveGarmentBtn');
-      btn.innerHTML = `<div class="loader" style="width:20px;height:20px;border-width:2px;"></div>`;
-      btn.disabled = true;
+      const originalHTML = btn.innerHTML;
+      btn.innerHTML = `<div class="loader-spinner" style="width: 24px; height: 24px; border-width: 3px; border-top-color: #fff; margin: 0 auto;"></div>`;
       
       try {
+        const blob = await convertToWebP(newGarmentDataUrl);
         const path = `garment_${Date.now()}.webp`;
+        await supabaseClient.storage.from('garments').upload(path, blob, { contentType: 'image/webp' });
+        await supabaseClient.from('garments').insert([{ name: name, image_path: path }]);
         
-        // 1. Upload to storage
-        const { error: uploadError } = await supabaseClient.storage.from('garments').upload(path, newGarmentBlob, { contentType: newGarmentBlob.type });
-        if (uploadError) throw uploadError;
-
-        // 2. Insert to DB
-        const { error: dbError } = await supabaseClient.from('garments').insert([{ name, image_path: path }]);
-        if (dbError) throw dbError;
-        
-        showToast("Garment added successfully!");
+        addGarmentView.classList.add('hidden');
         document.getElementById('garmentNameInput').value = '';
         garmentPreviewImg.classList.add('hidden');
         garmentPreviewIcon.classList.remove('hidden');
-        newGarmentBlob = null;
-        switchView('camera');
-        
+        newGarmentDataUrl = null;
       } catch (err) {
-        showToast(err.message, "error");
+        alert("Upload failed: " + err.message);
       } finally {
-        btn.innerHTML = "Save Garment";
-        btn.disabled = false;
+        btn.innerHTML = originalHTML;
       }
     });
 
-    // ==========================================
-    // GARMENT SELECTION
-    // ==========================================
+    // --- GARMENT SELECTION LOGIC ---
     async function loadGarments() {
       const grid = document.getElementById('garmentsGrid');
-      grid.innerHTML = Array(9).fill(`<div class="grid-item" style="animation: pulse 1.5s infinite; background:#222;"></div>`).join('');
+      grid.innerHTML = Array(9).fill(`<div class="grid-item" style="background: var(--surface-light); animation: pulse 1.5s infinite;"></div>`).join('');
       
       const { data, error } = await supabaseClient.from('garments').select('*').order('created_at', { ascending: false });
-      if(error) return showToast("Failed to load wardrobe", "error");
+      if(error) return console.error(error);
       
       allGarments = data;
       renderGarments(allGarments);
@@ -438,54 +573,55 @@
         const url = supabaseClient.storage.from('garments').getPublicUrl(g.image_path).data.publicUrl;
         const div = document.createElement('div');
         div.className = "grid-item";
-        div.innerHTML = `<img src="${url}" loading="lazy" crossorigin="anonymous" /><div class="label">${g.name}</div>`;
+        div.innerHTML = `
+          <img src="${url}" crossorigin="anonymous" loading="lazy" />
+          <div class="grid-item-label">${g.name}</div>
+        `;
         
         div.onclick = async () => {
           Array.from(grid.children).forEach(c => c.classList.remove('selected'));
           div.classList.add('selected');
           
-          // Fetch base64 for API
-          try {
-            const response = await fetch(url);
-            const blob = await response.blob();
-            const reader = new FileReader();
-            reader.onloadend = () => {
-              selectedGarmentBase64 = reader.result.split(',')[1];
-              document.getElementById('generateTryOnBtn').disabled = false;
-            };
-            reader.readAsDataURL(blob);
-          } catch(e) {
-            showToast("Error reading garment image", "error");
-          }
+          const response = await fetch(url);
+          const blob = await response.blob();
+          const reader = new FileReader();
+          reader.onloadend = () => {
+            selectedGarmentBase64 = reader.result.split(',')[1];
+            document.getElementById('generateTryOnBtn').disabled = false;
+          };
+          reader.readAsDataURL(blob);
         };
         grid.appendChild(div);
       });
     }
 
     document.getElementById('searchInput').addEventListener('input', (e) => {
-      renderGarments(allGarments.filter(g => g.name.toLowerCase().includes(e.target.value.toLowerCase())));
+      const term = e.target.value.toLowerCase();
+      renderGarments(allGarments.filter(g => g.name.toLowerCase().includes(term)));
     });
 
-    // ==========================================
-    // GENERATION & AUTO-SAVE
-    // ==========================================
+    // --- GENERATION & AUTO-SAVE ---
     document.getElementById('generateTryOnBtn').addEventListener('click', async () => {
-      if(!selectedGarmentBase64 || !originalImageBase64) return;
+      if(!selectedGarmentBase64) return;
       
-      switchView('processing');
+      const base64Image = currentOriginalDataUrl.split(',')[1];
+      const btn = document.getElementById('generateTryOnBtn');
+
+      processingView.classList.remove('hidden');
+      processingView.classList.add('fade-in');
       let seconds = 0;
       const timerText = document.getElementById('timerText');
       timerText.textContent = `Styling... 0s`;
       const timer = setInterval(() => { seconds++; timerText.textContent = `Styling... ${seconds}s`; }, 1000);
 
       try {
-        const response = await fetch('/.netlify/functions/tryon', {
+        const response = await fetch('/.netlify/functions/inpaint', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ 
             prompt: VIRTUAL_TRY_ON_PROMPT, 
-            image: originalImageBase64, 
-            referenceImage: selectedGarmentBase64, 
+            image: base64Image, 
+            mask: selectedGarmentBase64, 
             model: 'gemini-3.1-flash-image' 
           })
         });
@@ -493,175 +629,201 @@
         const data = await response.json();
         if (!response.ok) throw new Error(data.error || "Server error");
 
-        // Robust Response Parsing
-        const parts = data?.candidates?.[0]?.content?.parts ?? [];
+        const candidateParts = data.candidates?.[0]?.content?.parts || [];
         let generatedImgSrc = null;
-        for (const part of parts) {
-          const img = part.inlineData ?? part.inline_data;
-          if (img?.data) {
-            generatedImgSrc = `data:${img.mimeType ?? 'image/jpeg'};base64,${img.data}`;
-            break;
+
+        candidateParts.forEach((part) => {
+          const inlineImg = part.inlineData || part.inline_data;
+          if (inlineImg && inlineImg.data) {
+            generatedImgSrc = `data:${inlineImg.mimeType || 'image/jpeg'};base64,${inlineImg.data}`;
           }
-        }
-        if (!generatedImgSrc) throw new Error("No image returned from AI.");
+        });
 
-        timerText.textContent = `Saving High-Res Result...`;
+        if (!generatedImgSrc) throw new Error("No image data returned from AI.");
+
+        timerText.textContent = `Auto-Saving to Gallery...`;
         
-        // Convert AI Base64 to Blob for storage
-        const genRes = await fetch(generatedImgSrc);
-        const genBlob = await genRes.blob();
-
         const timestamp = Date.now();
         const origPath = `original_${timestamp}.webp`;
         const genPath = `generated_${timestamp}.webp`;
 
-        // Upload both to storage securely
-        const [origUpload, genUpload] = await Promise.all([
-          supabaseClient.storage.from('photos').upload(origPath, originalImageBlob, { contentType: originalImageBlob.type }),
-          supabaseClient.storage.from('photos').upload(genPath, genBlob, { contentType: genBlob.type })
+        const origBlob = await convertToWebP(currentOriginalDataUrl);
+        const genBlob = await convertToWebP(generatedImgSrc);
+
+        await Promise.all([
+          supabaseClient.storage.from('photos').upload(origPath, origBlob, { contentType: 'image/webp' }),
+          supabaseClient.storage.from('photos').upload(genPath, genBlob, { contentType: 'image/webp' })
         ]);
 
-        if(origUpload.error) throw origUpload.error;
-        if(genUpload.error) throw genUpload.error;
-
-        // Insert to DB
-        const { data: insertedData, error: dbError } = await supabaseClient.from('gallery').insert([{ original_image_path: origPath, generated_image_path: genPath }]).select();
-        if(dbError) throw dbError;
+        const { data: insertedData } = await supabaseClient.from('gallery').insert([{ original_image_path: origPath, generated_image_path: genPath }]).select();
 
         isViewingGalleryItem = false;
         currentActiveDocId = insertedData[0].id;
         currentActiveOrigPath = origPath;
         currentActiveGenPath = genPath;
 
-        setupResultView(URL.createObjectURL(originalImageBlob), generatedImgSrc);
+        document.getElementById('closeComparisonBtn').textContent = "Retake";
+        setupComparison(currentOriginalDataUrl, generatedImgSrc);
+        loadGalleryThumbnail();
 
       } catch (err) {
-        console.error("AI Error:", err);
-        showToast(err.message || "Generation failed", "error");
-        switchView('garmentSelect');
+        const originalText = btn.innerHTML;
+        btn.textContent = "Failed - Try Again";
+        btn.style.backgroundColor = "var(--danger-color)";
+        setTimeout(() => {
+          btn.innerHTML = originalText;
+          btn.style.backgroundColor = "";
+        }, 3000);
       } finally {
         clearInterval(timer);
+        processingView.classList.add('hidden');
+        processingView.classList.remove('fade-in');
       }
     });
 
-    // ==========================================
-    // RESULT VIEW (SLIDER & ZOOM)
-    // ==========================================
-    function setupResultView(origSrc, genSrc) {
+    // --- ROBUST COMPARISON SLIDER & FULLSCREEN TOGGLE ---
+    function setupComparison(origSrc, genSrc) {
       document.getElementById('imgOriginal').src = origSrc;
       document.getElementById('imgGenerated').src = genSrc;
       
-      // Reset Zoom state
-      isZoomMode = false;
-      document.getElementById('comparisonView').classList.remove('zoom-mode');
-      document.getElementById('toggleZoomBtn').innerHTML = '<i class="bi bi-zoom-in"></i>';
+      // Reset view modes to Compare
+      setCompareMode(true);
       
-      switchView('comparison');
+      garmentSelectView.classList.add('hidden');
+      libraryView.classList.add('hidden');
+      comparisonView.classList.remove('hidden');
+      comparisonView.classList.add('fade-in');
+      
       initSlider();
     }
 
-    // Toggle Zoom Mode
-    document.getElementById('toggleZoomBtn').addEventListener('click', () => {
-      isZoomMode = !isZoomMode;
-      const compView = document.getElementById('comparisonView');
-      const btn = document.getElementById('toggleZoomBtn');
-      
-      if(isZoomMode) {
-        compView.classList.add('zoom-mode');
-        btn.innerHTML = '<i class="bi bi-sliders"></i>';
-        document.getElementById('imgOriginal').style.display = 'none'; // Hide original in zoom mode
-        document.getElementById('imgGenerated').style.width = '100%'; 
-      } else {
-        compView.classList.remove('zoom-mode');
-        btn.innerHTML = '<i class="bi bi-zoom-in"></i>';
-        document.getElementById('imgOriginal').style.display = 'block';
-        document.getElementById('imgGenerated').style.width = '200%'; // Reset for slider
+    function initSlider() {
+      const container = document.getElementById('compareContainer');
+      const imgGen = document.getElementById('imgGenerated');
+      const slider = document.getElementById('sliderHandle');
+      let isSliding = false;
+
+      // Reset to 50%
+      imgGen.style.clipPath = `polygon(50% 0, 100% 0, 100% 100%, 50% 100%)`;
+      slider.style.left = `50%`;
+
+      function slide(e) {
+        if (!isSliding) return;
+        if(e.cancelable) e.preventDefault(); 
+        
+        let clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
+        const rect = container.getBoundingClientRect();
+        let x = clientX - rect.left;
+        
+        if (x < 0) x = 0;
+        if (x > rect.width) x = rect.width;
+        
+        let percent = (x / rect.width) * 100;
+        imgGen.style.clipPath = `polygon(${percent}% 0, 100% 0, 100% 100%, ${percent}% 100%)`;
+        slider.style.left = `${percent}%`;
       }
+
+      container.addEventListener('mousedown', (e) => { isSliding = true; slide(e); });
+      window.addEventListener('mouseup', () => { isSliding = false; });
+      window.addEventListener('mousemove', slide);
+
+      container.addEventListener('touchstart', (e) => { isSliding = true; slide(e); }, { passive: false });
+      window.addEventListener('touchend', () => { isSliding = false; });
+      window.addEventListener('touchmove', slide, { passive: false });
+    }
+
+    // View Mode Toggles
+    const btnCompare = document.getElementById('modeCompareBtn');
+    const btnResult = document.getElementById('modeResultBtn');
+    const sliderHandle = document.getElementById('sliderHandle');
+    const imgGen = document.getElementById('imgGenerated');
+
+    function setCompareMode(isCompare) {
+      if (isCompare) {
+        btnCompare.classList.add('active');
+        btnResult.classList.remove('active');
+        sliderHandle.style.display = 'flex';
+        // Reset to 50% split
+        imgGen.style.clipPath = `polygon(50% 0, 100% 0, 100% 100%, 50% 100%)`;
+        sliderHandle.style.left = `50%`;
+      } else {
+        btnCompare.classList.remove('active');
+        btnResult.classList.add('active');
+        sliderHandle.style.display = 'none';
+        // Reveal 100% of generated image
+        imgGen.style.clipPath = `polygon(0 0, 100% 0, 100% 100%, 0 100%)`;
+      }
+    }
+
+    btnCompare.addEventListener('click', () => setCompareMode(true));
+    btnResult.addEventListener('click', () => setCompareMode(false));
+
+    // --- UTILS & GALLERY ACTIONS ---
+    async function convertToWebP(src) {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.crossOrigin = 'Anonymous'; 
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          canvas.width = img.width; canvas.height = img.height;
+          canvas.getContext('2d').drawImage(img, 0, 0);
+          canvas.toBlob((blob) => resolve(blob), 'image/webp', 0.8);
+        };
+        img.onerror = reject; img.src = src;
+      });
+    }
+
+    document.getElementById('deleteBtn').addEventListener('click', async () => {
+      if(!confirm("Delete this try-on from your gallery?")) return;
+      try {
+        await supabaseClient.from('gallery').delete().eq('id', currentActiveDocId);
+        await supabaseClient.storage.from('photos').remove([currentActiveOrigPath, currentActiveGenPath]);
+        comparisonView.classList.add('hidden');
+        if(isViewingGalleryItem) libraryView.classList.remove('hidden');
+        loadGallery(); loadGalleryThumbnail();
+      } catch (err) { alert("Failed to delete."); }
     });
 
-    // Slider Logic (Attached once, controlled via state)
-    let isSliding = false;
-    const container = document.getElementById('compareContainer');
-    const overlay = document.getElementById('imgOverlayWrapper');
-    const slider = document.getElementById('sliderHandle');
-
-    function slide(e) {
-      if (!isSliding || isZoomMode) return;
-      if(e.cancelable) e.preventDefault(); 
-      let clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
-      const rect = container.getBoundingClientRect();
-      let x = Math.max(0, Math.min(clientX - rect.left, rect.width));
-      
-      const percent = (x / rect.width) * 100;
-      overlay.style.width = `${percent}%`;
-      slider.style.left = `${percent}%`;
-    }
-
-    function initSlider() {
-      overlay.style.width = "50%";
-      slider.style.left = "50%";
-    }
-
-    container.addEventListener('mousedown', (e) => { isSliding = true; slide(e); });
-    window.addEventListener('mouseup', () => { isSliding = false; });
-    window.addEventListener('mousemove', slide);
-    container.addEventListener('touchstart', (e) => { isSliding = true; slide(e); }, { passive: false });
-    window.addEventListener('touchend', () => { isSliding = false; });
-    window.addEventListener('touchmove', slide, { passive: false });
-
-    // ==========================================
-    // GALLERY & DELETION
-    // ==========================================
-    document.getElementById('deleteBtn').addEventListener('click', async () => {
-      if(!confirm("Delete this try-on?")) return;
-      
+    document.getElementById('downloadBtn').addEventListener('click', async () => {
       try {
-        const { error: dbError } = await supabaseClient.from('gallery').delete().eq('id', currentActiveDocId);
-        if (dbError) throw dbError;
-
-        // Clean up storage
-        await supabaseClient.storage.from('photos').remove([currentActiveOrigPath, currentActiveGenPath]);
-        
-        showToast("Deleted successfully");
-        if(isViewingGalleryItem) {
-          loadGallery();
-          switchView('library');
-        } else {
-          switchView('camera');
-        }
-      } catch (err) {
-        showToast("Failed to delete", "error");
-      }
+        const response = await fetch(document.getElementById('imgGenerated').src);
+        const blob = await response.blob();
+        const blobUrl = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = blobUrl; link.download = `VirtualTryOn_${Date.now()}.webp`;
+        document.body.appendChild(link); link.click();
+        document.body.removeChild(link); URL.revokeObjectURL(blobUrl);
+      } catch (err) { alert("Failed to download."); }
     });
 
     document.getElementById('closeComparisonBtn').addEventListener('click', () => {
-      if(isViewingGalleryItem) {
-        switchView('library');
-      } else {
-        switchView('camera');
-      }
+      comparisonView.classList.add('hidden');
+      if(isViewingGalleryItem) libraryView.classList.remove('hidden');
     });
 
+    // --- LIBRARY GALLERY ---
     document.getElementById('openLibraryBtn').addEventListener('click', () => {
-      switchView('library');
+      libraryView.classList.remove('hidden');
+      libraryView.classList.add('fade-in');
       loadGallery();
     });
-    document.getElementById('closeLibraryBtn').addEventListener('click', () => switchView('camera'));
+    document.getElementById('closeLibraryBtn').addEventListener('click', () => libraryView.classList.add('hidden'));
 
     async function loadGalleryThumbnail() {
       const { data } = await supabaseClient.from('gallery').select('generated_image_path').order('created_at', { ascending: false }).limit(1);
       if (data && data.length > 0) {
         const { data: { publicUrl } } = supabaseClient.storage.from('photos').getPublicUrl(data[0].generated_image_path);
         document.getElementById('openLibraryBtn').style.backgroundImage = `url('${publicUrl}')`;
+      } else {
+        document.getElementById('openLibraryBtn').style.backgroundImage = 'none';
       }
     }
 
     async function loadGallery() {
       const grid = document.getElementById('galleryGrid');
-      grid.innerHTML = Array(6).fill(`<div class="grid-item" style="animation: pulse 1.5s infinite; background:#222;"></div>`).join('');
+      grid.innerHTML = Array(12).fill(`<div class="grid-item" style="background: var(--surface-light); animation: pulse 1.5s infinite;"></div>`).join('');
       
       const { data: docs, error } = await supabaseClient.from('gallery').select('*').order('created_at', { ascending: false });
-      
       if (!error && docs) {
         grid.innerHTML = '';
         docs.forEach(doc => {
@@ -670,7 +832,6 @@
           
           const div = document.createElement('div');
           div.className = "grid-item";
-          div.style.border = "none";
           div.innerHTML = `<img src="${genUrl}" loading="lazy" />`;
           
           div.onclick = () => {
@@ -678,14 +839,15 @@
             currentActiveDocId = doc.id;
             currentActiveOrigPath = doc.original_image_path;
             currentActiveGenPath = doc.generated_image_path;
-            setupResultView(origUrl, genUrl);
+            document.getElementById('closeComparisonBtn').textContent = "Back";
+            setupComparison(origUrl, genUrl);
           };
           grid.appendChild(div);
         });
       }
     }
 
-    window.onload = () => switchView('camera');
+    window.onload = initCamera;
   </script>
 </body>
 </html>
