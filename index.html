@@ -1,12 +1,15 @@
+--- START OF FILE TOOTH-main/index.html ---
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Tooth Fairy-Inpainting</title>
+  <title>Virtual Try-On Studio</title>
   <link href="./output.css" rel="stylesheet">
   <!-- Supabase Web SDK -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- Bootstrap Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
   <style>
     /* Prevent pull-to-refresh & make it feel like a native iOS app */
     body { overscroll-behavior-y: contain; background-color: #000; color: #fff; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
@@ -18,19 +21,17 @@
     }
     .shutter-btn:active { transform: scale(0.85); }
     
-    /* Canvas & Masking */
-    #canvasContainer { position: relative; display: flex; justify-content: center; align-items: center; max-width: 100%; border-radius: 12px; overflow: hidden; background: #111; }
-    #baseCanvas, #maskCanvas { display: block; max-width: 100%; height: auto; touch-action: none; }
-    #maskCanvas { position: absolute; top: 0; left: 0; cursor: crosshair; opacity: 0.55; }
-    
     /* Animations */
     .fade-in { animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-    /* Custom Range Slider */
-    input[type=range] { -webkit-appearance: none; background: transparent; }
-    input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 20px; width: 20px; border-radius: 50%; background: #ffffff; cursor: pointer; margin-top: -8px; box-shadow: 0 2px 6px rgba(0,0,0,0.4); }
-    input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 4px; cursor: pointer; background: #4b5563; border-radius: 2px; }
+    /* Custom Scrollbar for Search */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: #111; }
+    ::-webkit-scrollbar-thumb { background: #444; border-radius: 10px; }
+
+    /* Selected Garment Outline */
+    .garment-selected { border: 3px solid #3b82f6; transform: scale(0.95); opacity: 0.8; }
   </style>
 </head>
 <body class="h-screen w-screen overflow-hidden flex flex-col font-sans antialiased selection:bg-transparent">
@@ -38,15 +39,18 @@
   <!-- VIEW 1: Camera Interface -->
   <div id="cameraView" class="absolute inset-0 flex flex-col justify-between z-10">
     <div class="h-24 bg-black bg-opacity-80 flex justify-between items-end pb-4 px-6 relative z-20 backdrop-blur-md">
-      <div class="w-10"></div>
-      <span class="text-xs font-bold tracking-widest text-yellow-400">PHOTO</span>
+      <button id="openAddGarmentBtn" class="w-10 h-10 flex items-center justify-center bg-gray-800 bg-opacity-70 rounded-full active:scale-90 transition-transform">
+        <i class="bi bi-plus-lg text-white text-xl"></i>
+      </button>
+      <span class="text-xs font-bold tracking-widest text-blue-400 uppercase">Try-On Camera</span>
       <button id="uploadBtn" class="w-10 h-10 flex items-center justify-center bg-gray-800 bg-opacity-70 rounded-full active:scale-90 transition-transform">
-        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+        <i class="bi bi-image text-white"></i>
       </button>
       <input type="file" id="fileInput" class="hidden" accept="image/*" />
     </div>
     
     <div class="relative flex-1 bg-black flex items-center justify-center overflow-hidden">
+      <div id="cameraErrorMsg" class="hidden absolute z-30 text-center px-6 text-gray-400 text-sm">Camera access denied or unavailable. Please use the upload button.</div>
       <video id="cameraFeed" class="absolute w-full h-full object-cover" autoplay playsinline></video>
       <canvas id="captureCanvas" class="hidden"></canvas>
     </div>
@@ -55,72 +59,85 @@
       <button id="openLibraryBtn" class="w-14 h-14 rounded-xl overflow-hidden bg-gray-800 shadow-lg border border-gray-700 active:scale-95 transition-transform bg-cover bg-center"></button>
       <button id="captureBtn" class="shutter-btn shadow-2xl"></button>
       <button id="switchCameraBtn" class="w-14 h-14 flex items-center justify-center bg-gray-800 bg-opacity-60 rounded-full active:scale-95 transition-transform">
-        <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+        <i class="bi bi-arrow-repeat text-white text-2xl"></i>
       </button>
     </div>
   </div>
 
-  <!-- VIEW 2: Masking Editor -->
-  <div id="editorView" class="hidden absolute inset-0 bg-gray-950 z-20 flex flex-col">
-    <div class="h-16 flex items-center justify-between px-4 mt-safe border-b border-gray-800">
-      <button id="cancelEditBtn" class="text-white text-lg active:opacity-50">Cancel</button>
-      <span class="text-sm font-semibold tracking-widest uppercase">Mask</span>
-      <button id="clearMaskBtn" class="text-blue-400 font-medium active:opacity-50">Clear</button>
+  <!-- VIEW 2: Add Garment Modal -->
+  <div id="addGarmentView" class="hidden absolute inset-0 bg-black bg-opacity-95 backdrop-blur-xl z-50 flex flex-col items-center justify-center p-6">
+    <div class="w-full max-w-md bg-gray-900 rounded-3xl p-6 shadow-2xl border border-gray-800 flex flex-col space-y-5">
+      <div class="flex justify-between items-center">
+        <h2 class="text-lg font-bold text-white uppercase tracking-widest">Add New Suit</h2>
+        <button id="closeAddGarmentBtn" class="text-gray-400 active:scale-90 text-2xl"><i class="bi bi-x"></i></button>
+      </div>
+      
+      <div id="garmentPreviewContainer" class="w-full aspect-square bg-gray-800 rounded-2xl flex items-center justify-center overflow-hidden border border-gray-700 cursor-pointer active:opacity-80">
+        <i id="garmentPreviewIcon" class="bi bi-camera text-4xl text-gray-500"></i>
+        <img id="garmentPreviewImg" class="hidden w-full h-full object-cover" />
+      </div>
+      <input type="file" id="garmentFileInput" class="hidden" accept="image/*" />
+      
+      <input type="text" id="garmentNameInput" placeholder="E.g. Navy Blue Tuxedo" class="w-full bg-gray-800 text-white px-4 py-3 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-500" autocomplete="off" />
+      
+      <button id="saveGarmentBtn" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-4 rounded-xl shadow-lg transition active:scale-95 flex justify-center items-center">
+        Save to Wardrobe
+      </button>
+    </div>
+  </div>
+
+  <!-- VIEW 3: Garment Selection -->
+  <div id="garmentSelectView" class="hidden absolute inset-0 bg-gray-950 z-20 flex flex-col">
+    <div class="h-16 flex items-center justify-between px-4 mt-safe border-b border-gray-800 bg-gray-950">
+      <button id="cancelSelectBtn" class="text-white text-lg active:opacity-50">Cancel</button>
+      <span class="text-sm font-semibold tracking-widest uppercase">Select Suit</span>
+      <div class="w-16"></div>
     </div>
     
-    <div class="flex-1 flex flex-col items-center justify-start p-4 overflow-y-auto space-y-6">
-      <p class="text-xs text-gray-400 uppercase tracking-wider text-center">Draw over the area to repair</p>
-      
-      <div id="canvasContainer" class="shadow-2xl">
-        <canvas id="baseCanvas"></canvas>
-        <canvas id="maskCanvas"></canvas>
+    <div class="flex-1 flex flex-col p-4 overflow-hidden space-y-4">
+      <div class="flex items-center space-x-4 bg-gray-900 p-2 rounded-2xl border border-gray-800">
+        <img id="capturedThumb" class="w-16 h-16 rounded-xl object-cover border border-gray-700" />
+        <div class="flex-1 relative">
+          <i class="bi bi-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+          <input type="text" id="searchInput" placeholder="Search suits..." class="w-full bg-gray-800 text-white pl-10 pr-4 py-2 rounded-xl outline-none text-sm focus:ring-1 focus:ring-blue-500" />
+        </div>
       </div>
 
-      <div class="w-full max-w-md space-y-4 bg-gray-900 p-4 rounded-2xl border border-gray-800">
-        <div class="flex items-center space-x-4">
-          <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
-          <input type="range" id="brushSize" min="5" max="50" value="20" class="flex-1" />
-        </div>
-        
-        <!-- PROMPT PRESETS -->
-        <div class="flex space-x-3 w-full pt-2">
-          <button id="presetImplants" class="flex-1 bg-blue-600 text-white py-3 rounded-xl font-bold border-2 border-blue-400 transition active:scale-95">🦷 Implants</button>
-          <button id="presetBraces" class="flex-1 bg-gray-800 text-gray-300 py-3 rounded-xl font-bold border-2 border-transparent transition active:scale-95">🪥 Braces</button>
-        </div>
-        
-        <button id="submitBtn" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-4 rounded-xl shadow-lg transition active:scale-95 mt-2">
-          Generate Magic
-        </button>
+      <div id="garmentsGrid" class="flex-1 grid grid-cols-3 gap-2 overflow-y-auto pb-20 content-start">
+        <!-- Garments injected here via JS -->
       </div>
+    </div>
+
+    <div class="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black to-transparent">
+      <button id="generateTryOnBtn" disabled class="w-full bg-blue-600 disabled:bg-gray-700 disabled:text-gray-400 text-white font-bold py-4 px-4 rounded-2xl shadow-2xl transition active:scale-95 text-lg uppercase tracking-widest">
+        Generate Try-On
+      </button>
     </div>
   </div>
 
-  <!-- VIEW 3: Processing Overlay -->
-  <div id="processingView" class="hidden absolute inset-0 bg-black bg-opacity-90 backdrop-blur-xl z-40 flex flex-col items-center justify-center space-y-5">
+  <!-- VIEW 4: Processing Overlay -->
+  <div id="processingView" class="hidden absolute inset-0 bg-black bg-opacity-95 backdrop-blur-xl z-40 flex flex-col items-center justify-center space-y-5">
     <div class="w-14 h-14 border-4 border-gray-700 border-t-blue-500 rounded-full animate-spin"></div>
-    <p id="timerText" class="text-lg font-medium text-white tracking-widest uppercase">Enhancing... 0s</p>
+    <p id="timerText" class="text-lg font-medium text-white tracking-widest uppercase">Styling... 0s</p>
+    <p class="text-xs text-gray-500 uppercase tracking-widest">This may take up to 30 seconds</p>
   </div>
 
-  <!-- VIEW 4: Comparison Slider -->
+  <!-- VIEW 5: Comparison Slider -->
   <div id="comparisonView" class="hidden absolute inset-0 bg-black z-30 flex flex-col">
     <div class="h-20 flex items-end justify-between px-5 pb-3">
       <button id="closeComparisonBtn" class="text-white text-lg active:opacity-50">Back</button>
       <span class="text-sm font-semibold tracking-widest uppercase text-gray-300">Result</span>
-      
-      <!-- Contextual Action Buttons -->
       <div class="flex items-center space-x-4">
-        <button id="deleteBtn" class="hidden text-red-500 active:opacity-50 p-1 flex items-center justify-center min-w-[24px]">
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+        <button id="deleteBtn" class="text-red-500 active:opacity-50 p-1 flex items-center justify-center min-w-[24px]">
+          <i class="bi bi-trash text-2xl"></i>
         </button>
-        <button id="downloadBtn" class="hidden text-blue-400 active:opacity-50 p-1">
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+        <button id="downloadBtn" class="text-blue-400 active:opacity-50 p-1">
+          <i class="bi bi-download text-2xl"></i>
         </button>
-        <button id="saveToLibraryBtn" class="text-yellow-400 font-bold text-lg active:opacity-50 min-w-[40px]">Save</button>
       </div>
     </div>
     
     <div class="flex-1 flex items-center justify-center p-4">
-      <!-- BUG-FREE SLIDER ARCHITECTURE -->
       <div id="compareContainer" class="relative mx-auto rounded-2xl select-none bg-gray-900 shadow-2xl" style="touch-action: none;">
         <img id="imgOriginal" class="block rounded-2xl w-full h-full pointer-events-none" draggable="false" />
         <div id="imgOverlayWrapper" class="absolute top-0 left-0 h-full overflow-hidden rounded-2xl z-10" style="width: 50%;">
@@ -129,20 +146,19 @@
         <div id="sliderHandle" class="absolute top-0 bottom-0 flex flex-col items-center justify-center cursor-ew-resize z-20" style="left: 50%; transform: translateX(-50%); width: 40px;">
           <div class="absolute top-0 bottom-0 w-1 bg-white shadow-md z-10"></div>
           <div class="relative w-10 h-10 bg-white rounded-full shadow-lg flex items-center justify-center z-20">
-            <svg class="w-6 h-6 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l4-4 4 4m0 6l-4 4-4-4"></path></svg>
+            <i class="bi bi-arrows-collapse text-gray-800"></i>
           </div>
         </div>
       </div>
     </div>
-    <p class="text-center text-xs text-gray-500 pb-10 uppercase tracking-widest font-medium">Slide to compare</p>
+    <p class="text-center text-xs text-green-400 pb-10 uppercase tracking-widest font-bold"><i class="bi bi-check-circle-fill mr-1"></i> Auto-Saved to Gallery</p>
   </div>
 
-  <!-- VIEW 5: Library Gallery -->
+  <!-- VIEW 6: Library Gallery -->
   <div id="libraryView" class="hidden absolute inset-0 bg-black z-50 flex flex-col">
     <div class="h-20 flex items-end justify-between px-4 pb-3 border-b border-gray-900 bg-gray-950 mt-safe">
       <button id="closeLibraryBtn" class="text-blue-400 flex items-center space-x-1 text-lg active:opacity-50">
-        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
-        <span>Camera</span>
+        <i class="bi bi-chevron-left"></i> <span>Camera</span>
       </button>
       <span class="text-sm font-semibold tracking-widest uppercase">Gallery</span>
       <div class="w-20"></div>
@@ -158,17 +174,40 @@
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxxZnp2ZWRycHppaGR0bXdjZHlrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY2MjE2MjUsImV4cCI6MjEwMjE5NzYyNX0.ZXf3hYfr-qWiUxVhbQA9_VymeoTEoGLHoS8ou8xzCOQ';
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    // --- STATE & DOM ---
+    // --- STATE & PROMPT ---
     let videoStream = null;
     let currentFacingMode = 'environment';
-    let isDrawing = false;
     let currentOriginalDataUrl = null; 
+    let selectedGarmentBase64 = null;
+    let allGarments = [];
     
-    let activePromptType = 'implants'; 
-    const PROMPTS = {
-      implants: "Repair the masked teeth to look like healthy, real working teeth. Fix rotten or broken areas naturally. Strictly match the exact lighting, perspective, shadows, and overall mood of the original photo. CRITICAL: Generate a low resolution 512px image focusing purely on realistic textures to save compute.",
-      braces: "Add realistic, high-quality dental braces to the masked teeth. Ensure brackets and wires look natural and anatomically correct. Strictly match the exact lighting, perspective, shadows, and overall mood of the original photo. CRITICAL: Generate a low resolution 512px image focusing purely on realistic textures to save compute."
-    };
+    const VIRTUAL_TRY_ON_PROMPT = `Edit the **first photo** by replacing only the clothing/outfit with the **exact suit shown in the second reference photo**.
+
+### Strict preservation requirements
+* Keep my **face 100% unchanged**. Do not alter facial structure, identity, skin texture, eyes, eyebrows, nose, lips, jawline, hairstyle, facial hair, expression, or proportions.
+* Keep my **body position and pose exactly unchanged**.
+* Keep the **camera angle, framing, perspective, lighting direction, shadows, and image composition exactly unchanged**.
+* Keep the **entire background exactly unchanged**. Do not regenerate, blur, replace, crop, extend, or modify any background elements.
+* Keep my **hands, arms, neck, head position, and visible body proportions exactly as they are**.
+* Do not change my height, body shape, posture, or proportions.
+* Do not apply beauty filters, face enhancement, skin smoothing, age changes, or AI-style facial reconstruction.
+
+### Suit replacement
+Use the **second photo only as the clothing reference**. Recreate its suit accurately on my body:
+* Same suit color
+* Same fabric appearance and texture
+* Same lapel style
+* Same jacket cut and fit
+* Same shirt
+* Same tie, if present
+* Same buttons and pocket details
+* Same overall formal styling
+
+The suit must naturally conform to my **existing body position and anatomy**, including realistic folds, wrinkles, fabric tension, shoulder placement, sleeves, collar, and perspective.
+
+### Important
+This is a **clothing replacement only**, NOT a face swap or full-image regeneration.
+The final result should look like the original photograph was genuinely taken with me wearing the suit from the second photo. **Preserve everything from the first image except the clothing.**`;
 
     let isViewingGalleryItem = false;
     let currentActiveDocId = null;
@@ -176,14 +215,8 @@
     let currentActiveGenPath = null;
 
     const cameraFeed = document.getElementById('cameraFeed');
-    const captureCanvas = document.getElementById('captureCanvas');
-    const baseCanvas = document.getElementById('baseCanvas');
-    const maskCanvas = document.getElementById('maskCanvas');
-    const baseCtx = baseCanvas.getContext('2d');
-    const maskCtx = maskCanvas.getContext('2d');
-    
-    const [cameraView, editorView, processingView, comparisonView, libraryView] = 
-      ['cameraView', 'editorView', 'processingView', 'comparisonView', 'libraryView'].map(id => document.getElementById(id));
+    const [cameraView, garmentSelectView, processingView, comparisonView, libraryView, addGarmentView] = 
+      ['cameraView', 'garmentSelectView', 'processingView', 'comparisonView', 'libraryView', 'addGarmentView'].map(id => document.getElementById(id));
 
     // --- CAMERA INIT ---
     async function initCamera() {
@@ -194,7 +227,11 @@
           audio: false
         });
         cameraFeed.srcObject = videoStream;
-      } catch (err) { console.error("Camera error:", err); }
+        document.getElementById('cameraErrorMsg').classList.add('hidden');
+      } catch (err) { 
+        console.warn("Camera access denied or unavailable:", err); 
+        document.getElementById('cameraErrorMsg').classList.remove('hidden');
+      }
       loadGalleryThumbnail();
     }
 
@@ -203,47 +240,37 @@
       initCamera();
     });
 
-    // --- PROMPT TOGGLES ---
-    const btnImplants = document.getElementById('presetImplants');
-    const btnBraces = document.getElementById('presetBraces');
-
-    btnImplants.addEventListener('click', () => {
-      activePromptType = 'implants';
-      btnImplants.className = "flex-1 bg-blue-600 text-white py-3 rounded-xl font-bold border-2 border-blue-400 transition active:scale-95";
-      btnBraces.className = "flex-1 bg-gray-800 text-gray-300 py-3 rounded-xl font-bold border-2 border-transparent transition active:scale-95";
-    });
-
-    btnBraces.addEventListener('click', () => {
-      activePromptType = 'braces';
-      btnBraces.className = "flex-1 bg-blue-600 text-white py-3 rounded-xl font-bold border-2 border-blue-400 transition active:scale-95";
-      btnImplants.className = "flex-1 bg-gray-800 text-gray-300 py-3 rounded-xl font-bold border-2 border-transparent transition active:scale-95";
-    });
-
-    // --- IMAGE CAPTURE (Strict 512px) ---
-    function prepareEditor(source, originalWidth, originalHeight) {
+    // --- IMAGE CAPTURE & UPLOAD ---
+    function prepareGarmentSelection(source, originalWidth, originalHeight) {
       const MAX_SIZE = 512;
-      let width = originalWidth;
-      let height = originalHeight;
+      let width = originalWidth; let height = originalHeight;
       
       if (width > height) { if (width > MAX_SIZE) { height = Math.round(height * (MAX_SIZE / width)); width = MAX_SIZE; } } 
       else { if (height > MAX_SIZE) { width = Math.round(width * (MAX_SIZE / height)); height = MAX_SIZE; } }
 
-      baseCanvas.width = width; baseCanvas.height = height;
-      maskCanvas.width = width; maskCanvas.height = height;
-
-      baseCtx.drawImage(source, 0, 0, width, height);
-      currentOriginalDataUrl = baseCanvas.toDataURL('image/jpeg', 0.8);
+      const tempCanvas = document.createElement('canvas');
+      tempCanvas.width = width; tempCanvas.height = height;
+      const ctx = tempCanvas.getContext('2d');
+      ctx.drawImage(source, 0, 0, width, height);
       
-      clearMask();
-      editorView.classList.remove('hidden');
-      editorView.classList.add('fade-in');
+      currentOriginalDataUrl = tempCanvas.toDataURL('image/jpeg', 0.8);
+      document.getElementById('capturedThumb').src = currentOriginalDataUrl;
+      
+      selectedGarmentBase64 = null;
+      document.getElementById('generateTryOnBtn').disabled = true;
+      document.getElementById('searchInput').value = '';
+      
+      loadGarments();
+      garmentSelectView.classList.remove('hidden');
+      garmentSelectView.classList.add('fade-in');
     }
 
     document.getElementById('captureBtn').addEventListener('click', () => {
+      if(!cameraFeed.videoWidth) return alert("Camera not ready. Please upload an image.");
       const tempCanvas = document.createElement('canvas');
       tempCanvas.width = cameraFeed.videoWidth; tempCanvas.height = cameraFeed.videoHeight;
       tempCanvas.getContext('2d').drawImage(cameraFeed, 0, 0);
-      prepareEditor(tempCanvas, tempCanvas.width, tempCanvas.height);
+      prepareGarmentSelection(tempCanvas, tempCanvas.width, tempCanvas.height);
     });
 
     document.getElementById('uploadBtn').addEventListener('click', () => document.getElementById('fileInput').click());
@@ -253,84 +280,152 @@
       const reader = new FileReader();
       reader.onload = (event) => {
         const img = new Image();
-        img.onload = () => prepareEditor(img, img.width, img.height);
+        img.onload = () => prepareGarmentSelection(img, img.width, img.height);
         img.src = event.target.result;
       };
       reader.readAsDataURL(file);
     });
 
-    document.getElementById('cancelEditBtn').addEventListener('click', () => {
-      editorView.classList.add('hidden');
+    document.getElementById('cancelSelectBtn').addEventListener('click', () => {
+      garmentSelectView.classList.add('hidden');
       document.getElementById('fileInput').value = '';
     });
 
-    // --- MASKING LOGIC ---
-    function clearMask() {
-      maskCtx.fillStyle = 'black'; 
-      maskCtx.fillRect(0, 0, maskCanvas.width, maskCanvas.height);
-    }
-    document.getElementById('clearMaskBtn').addEventListener('click', clearMask);
+    // --- ADD GARMENT UI ---
+    document.getElementById('openAddGarmentBtn').addEventListener('click', () => {
+      addGarmentView.classList.remove('hidden');
+      addGarmentView.classList.add('fade-in');
+    });
+    
+    document.getElementById('closeAddGarmentBtn').addEventListener('click', () => {
+      addGarmentView.classList.add('hidden');
+    });
 
-    function getMousePos(canvas, evt) {
-      const rect = canvas.getBoundingClientRect();
-      const scaleX = canvas.width / rect.width;
-      const scaleY = canvas.height / rect.height;
-      let clientX = evt.clientX; let clientY = evt.clientY;
-      if(evt.touches && evt.touches.length > 0) {
-        clientX = evt.touches[0].clientX; clientY = evt.touches[0].clientY;
+    const garmentPreviewContainer = document.getElementById('garmentPreviewContainer');
+    const garmentFileInput = document.getElementById('garmentFileInput');
+    const garmentPreviewImg = document.getElementById('garmentPreviewImg');
+    const garmentPreviewIcon = document.getElementById('garmentPreviewIcon');
+    let newGarmentDataUrl = null;
+
+    garmentPreviewContainer.addEventListener('click', () => garmentFileInput.click());
+    garmentFileInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        newGarmentDataUrl = event.target.result;
+        garmentPreviewImg.src = newGarmentDataUrl;
+        garmentPreviewImg.classList.remove('hidden');
+        garmentPreviewIcon.classList.add('hidden');
+      };
+      reader.readAsDataURL(file);
+    });
+
+    document.getElementById('saveGarmentBtn').addEventListener('click', async () => {
+      const name = document.getElementById('garmentNameInput').value.trim();
+      if(!name || !newGarmentDataUrl) return alert("Please provide both a name and an image.");
+      
+      const btn = document.getElementById('saveGarmentBtn');
+      const originalHTML = btn.innerHTML;
+      btn.innerHTML = `<div class="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>`;
+      
+      try {
+        const blob = await convertToWebP(newGarmentDataUrl);
+        const path = `garment_${Date.now()}.webp`;
+        
+        await supabaseClient.storage.from('garments').upload(path, blob, { contentType: 'image/webp' });
+        await supabaseClient.from('garments').insert([{ name: name, image_path: path }]);
+        
+        addGarmentView.classList.add('hidden');
+        document.getElementById('garmentNameInput').value = '';
+        garmentPreviewImg.classList.add('hidden');
+        garmentPreviewIcon.classList.remove('hidden');
+        newGarmentDataUrl = null;
+        
+      } catch (err) {
+        alert("Upload failed: " + err.message);
+      } finally {
+        btn.innerHTML = originalHTML;
       }
-      return { x: (clientX - rect.left) * scaleX, y: (clientY - rect.top) * scaleY };
+    });
+
+    // --- GARMENT SELECTION LOGIC ---
+    async function loadGarments() {
+      const grid = document.getElementById('garmentsGrid');
+      grid.innerHTML = Array(9).fill(`<div class="aspect-square bg-gray-800 rounded-xl animate-pulse"></div>`).join('');
+      
+      const { data, error } = await supabaseClient.from('garments').select('*').order('created_at', { ascending: false });
+      if(error) return console.error(error);
+      
+      allGarments = data;
+      renderGarments(allGarments);
     }
 
-    function startDrawing(e) { e.preventDefault(); isDrawing = true; draw(e); }
-    function stopDrawing(e) { e.preventDefault(); isDrawing = false; maskCtx.beginPath(); }
-    function draw(e) {
-      if (!isDrawing) return;
-      e.preventDefault(); 
-      const pos = getMousePos(maskCanvas, e);
-      maskCtx.lineWidth = document.getElementById('brushSize').value;
-      maskCtx.lineCap = 'round';
-      maskCtx.strokeStyle = 'white'; 
-      maskCtx.lineTo(pos.x, pos.y);
-      maskCtx.stroke();
-      maskCtx.beginPath();
-      maskCtx.moveTo(pos.x, pos.y);
+    function renderGarments(garments) {
+      const grid = document.getElementById('garmentsGrid');
+      grid.innerHTML = '';
+      
+      garments.forEach(g => {
+        const url = supabaseClient.storage.from('garments').getPublicUrl(g.image_path).data.publicUrl;
+        const div = document.createElement('div');
+        div.className = "relative aspect-square bg-gray-800 rounded-xl overflow-hidden cursor-pointer transition-transform";
+        div.innerHTML = `
+          <img src="${url}" class="w-full h-full object-cover pointer-events-none" loading="lazy" crossorigin="anonymous" />
+          <div class="absolute bottom-0 inset-x-0 bg-black bg-opacity-60 text-center p-1 text-[10px] font-bold text-white truncate pointer-events-none">${g.name}</div>
+        `;
+        
+        div.onclick = async () => {
+          // Deselect others
+          Array.from(grid.children).forEach(c => c.classList.remove('garment-selected'));
+          div.classList.add('garment-selected');
+          
+          // Fetch base64 of the selected suit for the AI API
+          const response = await fetch(url);
+          const blob = await response.blob();
+          const reader = new FileReader();
+          reader.onloadend = () => {
+            selectedGarmentBase64 = reader.result.split(',')[1];
+            document.getElementById('generateTryOnBtn').disabled = false;
+          };
+          reader.readAsDataURL(blob);
+        };
+        grid.appendChild(div);
+      });
     }
 
-    maskCanvas.addEventListener('mousedown', startDrawing);
-    maskCanvas.addEventListener('mousemove', draw);
-    maskCanvas.addEventListener('mouseup', stopDrawing);
-    maskCanvas.addEventListener('mouseout', stopDrawing);
-    maskCanvas.addEventListener('touchstart', startDrawing, {passive: false});
-    maskCanvas.addEventListener('touchmove', draw, {passive: false});
-    maskCanvas.addEventListener('touchend', stopDrawing);
+    document.getElementById('searchInput').addEventListener('input', (e) => {
+      const term = e.target.value.toLowerCase();
+      const filtered = allGarments.filter(g => g.name.toLowerCase().includes(term));
+      renderGarments(filtered);
+    });
 
-    // --- GENERATION (NETLIFY API) ---
-    document.getElementById('submitBtn').addEventListener('click', async () => {
-      const promptToUse = PROMPTS[activePromptType];
-      const base64Image = baseCanvas.toDataURL('image/jpeg', 0.8).split(',')[1];
-      const base64Mask = maskCanvas.toDataURL('image/jpeg', 1.0).split(',')[1];
-      const submitBtn = document.getElementById('submitBtn');
+    // --- GENERATION & AUTO-SAVE ---
+    document.getElementById('generateTryOnBtn').addEventListener('click', async () => {
+      if(!selectedGarmentBase64) return;
+      
+      const base64Image = currentOriginalDataUrl.split(',')[1];
+      const btn = document.getElementById('generateTryOnBtn');
 
       processingView.classList.remove('hidden');
       processingView.classList.add('fade-in');
       let seconds = 0;
       const timerText = document.getElementById('timerText');
-      timerText.textContent = `Enhancing... 0s`;
-      const timer = setInterval(() => { seconds++; timerText.textContent = `Enhancing... ${seconds}s`; }, 1000);
-
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 150000); 
+      timerText.textContent = `Styling... 0s`;
+      const timer = setInterval(() => { seconds++; timerText.textContent = `Styling... ${seconds}s`; }, 1000);
 
       try {
+        // Sending image + referenceImage to the backend
         const response = await fetch('/.netlify/functions/inpaint', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ prompt: promptToUse, image: base64Image, mask: base64Mask, model: 'gemini-3.1-flash-image' }),
-          signal: controller.signal
+          body: JSON.stringify({ 
+            prompt: VIRTUAL_TRY_ON_PROMPT, 
+            image: base64Image, 
+            referenceImage: selectedGarmentBase64, 
+            model: 'gemini-3.1-flash-image' 
+          })
         });
 
-        clearTimeout(timeoutId);
         const data = await response.json();
         if (!response.ok) throw new Error(data.error || "Server error");
 
@@ -346,23 +441,41 @@
 
         if (!generatedImgSrc) throw new Error("No image data returned from AI.");
 
-        isViewingGalleryItem = false;
-        document.getElementById('saveToLibraryBtn').classList.remove('hidden');
-        document.getElementById('deleteBtn').classList.add('hidden');
-        document.getElementById('downloadBtn').classList.add('hidden');
-        document.getElementById('closeComparisonBtn').textContent = "Retake";
+        timerText.textContent = `Auto-Saving to Gallery...`;
+        
+        // AUTO-SAVE LOGIC
+        const timestamp = Date.now();
+        const origPath = `original_${timestamp}.webp`;
+        const genPath = `generated_${timestamp}.webp`;
 
+        const origBlob = await convertToWebP(currentOriginalDataUrl);
+        const genBlob = await convertToWebP(generatedImgSrc);
+
+        await Promise.all([
+          supabaseClient.storage.from('photos').upload(origPath, origBlob, { contentType: 'image/webp' }),
+          supabaseClient.storage.from('photos').upload(genPath, genBlob, { contentType: 'image/webp' })
+        ]);
+
+        const { data: insertedData } = await supabaseClient.from('gallery').insert([{ original_image_path: origPath, generated_image_path: genPath }]).select();
+
+        isViewingGalleryItem = false;
+        currentActiveDocId = insertedData[0].id;
+        currentActiveOrigPath = origPath;
+        currentActiveGenPath = genPath;
+
+        document.getElementById('closeComparisonBtn').textContent = "Retake";
         setupSliderDimensions(currentOriginalDataUrl, generatedImgSrc);
+        loadGalleryThumbnail();
 
       } catch (err) {
-        const originalText = submitBtn.innerHTML;
-        submitBtn.textContent = "Failed - Try Again";
-        submitBtn.classList.remove('bg-blue-600', 'hover:bg-blue-500');
-        submitBtn.classList.add('bg-red-600');
+        const originalText = btn.innerHTML;
+        btn.textContent = "Failed - Try Again";
+        btn.classList.remove('bg-blue-600');
+        btn.classList.add('bg-red-600');
         setTimeout(() => {
-          submitBtn.innerHTML = originalText;
-          submitBtn.classList.add('bg-blue-600', 'hover:bg-blue-500');
-          submitBtn.classList.remove('bg-red-600');
+          btn.innerHTML = originalText;
+          btn.classList.add('bg-blue-600');
+          btn.classList.remove('bg-red-600');
         }, 3000);
       } finally {
         clearInterval(timer);
@@ -398,7 +511,7 @@
         genImg.style.width = finalW + "px";
         genImg.style.height = finalH + "px";
 
-        editorView.classList.add('hidden');
+        garmentSelectView.classList.add('hidden');
         libraryView.classList.add('hidden');
         comparisonView.classList.remove('hidden');
         comparisonView.classList.add('fade-in');
@@ -477,41 +590,9 @@
       });
     }
 
-    // --- SAVE / DELETE / DOWNLOAD / CLOSE ---
-    document.getElementById('saveToLibraryBtn').addEventListener('click', async () => {
-      const btn = document.getElementById('saveToLibraryBtn');
-      const originalHTML = btn.innerHTML;
-      btn.innerHTML = `<div class="w-5 h-5 border-2 border-yellow-400 border-t-transparent rounded-full animate-spin"></div>`;
-      
-      try {
-        const timestamp = Date.now();
-        const origPath = `original_${timestamp}.webp`;
-        const genPath = `generated_${timestamp}.webp`;
-
-        const origSrc = document.getElementById('imgOriginal').src;
-        const genSrc = document.getElementById('imgGenerated').src;
-
-        const origBlob = await convertToWebP(origSrc);
-        const genBlob = await convertToWebP(genSrc);
-
-        await Promise.all([
-          supabaseClient.storage.from('photos').upload(origPath, origBlob, { contentType: 'image/webp' }),
-          supabaseClient.storage.from('photos').upload(genPath, genBlob, { contentType: 'image/webp' })
-        ]);
-
-        await supabaseClient.from('gallery').insert([{ original_image_path: origPath, generated_image_path: genPath }]);
-
-        comparisonView.classList.add('hidden');
-        loadGalleryThumbnail();
-      } catch (err) {
-        alert("Failed to save: " + err.message);
-      } finally {
-        btn.innerHTML = originalHTML;
-      }
-    });
-
+    // --- DELETE / DOWNLOAD / CLOSE ---
     document.getElementById('deleteBtn').addEventListener('click', async () => {
-      if(!confirm("Delete this image forever?")) return;
+      if(!confirm("Delete this try-on from your gallery?")) return;
       
       const btn = document.getElementById('deleteBtn');
       const originalHTML = btn.innerHTML;
@@ -521,15 +602,14 @@
         const { error: dbError } = await supabaseClient.from('gallery').delete().eq('id', currentActiveDocId);
         if (dbError) throw dbError;
 
-        const { error: storageError } = await supabaseClient.storage.from('photos').remove([currentActiveOrigPath, currentActiveGenPath]);
-        if (storageError) throw storageError;
+        await supabaseClient.storage.from('photos').remove([currentActiveOrigPath, currentActiveGenPath]);
         
         comparisonView.classList.add('hidden');
-        libraryView.classList.remove('hidden');
+        if(isViewingGalleryItem) libraryView.classList.remove('hidden');
         loadGallery();
         loadGalleryThumbnail();
       } catch (err) {
-        alert("Failed to delete. Ensure you updated Supabase SQL policies. Error: " + err.message);
+        alert("Failed to delete. Ensure you updated Supabase SQL policies.");
       } finally {
         btn.innerHTML = originalHTML;
       }
@@ -544,7 +624,7 @@
         const blobUrl = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = blobUrl;
-        link.download = `CodeInBlack_Result_${Date.now()}.webp`;
+        link.download = `VirtualTryOn_${Date.now()}.webp`;
         
         document.body.appendChild(link);
         link.click();
@@ -603,11 +683,7 @@
             currentActiveOrigPath = doc.original_image_path;
             currentActiveGenPath = doc.generated_image_path;
             
-            document.getElementById('saveToLibraryBtn').classList.add('hidden');
-            document.getElementById('deleteBtn').classList.remove('hidden');
-            document.getElementById('downloadBtn').classList.remove('hidden');
             document.getElementById('closeComparisonBtn').textContent = "Back";
-
             setupSliderDimensions(origUrl, genUrl);
           };
           
@@ -620,3 +696,4 @@
   </script>
 </body>
 </html>
+--- END OF FILE TOOTH-main/index.html ---
