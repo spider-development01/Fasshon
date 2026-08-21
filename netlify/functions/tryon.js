@@ -17,7 +17,7 @@ exports.handler = async function(event, context) {
     }
 
     // Google Gemini API URL
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model || 'gemini-1.5-pro'}:generateContent?key=${API_KEY}`;
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model || 'gemini-3.1-flash-image'}:generateContent?key=${API_KEY}`;
 
     // Structure the request for Gemini
     const payload = {
