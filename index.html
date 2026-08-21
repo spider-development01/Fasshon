@@ -615,7 +615,7 @@ The final result should look like the original photograph was genuinely taken wi
       const timer = setInterval(() => { seconds++; timerText.textContent = `Styling... ${seconds}s`; }, 1000);
 
       try {
-        const response = await fetch('/.netlify/functions/inpaint', {
+        const response = await fetch('/.netlify/functions/tryon', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ 
