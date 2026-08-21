@@ -436,7 +436,7 @@ The final result should look like the original photograph was genuinely taken wi
         // Instead of renaming it to referenceImage and breaking your backend, 
         // we pass the suit image AS the "mask" variable. 
         // The prompt tells the AI to use it as a reference image instead of a drawing mask!
-        const response = await fetch('/.netlify/functions/inpaint', {
+       const response = await fetch('/.netlify/functions/tryon', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ 
