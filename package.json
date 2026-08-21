@@ -3,6 +3,10 @@
   "version": "1.0.0",
   "description": "Image inpainting using Gemini AI",
   "scripts": {
-    "start": "netlify dev"
+    "start": "wrangler pages dev .",
+    "deploy": "wrangler pages deploy ."
+  },
+  "devDependencies": {
+    "wrangler": "^3.0.0"
   }
 }
