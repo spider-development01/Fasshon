@@ -329,6 +329,7 @@
         </div>
 
         <div style="display: flex; gap: 16px;">
+          <button id="zoomBtn" style="color: var(--text-main); font-size: 1.2rem;"><i class="bi bi-arrows-fullscreen"></i></button>
           <button id="deleteBtn" style="color: var(--danger-color); font-size: 1.2rem;"><i class="bi bi-trash"></i></button>
           <button id="downloadBtn" style="color: var(--accent-color); font-size: 1.2rem;"><i class="bi bi-download"></i></button>
         </div>
@@ -365,6 +366,21 @@
     </div>
   </div>
 
+  <!-- VIEW 7: Fullscreen Zoom Overlay -->
+  <div id="zoomOverlay" class="view-container hidden" style="z-index: 60; background: #000;">
+    <div class="glass-header" style="position: absolute; top: 0; width: 100%; border: none; background: linear-gradient(rgba(0,0,0,0.8), transparent); backdrop-filter: none; -webkit-backdrop-filter: none; z-index: 61;">
+      <button id="closeZoomBtn" style="color: #fff; font-weight: 600; font-size: 1.5rem;"><i class="bi bi-x-lg"></i></button>
+      <div class="mode-toggle">
+         <button id="zoomOutBtn" class="icon-btn" style="width: 36px; height: 36px;"><i class="bi bi-zoom-out"></i></button>
+         <button id="zoomInBtn" class="icon-btn" style="width: 36px; height: 36px;"><i class="bi bi-zoom-in"></i></button>
+      </div>
+      <div style="width: 24px;"></div>
+    </div>
+    <div id="zoomPanContainer" style="width: 100%; height: 100%; overflow: auto; -webkit-overflow-scrolling: touch; display: flex; align-items: flex-start; justify-content: flex-start; background: #000;">
+      <img id="zoomImg" style="width: 100%; height: auto; margin: auto; object-fit: contain; transition: width 0.2s ease-out;" />
+    </div>
+  </div>
+
   <script>
     // --- SUPABASE CONFIGURATION ---
     const SUPABASE_URL = 'https://rmfubnduytozikcgzvok.supabase.co';
@@ -377,6 +393,7 @@
     let currentOriginalDataUrl = null; 
     let selectedGarmentBase64 = null;
     let allGarments = [];
+    let isCompareMode = true; // Tracks if we are in Compare vs Result view
     
     const VIRTUAL_TRY_ON_PROMPT = `Edit the **first photo** by replacing only the clothing/outfit with the **exact suit shown in the second reference photo**.
 
@@ -450,9 +467,9 @@ The final result should look like the original photograph was genuinely taken wi
       initCamera();
     });
 
-    // --- IMAGE CAPTURE & UPLOAD ---
+    // --- IMAGE CAPTURE & UPLOAD (HIGH QUALITY WEB-P) ---
     function prepareGarmentSelection(source, originalWidth, originalHeight) {
-      const MAX_SIZE = 512;
+      const MAX_SIZE = 2048; // Increased from 512px to 2048px for top DPI / Quality
       let width = originalWidth; let height = originalHeight;
       
       if (width > height) { if (width > MAX_SIZE) { height = Math.round(height * (MAX_SIZE / width)); width = MAX_SIZE; } } 
@@ -462,7 +479,8 @@ The final result should look like the original photograph was genuinely taken wi
       tempCanvas.width = width; tempCanvas.height = height;
       tempCanvas.getContext('2d').drawImage(source, 0, 0, width, height);
       
-      currentOriginalDataUrl = tempCanvas.toDataURL('image/jpeg', 0.8);
+      // Use image/webp at 100% quality for best results
+      currentOriginalDataUrl = tempCanvas.toDataURL('image/webp', 1.0);
       document.getElementById('capturedThumb').src = currentOriginalDataUrl;
       
       selectedGarmentBase64 = null;
@@ -635,7 +653,7 @@ The final result should look like the original photograph was genuinely taken wi
         candidateParts.forEach((part) => {
           const inlineImg = part.inlineData || part.inline_data;
           if (inlineImg && inlineImg.data) {
-            generatedImgSrc = `data:${inlineImg.mimeType || 'image/jpeg'};base64,${inlineImg.data}`;
+            generatedImgSrc = `data:${inlineImg.mimeType || 'image/webp'};base64,${inlineImg.data}`;
           }
         });
 
@@ -708,7 +726,8 @@ The final result should look like the original photograph was genuinely taken wi
       slider.style.left = `50%`;
 
       function slide(e) {
-        if (!isSliding) return;
+        // Stop sliding if we are in Result Only mode
+        if (!isSliding || !isCompareMode) return;
         if(e.cancelable) e.preventDefault(); 
         
         let clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
@@ -739,6 +758,7 @@ The final result should look like the original photograph was genuinely taken wi
     const imgGen = document.getElementById('imgGenerated');
 
     function setCompareMode(isCompare) {
+      isCompareMode = isCompare;
       if (isCompare) {
         btnCompare.classList.add('active');
         btnResult.classList.remove('active');
@@ -751,12 +771,75 @@ The final result should look like the original photograph was genuinely taken wi
         btnResult.classList.add('active');
         sliderHandle.style.display = 'none';
         // Reveal 100% of generated image
-        imgGen.style.clipPath = `polygon(0 0, 100% 0, 100% 100%, 0 100%)`;
+        imgGen.style.clipPath = `polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)`;
       }
     }
 
     btnCompare.addEventListener('click', () => setCompareMode(true));
     btnResult.addEventListener('click', () => setCompareMode(false));
+
+    // --- FULLSCREEN ZOOM HANDLING ---
+    const zoomOverlay = document.getElementById('zoomOverlay');
+    const zoomImg = document.getElementById('zoomImg');
+    const zoomPanContainer = document.getElementById('zoomPanContainer');
+    let currentZoom = 1;
+    let initialDistance = null;
+    let initialZoom = 1;
+
+    function applyZoom() {
+      zoomImg.style.width = `${currentZoom * 100}%`;
+    }
+
+    document.getElementById('zoomBtn').addEventListener('click', () => {
+      zoomImg.src = document.getElementById('imgGenerated').src;
+      zoomOverlay.classList.remove('hidden');
+      zoomOverlay.classList.add('fade-in');
+      currentZoom = 1;
+      applyZoom();
+    });
+
+    document.getElementById('closeZoomBtn').addEventListener('click', () => zoomOverlay.classList.add('hidden'));
+
+    document.getElementById('zoomInBtn').addEventListener('click', () => {
+      currentZoom = Math.min(currentZoom + 0.5, 5);
+      applyZoom();
+    });
+
+    document.getElementById('zoomOutBtn').addEventListener('click', () => {
+      currentZoom = Math.max(currentZoom - 0.5, 1);
+      applyZoom();
+    });
+
+    // Pinch-to-zoom logic for mobile
+    zoomPanContainer.addEventListener('touchstart', (e) => {
+      if (e.touches.length === 2) {
+        initialDistance = Math.hypot(
+          e.touches[0].pageX - e.touches[1].pageX,
+          e.touches[0].pageY - e.touches[1].pageY
+        );
+        initialZoom = currentZoom;
+      }
+    });
+
+    zoomPanContainer.addEventListener('touchmove', (e) => {
+      if (e.touches.length === 2 && initialDistance) {
+        e.preventDefault(); // Prevent default scroll while pinching
+        const currentDistance = Math.hypot(
+          e.touches[0].pageX - e.touches[1].pageX,
+          e.touches[0].pageY - e.touches[1].pageY
+        );
+        const scale = currentDistance / initialDistance;
+        currentZoom = Math.min(Math.max(initialZoom * scale, 1), 5);
+        applyZoom();
+      }
+    }, { passive: false });
+
+    zoomPanContainer.addEventListener('touchend', (e) => {
+      if (e.touches.length < 2) {
+        initialDistance = null;
+      }
+    });
+
 
     // --- UTILS & GALLERY ACTIONS ---
     async function convertToWebP(src) {
@@ -767,7 +850,8 @@ The final result should look like the original photograph was genuinely taken wi
           const canvas = document.createElement('canvas');
           canvas.width = img.width; canvas.height = img.height;
           canvas.getContext('2d').drawImage(img, 0, 0);
-          canvas.toBlob((blob) => resolve(blob), 'image/webp', 0.8);
+          // Set to 1.0 (100% Quality) for Best Output Quality
+          canvas.toBlob((blob) => resolve(blob), 'image/webp', 1.0);
         };
         img.onerror = reject; img.src = src;
       });
