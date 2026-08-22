@@ -3,17 +3,20 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-    <!-- Favicon -->
+  <meta name="description" content="FASSHON - AI Virtual Try-On Experience" />
+  
+  <!-- Favicon -->
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%23111111'/><text y='54%' x='50%' dominant-baseline='middle' text-anchor='middle' font-size='70' fill='%23ffffff' font-family='sans-serif'>着</text></svg>">
   
   <title>FASSHON - Virtual Try-On</title>
   
-  <!-- Supabase Web SDK -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- Supabase Web SDK (Deferred for faster initial render) -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+  
   <!-- Bootstrap Icons -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
   
-  <!-- Google Fonts: Bold Brutalist Typography -->
+  <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo+Black&family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
@@ -23,7 +26,6 @@
        CSS VARIABLES: EURO-BRUTALISM SCHEME
        ========================================= */
     :root {
-      /* Palette */
       --beige: #F4F4F0;
       --white: #FFFFFF;
       --black: #1A1A1A;
@@ -32,19 +34,16 @@
       --cyan: #1597D0;
       --pink: #F04A83;
       
-      /* Typography */
       --font-display: 'Anton', sans-serif;
       --font-bold: 'Archivo Black', sans-serif;
       --font-body: 'Noto Sans JP', sans-serif;
 
-      /* Structural */
       --border-thick: 3px solid var(--black);
       --shadow-solid: 6px 6px 0px var(--black);
       --shadow-sm: 4px 4px 0px var(--black);
       --radius-card: 16px;
       --radius-pill: 100px;
       
-      /* Animation */
       --bounce: cubic-bezier(0.175, 0.885, 0.32, 1.275);
       
       --safe-top: env(safe-area-inset-top, 0px);
@@ -65,11 +64,12 @@
     }
 
     /* =========================================
-       TYPOGRAPHY & BRANDING
+       TYPOGRAPHY & UTILS
        ========================================= */
     h1, h2, h3 { font-family: var(--font-bold); text-transform: uppercase; letter-spacing: -1px; line-height: 1; margin: 0; }
     .text-red { color: var(--red); }
     .text-cyan { color: var(--cyan); }
+    .hidden { display: none !important; }
     
     .brand-logo {
       font-family: var(--font-display);
@@ -81,12 +81,6 @@
       pointer-events: auto;
     }
 
-    input#fileInput {
-    display: none;
-}
-    input#garmentFileInput {
-    display: none;
-}
     /* View Transition System */
     .view-container {
       position: absolute; inset: 0;
@@ -101,7 +95,7 @@
     }
 
     /* =========================================
-       BUTTONS & UI ELEMENTS (BRUTALIST)
+       BUTTONS & UI ELEMENTS
        ========================================= */
     button {
       background: none; border: none; color: inherit; cursor: pointer;
@@ -116,7 +110,7 @@
       padding: 12px 24px; font-size: 1rem; font-weight: 900;
       box-shadow: var(--shadow-sm); display: flex; align-items: center; justify-content: center; gap: 8px;
     }
-    .btn-pill:active { transform: translate(4px, 4px); box-shadow: 0px 0px 0px var(--black); }
+    .btn-pill:active:not(:disabled) { transform: translate(4px, 4px); box-shadow: 0px 0px 0px var(--black); }
     
     .btn-primary {
       background: var(--red); color: var(--white);
@@ -124,7 +118,7 @@
       padding: 18px 30px; font-size: 1.1rem; width: 100%;
       box-shadow: var(--shadow-solid);
     }
-    .btn-primary:active { transform: translate(6px, 6px); box-shadow: 0px 0px 0px var(--black); }
+    .btn-primary:active:not(:disabled) { transform: translate(6px, 6px); box-shadow: 0px 0px 0px var(--black); }
 
     .icon-btn {
       width: 50px; height: 50px; border-radius: 50%;
@@ -132,7 +126,7 @@
       display: flex; align-items: center; justify-content: center;
       font-size: 1.2rem; box-shadow: var(--shadow-sm); flex-shrink: 0;
     }
-    .icon-btn:active { transform: translate(4px, 4px); box-shadow: 0px 0px 0px var(--black); }
+    .icon-btn:active:not(:disabled) { transform: translate(4px, 4px); box-shadow: 0px 0px 0px var(--black); }
 
     .input-field {
       width: 100%; background: var(--white); color: var(--black);
@@ -146,10 +140,7 @@
     /* =========================================
        CAMERA & FLOATING DOCKS
        ========================================= */
-    .camera-wrapper { 
-      position: absolute; inset: 0; 
-      background: var(--black); z-index: 10;
-    }
+    .camera-wrapper { position: absolute; inset: 0; background: var(--black); z-index: 10; }
     #cameraFeed { position: absolute; width: 100%; height: 100%; object-fit: cover; }
     
     .error-overlay {
@@ -160,11 +151,10 @@
     }
     .error-overlay.active { opacity: 1; pointer-events: all; }
 
-    /* Floating UI Layers (Always on top of camera) */
     .top-bar {
       position: absolute; top: calc(var(--safe-top) + 20px); left: 20px; right: 20px;
       display: flex; justify-content: space-between; align-items: center; 
-      z-index: 50; pointer-events: none; /* Let clicks pass through empty space */
+      z-index: 50; pointer-events: none;
     }
     .top-bar > * { pointer-events: auto; }
 
@@ -187,7 +177,6 @@
        GRIDS & CARDS
        ========================================= */
     .content-area { flex: 1; overflow-y: auto; padding: 20px; padding-bottom: calc(var(--safe-bottom) + 120px); }
-    
     .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
     
     .card {
@@ -198,7 +187,6 @@
     }
     .card:active { transform: scale(0.95); }
     .card.selected { border-color: var(--cyan); box-shadow: 0 0 0 4px var(--cyan), var(--shadow-sm); }
-    
     .card img { width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
     
     .card-label {
@@ -259,6 +247,7 @@
     .compare-wrapper {
       flex: 1; position: relative; overflow: hidden; background: var(--white);
       border-bottom: var(--border-thick); border-radius: 0 0 24px 24px;
+      touch-action: none; /* Prevent scroll while sliding */
     }
     .compare-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; pointer-events: none; }
     #imgGenerated { clip-path: polygon(50% 0, 100% 0, 100% 100%, 50% 100%); }
@@ -272,10 +261,9 @@
     .slider-btn {
       position: relative; width: 44px; height: 44px; background: var(--lime);
       border: var(--border-thick); border-radius: 50%; display: flex; align-items: center; justify-content: center;
-      box-shadow: 4px 4px 0px var(--black); color: var(--black); font-size: 1.2rem;
+      box-shadow: 4px 4px 0px var(--black); color: var(--black); font-size: 1.2rem; pointer-events: none;
     }
 
-    /* View Mode Toggle */
     .mode-toggle {
       display: flex; background: var(--white); border: var(--border-thick);
       border-radius: var(--radius-pill); padding: 4px; gap: 4px;
@@ -287,29 +275,46 @@
     }
     .mode-btn.active { background: var(--black); color: var(--white); }
 
-    /* Loading Skeleton/Spinner */
     .loader-spinner {
       width: 60px; height: 60px; border: 6px solid var(--black);
       border-top-color: var(--lime); border-radius: 50%; animation: spin 1s linear infinite;
     }
+    @keyframes spin { 100% { transform: rotate(360deg); } }
+
+    /* =========================================
+       TOAST NOTIFICATIONS
+       ========================================= */
+    .toast-container {
+      position: fixed; top: calc(var(--safe-top) + 20px); left: 50%; transform: translateX(-50%);
+      z-index: 9999; display: flex; flex-direction: column; gap: 10px; pointer-events: none;
+    }
+    .toast {
+      background: var(--white); border: var(--border-thick); border-radius: var(--radius-pill);
+      padding: 12px 24px; font-family: var(--font-bold); font-size: 0.9rem;
+      box-shadow: var(--shadow-solid); display: flex; align-items: center; gap: 10px;
+      animation: slideDown 0.3s var(--bounce) forwards, fadeOut 0.3s ease 2.7s forwards;
+    }
+    .toast.error { background: var(--red); color: var(--white); }
+    @keyframes slideDown { from { transform: translateY(-50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    @keyframes fadeOut { to { opacity: 0; transform: translateY(-20px); } }
   </style>
 </head>
 <body>
 
+  <!-- Toast Container -->
+  <div id="toastContainer" class="toast-container"></div>
+
   <!-- VIEW 1: Camera Interface -->
   <div id="cameraView" class="view-container active">
-    
-    <!-- Floating Top Bar -->
     <div class="top-bar">
       <div class="brand-logo">FASSHON</div>
       <div style="display: flex; gap: 10px;">
-        <button id="openAddGarmentBtn" class="btn-pill"><i class="bi bi-plus-lg"></i> SUIT</button>
-        <button id="uploadBtn" class="icon-btn"><i class="bi bi-image"></i></button>
+        <button id="openAddGarmentBtn" class="btn-pill" aria-label="Add Suit"><i class="bi bi-plus-lg"></i> SUIT</button>
+        <button id="uploadBtn" class="icon-btn" aria-label="Upload Photo"><i class="bi bi-image"></i></button>
         <input type="file" id="fileInput" class="hidden" accept="image/*" />
       </div>
     </div>
     
-    <!-- Camera Area Layer -->
     <div class="camera-wrapper">
       <video id="cameraFeed" autoplay playsinline></video>
       <div id="cameraErrorMsg" class="error-overlay">
@@ -320,11 +325,10 @@
       </div>
     </div>
 
-    <!-- Floating Bottom Dock -->
     <div class="floating-dock">
-      <button id="openLibraryBtn" class="icon-btn" style="background-size: cover; background-position: center;"></button>
-      <button id="captureBtn" class="shutter-btn"></button>
-      <button id="switchCameraBtn" class="icon-btn"><i class="bi bi-arrow-repeat" style="font-size: 1.5rem;"></i></button>
+      <button id="openLibraryBtn" class="icon-btn" aria-label="Open Gallery" style="background-size: cover; background-position: center;"></button>
+      <button id="captureBtn" class="shutter-btn" aria-label="Take Photo"></button>
+      <button id="switchCameraBtn" class="icon-btn" aria-label="Switch Camera"><i class="bi bi-arrow-repeat" style="font-size: 1.5rem;"></i></button>
     </div>
   </div>
 
@@ -336,7 +340,7 @@
           <div style="background: var(--cyan); color: var(--white); display: inline-block; padding: 4px 10px; font-weight: 900; font-size: 0.7rem; text-transform: uppercase; border: 2px solid var(--black); margin-bottom: 10px; transform: rotate(-2deg); box-shadow: 2px 2px 0px var(--black);">Wardrobe</div>
           <h1 style="font-size: 2rem;">ADD NEW SUIT</h1>
         </div>
-        <button id="closeAddGarmentBtn" class="icon-btn" style="width: 40px; height: 40px;"><i class="bi bi-x-lg"></i></button>
+        <button id="closeAddGarmentBtn" class="icon-btn" style="width: 40px; height: 40px;" aria-label="Close"><i class="bi bi-x-lg"></i></button>
       </div>
       
       <div id="garmentPreviewContainer" class="preview-box">
@@ -344,13 +348,11 @@
           <i id="garmentPreviewIcon" class="bi bi-camera" style="font-size: 2.5rem;"></i>
           <p style="font-size: 0.8rem; margin-top: 8px; font-weight: 700;">Select 1 or 2 Images<br/><span style="color: var(--red);">Will auto-stitch side-by-side</span></p>
         </div>
-        <img id="garmentPreviewImg" class="hidden" style="position: absolute; inset: 0;" />
+        <img id="garmentPreviewImg" class="hidden" style="position: absolute; inset: 0;" alt="Garment Preview" />
       </div>
-      <!-- ENABLE MULTIPLE UPLOAD FOR STITCHING -->
       <input type="file" id="garmentFileInput" class="hidden" accept="image/*" multiple />
       
       <input type="text" id="garmentNameInput" placeholder="E.g. Vintage Pink Combo" class="input-field" autocomplete="off" />
-      
       <button id="saveGarmentBtn" class="btn-primary">SAVE TO WARDROBE</button>
     </div>
   </div>
@@ -364,16 +366,13 @@
     </div>
     
     <div class="content-area">
-      <!-- Search & Captured Preview -->
       <div style="display: flex; gap: 12px; background: var(--white); padding: 12px; border: var(--border-thick); border-radius: 16px; box-shadow: var(--shadow-sm); margin-bottom: 20px;">
-        <img id="capturedThumb" style="width: 60px; height: 60px; object-fit: cover; border: 2px solid var(--black); border-radius: 8px;" />
+        <img id="capturedThumb" style="width: 60px; height: 60px; object-fit: cover; border: 2px solid var(--black); border-radius: 8px;" alt="Captured" />
         <div style="position: relative; flex: 1; display: flex; align-items: center;">
           <i class="bi bi-search" style="position: absolute; left: 12px; font-size: 1.2rem;"></i>
           <input type="text" id="searchInput" placeholder="SEARCH..." class="input-field" style="padding-left: 40px; border: none; box-shadow: none; background: transparent;" />
         </div>
       </div>
-
-      <!-- Garments Grid -->
       <div id="garmentsGrid" class="grid-2"></div>
     </div>
 
@@ -403,8 +402,8 @@
     </div>
     
     <div id="compareContainer" class="compare-wrapper">
-      <img id="imgOriginal" class="compare-img" />
-      <img id="imgGenerated" class="compare-img" />
+      <img id="imgOriginal" class="compare-img" alt="Original" />
+      <img id="imgGenerated" class="compare-img" alt="Generated" />
       
       <div id="sliderHandle" class="slider-handle">
         <div class="slider-line"></div>
@@ -412,11 +411,10 @@
       </div>
     </div>
     
-    <!-- Floating Actions Dock -->
     <div style="position: absolute; bottom: calc(var(--safe-bottom) + 30px); left: 50%; transform: translateX(-50%); display: flex; gap: 15px; z-index: 30;">
-      <button id="zoomBtn" class="icon-btn" style="background: var(--white);"><i class="bi bi-arrows-fullscreen"></i></button>
+      <button id="zoomBtn" class="icon-btn" aria-label="Zoom" style="background: var(--white);"><i class="bi bi-arrows-fullscreen"></i></button>
       <button id="downloadBtn" class="btn-pill" style="background: var(--cyan); color: var(--white);">SAVE <i class="bi bi-download"></i></button>
-      <button id="deleteBtn" class="icon-btn" style="background: var(--red); color: var(--white);"><i class="bi bi-trash"></i></button>
+      <button id="deleteBtn" class="icon-btn" aria-label="Delete" style="background: var(--red); color: var(--white);"><i class="bi bi-trash"></i></button>
     </div>
   </div>
 
@@ -435,32 +433,37 @@
   <!-- VIEW 7: Fullscreen Zoom Overlay -->
   <div id="zoomOverlay" class="view-container" style="background: #000; z-index: 70;">
     <div style="position: absolute; top: calc(var(--safe-top) + 20px); left: 20px; right: 20px; display: flex; justify-content: space-between; z-index: 71; pointer-events: none;">
-      <button id="closeZoomBtn" class="icon-btn" style="pointer-events: auto;"><i class="bi bi-x-lg"></i></button>
+      <button id="closeZoomBtn" class="icon-btn" aria-label="Close Zoom" style="pointer-events: auto;"><i class="bi bi-x-lg"></i></button>
       <div class="mode-toggle" style="box-shadow: none; pointer-events: auto;">
-         <button id="zoomOutBtn" class="icon-btn" style="width: 40px; height: 40px; box-shadow: none;"><i class="bi bi-zoom-out"></i></button>
-         <button id="zoomInBtn" class="icon-btn" style="width: 40px; height: 40px; box-shadow: none;"><i class="bi bi-zoom-in"></i></button>
+         <button id="zoomOutBtn" class="icon-btn" aria-label="Zoom Out" style="width: 40px; height: 40px; box-shadow: none;"><i class="bi bi-zoom-out"></i></button>
+         <button id="zoomInBtn" class="icon-btn" aria-label="Zoom In" style="width: 40px; height: 40px; box-shadow: none;"><i class="bi bi-zoom-in"></i></button>
       </div>
     </div>
     <div id="zoomPanContainer" style="width: 100%; height: 100%; overflow: auto; -webkit-overflow-scrolling: touch; display: flex; align-items: flex-start; justify-content: flex-start; background: var(--beige);">
-      <img id="zoomImg" style="width: 100%; height: auto; margin: auto; object-fit: contain; transition: width 0.2s ease-out;" />
+      <img id="zoomImg" style="width: 100%; height: auto; margin: auto; object-fit: contain; transition: width 0.2s ease-out;" alt="Zoomed Result" />
     </div>
   </div>
 
   <script>
-    // --- SUPABASE CONFIGURATION ---
-    const SUPABASE_URL = 'https://rmfubnduytozikcgzvok.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJtZnVibmR1eXRvemlrY2d6dm9rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2OTIyMDgsImV4cCI6MjA5NzI2ODIwOH0.XmxDD8mH8rgq3OZmD7jVophtH2W3NNDgSRJKC3RXvJU';
-    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    // Execute after DOM is fully loaded to ensure Supabase SDK is available
+    window.addEventListener('DOMContentLoaded', () => {
+      
+      // --- SUPABASE CONFIGURATION ---
+      // NOTE: Ensure Row Level Security (RLS) is enabled in your Supabase dashboard 
+      // since Anon Keys are exposed in client-side applications.
+      const SUPABASE_URL = 'https://rmfubnduytozikcgzvok.supabase.co';
+      const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJtZnVibmR1eXRvemlrY2d6dm9rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2OTIyMDgsImV4cCI6MjA5NzI2ODIwOH0.XmxDD8mH8rgq3OZmD7jVophtH2W3NNDgSRJKC3RXvJU';
+      const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    // --- STATE & PROMPT ---
-    let videoStream = null;
-    let currentFacingMode = 'environment';
-    let currentOriginalDataUrl = null; 
-    let selectedGarmentBase64 = null;
-    let allGarments = [];
-    let isCompareMode = true; 
-    
-    const VIRTUAL_TRY_ON_PROMPT = `Edit the **first photo** by replacing only the clothing/outfit with the **exact suit shown in the second reference photo**.
+      // --- STATE & PROMPT ---
+      let videoStream = null;
+      let currentFacingMode = 'environment';
+      let currentOriginalDataUrl = null; 
+      let selectedGarmentBase64 = null;
+      let allGarments = [];
+      let isCompareMode = true; 
+      
+      const VIRTUAL_TRY_ON_PROMPT = `Edit the **first photo** by replacing only the clothing/outfit with the **exact suit shown in the second reference photo**.
 ### Strict preservation requirements
 * Keep my **face 100% unchanged**.
 * Keep my **body position and pose exactly unchanged**.
@@ -469,339 +472,389 @@
 ### Suit replacement
 Use the **second photo only as the clothing reference**. Recreate its suit accurately on my body. The suit must naturally conform to my **existing body position and anatomy**.`;
 
-    let isViewingGalleryItem = false;
-    let currentActiveDocId = null;
-    let currentActiveOrigPath = null;
-    let currentActiveGenPath = null;
+      let isViewingGalleryItem = false;
+      let currentActiveDocId = null;
+      let currentActiveOrigPath = null;
+      let currentActiveGenPath = null;
 
-    // DOM Elements
-    const cameraFeed = document.getElementById('cameraFeed');
-    const cameraView = document.getElementById('cameraView');
-    const garmentSelectView = document.getElementById('garmentSelectView');
-    const processingView = document.getElementById('processingView');
-    const comparisonView = document.getElementById('comparisonView');
-    const libraryView = document.getElementById('libraryView');
-    const addGarmentView = document.getElementById('addGarmentView');
+      // DOM Elements
+      const cameraFeed = document.getElementById('cameraFeed');
+      const cameraView = document.getElementById('cameraView');
+      const garmentSelectView = document.getElementById('garmentSelectView');
+      const processingView = document.getElementById('processingView');
+      const comparisonView = document.getElementById('comparisonView');
+      const libraryView = document.getElementById('libraryView');
+      const addGarmentView = document.getElementById('addGarmentView');
 
-    // UI Navigation Helper (Handles fluid transitions)
-    function showView(viewElement) {
-      [cameraView, garmentSelectView, comparisonView, libraryView].forEach(v => v.classList.remove('active'));
-      if(viewElement) viewElement.classList.add('active');
-    }
+      // --- UTILITIES ---
+      function showView(viewElement) {
+        [cameraView, garmentSelectView, comparisonView, libraryView].forEach(v => v.classList.remove('active'));
+        if(viewElement) viewElement.classList.add('active');
+      }
 
-    // --- CAMERA INIT ---
-    async function initCamera() {
-      if (videoStream) videoStream.getTracks().forEach(track => track.stop());
-      try {
-        videoStream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: currentFacingMode, width: { ideal: 1920 }, height: { ideal: 1080 } },
-          audio: false
-        });
-        cameraFeed.srcObject = videoStream;
-        document.getElementById('cameraErrorMsg').classList.remove('active');
-      } catch (err) { 
+      function showToast(message, isError = false) {
+        const container = document.getElementById('toastContainer');
+        const toast = document.createElement('div');
+        toast.className = `toast ${isError ? 'error' : ''}`;
+        toast.innerHTML = `<i class="bi ${isError ? 'bi-exclamation-triangle' : 'bi-check-circle'}"></i> ${message}`;
+        container.appendChild(toast);
+        setTimeout(() => toast.remove(), 3000);
+      }
+
+      // --- CAMERA INIT ---
+      async function initCamera() {
+        if (videoStream) {
+          videoStream.getTracks().forEach(track => track.stop());
+        }
         try {
-          videoStream = await navigator.mediaDevices.getUserMedia({ video: { width: { ideal: 1920 }, height: { ideal: 1080 } }, audio: false });
+          videoStream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: currentFacingMode, width: { ideal: 1920 }, height: { ideal: 1080 } },
+            audio: false
+          });
           cameraFeed.srcObject = videoStream;
           document.getElementById('cameraErrorMsg').classList.remove('active');
-        } catch (fallbackErr) {
-          document.getElementById('cameraErrorMsg').classList.add('active');
+        } catch (err) { 
+          try {
+            // Fallback for devices without facingMode support
+            videoStream = await navigator.mediaDevices.getUserMedia({ video: { width: { ideal: 1920 }, height: { ideal: 1080 } }, audio: false });
+            cameraFeed.srcObject = videoStream;
+            document.getElementById('cameraErrorMsg').classList.remove('active');
+          } catch (fallbackErr) {
+            document.getElementById('cameraErrorMsg').classList.add('active');
+          }
         }
+        loadGalleryThumbnail();
       }
-      loadGalleryThumbnail();
-    }
 
-    document.getElementById('switchCameraBtn').addEventListener('click', () => {
-      currentFacingMode = currentFacingMode === 'environment' ? 'user' : 'environment';
-      initCamera();
-    });
+      document.getElementById('switchCameraBtn').addEventListener('click', () => {
+        currentFacingMode = currentFacingMode === 'environment' ? 'user' : 'environment';
+        initCamera();
+      });
 
-    // --- IMAGE CAPTURE & UPLOAD (HIGH QUALITY WEB-P) ---
-    function prepareGarmentSelection(source, originalWidth, originalHeight) {
-      const MAX_SIZE = 2048; 
-      let width = originalWidth; let height = originalHeight;
+      // --- IMAGE CAPTURE & UPLOAD ---
+      function prepareGarmentSelection(source, originalWidth, originalHeight) {
+        const MAX_SIZE = 2048; 
+        let width = originalWidth; let height = originalHeight;
+        
+        if (width > height) { if (width > MAX_SIZE) { height = Math.round(height * (MAX_SIZE / width)); width = MAX_SIZE; } } 
+        else { if (height > MAX_SIZE) { width = Math.round(width * (MAX_SIZE / height)); height = MAX_SIZE; } }
+
+        const tempCanvas = document.createElement('canvas');
+        tempCanvas.width = width; tempCanvas.height = height;
+        tempCanvas.getContext('2d').drawImage(source, 0, 0, width, height);
+        
+        currentOriginalDataUrl = tempCanvas.toDataURL('image/webp', 0.9);
+        document.getElementById('capturedThumb').src = currentOriginalDataUrl;
+        
+        selectedGarmentBase64 = null;
+        document.getElementById('generateTryOnBtn').disabled = true;
+        document.getElementById('searchInput').value = '';
+        
+        loadGarments();
+        showView(garmentSelectView);
+      }
+
+      document.getElementById('captureBtn').addEventListener('click', () => {
+        if(!cameraFeed.videoWidth) {
+          showToast("Camera not ready. Please use the upload button.", true);
+          return;
+        }
+        const tempCanvas = document.createElement('canvas');
+        tempCanvas.width = cameraFeed.videoWidth; tempCanvas.height = cameraFeed.videoHeight;
+        tempCanvas.getContext('2d').drawImage(cameraFeed, 0, 0);
+        prepareGarmentSelection(tempCanvas, tempCanvas.width, tempCanvas.height);
+      });
+
+      document.getElementById('uploadBtn').addEventListener('click', () => {
+        const fileInput = document.getElementById('fileInput');
+        fileInput.value = ''; // Reset to allow re-uploading the same file
+        fileInput.click();
+      });
       
-      if (width > height) { if (width > MAX_SIZE) { height = Math.round(height * (MAX_SIZE / width)); width = MAX_SIZE; } } 
-      else { if (height > MAX_SIZE) { width = Math.round(width * (MAX_SIZE / height)); height = MAX_SIZE; } }
-
-      const tempCanvas = document.createElement('canvas');
-      tempCanvas.width = width; tempCanvas.height = height;
-      tempCanvas.getContext('2d').drawImage(source, 0, 0, width, height);
-      
-      currentOriginalDataUrl = tempCanvas.toDataURL('image/webp', 1.0);
-      document.getElementById('capturedThumb').src = currentOriginalDataUrl;
-      
-      selectedGarmentBase64 = null;
-      document.getElementById('generateTryOnBtn').disabled = true;
-      document.getElementById('searchInput').value = '';
-      
-      loadGarments();
-      showView(garmentSelectView);
-    }
-
-    document.getElementById('captureBtn').addEventListener('click', () => {
-      if(!cameraFeed.videoWidth) return alert("Camera not ready. Please use the upload button.");
-      const tempCanvas = document.createElement('canvas');
-      tempCanvas.width = cameraFeed.videoWidth; tempCanvas.height = cameraFeed.videoHeight;
-      tempCanvas.getContext('2d').drawImage(cameraFeed, 0, 0);
-      prepareGarmentSelection(tempCanvas, tempCanvas.width, tempCanvas.height);
-    });
-
-    document.getElementById('uploadBtn').addEventListener('click', () => document.getElementById('fileInput').click());
-    document.getElementById('fileInput').addEventListener('change', (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        const img = new Image();
-        img.onload = () => prepareGarmentSelection(img, img.width, img.height);
-        img.src = event.target.result;
-      };
-      reader.readAsDataURL(file);
-    });
-
-    document.getElementById('cancelSelectBtn').addEventListener('click', () => {
-      showView(cameraView);
-      document.getElementById('fileInput').value = '';
-    });
-
-    // --- ADD GARMENT UI (WITH IMAGE STITCHING) ---
-    document.getElementById('openAddGarmentBtn').addEventListener('click', () => {
-      addGarmentView.classList.add('active');
-    });
-    document.getElementById('closeAddGarmentBtn').addEventListener('click', () => {
-      addGarmentView.classList.remove('active');
-    });
-
-    const garmentPreviewContainer = document.getElementById('garmentPreviewContainer');
-    const garmentFileInput = document.getElementById('garmentFileInput');
-    const garmentPreviewImg = document.getElementById('garmentPreviewImg');
-    let newGarmentDataUrl = null;
-
-    garmentPreviewContainer.addEventListener('click', () => garmentFileInput.click());
-    
-    function loadImageFromFile(file) {
-      return new Promise((resolve, reject) => {
+      document.getElementById('fileInput').addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
         const reader = new FileReader();
-        reader.onload = (e) => {
+        reader.onload = (event) => {
           const img = new Image();
-          img.onload = () => resolve(img);
-          img.onerror = reject;
-          img.src = e.target.result;
+          img.onload = () => prepareGarmentSelection(img, img.width, img.height);
+          img.src = event.target.result;
         };
         reader.readAsDataURL(file);
       });
-    }
 
-    garmentFileInput.addEventListener('change', async (e) => {
-      const files = e.target.files;
-      if (!files || files.length === 0) return;
-      
-      try {
-        if (files.length === 1) {
-          const img = await loadImageFromFile(files[0]);
-          const canvas = document.createElement('canvas');
-          canvas.width = img.width; canvas.height = img.height;
-          canvas.getContext('2d').drawImage(img, 0, 0);
-          newGarmentDataUrl = canvas.toDataURL('image/webp', 1.0);
-        } else if (files.length >= 2) {
-          const img1 = await loadImageFromFile(files[0]);
-          const img2 = await loadImageFromFile(files[1]);
-          
-          const targetHeight = Math.max(img1.height, img2.height);
-          const w1 = img1.width * (targetHeight / img1.height);
-          const w2 = img2.width * (targetHeight / img2.height);
-          
-          const canvas = document.createElement('canvas');
-          canvas.width = w1 + w2; canvas.height = targetHeight;
-          const ctx = canvas.getContext('2d');
-          
-          ctx.fillStyle = '#FFFFFF'; ctx.fillRect(0, 0, canvas.width, canvas.height);
-          ctx.drawImage(img1, 0, 0, w1, targetHeight);
-          ctx.drawImage(img2, w1, 0, w2, targetHeight);
-          
-          newGarmentDataUrl = canvas.toDataURL('image/webp', 1.0);
-        }
-        garmentPreviewImg.src = newGarmentDataUrl;
-        garmentPreviewImg.classList.remove('hidden');
-      } catch (err) { alert("Error loading images: " + err.message); }
-    });
-
-    document.getElementById('saveGarmentBtn').addEventListener('click', async () => {
-      const name = document.getElementById('garmentNameInput').value.trim();
-      if(!name || !newGarmentDataUrl) return alert("Please provide both a name and an image.");
-      
-      const btn = document.getElementById('saveGarmentBtn');
-      const originalHTML = btn.innerHTML;
-      btn.innerHTML = `<div class="loader-spinner" style="width: 24px; height: 24px; border-width: 3px; border-top-color: var(--white); margin: 0 auto;"></div>`;
-      
-      try {
-        const blob = await convertToWebP(newGarmentDataUrl);
-        const path = `garment_${Date.now()}.webp`;
-        await supabaseClient.storage.from('garments').upload(path, blob, { contentType: 'image/webp' });
-        await supabaseClient.from('garments').insert([{ name: name, image_path: path }]);
-        
-        addGarmentView.classList.remove('active');
-        document.getElementById('garmentNameInput').value = '';
-        garmentPreviewImg.classList.add('hidden');
-        newGarmentDataUrl = null; garmentFileInput.value = '';
-        if(garmentSelectView.classList.contains('active')) loadGarments();
-      } catch (err) { alert("Upload failed: " + err.message); } 
-      finally { btn.innerHTML = originalHTML; }
-    });
-
-    // --- GARMENT SELECTION & DELETE LOGIC ---
-    async function loadGarments() {
-      const grid = document.getElementById('garmentsGrid');
-      grid.innerHTML = Array(6).fill(`<div class="card" style="background: #e0e0e0; animation: pulse 1.5s infinite;"></div>`).join('');
-      
-      const { data, error } = await supabaseClient.from('garments').select('*').order('created_at', { ascending: false });
-      if(error) return console.error(error);
-      
-      allGarments = data; renderGarments(allGarments);
-    }
-
-    function renderGarments(garments) {
-      const grid = document.getElementById('garmentsGrid');
-      grid.innerHTML = '';
-      
-      garments.forEach((g, index) => {
-        const url = supabaseClient.storage.from('garments').getPublicUrl(g.image_path).data.publicUrl;
-        const div = document.createElement('div');
-        div.className = "card";
-        div.innerHTML = `
-          <img src="${url}" crossorigin="anonymous" loading="lazy" />
-          ${index === 0 ? '<div class="badge badge-lime">NEW</div>' : ''}
-          <div class="card-label">${g.name}</div>
-          <button class="delete-card-btn"><i class="bi bi-trash"></i></button>
-        `;
-        
-        div.querySelector('.delete-card-btn').onclick = async (e) => {
-          e.stopPropagation(); 
-          if(!confirm(`Delete "${g.name}" from your wardrobe?`)) return;
-          try {
-            await supabaseClient.from('garments').delete().eq('id', g.id);
-            await supabaseClient.storage.from('garments').remove([g.image_path]);
-            loadGarments();
-          } catch(err) { alert("Failed to delete suit."); }
-        };
-
-        div.onclick = async () => {
-          Array.from(grid.children).forEach(c => c.classList.remove('selected'));
-          div.classList.add('selected');
-          
-          const response = await fetch(url);
-          const blob = await response.blob();
-          const reader = new FileReader();
-          reader.onloadend = () => {
-            selectedGarmentBase64 = reader.result.split(',')[1];
-            document.getElementById('generateTryOnBtn').disabled = false;
-          };
-          reader.readAsDataURL(blob);
-        };
-        grid.appendChild(div);
+      document.getElementById('cancelSelectBtn').addEventListener('click', () => {
+        showView(cameraView);
+        document.getElementById('fileInput').value = '';
       });
-    }
 
-    document.getElementById('searchInput').addEventListener('input', (e) => {
-      const term = e.target.value.toLowerCase();
-      renderGarments(allGarments.filter(g => g.name.toLowerCase().includes(term)));
-    });
+      // --- ADD GARMENT UI ---
+      document.getElementById('openAddGarmentBtn').addEventListener('click', () => addGarmentView.classList.add('active'));
+      document.getElementById('closeAddGarmentBtn').addEventListener('click', () => addGarmentView.classList.remove('active'));
 
-    // --- GENERATION & AUTO-SAVE ---
-    document.getElementById('generateTryOnBtn').addEventListener('click', async () => {
-      if(!selectedGarmentBase64) return;
+      const garmentPreviewContainer = document.getElementById('garmentPreviewContainer');
+      const garmentFileInput = document.getElementById('garmentFileInput');
+      const garmentPreviewImg = document.getElementById('garmentPreviewImg');
+      let newGarmentDataUrl = null;
+
+      garmentPreviewContainer.addEventListener('click', () => {
+        garmentFileInput.value = '';
+        garmentFileInput.click();
+      });
       
-      const base64Image = currentOriginalDataUrl.split(',')[1];
-      const btn = document.getElementById('generateTryOnBtn');
-
-      processingView.classList.add('active');
-      let seconds = 0;
-      const timerText = document.getElementById('timerText');
-      timerText.textContent = `STYLING... 0S`;
-      const timer = setInterval(() => { seconds++; timerText.textContent = `STYLING... ${seconds}S`; }, 1000);
-
-      try {
-        const response = await fetch('/api/tryon', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ prompt: VIRTUAL_TRY_ON_PROMPT, image: base64Image, mask: selectedGarmentBase64, model: 'gemini-3.1-flash-image' })
+      function loadImageFromFile(file) {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            const img = new Image();
+            img.onload = () => resolve(img);
+            img.onerror = reject;
+            img.src = e.target.result;
+          };
+          reader.readAsDataURL(file);
         });
-
-        const data = await response.json();
-        if (!response.ok) throw new Error(data.error || "Server error");
-
-        const candidateParts = data.candidates?.[0]?.content?.parts || [];
-        let generatedImgSrc = null;
-
-        candidateParts.forEach((part) => {
-          const inlineImg = part.inlineData || part.inline_data;
-          if (inlineImg && inlineImg.data) {
-            generatedImgSrc = `data:${inlineImg.mimeType || 'image/webp'};base64,${inlineImg.data}`;
-          }
-        });
-
-        if (!generatedImgSrc) throw new Error("No image data returned from AI.");
-
-        timerText.textContent = `SAVING...`;
-        
-        const timestamp = Date.now();
-        const origPath = `original_${timestamp}.webp`;
-        const genPath = `generated_${timestamp}.webp`;
-
-        const origBlob = await convertToWebP(currentOriginalDataUrl);
-        const genBlob = await convertToWebP(generatedImgSrc);
-
-        await Promise.all([
-          supabaseClient.storage.from('photos').upload(origPath, origBlob, { contentType: 'image/webp' }),
-          supabaseClient.storage.from('photos').upload(genPath, genBlob, { contentType: 'image/webp' })
-        ]);
-
-        const { data: insertedData } = await supabaseClient.from('gallery').insert([{ original_image_path: origPath, generated_image_path: genPath }]).select();
-
-        isViewingGalleryItem = false;
-        currentActiveDocId = insertedData[0].id;
-        currentActiveOrigPath = origPath;
-        currentActiveGenPath = genPath;
-
-        document.getElementById('closeComparisonBtn').textContent = "RETAKE";
-        setupComparison(currentOriginalDataUrl, generatedImgSrc);
-        loadGalleryThumbnail();
-
-      } catch (err) {
-        const originalText = btn.innerHTML;
-        btn.textContent = "FAILED - TRY AGAIN";
-        setTimeout(() => { btn.innerHTML = originalText; }, 3000);
-      } finally {
-        clearInterval(timer);
-        processingView.classList.remove('active');
       }
-    });
 
-    // --- CONSTRAINED COMPARISON SLIDER & FULLSCREEN TOGGLE ---
-    function setupComparison(origSrc, genSrc) {
-      document.getElementById('imgOriginal').src = origSrc;
-      document.getElementById('imgGenerated').src = genSrc;
-      setCompareMode(true);
-      showView(comparisonView);
-      initSlider();
-    }
+      garmentFileInput.addEventListener('change', async (e) => {
+        const files = e.target.files;
+        if (!files || files.length === 0) return;
+        
+        try {
+          if (files.length === 1) {
+            const img = await loadImageFromFile(files[0]);
+            const canvas = document.createElement('canvas');
+            canvas.width = img.width; canvas.height = img.height;
+            canvas.getContext('2d').drawImage(img, 0, 0);
+            newGarmentDataUrl = canvas.toDataURL('image/webp', 0.9);
+          } else if (files.length >= 2) {
+            const img1 = await loadImageFromFile(files[0]);
+            const img2 = await loadImageFromFile(files[1]);
+            
+            const targetHeight = Math.max(img1.height, img2.height);
+            const w1 = img1.width * (targetHeight / img1.height);
+            const w2 = img2.width * (targetHeight / img2.height);
+            
+            const canvas = document.createElement('canvas');
+            canvas.width = w1 + w2; canvas.height = targetHeight;
+            const ctx = canvas.getContext('2d');
+            
+            ctx.fillStyle = '#FFFFFF'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(img1, 0, 0, w1, targetHeight);
+            ctx.drawImage(img2, w1, 0, w2, targetHeight);
+            
+            newGarmentDataUrl = canvas.toDataURL('image/webp', 0.9);
+          }
+          garmentPreviewImg.src = newGarmentDataUrl;
+          garmentPreviewImg.classList.remove('hidden');
+        } catch (err) { 
+          showToast("Error loading images.", true); 
+        }
+      });
 
-    function initSlider() {
-      const container = document.getElementById('compareContainer');
+      document.getElementById('saveGarmentBtn').addEventListener('click', async () => {
+        const name = document.getElementById('garmentNameInput').value.trim();
+        if(!name || !newGarmentDataUrl) {
+          showToast("Please provide both a name and an image.", true);
+          return;
+        }
+        
+        const btn = document.getElementById('saveGarmentBtn');
+        const originalHTML = btn.innerHTML;
+        btn.innerHTML = `<div class="loader-spinner" style="width: 24px; height: 24px; border-width: 3px; border-top-color: var(--white); margin: 0 auto;"></div>`;
+        btn.disabled = true;
+        
+        try {
+          const blob = await convertToWebP(newGarmentDataUrl);
+          const path = `garment_${Date.now()}.webp`;
+          await supabaseClient.storage.from('garments').upload(path, blob, { contentType: 'image/webp' });
+          await supabaseClient.from('garments').insert([{ name: name, image_path: path }]);
+          
+          addGarmentView.classList.remove('active');
+          document.getElementById('garmentNameInput').value = '';
+          garmentPreviewImg.classList.add('hidden');
+          newGarmentDataUrl = null; 
+          garmentFileInput.value = '';
+          showToast("Suit added to wardrobe!");
+          if(garmentSelectView.classList.contains('active')) loadGarments();
+        } catch (err) { 
+          showToast("Upload failed.", true); 
+        } finally { 
+          btn.innerHTML = originalHTML;
+          btn.disabled = false;
+        }
+      });
+
+      // --- GARMENT SELECTION ---
+      async function loadGarments() {
+        const grid = document.getElementById('garmentsGrid');
+        grid.innerHTML = Array(6).fill(`<div class="card" style="background: #e0e0e0; animation: pulse 1.5s infinite;"></div>`).join('');
+        
+        const { data, error } = await supabaseClient.from('garments').select('*').order('created_at', { ascending: false });
+        if(error) {
+          showToast("Failed to load wardrobe.", true);
+          return;
+        }
+        
+        allGarments = data; 
+        renderGarments(allGarments);
+      }
+
+      function renderGarments(garments) {
+        const grid = document.getElementById('garmentsGrid');
+        grid.innerHTML = '';
+        
+        if(garments.length === 0) {
+          grid.innerHTML = `<div style="grid-column: span 2; text-align: center; padding: 20px; color: var(--black);">No suits found.</div>`;
+          return;
+        }
+
+        garments.forEach((g, index) => {
+          const url = supabaseClient.storage.from('garments').getPublicUrl(g.image_path).data.publicUrl;
+          const div = document.createElement('div');
+          div.className = "card";
+          div.innerHTML = `
+            <img src="${url}" crossorigin="anonymous" loading="lazy" alt="${g.name}" />
+            ${index === 0 ? '<div class="badge badge-lime">NEW</div>' : ''}
+            <div class="card-label">${g.name}</div>
+            <button class="delete-card-btn" aria-label="Delete Suit"><i class="bi bi-trash"></i></button>
+          `;
+          
+          div.querySelector('.delete-card-btn').onclick = async (e) => {
+            e.stopPropagation(); 
+            if(!confirm(`Delete "${g.name}" from your wardrobe?`)) return;
+            try {
+              await supabaseClient.from('garments').delete().eq('id', g.id);
+              await supabaseClient.storage.from('garments').remove([g.image_path]);
+              showToast("Suit deleted.");
+              loadGarments();
+            } catch(err) { showToast("Failed to delete suit.", true); }
+          };
+
+          div.onclick = async () => {
+            Array.from(grid.children).forEach(c => c.classList.remove('selected'));
+            div.classList.add('selected');
+            
+            try {
+              const response = await fetch(url);
+              const blob = await response.blob();
+              const reader = new FileReader();
+              reader.onloadend = () => {
+                selectedGarmentBase64 = reader.result.split(',')[1];
+                document.getElementById('generateTryOnBtn').disabled = false;
+              };
+              reader.readAsDataURL(blob);
+            } catch(e) {
+              showToast("Error selecting garment.", true);
+            }
+          };
+          grid.appendChild(div);
+        });
+      }
+
+      // Debounced search
+      let searchTimeout;
+      document.getElementById('searchInput').addEventListener('input', (e) => {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+          const term = e.target.value.toLowerCase();
+          renderGarments(allGarments.filter(g => g.name.toLowerCase().includes(term)));
+        }, 300);
+      });
+
+      // --- GENERATION & AUTO-SAVE ---
+      document.getElementById('generateTryOnBtn').addEventListener('click', async () => {
+        if(!selectedGarmentBase64) return;
+        
+        const base64Image = currentOriginalDataUrl.split(',')[1];
+        const btn = document.getElementById('generateTryOnBtn');
+
+        processingView.classList.add('active');
+        let seconds = 0;
+        const timerText = document.getElementById('timerText');
+        timerText.textContent = `STYLING... 0S`;
+        const timer = setInterval(() => { seconds++; timerText.textContent = `STYLING... ${seconds}S`; }, 1000);
+
+        try {
+          const response = await fetch('/api/tryon', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ prompt: VIRTUAL_TRY_ON_PROMPT, image: base64Image, mask: selectedGarmentBase64, model: 'gemini-3.1-flash-image' })
+          });
+
+          const data = await response.json();
+          if (!response.ok) throw new Error(data.error || "Server error");
+
+          const candidateParts = data.candidates?.[0]?.content?.parts || [];
+          let generatedImgSrc = null;
+
+          candidateParts.forEach((part) => {
+            const inlineImg = part.inlineData || part.inline_data;
+            if (inlineImg && inlineImg.data) {
+              generatedImgSrc = `data:${inlineImg.mimeType || 'image/webp'};base64,${inlineImg.data}`;
+            }
+          });
+
+          if (!generatedImgSrc) throw new Error("No image data returned from AI.");
+
+          timerText.textContent = `SAVING...`;
+          
+          const timestamp = Date.now();
+          const origPath = `original_${timestamp}.webp`;
+          const genPath = `generated_${timestamp}.webp`;
+
+          const origBlob = await convertToWebP(currentOriginalDataUrl);
+          const genBlob = await convertToWebP(generatedImgSrc);
+
+          await Promise.all([
+            supabaseClient.storage.from('photos').upload(origPath, origBlob, { contentType: 'image/webp' }),
+            supabaseClient.storage.from('photos').upload(genPath, genBlob, { contentType: 'image/webp' })
+          ]);
+
+          const { data: insertedData } = await supabaseClient.from('gallery').insert([{ original_image_path: origPath, generated_image_path: genPath }]).select();
+
+          isViewingGalleryItem = false;
+          currentActiveDocId = insertedData[0].id;
+          currentActiveOrigPath = origPath;
+          currentActiveGenPath = genPath;
+
+          document.getElementById('closeComparisonBtn').textContent = "RETAKE";
+          setupComparison(currentOriginalDataUrl, generatedImgSrc);
+          loadGalleryThumbnail();
+          showToast("Try-on successful!");
+
+        } catch (err) {
+          const originalText = btn.innerHTML;
+          btn.textContent = "FAILED - TRY AGAIN";
+          showToast("Generation failed. Please try again.", true);
+          setTimeout(() => { btn.innerHTML = originalText; }, 3000);
+        } finally {
+          clearInterval(timer);
+          processingView.classList.remove('active');
+        }
+      });
+
+      // --- CONSTRAINED COMPARISON SLIDER (OPTIMIZED) ---
+      const compareContainer = document.getElementById('compareContainer');
       const imgGen = document.getElementById('imgGenerated');
-      const slider = document.getElementById('sliderHandle');
+      const sliderHandle = document.getElementById('sliderHandle');
       let isSliding = false;
 
-      imgGen.style.clipPath = `polygon(50% 0, 100% 0, 100% 100%, 50% 100%)`;
-      slider.style.left = `50%`;
+      function setupComparison(origSrc, genSrc) {
+        document.getElementById('imgOriginal').src = origSrc;
+        imgGen.src = genSrc;
+        setCompareMode(true);
+        showView(comparisonView);
+        // Reset slider position
+        imgGen.style.clipPath = `polygon(50% 0, 100% 0, 100% 100%, 50% 100%)`;
+        sliderHandle.style.left = `50%`;
+      }
 
-      function slide(e) {
+      function handleSlide(e) {
         if (!isSliding || !isCompareMode) return;
         if(e.cancelable) e.preventDefault(); 
         
         let clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
-        const rect = container.getBoundingClientRect();
+        const rect = compareContainer.getBoundingClientRect();
         
         let x = clientX - rect.left;
         x = Math.max(0, Math.min(x, rect.width));
@@ -813,157 +866,165 @@ Use the **second photo only as the clothing reference**. Recreate its suit accur
         let handleX = Math.max(handleWidth / 2, Math.min(x, rect.width - handleWidth / 2));
         let handlePercent = (handleX / rect.width) * 100;
         
-        slider.style.left = `${handlePercent}%`;
+        sliderHandle.style.left = `${handlePercent}%`;
       }
 
-      container.addEventListener('mousedown', (e) => { isSliding = true; slide(e); });
+      // Attach event listeners ONLY ONCE to prevent memory leaks and exponential firing
+      compareContainer.addEventListener('mousedown', (e) => { isSliding = true; handleSlide(e); });
       window.addEventListener('mouseup', () => { isSliding = false; });
-      window.addEventListener('mousemove', slide);
+      window.addEventListener('mousemove', handleSlide);
 
-      container.addEventListener('touchstart', (e) => { isSliding = true; slide(e); }, { passive: false });
+      compareContainer.addEventListener('touchstart', (e) => { isSliding = true; handleSlide(e); }, { passive: false });
       window.addEventListener('touchend', () => { isSliding = false; });
-      window.addEventListener('touchmove', slide, { passive: false });
-    }
+      window.addEventListener('touchmove', handleSlide, { passive: false });
 
-    const btnCompare = document.getElementById('modeCompareBtn');
-    const btnResult = document.getElementById('modeResultBtn');
-    const sliderHandle = document.getElementById('sliderHandle');
-    const imgGen = document.getElementById('imgGenerated');
+      const btnCompare = document.getElementById('modeCompareBtn');
+      const btnResult = document.getElementById('modeResultBtn');
 
-    function setCompareMode(isCompare) {
-      isCompareMode = isCompare;
-      if (isCompare) {
-        btnCompare.classList.add('active'); btnResult.classList.remove('active');
-        sliderHandle.style.display = 'flex';
-        imgGen.style.clipPath = `polygon(50% 0, 100% 0, 100% 100%, 50% 100%)`;
-        sliderHandle.style.left = `50%`;
-      } else {
-        btnCompare.classList.remove('active'); btnResult.classList.add('active');
-        sliderHandle.style.display = 'none';
-        imgGen.style.clipPath = `polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)`;
+      function setCompareMode(isCompare) {
+        isCompareMode = isCompare;
+        if (isCompare) {
+          btnCompare.classList.add('active'); btnResult.classList.remove('active');
+          sliderHandle.style.display = 'flex';
+          imgGen.style.clipPath = `polygon(50% 0, 100% 0, 100% 100%, 50% 100%)`;
+          sliderHandle.style.left = `50%`;
+        } else {
+          btnCompare.classList.remove('active'); btnResult.classList.add('active');
+          sliderHandle.style.display = 'none';
+          imgGen.style.clipPath = `polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)`;
+        }
       }
-    }
 
-    btnCompare.addEventListener('click', () => setCompareMode(true));
-    btnResult.addEventListener('click', () => setCompareMode(false));
+      btnCompare.addEventListener('click', () => setCompareMode(true));
+      btnResult.addEventListener('click', () => setCompareMode(false));
 
-    // --- FULLSCREEN ZOOM HANDLING ---
-    const zoomOverlay = document.getElementById('zoomOverlay');
-    const zoomImg = document.getElementById('zoomImg');
-    const zoomPanContainer = document.getElementById('zoomPanContainer');
-    let currentZoom = 1; let initialDistance = null; let initialZoom = 1;
+      // --- FULLSCREEN ZOOM HANDLING ---
+      const zoomOverlay = document.getElementById('zoomOverlay');
+      const zoomImg = document.getElementById('zoomImg');
+      const zoomPanContainer = document.getElementById('zoomPanContainer');
+      let currentZoom = 1; let initialDistance = null; let initialZoom = 1;
 
-    function applyZoom() { zoomImg.style.width = `${currentZoom * 100}%`; }
+      function applyZoom() { zoomImg.style.width = `${currentZoom * 100}%`; }
 
-    document.getElementById('zoomBtn').addEventListener('click', () => {
-      zoomImg.src = document.getElementById('imgGenerated').src;
-      zoomOverlay.classList.add('active');
-      currentZoom = 1; applyZoom();
-    });
-
-    document.getElementById('closeZoomBtn').addEventListener('click', () => zoomOverlay.classList.remove('active'));
-    document.getElementById('zoomInBtn').addEventListener('click', () => { currentZoom = Math.min(currentZoom + 0.5, 5); applyZoom(); });
-    document.getElementById('zoomOutBtn').addEventListener('click', () => { currentZoom = Math.max(currentZoom - 0.5, 1); applyZoom(); });
-
-    zoomPanContainer.addEventListener('touchstart', (e) => {
-      if (e.touches.length === 2) {
-        initialDistance = Math.hypot(e.touches[0].pageX - e.touches[1].pageX, e.touches[0].pageY - e.touches[1].pageY);
-        initialZoom = currentZoom;
-      }
-    });
-    zoomPanContainer.addEventListener('touchmove', (e) => {
-      if (e.touches.length === 2 && initialDistance) {
-        e.preventDefault();
-        const currentDistance = Math.hypot(e.touches[0].pageX - e.touches[1].pageX, e.touches[0].pageY - e.touches[1].pageY);
-        const scale = currentDistance / initialDistance;
-        currentZoom = Math.min(Math.max(initialZoom * scale, 1), 5);
-        applyZoom();
-      }
-    }, { passive: false });
-    zoomPanContainer.addEventListener('touchend', (e) => { if (e.touches.length < 2) initialDistance = null; });
-
-    // --- UTILS & GALLERY ACTIONS ---
-    async function convertToWebP(src) {
-      return new Promise((resolve, reject) => {
-        const img = new Image(); img.crossOrigin = 'Anonymous'; 
-        img.onload = () => {
-          const canvas = document.createElement('canvas');
-          canvas.width = img.width; canvas.height = img.height;
-          canvas.getContext('2d').drawImage(img, 0, 0);
-          canvas.toBlob((blob) => resolve(blob), 'image/webp', 1.0);
-        };
-        img.onerror = reject; img.src = src;
+      document.getElementById('zoomBtn').addEventListener('click', () => {
+        zoomImg.src = document.getElementById('imgGenerated').src;
+        zoomOverlay.classList.add('active');
+        currentZoom = 1; applyZoom();
       });
-    }
 
-    document.getElementById('deleteBtn').addEventListener('click', async () => {
-      if(!confirm("Delete this try-on from your gallery?")) return;
-      try {
-        await supabaseClient.from('gallery').delete().eq('id', currentActiveDocId);
-        await supabaseClient.storage.from('photos').remove([currentActiveOrigPath, currentActiveGenPath]);
-        if(isViewingGalleryItem) { showView(libraryView); loadGallery(); } else { showView(cameraView); }
-        loadGalleryThumbnail();
-      } catch (err) { alert("Failed to delete."); }
-    });
+      document.getElementById('closeZoomBtn').addEventListener('click', () => zoomOverlay.classList.remove('active'));
+      document.getElementById('zoomInBtn').addEventListener('click', () => { currentZoom = Math.min(currentZoom + 0.5, 5); applyZoom(); });
+      document.getElementById('zoomOutBtn').addEventListener('click', () => { currentZoom = Math.max(currentZoom - 0.5, 1); applyZoom(); });
 
-    document.getElementById('downloadBtn').addEventListener('click', async () => {
-      try {
-        const response = await fetch(document.getElementById('imgGenerated').src);
-        const blob = await response.blob();
-        const blobUrl = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = blobUrl; link.download = `VirtualTryOn_${Date.now()}.webp`;
-        document.body.appendChild(link); link.click(); document.body.removeChild(link); URL.revokeObjectURL(blobUrl);
-      } catch (err) { alert("Failed to download."); }
-    });
+      zoomPanContainer.addEventListener('touchstart', (e) => {
+        if (e.touches.length === 2) {
+          initialDistance = Math.hypot(e.touches[0].pageX - e.touches[1].pageX, e.touches[0].pageY - e.touches[1].pageY);
+          initialZoom = currentZoom;
+        }
+      });
+      zoomPanContainer.addEventListener('touchmove', (e) => {
+        if (e.touches.length === 2 && initialDistance) {
+          e.preventDefault();
+          const currentDistance = Math.hypot(e.touches[0].pageX - e.touches[1].pageX, e.touches[0].pageY - e.touches[1].pageY);
+          const scale = currentDistance / initialDistance;
+          currentZoom = Math.min(Math.max(initialZoom * scale, 1), 5);
+          applyZoom();
+        }
+      }, { passive: false });
+      zoomPanContainer.addEventListener('touchend', (e) => { if (e.touches.length < 2) initialDistance = null; });
 
-    document.getElementById('closeComparisonBtn').addEventListener('click', () => {
-      if(isViewingGalleryItem) showView(libraryView); else showView(cameraView);
-    });
-
-    // --- LIBRARY GALLERY ---
-    document.getElementById('openLibraryBtn').addEventListener('click', () => {
-      showView(libraryView); loadGallery();
-    });
-    document.getElementById('closeLibraryBtn').addEventListener('click', () => showView(cameraView));
-
-    async function loadGalleryThumbnail() {
-      const { data } = await supabaseClient.from('gallery').select('generated_image_path').order('created_at', { ascending: false }).limit(1);
-      if (data && data.length > 0) {
-        const { data: { publicUrl } } = supabaseClient.storage.from('photos').getPublicUrl(data[0].generated_image_path);
-        document.getElementById('openLibraryBtn').style.backgroundImage = `url('${publicUrl}')`;
-      } else {
-        document.getElementById('openLibraryBtn').style.backgroundImage = 'none';
-      }
-    }
-
-    async function loadGallery() {
-      const grid = document.getElementById('galleryGrid');
-      grid.innerHTML = Array(6).fill(`<div class="card" style="background: #e0e0e0; animation: pulse 1.5s infinite;"></div>`).join('');
-      
-      const { data: docs, error } = await supabaseClient.from('gallery').select('*').order('created_at', { ascending: false });
-      if (!error && docs) {
-        grid.innerHTML = '';
-        docs.forEach(doc => {
-          const genUrl = supabaseClient.storage.from('photos').getPublicUrl(doc.generated_image_path).data.publicUrl;
-          const origUrl = supabaseClient.storage.from('photos').getPublicUrl(doc.original_image_path).data.publicUrl;
-          
-          const div = document.createElement('div');
-          div.className = "card";
-          div.innerHTML = `<img src="${genUrl}" loading="lazy" />`;
-          
-          div.onclick = () => {
-            isViewingGalleryItem = true;
-            currentActiveDocId = doc.id; currentActiveOrigPath = doc.original_image_path; currentActiveGenPath = doc.generated_image_path;
-            document.getElementById('closeComparisonBtn').textContent = "BACK";
-            setupComparison(origUrl, genUrl);
+      // --- UTILS & GALLERY ACTIONS ---
+      async function convertToWebP(src) {
+        return new Promise((resolve, reject) => {
+          const img = new Image(); img.crossOrigin = 'Anonymous'; 
+          img.onload = () => {
+            const canvas = document.createElement('canvas');
+            canvas.width = img.width; canvas.height = img.height;
+            canvas.getContext('2d').drawImage(img, 0, 0);
+            canvas.toBlob((blob) => resolve(blob), 'image/webp', 0.9);
           };
-          grid.appendChild(div);
+          img.onerror = reject; img.src = src;
         });
       }
-    }
 
-    window.onload = initCamera;
+      document.getElementById('deleteBtn').addEventListener('click', async () => {
+        if(!confirm("Delete this try-on from your gallery?")) return;
+        try {
+          await supabaseClient.from('gallery').delete().eq('id', currentActiveDocId);
+          await supabaseClient.storage.from('photos').remove([currentActiveOrigPath, currentActiveGenPath]);
+          showToast("Photo deleted.");
+          if(isViewingGalleryItem) { showView(libraryView); loadGallery(); } else { showView(cameraView); }
+          loadGalleryThumbnail();
+        } catch (err) { showToast("Failed to delete.", true); }
+      });
+
+      document.getElementById('downloadBtn').addEventListener('click', async () => {
+        try {
+          const response = await fetch(document.getElementById('imgGenerated').src);
+          const blob = await response.blob();
+          const blobUrl = URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = blobUrl; link.download = `VirtualTryOn_${Date.now()}.webp`;
+          document.body.appendChild(link); link.click(); document.body.removeChild(link); URL.revokeObjectURL(blobUrl);
+          showToast("Image downloaded!");
+        } catch (err) { showToast("Failed to download.", true); }
+      });
+
+      document.getElementById('closeComparisonBtn').addEventListener('click', () => {
+        if(isViewingGalleryItem) showView(libraryView); else showView(cameraView);
+      });
+
+      // --- LIBRARY GALLERY ---
+      document.getElementById('openLibraryBtn').addEventListener('click', () => {
+        showView(libraryView); loadGallery();
+      });
+      document.getElementById('closeLibraryBtn').addEventListener('click', () => showView(cameraView));
+
+      async function loadGalleryThumbnail() {
+        const { data } = await supabaseClient.from('gallery').select('generated_image_path').order('created_at', { ascending: false }).limit(1);
+        if (data && data.length > 0) {
+          const { data: { publicUrl } } = supabaseClient.storage.from('photos').getPublicUrl(data[0].generated_image_path);
+          document.getElementById('openLibraryBtn').style.backgroundImage = `url('${publicUrl}')`;
+        } else {
+          document.getElementById('openLibraryBtn').style.backgroundImage = 'none';
+        }
+      }
+
+      async function loadGallery() {
+        const grid = document.getElementById('galleryGrid');
+        grid.innerHTML = Array(6).fill(`<div class="card" style="background: #e0e0e0; animation: pulse 1.5s infinite;"></div>`).join('');
+        
+        const { data: docs, error } = await supabaseClient.from('gallery').select('*').order('created_at', { ascending: false });
+        if (!error && docs) {
+          grid.innerHTML = '';
+          if(docs.length === 0) {
+            grid.innerHTML = `<div style="grid-column: span 2; text-align: center; padding: 20px; color: var(--black);">Gallery is empty.</div>`;
+            return;
+          }
+          docs.forEach(doc => {
+            const genUrl = supabaseClient.storage.from('photos').getPublicUrl(doc.generated_image_path).data.publicUrl;
+            const origUrl = supabaseClient.storage.from('photos').getPublicUrl(doc.original_image_path).data.publicUrl;
+            
+            const div = document.createElement('div');
+            div.className = "card";
+            div.innerHTML = `<img src="${genUrl}" loading="lazy" alt="Gallery Try-On" />`;
+            
+            div.onclick = () => {
+              isViewingGalleryItem = true;
+              currentActiveDocId = doc.id; currentActiveOrigPath = doc.original_image_path; currentActiveGenPath = doc.generated_image_path;
+              document.getElementById('closeComparisonBtn').textContent = "BACK";
+              setupComparison(origUrl, genUrl);
+            };
+            grid.appendChild(div);
+          });
+        } else {
+          showToast("Failed to load gallery.", true);
+        }
+      }
+
+      // Initialize Application
+      initCamera();
+    });
   </script>
 </body>
 </html>
