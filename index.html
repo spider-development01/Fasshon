@@ -3,33 +3,47 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <title>Virtual Try-On Studio</title>
+  <title>FASSHON - Virtual Try-On</title>
   
   <!-- Supabase Web SDK -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <!-- Bootstrap Icons -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
   
+  <!-- Google Fonts: Bold Brutalist Typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo+Black&family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
+  
   <style>
     /* =========================================
-       CSS VARIABLES & RESET
+       CSS VARIABLES: EURO-BRUTALISM SCHEME
        ========================================= */
     :root {
-      --bg-color: #000000;
-      --surface-color: #121212;
-      --surface-light: #1e1e1e;
-      --accent-color: #0a84ff;
-      --accent-hover: #0070e6;
-      --danger-color: #ff453a;
-      --text-main: #ffffff;
-      --text-muted: #8e8e93;
-      --border-color: rgba(255, 255, 255, 0.1);
-      --glass-bg: rgba(18, 18, 18, 0.65);
-      --glass-border: rgba(255, 255, 255, 0.08);
-      --radius-sm: 8px;
-      --radius-md: 16px;
-      --radius-lg: 24px;
-      --radius-full: 9999px;
+      /* Palette */
+      --beige: #F4F4F0;
+      --white: #FFFFFF;
+      --black: #1A1A1A;
+      --red: #FF4742;
+      --lime: #D4FF00;
+      --cyan: #1597D0;
+      --pink: #F04A83;
+      
+      /* Typography */
+      --font-display: 'Anton', sans-serif;
+      --font-bold: 'Archivo Black', sans-serif;
+      --font-body: 'Noto Sans JP', sans-serif;
+
+      /* Structural */
+      --border-thick: 3px solid var(--black);
+      --shadow-solid: 6px 6px 0px var(--black);
+      --shadow-sm: 4px 4px 0px var(--black);
+      --radius-card: 16px;
+      --radius-pill: 100px;
+      
+      /* Animation */
+      --bounce: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      
       --safe-top: env(safe-area-inset-top, 0px);
       --safe-bottom: env(safe-area-inset-bottom, 0px);
     }
@@ -37,9 +51,9 @@
     * { box-sizing: border-box; margin: 0; padding: 0; }
     
     body {
-      background-color: var(--bg-color);
-      color: var(--text-main);
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background-color: var(--beige);
+      color: var(--black);
+      font-family: var(--font-body);
       overflow: hidden;
       overscroll-behavior-y: contain;
       touch-action: manipulation;
@@ -48,140 +62,196 @@
     }
 
     /* =========================================
-       TYPOGRAPHY & UTILITIES
+       TYPOGRAPHY & BRANDING
        ========================================= */
-    .label-text { font-size: 0.75rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted); }
-    .label-text.accent { color: var(--accent-color); }
-    .hidden { display: none !important; }
-    .fade-in { animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+    h1, h2, h3 { font-family: var(--font-bold); text-transform: uppercase; letter-spacing: -1px; line-height: 1; margin: 0; }
+    .text-red { color: var(--red); }
+    .text-cyan { color: var(--cyan); }
     
-    @keyframes fadeIn {
-      from { opacity: 0; transform: scale(0.98); }
-      to { opacity: 1; transform: scale(1); }
+    .brand-logo {
+      font-family: var(--font-display);
+      font-size: 2.5rem;
+      color: var(--black);
+      text-shadow: 3px 3px 0px var(--cyan);
+      letter-spacing: 2px;
+      line-height: 1;
+      pointer-events: auto;
     }
-    @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* =========================================
-       LAYOUT & VIEWS
-       ========================================= */
+    /* View Transition System */
     .view-container {
-      position: absolute;
-      inset: 0;
-      display: flex;
-      flex-direction: column;
-      background-color: var(--bg-color);
+      position: absolute; inset: 0;
+      background-color: var(--beige);
+      display: flex; flex-direction: column;
       z-index: 10;
+      opacity: 0; pointer-events: none; visibility: hidden;
+      transition: opacity 0.3s ease, visibility 0.3s ease;
     }
-
-    .glass-header {
-      background: var(--glass-bg);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border-bottom: 1px solid var(--glass-border);
-      padding: calc(var(--safe-top) + 16px) 20px 16px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      z-index: 20;
-    }
-
-    .glass-footer {
-      background: var(--glass-bg);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border-top: 1px solid var(--glass-border);
-      padding: 16px 20px calc(var(--safe-bottom) + 24px);
-      display: flex;
-      justify-content: space-around;
-      align-items: center;
-      z-index: 20;
+    .view-container.active {
+      opacity: 1; pointer-events: all; visibility: visible;
     }
 
     /* =========================================
-       BUTTONS & INPUTS
+       BUTTONS & UI ELEMENTS (BRUTALIST)
        ========================================= */
     button {
       background: none; border: none; color: inherit; cursor: pointer;
-      font-family: inherit; transition: transform 0.15s ease, opacity 0.15s ease;
+      font-family: var(--font-bold); text-transform: uppercase;
+      transition: transform 0.2s var(--bounce), box-shadow 0.2s var(--bounce);
     }
-    button:active { transform: scale(0.92); opacity: 0.8; }
-    button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+    button:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; box-shadow: none !important; }
+
+    .btn-pill {
+      background: var(--white); color: var(--black);
+      border: var(--border-thick); border-radius: var(--radius-pill);
+      padding: 12px 24px; font-size: 1rem; font-weight: 900;
+      box-shadow: var(--shadow-sm); display: flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    .btn-pill:active { transform: translate(4px, 4px); box-shadow: 0px 0px 0px var(--black); }
+    
+    .btn-primary {
+      background: var(--red); color: var(--white);
+      border: var(--border-thick); border-radius: var(--radius-pill);
+      padding: 18px 30px; font-size: 1.1rem; width: 100%;
+      box-shadow: var(--shadow-solid);
+    }
+    .btn-primary:active { transform: translate(6px, 6px); box-shadow: 0px 0px 0px var(--black); }
 
     .icon-btn {
-      width: 44px; height: 44px; border-radius: var(--radius-full);
-      background: var(--surface-light); display: flex; align-items: center; justify-content: center;
-      font-size: 1.25rem; border: 1px solid var(--border-color);
+      width: 50px; height: 50px; border-radius: 50%;
+      background: var(--white); border: var(--border-thick);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.2rem; box-shadow: var(--shadow-sm); flex-shrink: 0;
     }
-
-    .btn-primary {
-      background: var(--accent-color); color: #fff; font-weight: 700;
-      padding: 16px; border-radius: var(--radius-md); width: 100%;
-      text-transform: uppercase; letter-spacing: 0.05em; font-size: 1rem;
-    }
-    .btn-primary:hover { background: var(--accent-hover); }
-
-    .shutter-btn {
-      width: 72px; height: 72px; border-radius: var(--radius-full);
-      background: #fff; border: 4px solid var(--bg-color);
-      outline: 3px solid #fff; box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-    }
+    .icon-btn:active { transform: translate(4px, 4px); box-shadow: 0px 0px 0px var(--black); }
 
     .input-field {
-      width: 100%; background: var(--surface-light); color: var(--text-main);
-      border: 1px solid var(--border-color); padding: 14px 16px;
-      border-radius: var(--radius-md); font-size: 1rem; outline: none;
+      width: 100%; background: var(--white); color: var(--black);
+      border: var(--border-thick); border-radius: 12px; padding: 16px;
+      font-size: 1rem; font-family: var(--font-body); font-weight: 700;
+      box-shadow: inset 3px 3px 0px rgba(0,0,0,0.05); outline: none;
       transition: border-color 0.2s ease;
     }
-    .input-field:focus { border-color: var(--accent-color); }
+    .input-field:focus { border-color: var(--cyan); box-shadow: var(--shadow-sm); }
 
     /* =========================================
-       CAMERA & MEDIA
+       CAMERA & FLOATING DOCKS
        ========================================= */
-    .camera-wrapper { flex: 1; position: relative; overflow: hidden; background: #000; }
+    .camera-wrapper { 
+      position: absolute; inset: 0; 
+      background: var(--black); z-index: 10;
+    }
     #cameraFeed { position: absolute; width: 100%; height: 100%; object-fit: cover; }
     
     .error-overlay {
       position: absolute; inset: 0; display: flex; flex-direction: column;
-      align-items: center; justify-content: center; background: rgba(0,0,0,0.8);
-      z-index: 30; padding: 20px; text-align: center; gap: 12px;
+      align-items: center; justify-content: center; background: var(--beige);
+      z-index: 20; text-align: center; padding: 20px;
+      opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
+    }
+    .error-overlay.active { opacity: 1; pointer-events: all; }
+
+    /* Floating UI Layers (Always on top of camera) */
+    .top-bar {
+      position: absolute; top: calc(var(--safe-top) + 20px); left: 20px; right: 20px;
+      display: flex; justify-content: space-between; align-items: center; 
+      z-index: 50; pointer-events: none; /* Let clicks pass through empty space */
+    }
+    .top-bar > * { pointer-events: auto; }
+
+    .floating-dock {
+      position: absolute; bottom: calc(var(--safe-bottom) + 30px); left: 50%; transform: translateX(-50%);
+      background: var(--white); border: var(--border-thick); border-radius: var(--radius-pill);
+      padding: 10px 20px; display: flex; align-items: center; gap: 20px;
+      box-shadow: var(--shadow-solid); z-index: 50; pointer-events: auto;
     }
 
+    .shutter-btn {
+      width: 64px; height: 64px; border-radius: 50%;
+      background: var(--red); border: var(--border-thick);
+      outline: 4px solid var(--white); box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+      flex-shrink: 0;
+    }
+    .shutter-btn:active { transform: scale(0.9); box-shadow: inset 0 4px 10px rgba(0,0,0,0.5); }
+
     /* =========================================
-       GRIDS (WARDROBE & GALLERY)
+       GRIDS & CARDS
        ========================================= */
-    .content-area { flex: 1; overflow-y: auto; padding: 16px; padding-bottom: calc(var(--safe-bottom) + 100px); }
+    .content-area { flex: 1; overflow-y: auto; padding: 20px; padding-bottom: calc(var(--safe-bottom) + 120px); }
     
-    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
     
-    .grid-item {
-      aspect-ratio: 1; background: var(--surface-light); border-radius: var(--radius-sm);
+    .card {
+      background: var(--white); border: var(--border-thick); border-radius: var(--radius-card);
       overflow: hidden; position: relative; cursor: pointer;
-      border: 2px solid transparent; transition: all 0.2s ease;
+      box-shadow: var(--shadow-sm); transition: transform 0.2s var(--bounce);
+      aspect-ratio: 4/5; display: flex; flex-direction: column;
     }
-    .grid-item img { width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
-    .grid-item.selected { border-color: var(--accent-color); transform: scale(0.95); }
+    .card:active { transform: scale(0.95); }
+    .card.selected { border-color: var(--cyan); box-shadow: 0 0 0 4px var(--cyan), var(--shadow-sm); }
     
-    .grid-item-label {
-      position: absolute; bottom: 0; left: 0; right: 0;
-      background: linear-gradient(transparent, rgba(0,0,0,0.9));
-      padding: 16px 4px 4px; font-size: 0.65rem; font-weight: 600;
+    .card img { width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
+    
+    .card-label {
+      position: absolute; bottom: 10px; left: 10px; right: 10px;
+      background: var(--white); border: 2px solid var(--black); border-radius: var(--radius-pill);
+      padding: 6px 10px; font-size: 0.7rem; font-family: var(--font-bold);
       text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      box-shadow: 2px 2px 0px var(--black);
     }
 
+    .badge {
+      position: absolute; top: 10px; right: 10px;
+      padding: 4px 8px; font-weight: 900; font-size: 0.65rem;
+      border: 2px solid var(--black); z-index: 5; text-transform: uppercase;
+      transform: rotate(4deg); box-shadow: 2px 2px 0px var(--black);
+    }
+    .badge-lime { background: var(--lime); color: var(--black); }
+    
+    .delete-card-btn {
+      position: absolute; top: 10px; left: 10px; background: var(--red);
+      color: var(--white); border: 2px solid var(--black); width: 32px; height: 32px;
+      border-radius: 50%; display: flex; align-items: center; justify-content: center; z-index: 10;
+      box-shadow: 2px 2px 0px var(--black);
+    }
+    .delete-card-btn:active { transform: translate(2px, 2px); box-shadow: 0 0 0 var(--black); }
+
     /* =========================================
-       COMPARISON SLIDER & FULLSCREEN
+       MODALS & OVERLAYS
+       ========================================= */
+    .overlay-view {
+      position: fixed; inset: 0; z-index: 60; 
+      background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(5px);
+      display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px;
+      opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
+    }
+    .overlay-view.active { opacity: 1; pointer-events: all; }
+    
+    .modal-card {
+      background: var(--beige); border: var(--border-thick);
+      border-radius: 24px; width: 100%; max-width: 420px; padding: 30px;
+      display: flex; flex-direction: column; gap: 20px; 
+      box-shadow: 12px 12px 0px var(--cyan);
+      transform: translateY(40px) scale(0.95); transition: transform 0.4s var(--bounce);
+    }
+    .overlay-view.active .modal-card { transform: translateY(0) scale(1); }
+
+    .preview-box {
+      width: 100%; aspect-ratio: 1; background: var(--white);
+      border: 3px dashed var(--black); border-radius: 16px;
+      display: flex; align-items: center; justify-content: center;
+      overflow: hidden; cursor: pointer; position: relative;
+    }
+    .preview-box img { width: 100%; height: 100%; object-fit: contain; }
+
+    /* =========================================
+       COMPARISON SLIDER
        ========================================= */
     .compare-wrapper {
-      flex: 1; position: relative; overflow: hidden; background: var(--bg-color);
-      display: flex; align-items: center; justify-content: center;
+      flex: 1; position: relative; overflow: hidden; background: var(--white);
+      border-bottom: var(--border-thick); border-radius: 0 0 24px 24px;
     }
-    
-    .compare-img {
-      position: absolute; inset: 0; width: 100%; height: 100%;
-      object-fit: contain; pointer-events: none;
-    }
-
-    /* Clip path reveals the generated image on the right side */
+    .compare-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; pointer-events: none; }
     #imgGenerated { clip-path: polygon(50% 0, 100% 0, 100% 100%, 50% 100%); }
 
     .slider-handle {
@@ -189,154 +259,140 @@
       transform: translateX(-50%); cursor: ew-resize; z-index: 20;
       display: flex; align-items: center; justify-content: center;
     }
-    .slider-line { position: absolute; top: 0; bottom: 0; width: 2px; background: #fff; box-shadow: 0 0 10px rgba(0,0,0,0.5); }
+    .slider-line { position: absolute; top: 0; bottom: 0; width: 4px; background: var(--black); }
     .slider-btn {
-      position: relative; width: 36px; height: 36px; background: #fff;
-      border-radius: 50%; display: flex; align-items: center; justify-content: center;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.3); color: #000; font-size: 1.2rem;
+      position: relative; width: 44px; height: 44px; background: var(--lime);
+      border: var(--border-thick); border-radius: 50%; display: flex; align-items: center; justify-content: center;
+      box-shadow: 4px 4px 0px var(--black); color: var(--black); font-size: 1.2rem;
     }
 
     /* View Mode Toggle */
     .mode-toggle {
-      display: flex; background: var(--surface-light); border-radius: var(--radius-full);
-      padding: 4px; gap: 4px; margin: 0 auto;
+      display: flex; background: var(--white); border: var(--border-thick);
+      border-radius: var(--radius-pill); padding: 4px; gap: 4px;
+      box-shadow: var(--shadow-sm);
     }
     .mode-btn {
-      padding: 6px 16px; border-radius: var(--radius-full); font-size: 0.8rem;
-      font-weight: 600; color: var(--text-muted); transition: all 0.2s ease;
+      padding: 8px 16px; border-radius: var(--radius-pill); font-size: 0.8rem;
+      color: var(--black); transition: background 0.2s ease;
     }
-    .mode-btn.active { background: var(--surface-color); color: var(--text-main); box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
+    .mode-btn.active { background: var(--black); color: var(--white); }
 
-    /* =========================================
-       MODALS & OVERLAYS
-       ========================================= */
-    .overlay-view {
-      position: fixed; inset: 0; z-index: 50; background: rgba(0,0,0,0.85);
-      backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
-      display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px;
-    }
-    .modal-card {
-      background: var(--surface-color); border: 1px solid var(--border-color);
-      border-radius: var(--radius-lg); width: 100%; max-width: 400px; padding: 24px;
-      display: flex; flex-direction: column; gap: 20px; box-shadow: 0 20px 40px rgba(0,0,0,0.5);
-    }
-    
-    .preview-box {
-      width: 100%; aspect-ratio: 1; background: var(--surface-light);
-      border-radius: var(--radius-md); border: 2px dashed var(--border-color);
-      display: flex; align-items: center; justify-content: center;
-      overflow: hidden; cursor: pointer; position: relative;
-    }
-    .preview-box img { width: 100%; height: 100%; object-fit: cover; }
-
+    /* Loading Skeleton/Spinner */
     .loader-spinner {
-      width: 50px; height: 50px; border: 4px solid var(--border-color);
-      border-top-color: var(--accent-color); border-radius: 50%; animation: spin 1s linear infinite;
+      width: 60px; height: 60px; border: 6px solid var(--black);
+      border-top-color: var(--lime); border-radius: 50%; animation: spin 1s linear infinite;
     }
   </style>
 </head>
 <body>
 
   <!-- VIEW 1: Camera Interface -->
-  <div id="cameraView" class="view-container">
-    <div class="glass-header">
-      <button id="openAddGarmentBtn" class="icon-btn"><i class="bi bi-plus-lg"></i></button>
-      <span class="label-text accent">Try-On Camera</span>
-      <button id="uploadBtn" class="icon-btn"><i class="bi bi-image"></i></button>
-      <input type="file" id="fileInput" class="hidden" accept="image/*" />
+  <div id="cameraView" class="view-container active">
+    
+    <!-- Floating Top Bar -->
+    <div class="top-bar">
+      <div class="brand-logo">FASSHON</div>
+      <div style="display: flex; gap: 10px;">
+        <button id="openAddGarmentBtn" class="btn-pill"><i class="bi bi-plus-lg"></i> SUIT</button>
+        <button id="uploadBtn" class="icon-btn"><i class="bi bi-image"></i></button>
+        <input type="file" id="fileInput" class="hidden" accept="image/*" />
+      </div>
     </div>
     
+    <!-- Camera Area Layer -->
     <div class="camera-wrapper">
-      <div id="cameraErrorMsg" class="error-overlay hidden">
-        <i class="bi bi-camera-video-off" style="font-size: 2.5rem; color: var(--text-muted);"></i>
-        <p style="font-size: 0.9rem; font-weight: 500;">Camera not found or access denied.</p>
-        <button onclick="document.getElementById('fileInput').click()" class="btn-primary" style="width: auto; padding: 10px 20px; margin-top: 10px;">Upload Photo</button>
-      </div>
       <video id="cameraFeed" autoplay playsinline></video>
+      <div id="cameraErrorMsg" class="error-overlay">
+        <i class="bi bi-camera-video-off" style="font-size: 3.5rem; color: var(--black); margin-bottom: 10px;"></i>
+        <h2>CAMERA ERROR</h2>
+        <p style="font-weight: 700; margin: 10px 0 25px; color: var(--black);">Access denied or not found.</p>
+        <button onclick="document.getElementById('fileInput').click()" class="btn-primary" style="width: auto;">UPLOAD PHOTO</button>
+      </div>
     </div>
 
-    <div class="glass-footer">
-      <button id="openLibraryBtn" class="icon-btn" style="width: 56px; height: 56px; border-radius: 12px; background-size: cover; background-position: center;"></button>
+    <!-- Floating Bottom Dock -->
+    <div class="floating-dock">
+      <button id="openLibraryBtn" class="icon-btn" style="background-size: cover; background-position: center;"></button>
       <button id="captureBtn" class="shutter-btn"></button>
-      <button id="switchCameraBtn" class="icon-btn" style="width: 56px; height: 56px;"><i class="bi bi-arrow-repeat" style="font-size: 1.5rem;"></i></button>
+      <button id="switchCameraBtn" class="icon-btn"><i class="bi bi-arrow-repeat" style="font-size: 1.5rem;"></i></button>
     </div>
   </div>
 
   <!-- VIEW 2: Add Garment Modal -->
-  <div id="addGarmentView" class="overlay-view hidden">
+  <div id="addGarmentView" class="overlay-view">
     <div class="modal-card">
-      <div style="display: flex; justify-content: space-between; align-items: center;">
-        <h2 class="label-text" style="font-size: 1rem; color: #fff;">Add New Suit</h2>
-        <button id="closeAddGarmentBtn" style="font-size: 1.8rem; color: var(--text-muted);"><i class="bi bi-x"></i></button>
+      <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+        <div>
+          <div style="background: var(--cyan); color: var(--white); display: inline-block; padding: 4px 10px; font-weight: 900; font-size: 0.7rem; text-transform: uppercase; border: 2px solid var(--black); margin-bottom: 10px; transform: rotate(-2deg); box-shadow: 2px 2px 0px var(--black);">Wardrobe</div>
+          <h1 style="font-size: 2rem;">ADD NEW SUIT</h1>
+        </div>
+        <button id="closeAddGarmentBtn" class="icon-btn" style="width: 40px; height: 40px;"><i class="bi bi-x-lg"></i></button>
       </div>
       
       <div id="garmentPreviewContainer" class="preview-box">
-        <i id="garmentPreviewIcon" class="bi bi-camera" style="font-size: 2.5rem; color: var(--text-muted);"></i>
-        <img id="garmentPreviewImg" class="hidden" />
+        <div style="text-align: center; color: var(--black);">
+          <i id="garmentPreviewIcon" class="bi bi-camera" style="font-size: 2.5rem;"></i>
+          <p style="font-size: 0.8rem; margin-top: 8px; font-weight: 700;">Select 1 or 2 Images<br/><span style="color: var(--red);">Will auto-stitch side-by-side</span></p>
+        </div>
+        <img id="garmentPreviewImg" class="hidden" style="position: absolute; inset: 0;" />
       </div>
-      <input type="file" id="garmentFileInput" class="hidden" accept="image/*" />
+      <!-- ENABLE MULTIPLE UPLOAD FOR STITCHING -->
+      <input type="file" id="garmentFileInput" class="hidden" accept="image/*" multiple />
       
-      <input type="text" id="garmentNameInput" placeholder="E.g. Navy Blue Tuxedo" class="input-field" autocomplete="off" />
+      <input type="text" id="garmentNameInput" placeholder="E.g. Vintage Pink Combo" class="input-field" autocomplete="off" />
       
-      <button id="saveGarmentBtn" class="btn-primary">Save to Wardrobe</button>
+      <button id="saveGarmentBtn" class="btn-primary">SAVE TO WARDROBE</button>
     </div>
   </div>
 
   <!-- VIEW 3: Garment Selection -->
-  <div id="garmentSelectView" class="view-container hidden" style="z-index: 15;">
-    <div class="glass-header">
-      <button id="cancelSelectBtn" style="color: var(--text-muted); font-weight: 600;">Cancel</button>
-      <span class="label-text">Select Suit</span>
-      <div style="width: 50px;"></div>
+  <div id="garmentSelectView" class="view-container">
+    <div style="padding: calc(var(--safe-top) + 20px) 20px 10px; display: flex; justify-content: space-between; align-items: center; border-bottom: var(--border-thick); background: var(--white); z-index: 20;">
+      <button id="cancelSelectBtn" class="btn-pill" style="padding: 8px 16px; font-size: 0.8rem;">CANCEL</button>
+      <h2 style="font-size: 1.5rem;">CHOOSE SUIT</h2>
+      <div style="width: 70px;"></div>
     </div>
     
-    <div class="content-area" style="display: flex; flex-direction: column; gap: 16px;">
+    <div class="content-area">
       <!-- Search & Captured Preview -->
-      <div style="display: flex; gap: 12px; background: var(--surface-color); padding: 12px; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
-        <img id="capturedThumb" style="width: 60px; height: 60px; border-radius: var(--radius-sm); object-fit: cover;" />
+      <div style="display: flex; gap: 12px; background: var(--white); padding: 12px; border: var(--border-thick); border-radius: 16px; box-shadow: var(--shadow-sm); margin-bottom: 20px;">
+        <img id="capturedThumb" style="width: 60px; height: 60px; object-fit: cover; border: 2px solid var(--black); border-radius: 8px;" />
         <div style="position: relative; flex: 1; display: flex; align-items: center;">
-          <i class="bi bi-search" style="position: absolute; left: 12px; color: var(--text-muted);"></i>
-          <input type="text" id="searchInput" placeholder="Search suits..." class="input-field" style="padding-left: 36px; height: 100%; border: none; background: var(--surface-light);" />
+          <i class="bi bi-search" style="position: absolute; left: 12px; font-size: 1.2rem;"></i>
+          <input type="text" id="searchInput" placeholder="SEARCH..." class="input-field" style="padding-left: 40px; border: none; box-shadow: none; background: transparent;" />
         </div>
       </div>
 
       <!-- Garments Grid -->
-      <div id="garmentsGrid" class="grid-3"></div>
+      <div id="garmentsGrid" class="grid-2"></div>
     </div>
 
-    <div style="position: absolute; bottom: 0; left: 0; right: 0; padding: 20px; background: linear-gradient(transparent, var(--bg-color) 80%);">
-      <button id="generateTryOnBtn" disabled class="btn-primary">Generate Try-On</button>
+    <div style="position: absolute; bottom: 0; left: 0; right: 0; padding: 20px calc(var(--safe-bottom) + 20px); background: linear-gradient(transparent, var(--beige) 80%); z-index: 20;">
+      <button id="generateTryOnBtn" disabled class="btn-primary" style="box-shadow: 8px 8px 0px var(--cyan);">GENERATE TRY-ON</button>
     </div>
   </div>
 
   <!-- VIEW 4: Processing Overlay -->
-  <div id="processingView" class="overlay-view hidden" style="z-index: 40; background: var(--bg-color);">
+  <div id="processingView" class="overlay-view" style="background: var(--beige);">
     <div class="loader-spinner"></div>
-    <p id="timerText" class="label-text" style="font-size: 1rem; margin-top: 24px; color: #fff;">Styling... 0s</p>
-    <p class="label-text" style="margin-top: 12px; font-size: 0.65rem;">This may take up to 30 seconds</p>
+    <h1 id="timerText" style="font-size: 2.5rem; margin-top: 30px; color: var(--black);">STYLING... 0S</h1>
+    <div style="background: var(--lime); border: 2px solid var(--black); padding: 5px 15px; border-radius: 100px; font-weight: 900; margin-top: 15px; box-shadow: 2px 2px 0px var(--black);">
+      MAY TAKE UP TO 30 SECONDS
+    </div>
   </div>
 
   <!-- VIEW 5: Comparison / Result View -->
-  <div id="comparisonView" class="view-container hidden" style="z-index: 30;">
-    <div class="glass-header" style="flex-direction: column; gap: 16px; padding-bottom: 12px;">
-      <div style="display: flex; justify-content: space-between; width: 100%; align-items: center;">
-        <button id="closeComparisonBtn" style="color: var(--text-muted); font-weight: 600;">Back</button>
-        
-        <!-- View Mode Toggle (Compare vs Result Only) -->
-        <div class="mode-toggle">
-          <button id="modeCompareBtn" class="mode-btn active">Compare</button>
-          <button id="modeResultBtn" class="mode-btn">Result Only</button>
-        </div>
-
-        <div style="display: flex; gap: 16px;">
-          <button id="zoomBtn" style="color: var(--text-main); font-size: 1.2rem;"><i class="bi bi-arrows-fullscreen"></i></button>
-          <button id="deleteBtn" style="color: var(--danger-color); font-size: 1.2rem;"><i class="bi bi-trash"></i></button>
-          <button id="downloadBtn" style="color: var(--accent-color); font-size: 1.2rem;"><i class="bi bi-download"></i></button>
-        </div>
+  <div id="comparisonView" class="view-container">
+    <div style="padding: calc(var(--safe-top) + 15px) 20px; display: flex; justify-content: space-between; align-items: center; background: var(--beige); z-index: 20;">
+      <button id="closeComparisonBtn" class="btn-pill" style="padding: 8px 16px; font-size: 0.8rem;">BACK</button>
+      <div class="mode-toggle">
+        <button id="modeCompareBtn" class="mode-btn active">COMPARE</button>
+        <button id="modeResultBtn" class="mode-btn">RESULT</button>
       </div>
+      <div style="width: 70px;"></div>
     </div>
     
-    <!-- Robust CSS Clip-Path Slider -->
     <div id="compareContainer" class="compare-wrapper">
       <img id="imgOriginal" class="compare-img" />
       <img id="imgGenerated" class="compare-img" />
@@ -347,36 +403,36 @@
       </div>
     </div>
     
-    <div style="text-align: center; padding: 20px; background: var(--bg-color);">
-      <p class="label-text" style="color: #32d74b;"><i class="bi bi-check-circle-fill" style="margin-right: 4px;"></i> Auto-Saved to Gallery</p>
+    <!-- Floating Actions Dock -->
+    <div style="position: absolute; bottom: calc(var(--safe-bottom) + 30px); left: 50%; transform: translateX(-50%); display: flex; gap: 15px; z-index: 30;">
+      <button id="zoomBtn" class="icon-btn" style="background: var(--white);"><i class="bi bi-arrows-fullscreen"></i></button>
+      <button id="downloadBtn" class="btn-pill" style="background: var(--cyan); color: var(--white);">SAVE <i class="bi bi-download"></i></button>
+      <button id="deleteBtn" class="icon-btn" style="background: var(--red); color: var(--white);"><i class="bi bi-trash"></i></button>
     </div>
   </div>
 
   <!-- VIEW 6: Library Gallery -->
-  <div id="libraryView" class="view-container hidden" style="z-index: 35;">
-    <div class="glass-header">
-      <button id="closeLibraryBtn" style="color: var(--accent-color); font-weight: 600; display: flex; align-items: center; gap: 4px;">
-        <i class="bi bi-chevron-left"></i> Camera
-      </button>
-      <span class="label-text">Gallery</span>
+  <div id="libraryView" class="view-container">
+    <div style="padding: calc(var(--safe-top) + 20px) 20px 10px; display: flex; justify-content: space-between; align-items: center; border-bottom: var(--border-thick); background: var(--white); z-index: 20;">
+      <button id="closeLibraryBtn" class="btn-pill" style="padding: 8px 16px; font-size: 0.8rem;">CAMERA</button>
+      <h2 style="font-size: 1.5rem;">GALLERY</h2>
       <div style="width: 70px;"></div>
     </div>
     <div class="content-area">
-      <div id="galleryGrid" class="grid-3"></div>
+      <div id="galleryGrid" class="grid-2"></div>
     </div>
   </div>
 
   <!-- VIEW 7: Fullscreen Zoom Overlay -->
-  <div id="zoomOverlay" class="view-container hidden" style="z-index: 60; background: #000;">
-    <div class="glass-header" style="position: absolute; top: 0; width: 100%; border: none; background: linear-gradient(rgba(0,0,0,0.8), transparent); backdrop-filter: none; -webkit-backdrop-filter: none; z-index: 61;">
-      <button id="closeZoomBtn" style="color: #fff; font-weight: 600; font-size: 1.5rem;"><i class="bi bi-x-lg"></i></button>
-      <div class="mode-toggle">
-         <button id="zoomOutBtn" class="icon-btn" style="width: 36px; height: 36px;"><i class="bi bi-zoom-out"></i></button>
-         <button id="zoomInBtn" class="icon-btn" style="width: 36px; height: 36px;"><i class="bi bi-zoom-in"></i></button>
+  <div id="zoomOverlay" class="view-container" style="background: #000; z-index: 70;">
+    <div style="position: absolute; top: calc(var(--safe-top) + 20px); left: 20px; right: 20px; display: flex; justify-content: space-between; z-index: 71; pointer-events: none;">
+      <button id="closeZoomBtn" class="icon-btn" style="pointer-events: auto;"><i class="bi bi-x-lg"></i></button>
+      <div class="mode-toggle" style="box-shadow: none; pointer-events: auto;">
+         <button id="zoomOutBtn" class="icon-btn" style="width: 40px; height: 40px; box-shadow: none;"><i class="bi bi-zoom-out"></i></button>
+         <button id="zoomInBtn" class="icon-btn" style="width: 40px; height: 40px; box-shadow: none;"><i class="bi bi-zoom-in"></i></button>
       </div>
-      <div style="width: 24px;"></div>
     </div>
-    <div id="zoomPanContainer" style="width: 100%; height: 100%; overflow: auto; -webkit-overflow-scrolling: touch; display: flex; align-items: flex-start; justify-content: flex-start; background: #000;">
+    <div id="zoomPanContainer" style="width: 100%; height: 100%; overflow: auto; -webkit-overflow-scrolling: touch; display: flex; align-items: flex-start; justify-content: flex-start; background: var(--beige);">
       <img id="zoomImg" style="width: 100%; height: auto; margin: auto; object-fit: contain; transition: width 0.2s ease-out;" />
     </div>
   </div>
@@ -393,35 +449,16 @@
     let currentOriginalDataUrl = null; 
     let selectedGarmentBase64 = null;
     let allGarments = [];
-    let isCompareMode = true; // Tracks if we are in Compare vs Result view
+    let isCompareMode = true; 
     
     const VIRTUAL_TRY_ON_PROMPT = `Edit the **first photo** by replacing only the clothing/outfit with the **exact suit shown in the second reference photo**.
-
 ### Strict preservation requirements
-* Keep my **face 100% unchanged**. Do not alter facial structure, identity, skin texture, eyes, eyebrows, nose, lips, jawline, hairstyle, facial hair, expression, or proportions.
+* Keep my **face 100% unchanged**.
 * Keep my **body position and pose exactly unchanged**.
-* Keep the **camera angle, framing, perspective, lighting direction, shadows, and image composition exactly unchanged**.
-* Keep the **entire background exactly unchanged**. Do not regenerate, blur, replace, crop, extend, or modify any background elements.
+* Keep the **entire background exactly unchanged**.
 * Keep my **hands, arms, neck, head position, and visible body proportions exactly as they are**.
-* Do not change my height, body shape, posture, or proportions.
-* Do not apply beauty filters, face enhancement, skin smoothing, age changes, or AI-style facial reconstruction.
-
 ### Suit replacement
-Use the **second photo only as the clothing reference**. Recreate its suit accurately on my body:
-* Same suit color
-* Same fabric appearance and texture
-* Same lapel style
-* Same jacket cut and fit
-* Same shirt
-* Same tie, if present
-* Same buttons and pocket details
-* Same overall formal styling
-
-The suit must naturally conform to my **existing body position and anatomy**, including realistic folds, wrinkles, fabric tension, shoulder placement, sleeves, collar, and perspective.
-
-### Important
-This is a **clothing replacement only**, NOT a face swap or full-image regeneration.
-The final result should look like the original photograph was genuinely taken with me wearing the suit from the second photo. **Preserve everything from the first image except the clothing.**`;
+Use the **second photo only as the clothing reference**. Recreate its suit accurately on my body. The suit must naturally conform to my **existing body position and anatomy**.`;
 
     let isViewingGalleryItem = false;
     let currentActiveDocId = null;
@@ -437,6 +474,12 @@ The final result should look like the original photograph was genuinely taken wi
     const libraryView = document.getElementById('libraryView');
     const addGarmentView = document.getElementById('addGarmentView');
 
+    // UI Navigation Helper (Handles fluid transitions)
+    function showView(viewElement) {
+      [cameraView, garmentSelectView, comparisonView, libraryView].forEach(v => v.classList.remove('active'));
+      if(viewElement) viewElement.classList.add('active');
+    }
+
     // --- CAMERA INIT ---
     async function initCamera() {
       if (videoStream) videoStream.getTracks().forEach(track => track.stop());
@@ -446,17 +489,14 @@ The final result should look like the original photograph was genuinely taken wi
           audio: false
         });
         cameraFeed.srcObject = videoStream;
-        document.getElementById('cameraErrorMsg').classList.add('hidden');
+        document.getElementById('cameraErrorMsg').classList.remove('active');
       } catch (err) { 
-        console.warn(`Camera access failed for facingMode: ${currentFacingMode}. Trying fallback...`); 
         try {
-          videoStream = await navigator.mediaDevices.getUserMedia({
-            video: { width: { ideal: 1920 }, height: { ideal: 1080 } }, audio: false
-          });
+          videoStream = await navigator.mediaDevices.getUserMedia({ video: { width: { ideal: 1920 }, height: { ideal: 1080 } }, audio: false });
           cameraFeed.srcObject = videoStream;
-          document.getElementById('cameraErrorMsg').classList.add('hidden');
+          document.getElementById('cameraErrorMsg').classList.remove('active');
         } catch (fallbackErr) {
-          document.getElementById('cameraErrorMsg').classList.remove('hidden');
+          document.getElementById('cameraErrorMsg').classList.add('active');
         }
       }
       loadGalleryThumbnail();
@@ -469,7 +509,7 @@ The final result should look like the original photograph was genuinely taken wi
 
     // --- IMAGE CAPTURE & UPLOAD (HIGH QUALITY WEB-P) ---
     function prepareGarmentSelection(source, originalWidth, originalHeight) {
-      const MAX_SIZE = 2048; // Increased from 512px to 2048px for top DPI / Quality
+      const MAX_SIZE = 2048; 
       let width = originalWidth; let height = originalHeight;
       
       if (width > height) { if (width > MAX_SIZE) { height = Math.round(height * (MAX_SIZE / width)); width = MAX_SIZE; } } 
@@ -479,7 +519,6 @@ The final result should look like the original photograph was genuinely taken wi
       tempCanvas.width = width; tempCanvas.height = height;
       tempCanvas.getContext('2d').drawImage(source, 0, 0, width, height);
       
-      // Use image/webp at 100% quality for best results
       currentOriginalDataUrl = tempCanvas.toDataURL('image/webp', 1.0);
       document.getElementById('capturedThumb').src = currentOriginalDataUrl;
       
@@ -488,8 +527,7 @@ The final result should look like the original photograph was genuinely taken wi
       document.getElementById('searchInput').value = '';
       
       loadGarments();
-      garmentSelectView.classList.remove('hidden');
-      garmentSelectView.classList.add('fade-in');
+      showView(garmentSelectView);
     }
 
     document.getElementById('captureBtn').addEventListener('click', () => {
@@ -514,35 +552,70 @@ The final result should look like the original photograph was genuinely taken wi
     });
 
     document.getElementById('cancelSelectBtn').addEventListener('click', () => {
-      garmentSelectView.classList.add('hidden');
+      showView(cameraView);
       document.getElementById('fileInput').value = '';
     });
 
-    // --- ADD GARMENT UI ---
+    // --- ADD GARMENT UI (WITH IMAGE STITCHING) ---
     document.getElementById('openAddGarmentBtn').addEventListener('click', () => {
-      addGarmentView.classList.remove('hidden');
-      addGarmentView.classList.add('fade-in');
+      addGarmentView.classList.add('active');
     });
-    document.getElementById('closeAddGarmentBtn').addEventListener('click', () => addGarmentView.classList.add('hidden'));
+    document.getElementById('closeAddGarmentBtn').addEventListener('click', () => {
+      addGarmentView.classList.remove('active');
+    });
 
     const garmentPreviewContainer = document.getElementById('garmentPreviewContainer');
     const garmentFileInput = document.getElementById('garmentFileInput');
     const garmentPreviewImg = document.getElementById('garmentPreviewImg');
-    const garmentPreviewIcon = document.getElementById('garmentPreviewIcon');
     let newGarmentDataUrl = null;
 
     garmentPreviewContainer.addEventListener('click', () => garmentFileInput.click());
-    garmentFileInput.addEventListener('change', (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        newGarmentDataUrl = event.target.result;
+    
+    function loadImageFromFile(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const img = new Image();
+          img.onload = () => resolve(img);
+          img.onerror = reject;
+          img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    garmentFileInput.addEventListener('change', async (e) => {
+      const files = e.target.files;
+      if (!files || files.length === 0) return;
+      
+      try {
+        if (files.length === 1) {
+          const img = await loadImageFromFile(files[0]);
+          const canvas = document.createElement('canvas');
+          canvas.width = img.width; canvas.height = img.height;
+          canvas.getContext('2d').drawImage(img, 0, 0);
+          newGarmentDataUrl = canvas.toDataURL('image/webp', 1.0);
+        } else if (files.length >= 2) {
+          const img1 = await loadImageFromFile(files[0]);
+          const img2 = await loadImageFromFile(files[1]);
+          
+          const targetHeight = Math.max(img1.height, img2.height);
+          const w1 = img1.width * (targetHeight / img1.height);
+          const w2 = img2.width * (targetHeight / img2.height);
+          
+          const canvas = document.createElement('canvas');
+          canvas.width = w1 + w2; canvas.height = targetHeight;
+          const ctx = canvas.getContext('2d');
+          
+          ctx.fillStyle = '#FFFFFF'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+          ctx.drawImage(img1, 0, 0, w1, targetHeight);
+          ctx.drawImage(img2, w1, 0, w2, targetHeight);
+          
+          newGarmentDataUrl = canvas.toDataURL('image/webp', 1.0);
+        }
         garmentPreviewImg.src = newGarmentDataUrl;
         garmentPreviewImg.classList.remove('hidden');
-        garmentPreviewIcon.classList.add('hidden');
-      };
-      reader.readAsDataURL(file);
+      } catch (err) { alert("Error loading images: " + err.message); }
     });
 
     document.getElementById('saveGarmentBtn').addEventListener('click', async () => {
@@ -551,7 +624,7 @@ The final result should look like the original photograph was genuinely taken wi
       
       const btn = document.getElementById('saveGarmentBtn');
       const originalHTML = btn.innerHTML;
-      btn.innerHTML = `<div class="loader-spinner" style="width: 24px; height: 24px; border-width: 3px; border-top-color: #fff; margin: 0 auto;"></div>`;
+      btn.innerHTML = `<div class="loader-spinner" style="width: 24px; height: 24px; border-width: 3px; border-top-color: var(--white); margin: 0 auto;"></div>`;
       
       try {
         const blob = await convertToWebP(newGarmentDataUrl);
@@ -559,43 +632,51 @@ The final result should look like the original photograph was genuinely taken wi
         await supabaseClient.storage.from('garments').upload(path, blob, { contentType: 'image/webp' });
         await supabaseClient.from('garments').insert([{ name: name, image_path: path }]);
         
-        addGarmentView.classList.add('hidden');
+        addGarmentView.classList.remove('active');
         document.getElementById('garmentNameInput').value = '';
         garmentPreviewImg.classList.add('hidden');
-        garmentPreviewIcon.classList.remove('hidden');
-        newGarmentDataUrl = null;
-      } catch (err) {
-        alert("Upload failed: " + err.message);
-      } finally {
-        btn.innerHTML = originalHTML;
-      }
+        newGarmentDataUrl = null; garmentFileInput.value = '';
+        if(garmentSelectView.classList.contains('active')) loadGarments();
+      } catch (err) { alert("Upload failed: " + err.message); } 
+      finally { btn.innerHTML = originalHTML; }
     });
 
-    // --- GARMENT SELECTION LOGIC ---
+    // --- GARMENT SELECTION & DELETE LOGIC ---
     async function loadGarments() {
       const grid = document.getElementById('garmentsGrid');
-      grid.innerHTML = Array(9).fill(`<div class="grid-item" style="background: var(--surface-light); animation: pulse 1.5s infinite;"></div>`).join('');
+      grid.innerHTML = Array(6).fill(`<div class="card" style="background: #e0e0e0; animation: pulse 1.5s infinite;"></div>`).join('');
       
       const { data, error } = await supabaseClient.from('garments').select('*').order('created_at', { ascending: false });
       if(error) return console.error(error);
       
-      allGarments = data;
-      renderGarments(allGarments);
+      allGarments = data; renderGarments(allGarments);
     }
 
     function renderGarments(garments) {
       const grid = document.getElementById('garmentsGrid');
       grid.innerHTML = '';
       
-      garments.forEach(g => {
+      garments.forEach((g, index) => {
         const url = supabaseClient.storage.from('garments').getPublicUrl(g.image_path).data.publicUrl;
         const div = document.createElement('div');
-        div.className = "grid-item";
+        div.className = "card";
         div.innerHTML = `
           <img src="${url}" crossorigin="anonymous" loading="lazy" />
-          <div class="grid-item-label">${g.name}</div>
+          ${index === 0 ? '<div class="badge badge-lime">NEW</div>' : ''}
+          <div class="card-label">${g.name}</div>
+          <button class="delete-card-btn"><i class="bi bi-trash"></i></button>
         `;
         
+        div.querySelector('.delete-card-btn').onclick = async (e) => {
+          e.stopPropagation(); 
+          if(!confirm(`Delete "${g.name}" from your wardrobe?`)) return;
+          try {
+            await supabaseClient.from('garments').delete().eq('id', g.id);
+            await supabaseClient.storage.from('garments').remove([g.image_path]);
+            loadGarments();
+          } catch(err) { alert("Failed to delete suit."); }
+        };
+
         div.onclick = async () => {
           Array.from(grid.children).forEach(c => c.classList.remove('selected'));
           div.classList.add('selected');
@@ -625,23 +706,17 @@ The final result should look like the original photograph was genuinely taken wi
       const base64Image = currentOriginalDataUrl.split(',')[1];
       const btn = document.getElementById('generateTryOnBtn');
 
-      processingView.classList.remove('hidden');
-      processingView.classList.add('fade-in');
+      processingView.classList.add('active');
       let seconds = 0;
       const timerText = document.getElementById('timerText');
-      timerText.textContent = `Styling... 0s`;
-      const timer = setInterval(() => { seconds++; timerText.textContent = `Styling... ${seconds}s`; }, 1000);
+      timerText.textContent = `STYLING... 0S`;
+      const timer = setInterval(() => { seconds++; timerText.textContent = `STYLING... ${seconds}S`; }, 1000);
 
       try {
         const response = await fetch('/api/tryon', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
-            prompt: VIRTUAL_TRY_ON_PROMPT, 
-            image: base64Image, 
-            mask: selectedGarmentBase64, 
-            model: 'gemini-3.1-flash-image' 
-          })
+          body: JSON.stringify({ prompt: VIRTUAL_TRY_ON_PROMPT, image: base64Image, mask: selectedGarmentBase64, model: 'gemini-3.1-flash-image' })
         });
 
         const data = await response.json();
@@ -659,7 +734,7 @@ The final result should look like the original photograph was genuinely taken wi
 
         if (!generatedImgSrc) throw new Error("No image data returned from AI.");
 
-        timerText.textContent = `Auto-Saving to Gallery...`;
+        timerText.textContent = `SAVING...`;
         
         const timestamp = Date.now();
         const origPath = `original_${timestamp}.webp`;
@@ -680,38 +755,26 @@ The final result should look like the original photograph was genuinely taken wi
         currentActiveOrigPath = origPath;
         currentActiveGenPath = genPath;
 
-        document.getElementById('closeComparisonBtn').textContent = "Retake";
+        document.getElementById('closeComparisonBtn').textContent = "RETAKE";
         setupComparison(currentOriginalDataUrl, generatedImgSrc);
         loadGalleryThumbnail();
 
       } catch (err) {
         const originalText = btn.innerHTML;
-        btn.textContent = "Failed - Try Again";
-        btn.style.backgroundColor = "var(--danger-color)";
-        setTimeout(() => {
-          btn.innerHTML = originalText;
-          btn.style.backgroundColor = "";
-        }, 3000);
+        btn.textContent = "FAILED - TRY AGAIN";
+        setTimeout(() => { btn.innerHTML = originalText; }, 3000);
       } finally {
         clearInterval(timer);
-        processingView.classList.add('hidden');
-        processingView.classList.remove('fade-in');
+        processingView.classList.remove('active');
       }
     });
 
-    // --- ROBUST COMPARISON SLIDER & FULLSCREEN TOGGLE ---
+    // --- CONSTRAINED COMPARISON SLIDER & FULLSCREEN TOGGLE ---
     function setupComparison(origSrc, genSrc) {
       document.getElementById('imgOriginal').src = origSrc;
       document.getElementById('imgGenerated').src = genSrc;
-      
-      // Reset view modes to Compare
       setCompareMode(true);
-      
-      garmentSelectView.classList.add('hidden');
-      libraryView.classList.add('hidden');
-      comparisonView.classList.remove('hidden');
-      comparisonView.classList.add('fade-in');
-      
+      showView(comparisonView);
       initSlider();
     }
 
@@ -721,25 +784,27 @@ The final result should look like the original photograph was genuinely taken wi
       const slider = document.getElementById('sliderHandle');
       let isSliding = false;
 
-      // Reset to 50%
       imgGen.style.clipPath = `polygon(50% 0, 100% 0, 100% 100%, 50% 100%)`;
       slider.style.left = `50%`;
 
       function slide(e) {
-        // Stop sliding if we are in Result Only mode
         if (!isSliding || !isCompareMode) return;
         if(e.cancelable) e.preventDefault(); 
         
         let clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
         const rect = container.getBoundingClientRect();
-        let x = clientX - rect.left;
         
-        if (x < 0) x = 0;
-        if (x > rect.width) x = rect.width;
+        let x = clientX - rect.left;
+        x = Math.max(0, Math.min(x, rect.width));
         
         let percent = (x / rect.width) * 100;
         imgGen.style.clipPath = `polygon(${percent}% 0, 100% 0, 100% 100%, ${percent}% 100%)`;
-        slider.style.left = `${percent}%`;
+        
+        const handleWidth = 40; 
+        let handleX = Math.max(handleWidth / 2, Math.min(x, rect.width - handleWidth / 2));
+        let handlePercent = (handleX / rect.width) * 100;
+        
+        slider.style.left = `${handlePercent}%`;
       }
 
       container.addEventListener('mousedown', (e) => { isSliding = true; slide(e); });
@@ -751,7 +816,6 @@ The final result should look like the original photograph was genuinely taken wi
       window.addEventListener('touchmove', slide, { passive: false });
     }
 
-    // View Mode Toggles
     const btnCompare = document.getElementById('modeCompareBtn');
     const btnResult = document.getElementById('modeResultBtn');
     const sliderHandle = document.getElementById('sliderHandle');
@@ -760,17 +824,13 @@ The final result should look like the original photograph was genuinely taken wi
     function setCompareMode(isCompare) {
       isCompareMode = isCompare;
       if (isCompare) {
-        btnCompare.classList.add('active');
-        btnResult.classList.remove('active');
+        btnCompare.classList.add('active'); btnResult.classList.remove('active');
         sliderHandle.style.display = 'flex';
-        // Reset to 50% split
         imgGen.style.clipPath = `polygon(50% 0, 100% 0, 100% 100%, 50% 100%)`;
         sliderHandle.style.left = `50%`;
       } else {
-        btnCompare.classList.remove('active');
-        btnResult.classList.add('active');
+        btnCompare.classList.remove('active'); btnResult.classList.add('active');
         sliderHandle.style.display = 'none';
-        // Reveal 100% of generated image
         imgGen.style.clipPath = `polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)`;
       }
     }
@@ -782,75 +842,45 @@ The final result should look like the original photograph was genuinely taken wi
     const zoomOverlay = document.getElementById('zoomOverlay');
     const zoomImg = document.getElementById('zoomImg');
     const zoomPanContainer = document.getElementById('zoomPanContainer');
-    let currentZoom = 1;
-    let initialDistance = null;
-    let initialZoom = 1;
+    let currentZoom = 1; let initialDistance = null; let initialZoom = 1;
 
-    function applyZoom() {
-      zoomImg.style.width = `${currentZoom * 100}%`;
-    }
+    function applyZoom() { zoomImg.style.width = `${currentZoom * 100}%`; }
 
     document.getElementById('zoomBtn').addEventListener('click', () => {
       zoomImg.src = document.getElementById('imgGenerated').src;
-      zoomOverlay.classList.remove('hidden');
-      zoomOverlay.classList.add('fade-in');
-      currentZoom = 1;
-      applyZoom();
+      zoomOverlay.classList.add('active');
+      currentZoom = 1; applyZoom();
     });
 
-    document.getElementById('closeZoomBtn').addEventListener('click', () => zoomOverlay.classList.add('hidden'));
+    document.getElementById('closeZoomBtn').addEventListener('click', () => zoomOverlay.classList.remove('active'));
+    document.getElementById('zoomInBtn').addEventListener('click', () => { currentZoom = Math.min(currentZoom + 0.5, 5); applyZoom(); });
+    document.getElementById('zoomOutBtn').addEventListener('click', () => { currentZoom = Math.max(currentZoom - 0.5, 1); applyZoom(); });
 
-    document.getElementById('zoomInBtn').addEventListener('click', () => {
-      currentZoom = Math.min(currentZoom + 0.5, 5);
-      applyZoom();
-    });
-
-    document.getElementById('zoomOutBtn').addEventListener('click', () => {
-      currentZoom = Math.max(currentZoom - 0.5, 1);
-      applyZoom();
-    });
-
-    // Pinch-to-zoom logic for mobile
     zoomPanContainer.addEventListener('touchstart', (e) => {
       if (e.touches.length === 2) {
-        initialDistance = Math.hypot(
-          e.touches[0].pageX - e.touches[1].pageX,
-          e.touches[0].pageY - e.touches[1].pageY
-        );
+        initialDistance = Math.hypot(e.touches[0].pageX - e.touches[1].pageX, e.touches[0].pageY - e.touches[1].pageY);
         initialZoom = currentZoom;
       }
     });
-
     zoomPanContainer.addEventListener('touchmove', (e) => {
       if (e.touches.length === 2 && initialDistance) {
-        e.preventDefault(); // Prevent default scroll while pinching
-        const currentDistance = Math.hypot(
-          e.touches[0].pageX - e.touches[1].pageX,
-          e.touches[0].pageY - e.touches[1].pageY
-        );
+        e.preventDefault();
+        const currentDistance = Math.hypot(e.touches[0].pageX - e.touches[1].pageX, e.touches[0].pageY - e.touches[1].pageY);
         const scale = currentDistance / initialDistance;
         currentZoom = Math.min(Math.max(initialZoom * scale, 1), 5);
         applyZoom();
       }
     }, { passive: false });
-
-    zoomPanContainer.addEventListener('touchend', (e) => {
-      if (e.touches.length < 2) {
-        initialDistance = null;
-      }
-    });
-
+    zoomPanContainer.addEventListener('touchend', (e) => { if (e.touches.length < 2) initialDistance = null; });
 
     // --- UTILS & GALLERY ACTIONS ---
     async function convertToWebP(src) {
       return new Promise((resolve, reject) => {
-        const img = new Image();
-        img.crossOrigin = 'Anonymous'; 
+        const img = new Image(); img.crossOrigin = 'Anonymous'; 
         img.onload = () => {
           const canvas = document.createElement('canvas');
           canvas.width = img.width; canvas.height = img.height;
           canvas.getContext('2d').drawImage(img, 0, 0);
-          // Set to 1.0 (100% Quality) for Best Output Quality
           canvas.toBlob((blob) => resolve(blob), 'image/webp', 1.0);
         };
         img.onerror = reject; img.src = src;
@@ -862,9 +892,8 @@ The final result should look like the original photograph was genuinely taken wi
       try {
         await supabaseClient.from('gallery').delete().eq('id', currentActiveDocId);
         await supabaseClient.storage.from('photos').remove([currentActiveOrigPath, currentActiveGenPath]);
-        comparisonView.classList.add('hidden');
-        if(isViewingGalleryItem) libraryView.classList.remove('hidden');
-        loadGallery(); loadGalleryThumbnail();
+        if(isViewingGalleryItem) { showView(libraryView); loadGallery(); } else { showView(cameraView); }
+        loadGalleryThumbnail();
       } catch (err) { alert("Failed to delete."); }
     });
 
@@ -875,23 +904,19 @@ The final result should look like the original photograph was genuinely taken wi
         const blobUrl = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = blobUrl; link.download = `VirtualTryOn_${Date.now()}.webp`;
-        document.body.appendChild(link); link.click();
-        document.body.removeChild(link); URL.revokeObjectURL(blobUrl);
+        document.body.appendChild(link); link.click(); document.body.removeChild(link); URL.revokeObjectURL(blobUrl);
       } catch (err) { alert("Failed to download."); }
     });
 
     document.getElementById('closeComparisonBtn').addEventListener('click', () => {
-      comparisonView.classList.add('hidden');
-      if(isViewingGalleryItem) libraryView.classList.remove('hidden');
+      if(isViewingGalleryItem) showView(libraryView); else showView(cameraView);
     });
 
     // --- LIBRARY GALLERY ---
     document.getElementById('openLibraryBtn').addEventListener('click', () => {
-      libraryView.classList.remove('hidden');
-      libraryView.classList.add('fade-in');
-      loadGallery();
+      showView(libraryView); loadGallery();
     });
-    document.getElementById('closeLibraryBtn').addEventListener('click', () => libraryView.classList.add('hidden'));
+    document.getElementById('closeLibraryBtn').addEventListener('click', () => showView(cameraView));
 
     async function loadGalleryThumbnail() {
       const { data } = await supabaseClient.from('gallery').select('generated_image_path').order('created_at', { ascending: false }).limit(1);
@@ -905,7 +930,7 @@ The final result should look like the original photograph was genuinely taken wi
 
     async function loadGallery() {
       const grid = document.getElementById('galleryGrid');
-      grid.innerHTML = Array(12).fill(`<div class="grid-item" style="background: var(--surface-light); animation: pulse 1.5s infinite;"></div>`).join('');
+      grid.innerHTML = Array(6).fill(`<div class="card" style="background: #e0e0e0; animation: pulse 1.5s infinite;"></div>`).join('');
       
       const { data: docs, error } = await supabaseClient.from('gallery').select('*').order('created_at', { ascending: false });
       if (!error && docs) {
@@ -915,15 +940,13 @@ The final result should look like the original photograph was genuinely taken wi
           const origUrl = supabaseClient.storage.from('photos').getPublicUrl(doc.original_image_path).data.publicUrl;
           
           const div = document.createElement('div');
-          div.className = "grid-item";
+          div.className = "card";
           div.innerHTML = `<img src="${genUrl}" loading="lazy" />`;
           
           div.onclick = () => {
             isViewingGalleryItem = true;
-            currentActiveDocId = doc.id;
-            currentActiveOrigPath = doc.original_image_path;
-            currentActiveGenPath = doc.generated_image_path;
-            document.getElementById('closeComparisonBtn').textContent = "Back";
+            currentActiveDocId = doc.id; currentActiveOrigPath = doc.original_image_path; currentActiveGenPath = doc.generated_image_path;
+            document.getElementById('closeComparisonBtn').textContent = "BACK";
             setupComparison(origUrl, genUrl);
           };
           grid.appendChild(div);
