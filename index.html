@@ -3,78 +3,81 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <meta name="description" content="AI Virtual Hairstyle Try-On & Studio" />
-  <title>HAIR LAB — Editorial AI Hairstyle Studio</title>
+  <meta name="description" content="HAIR·LAB Neo-Brutalist Virtual Hairstyle Try-On Studio" />
+  <title>HAIR·LAB 2026 — Neo-Brutalist Hairstyle Studio</title>
 
-  <!-- Google Fonts: Editorial Sans & Clean Grotesk -->
+  <!-- Google Fonts: Anton, Archivo Black, Plus Jakarta Sans -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo+Black&family=Plus+Jakarta+Sans:wght@500;700;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
 
   <!-- Bootstrap Icons -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
   <style>
     /* ==========================================================================
-       DESIGN SYSTEM (Based on design(2).md: Premium Editorial Skincare & AI Studio)
+       NEO-BRUTALIST DESIGN SYSTEM & TOKENS
        ========================================================================== */
     :root {
-      /* Neutral Palette */
-      --bg: #F1F2F4;
-      --surface: #FFFFFF;
-      --surface-soft: #E8E9EC;
-      --text: #050505;
-      --text-secondary: #66686D;
-      --text-muted: #8B8D92;
-      --border: #D7D8DB;
-      --border-subtle: rgba(0, 0, 0, 0.06);
-      --black: #000000;
+      /* Palette */
+      --beige: #F5F5ED;
+      --card-bg: #FFFFFF;
+      --black: #121212;
       --white: #FFFFFF;
+      --muted: #6B7280;
 
-      /* Pastel Data Accents */
-      --lime: #C8D94E;
-      --pink: #D99ABC;
-      --cyan: #88DAD5;
-      --lavender: #C7A8D9;
-      --yellow: #D8E27A;
-      --peach: #E8B39E;
+      /* Neon Pastel Brutal Accents */
+      --lime: #D4FF00;
+      --cyan: #00E5FF;
+      --pink: #FF62A5;
+      --yellow: #FFD200;
+      --purple: #BA85FF;
+      --red: #FF4742;
+      --orange: #FF8438;
 
-      /* Glass Panels */
-      --glass-bg: rgba(255, 255, 255, 0.78);
-      --glass-dark: rgba(15, 15, 18, 0.72);
-      --glass-border: rgba(255, 255, 255, 0.45);
+      /* Brutal Elevation & Strokes */
+      --border-thick: 3px solid var(--black);
+      --border-thin: 2px solid var(--black);
+      --shadow-sm: 3px 3px 0px var(--black);
+      --shadow-md: 5px 5px 0px var(--black);
+      --shadow-lg: 8px 8px 0px var(--black);
 
       /* Typography */
-      --font-display: 'Space Grotesk', sans-serif;
+      --font-display: 'Anton', sans-serif;
+      --font-heading: 'Archivo Black', sans-serif;
+      --font-mono: 'Space Grotesk', monospace;
       --font-body: 'Plus Jakarta Sans', sans-serif;
 
       /* Radii */
-      --radius-sm: 10px;
-      --radius-md: 18px;
-      --radius-lg: 24px;
-      --radius-xl: 32px;
-      --radius-pill: 999px;
+      --radius-sm: 8px;
+      --radius-md: 14px;
+      --radius-pill: 9999px;
 
-      /* Elevation */
-      --shadow-soft: 0 8px 30px rgba(0, 0, 0, 0.04);
-      --shadow-float: 0 16px 40px rgba(0, 0, 0, 0.08);
+      /* Bounce curve */
+      --bounce: cubic-bezier(0.175, 0.885, 0.32, 1.275);
 
-      /* Safe Areas */
+      /* Safe-area insets */
       --safe-top: env(safe-area-inset-top, 0px);
       --safe-bottom: env(safe-area-inset-bottom, 0px);
     }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
 
     body {
-      background-color: var(--bg);
-      color: var(--text);
+      background-color: var(--beige);
+      color: var(--black);
       font-family: var(--font-body);
+      font-weight: 700;
       overflow: hidden;
-      touch-action: manipulation;
-      -webkit-font-smoothing: antialiased;
       position: fixed;
       inset: 0;
+      user-select: none;
+      -webkit-font-smoothing: antialiased;
     }
 
     /* Screen Views */
@@ -83,11 +86,11 @@
       inset: 0;
       display: flex;
       flex-direction: column;
-      background: var(--bg);
+      background: var(--beige);
       opacity: 0;
       pointer-events: none;
       visibility: hidden;
-      transition: opacity 0.28s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.28s;
+      transition: opacity 0.22s ease, visibility 0.22s;
       z-index: 10;
     }
     .view-screen.active {
@@ -97,417 +100,544 @@
       z-index: 20;
     }
 
-    /* Typography */
     h1, h2, h3, h4 {
-      font-family: var(--font-display);
+      font-family: var(--font-heading);
+      text-transform: uppercase;
       letter-spacing: -0.03em;
-      line-height: 1.05;
-      font-weight: 700;
+      line-height: 1;
     }
-    .text-muted { color: var(--text-muted); }
     .hidden { display: none !important; }
 
     /* ==========================================================================
-       BUTTONS & CONTROLS (design(2).md specification)
+       BUTTONS & TACTILE CONTROLS (NEO-BRUTALISM)
        ========================================================================== */
     button {
       background: none;
       border: none;
       cursor: pointer;
-      font-family: var(--font-body);
-      font-weight: 600;
+      font-family: var(--font-heading);
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
       outline: none;
-      transition: transform 0.15s ease, opacity 0.15s ease, background 0.15s ease;
+      transition: transform 0.15s var(--bounce), box-shadow 0.15s var(--bounce), background 0.15s;
     }
-    button:active { transform: scale(0.97); }
-    button:disabled { opacity: 0.35; cursor: not-allowed; transform: none !important; }
+    button:hover:not(:disabled) {
+      transform: translate(-2px, -2px);
+      box-shadow: 6px 6px 0px var(--black);
+    }
+    button:active:not(:disabled) {
+      transform: translate(2px, 2px);
+      box-shadow: 1px 1px 0px var(--black) !important;
+    }
+    button:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      transform: none !important;
+      box-shadow: var(--shadow-sm) !important;
+    }
 
-    /* Primary Pill */
-    .btn-pill-primary {
-      background: var(--black);
-      color: var(--white);
-      height: 52px;
-      padding: 0 28px;
+    .btn-pill {
+      background: var(--white);
+      color: var(--black);
+      border: var(--border-thick);
       border-radius: var(--radius-pill);
-      font-size: 0.95rem;
-      font-weight: 700;
+      padding: 10px 20px;
+      font-size: 0.85rem;
+      box-shadow: var(--shadow-sm);
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      white-space: nowrap;
+    }
+
+    .btn-brutal-primary {
+      background: var(--lime);
+      color: var(--black);
+      border: var(--border-thick);
+      border-radius: var(--radius-pill);
+      padding: 16px 28px;
+      font-size: 1rem;
+      box-shadow: var(--shadow-md);
       display: inline-flex;
       align-items: center;
       justify-content: center;
       gap: 10px;
-      letter-spacing: 0.02em;
-      box-shadow: 0 10px 24px rgba(0, 0, 0, 0.12);
+      width: 100%;
     }
 
-    /* Secondary Neutral Pill */
-    .btn-pill-secondary {
-      background: var(--surface);
-      color: var(--text);
-      height: 44px;
-      padding: 0 20px;
-      border-radius: var(--radius-pill);
-      font-size: 0.88rem;
-      font-weight: 600;
-      border: 1px solid var(--border);
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-    }
-
-    /* Circular Icon Button */
     .btn-icon {
       width: 48px;
       height: 48px;
-      border-radius: var(--radius-pill);
-      background: var(--surface);
-      color: var(--text);
-      border: 1px solid var(--border);
+      border-radius: 50%;
+      background: var(--white);
+      border: var(--border-thick);
+      color: var(--black);
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      font-size: 1.15rem;
-      box-shadow: var(--shadow-soft);
+      font-size: 1.25rem;
+      box-shadow: var(--shadow-sm);
       flex-shrink: 0;
     }
 
+    /* Sticker / Angled Badges */
+    .brutal-badge {
+      display: inline-block;
+      font-family: var(--font-heading);
+      font-size: 0.68rem;
+      padding: 4px 10px;
+      border: var(--border-thin);
+      border-radius: 6px;
+      text-transform: uppercase;
+      box-shadow: 2px 2px 0px var(--black);
+      transform: rotate(-1.5deg);
+    }
+
     /* ==========================================================================
-       VIEW 1: CAMERA & CAPTURE
+       VIEW 1: CAMERA & PHOTO CAPTURE
        ========================================================================== */
-    .camera-viewport {
+    .top-brand-bar {
+      position: absolute;
+      top: calc(var(--safe-top) + 16px);
+      left: 16px;
+      right: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 50;
+      pointer-events: none;
+    }
+    .top-brand-bar > * { pointer-events: auto; }
+
+    .brand-logo {
+      font-family: var(--font-display);
+      font-size: 2.2rem;
+      color: var(--black);
+      text-shadow: 3px 3px 0px var(--cyan);
+      letter-spacing: 1px;
+      background: var(--white);
+      border: var(--border-thick);
+      padding: 4px 14px;
+      border-radius: 12px;
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .brand-logo span.tag-ver {
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      background: var(--yellow);
+      border: 2px solid var(--black);
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+
+    .camera-frame {
       position: absolute;
       inset: 0;
       background: var(--black);
+      display: flex;
+      align-items: center;
+      justify-content: center;
       overflow: hidden;
     }
-    #cameraVideo {
+    #cameraFeed {
       width: 100%;
       height: 100%;
       object-fit: cover;
     }
 
-    .editorial-header {
+    /* Camera Viewfinder Crosshairs */
+    .viewfinder-guide {
       position: absolute;
-      top: calc(var(--safe-top) + 16px);
-      left: 20px;
-      right: 20px;
+      inset: 40px 24px calc(var(--safe-bottom) + 130px) 24px;
+      border: 2px dashed rgba(255, 255, 255, 0.45);
+      border-radius: 24px;
+      pointer-events: none;
       display: flex;
+      flex-direction: column;
       justify-content: space-between;
-      align-items: center;
-      z-index: 30;
+      padding: 16px;
     }
-    .brand-mark {
-      background: var(--glass-bg);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      padding: 8px 16px;
+    .guide-tag {
+      align-self: center;
+      background: var(--black);
+      color: var(--white);
+      border: 2px solid var(--white);
+      padding: 4px 12px;
       border-radius: var(--radius-pill);
-      border: 1px solid var(--glass-border);
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .brand-title {
-      font-family: var(--font-display);
-      font-size: 0.95rem;
-      font-weight: 700;
-      letter-spacing: 0.08em;
+      font-size: 0.72rem;
+      font-family: var(--font-mono);
       text-transform: uppercase;
-    }
-    .brand-indicator {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: var(--lime);
+      letter-spacing: 0.05em;
     }
 
-    .capture-dock {
+    /* Fallback Card if Camera Unavailable */
+    .camera-notice-card {
+      position: absolute;
+      inset: 20px;
+      max-width: 440px;
+      margin: auto;
+      height: fit-content;
+      background: var(--beige);
+      border: var(--border-thick);
+      border-radius: 20px;
+      padding: 28px;
+      text-align: center;
+      box-shadow: var(--shadow-lg);
+      z-index: 40;
+    }
+
+    .floating-shutter-dock {
       position: absolute;
       bottom: calc(var(--safe-bottom) + 24px);
       left: 50%;
       transform: translateX(-50%);
-      background: var(--glass-bg);
-      backdrop-filter: blur(24px);
-      -webkit-backdrop-filter: blur(24px);
-      padding: 8px 16px;
+      background: var(--white);
+      border: var(--border-thick);
       border-radius: var(--radius-pill);
-      border: 1px solid var(--glass-border);
+      padding: 10px 22px;
       display: flex;
       align-items: center;
       gap: 20px;
-      box-shadow: var(--shadow-float);
-      z-index: 30;
+      box-shadow: var(--shadow-lg);
+      z-index: 50;
     }
 
-    .shutter-ring {
+    .shutter-btn {
       width: 72px;
       height: 72px;
       border-radius: 50%;
-      border: 3px solid var(--black);
-      padding: 4px;
-      background: transparent;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .shutter-core {
-      width: 100%;
-      height: 100%;
-      border-radius: 50%;
-      background: var(--black);
+      background: var(--red);
+      border: var(--border-thick);
+      outline: 4px solid var(--white);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.25);
       transition: transform 0.15s ease;
     }
-    .shutter-ring:active .shutter-core { transform: scale(0.9); }
+    .shutter-btn:active { transform: scale(0.9); }
 
     /* ==========================================================================
-       VIEW 2: HAIRSTYLE STUDIO & CATALOGUE
+       VIEW 2: HAIRSTYLE CATALOGUE (50 STYLES & SEARCH)
        ========================================================================== */
     .studio-header {
-      padding: calc(var(--safe-top) + 14px) 20px 12px;
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
+      padding: calc(var(--safe-top) + 14px) 16px 12px;
+      background: var(--white);
+      border-bottom: var(--border-thick);
       display: flex;
       flex-direction: column;
       gap: 12px;
-      z-index: 25;
+      z-index: 30;
+      box-shadow: 0 4px 0px rgba(0,0,0,0.04);
     }
-    .studio-top-row {
+
+    .studio-nav-row {
       display: flex;
       justify-content: space-between;
       align-items: center;
     }
 
-    /* Client Preview Bar */
     .client-bar {
       display: flex;
-      align-items: center;
       gap: 12px;
-      background: var(--bg);
+      align-items: center;
+      background: var(--beige);
+      border: var(--border-thick);
       border-radius: var(--radius-md);
       padding: 8px 12px;
-      border: 1px solid var(--border);
+      box-shadow: var(--shadow-sm);
     }
-    .client-avatar {
-      width: 48px;
-      height: 48px;
-      border-radius: 12px;
+    .client-thumb {
+      width: 52px;
+      height: 52px;
+      border-radius: 8px;
       object-fit: cover;
-      border: 1px solid var(--border);
+      border: var(--border-thin);
+      flex-shrink: 0;
+      background: #E5E7EB;
     }
-    .search-box {
+    .search-wrapper {
       position: relative;
       flex: 1;
+      display: flex;
+      align-items: center;
     }
-    .search-box input {
+    .search-input {
       width: 100%;
-      height: 40px;
-      background: var(--surface);
-      border: 1px solid var(--border);
+      height: 42px;
+      background: var(--white);
+      border: var(--border-thick);
       border-radius: var(--radius-pill);
-      padding: 0 16px 0 36px;
-      font-size: 0.85rem;
+      padding: 0 36px 0 38px;
       font-family: var(--font-body);
-      color: var(--text);
+      font-weight: 700;
+      font-size: 0.88rem;
       outline: none;
+      color: var(--black);
+      box-shadow: inset 2px 2px 0px rgba(0,0,0,0.06);
     }
-    .search-box i {
+    .search-input:focus {
+      border-color: var(--black);
+      box-shadow: var(--shadow-sm);
+    }
+    .search-wrapper i.search-icon {
       position: absolute;
-      left: 12px;
-      top: 50%;
-      transform: translateY(-50%);
-      color: var(--text-muted);
-      font-size: 0.95rem;
+      left: 14px;
+      font-size: 1.1rem;
+      color: var(--black);
+      pointer-events: none;
+    }
+    .clear-search-btn {
+      position: absolute;
+      right: 12px;
+      font-size: 1rem;
+      color: var(--black);
+      display: none;
     }
 
-    /* Category Pill Slider */
-    .category-scroll {
+    /* Category Filter Pills */
+    .filter-track {
       display: flex;
       gap: 8px;
       overflow-x: auto;
-      padding: 2px 0 6px;
+      padding: 2px 0 4px;
       scrollbar-width: none;
     }
-    .category-scroll::-webkit-scrollbar { display: none; }
-    .cat-chip {
-      white-space: nowrap;
-      padding: 8px 16px;
+    .filter-track::-webkit-scrollbar { display: none; }
+    
+    .cat-pill {
+      background: var(--white);
+      color: var(--black);
+      border: var(--border-thin);
       border-radius: var(--radius-pill);
-      background: var(--surface-soft);
-      font-size: 0.78rem;
-      font-weight: 700;
-      color: var(--text-secondary);
-      border: 1px solid transparent;
-      letter-spacing: 0.02em;
-      text-transform: uppercase;
+      padding: 7px 16px;
+      font-family: var(--font-heading);
+      font-size: 0.75rem;
+      letter-spacing: 0.03em;
+      white-space: nowrap;
+      box-shadow: 2px 2px 0px var(--black);
     }
-    .cat-chip.active {
+    .cat-pill.active {
       background: var(--black);
       color: var(--white);
+      transform: translate(2px, 2px);
+      box-shadow: 0 0 0 var(--black);
     }
 
-    /* Hairstyle Grid */
-    .catalog-content {
+    /* 50 Hairstyle Grid */
+    .catalogue-container {
       flex: 1;
       overflow-y: auto;
-      padding: 16px 20px calc(var(--safe-bottom) + 110px);
+      padding: 16px;
+      padding-bottom: calc(var(--safe-bottom) + 120px);
     }
     .hairstyles-grid {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
       gap: 14px;
     }
-    @media (min-width: 768px) {
+    @media (min-width: 680px) {
+      .hairstyles-grid { grid-template-columns: repeat(3, 1fr); }
+    }
+    @media (min-width: 1024px) {
       .hairstyles-grid { grid-template-columns: repeat(4, 1fr); gap: 18px; }
     }
 
-    /* Individual Style Card */
+    /* Neo-Brutalist Hairstyle Card */
     .hair-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-lg);
-      padding: 16px;
+      background: var(--card-bg);
+      border: var(--border-thick);
+      border-radius: var(--radius-md);
+      padding: 14px;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
-      min-height: 140px;
+      min-height: 160px;
       position: relative;
       cursor: pointer;
-      box-shadow: var(--shadow-soft);
-      transition: all 0.2s ease;
+      box-shadow: var(--shadow-sm);
+      transition: transform 0.15s var(--bounce), box-shadow 0.15s, border-color 0.15s;
     }
-    .hair-card:hover { border-color: var(--black); }
+    .hair-card:hover {
+      transform: translate(-3px, -3px);
+      box-shadow: var(--shadow-md);
+    }
     .hair-card.selected {
-      border: 2px solid var(--black);
-      background: #FAFBFB;
-      box-shadow: 0 10px 24px rgba(0, 0, 0, 0.07);
+      background: #FFFDF0;
+      border-color: var(--black);
+      box-shadow: 6px 6px 0px var(--cyan);
+      transform: translate(-2px, -2px);
     }
     .hair-card.selected::after {
-      content: '\F26E';
-      font-family: "bootstrap-icons";
+      content: '✓ SELECTED';
       position: absolute;
-      top: 10px;
+      top: -10px;
       right: 10px;
-      width: 22px;
-      height: 22px;
-      border-radius: 50%;
-      background: var(--black);
-      color: var(--white);
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      background: var(--lime);
+      color: var(--black);
+      font-family: var(--font-heading);
       font-size: 0.65rem;
+      border: var(--border-thin);
+      padding: 2px 8px;
+      border-radius: 4px;
+      box-shadow: 2px 2px 0px var(--black);
+      transform: rotate(2deg);
     }
 
-    .hair-tag {
-      font-size: 0.65rem;
-      font-weight: 800;
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-      padding: 3px 8px;
-      border-radius: var(--radius-pill);
-      align-self: flex-start;
+    .card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
       margin-bottom: 8px;
+      gap: 6px;
     }
-    .hair-title {
-      font-size: 1.05rem;
-      font-family: var(--font-display);
+    .card-number {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
       font-weight: 700;
+      color: var(--muted);
+    }
+    .hair-name {
+      font-family: var(--font-heading);
+      font-size: 1.05rem;
       line-height: 1.15;
-      color: var(--text);
       margin-bottom: 6px;
+      color: var(--black);
     }
     .hair-desc {
       font-size: 0.75rem;
-      color: var(--text-secondary);
-      line-height: 1.35;
+      color: var(--muted);
+      line-height: 1.3;
       display: -webkit-box;
       -webkit-line-clamp: 2;
       -webkit-box-orient: vertical;
       overflow: hidden;
+      margin-bottom: 12px;
+    }
+    .card-action-bar {
+      margin-top: auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .btn-card-apply {
+      background: var(--white);
+      border: var(--border-thin);
+      border-radius: var(--radius-pill);
+      padding: 6px 12px;
+      font-size: 0.72rem;
+      box-shadow: 2px 2px 0px var(--black);
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
     }
 
-    /* Fixed Floating Apply Footer */
-    .studio-action-dock {
+    /* Sticky Bottom Bar */
+    .studio-dock {
       position: absolute;
       bottom: 0;
       left: 0;
       right: 0;
-      background: linear-gradient(180deg, rgba(241, 242, 244, 0) 0%, rgba(241, 242, 244, 0.98) 40%, rgba(241, 242, 244, 1) 100%);
+      background: linear-gradient(180deg, rgba(245, 245, 237, 0) 0%, rgba(245, 245, 237, 0.95) 30%, rgba(245, 245, 237, 1) 100%);
       padding: 16px 20px calc(var(--safe-bottom) + 16px);
       display: flex;
       align-items: center;
-      justify-content: space-between;
       gap: 16px;
-      z-index: 30;
+      z-index: 40;
     }
-    .selected-summary {
-      display: flex;
-      flex-direction: column;
+    .selection-summary {
+      flex: 1;
       overflow: hidden;
+      background: var(--white);
+      border: var(--border-thick);
+      border-radius: var(--radius-md);
+      padding: 8px 14px;
+      box-shadow: var(--shadow-sm);
     }
-    .selected-label {
-      font-size: 0.7rem;
+    .summary-meta {
+      font-size: 0.65rem;
+      font-family: var(--font-mono);
       text-transform: uppercase;
-      color: var(--text-muted);
-      font-weight: 700;
-      letter-spacing: 0.05em;
+      color: var(--muted);
     }
-    .selected-name {
-      font-family: var(--font-display);
-      font-size: 1.1rem;
-      font-weight: 700;
+    .summary-name {
+      font-family: var(--font-heading);
+      font-size: 1.05rem;
       white-space: nowrap;
-      text-overflow: ellipsis;
       overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     /* ==========================================================================
        VIEW 3: PROCESSING OVERLAY
        ========================================================================== */
-    .processing-modal {
+    .processing-overlay {
       position: absolute;
       inset: 0;
-      background: var(--glass-dark);
-      backdrop-filter: blur(28px);
-      -webkit-backdrop-filter: blur(28px);
+      background: rgba(245, 245, 237, 0.96);
+      backdrop-filter: blur(8px);
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: 30px;
+      padding: 24px;
       text-align: center;
       z-index: 100;
-      color: var(--white);
     }
-    .metric-ring-container {
-      position: relative;
-      width: 120px;
-      height: 120px;
+    .brutal-spinner-box {
+      width: 90px;
+      height: 90px;
+      background: var(--lime);
+      border: var(--border-thick);
+      border-radius: 20px;
+      box-shadow: var(--shadow-lg);
       display: flex;
       align-items: center;
       justify-content: center;
       margin-bottom: 24px;
+      animation: brutalWiggle 1.4s infinite ease-in-out;
     }
-    .spinner-svg {
-      position: absolute;
-      inset: 0;
-      width: 100%;
+    @keyframes brutalWiggle {
+      0%, 100% { transform: rotate(-6deg) scale(1); }
+      50% { transform: rotate(6deg) scale(1.06); }
+    }
+    .progress-bar-brutal {
+      width: 240px;
+      height: 16px;
+      background: var(--white);
+      border: var(--border-thick);
+      border-radius: var(--radius-pill);
+      margin: 16px 0;
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+    }
+    .progress-bar-fill {
       height: 100%;
-      animation: rotateRing 2s linear infinite;
+      width: 0%;
+      background: var(--red);
+      transition: width 0.2s linear;
     }
-    @keyframes rotateRing { 100% { transform: rotate(360deg); } }
 
     /* ==========================================================================
-       VIEW 4: COMPARISON & RESULT VIEW
+       VIEW 4: COMPARISON & RESULT VIEWER (SPLIT SLIDER)
        ========================================================================== */
+    .compare-header {
+      padding: calc(var(--safe-top) + 14px) 16px 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--white);
+      border-bottom: var(--border-thick);
+      z-index: 30;
+    }
     .compare-stage {
       flex: 1;
       position: relative;
-      background: #0D0E10;
+      background: #1A1A1A;
       overflow: hidden;
       touch-action: none;
     }
-    .stage-img {
+    .compare-layer-img {
       position: absolute;
       inset: 0;
       width: 100%;
@@ -519,7 +649,7 @@
       clip-path: polygon(50% 0, 100% 0, 100% 100%, 50% 100%);
     }
 
-    .slider-divider {
+    .slider-handle-wrap {
       position: absolute;
       top: 0;
       bottom: 0;
@@ -530,583 +660,1000 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      z-index: 40;
+      z-index: 35;
     }
-    .divider-line {
+    .slider-line-bar {
       position: absolute;
       top: 0;
       bottom: 0;
-      width: 2px;
-      background: var(--white);
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.4);
+      width: 4px;
+      background: var(--black);
+      box-shadow: 0 0 10px rgba(0,0,0,0.5);
     }
-    .divider-pill {
+    .slider-knob-btn {
       position: relative;
-      width: 36px;
-      height: 36px;
+      width: 44px;
+      height: 44px;
+      background: var(--lime);
+      border: var(--border-thick);
       border-radius: 50%;
-      background: var(--white);
-      color: var(--black);
-      border: 1px solid var(--border);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 0.9rem;
-      box-shadow: 0 4px 14px rgba(0,0,0,0.3);
+      font-size: 1.1rem;
+      box-shadow: var(--shadow-sm);
+      color: var(--black);
     }
 
-    .view-mode-pill {
+    .compare-mode-switch {
       display: flex;
-      background: var(--glass-bg);
-      backdrop-filter: blur(14px);
-      padding: 4px;
+      background: var(--white);
+      border: var(--border-thick);
       border-radius: var(--radius-pill);
-      border: 1px solid var(--glass-border);
+      padding: 3px;
+      box-shadow: var(--shadow-sm);
     }
-    .mode-tab {
+    .mode-tab-btn {
       padding: 6px 16px;
       border-radius: var(--radius-pill);
       font-size: 0.75rem;
-      font-weight: 700;
-      color: var(--text-secondary);
+      color: var(--black);
     }
-    .mode-tab.active {
+    .mode-tab-btn.active {
       background: var(--black);
       color: var(--white);
     }
 
-    /* Toast Notifications */
-    .toast-layer {
+    .floating-compare-actions {
+      position: absolute;
+      bottom: calc(var(--safe-bottom) + 24px);
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 12px;
+      z-index: 50;
+    }
+
+    /* ==========================================================================
+       TOAST NOTIFICATIONS (BRUTALIST TOASTS)
+       ========================================================================== */
+    .toast-zone {
       position: fixed;
-      top: calc(var(--safe-top) + 20px);
+      top: calc(var(--safe-top) + 16px);
       left: 50%;
       transform: translateX(-50%);
       z-index: 9999;
       pointer-events: none;
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 10px;
+      width: 90%;
+      max-width: 420px;
     }
-    .editorial-toast {
-      background: var(--black);
-      color: var(--white);
-      padding: 12px 22px;
+    .brutal-toast {
+      background: var(--white);
+      color: var(--black);
+      border: var(--border-thick);
       border-radius: var(--radius-pill);
+      padding: 12px 20px;
+      font-family: var(--font-heading);
       font-size: 0.88rem;
-      font-weight: 600;
+      box-shadow: var(--shadow-md);
       display: flex;
       align-items: center;
-      gap: 10px;
-      box-shadow: var(--shadow-float);
-      animation: toastIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      gap: 12px;
+      animation: slideInDown 0.25s var(--bounce) forwards;
     }
-    @keyframes toastIn { from { opacity: 0; transform: translateY(-16px); } to { opacity: 1; transform: translateY(0); } }
+    .brutal-toast.error { background: var(--red); color: var(--white); }
+    @keyframes slideInDown {
+      from { transform: translateY(-30px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    /* Modal / Zoom inspect */
+    .zoom-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.9);
+      z-index: 200;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .zoom-overlay img {
+      max-width: 100%;
+      max-height: 80vh;
+      border: var(--border-thick);
+      border-radius: 12px;
+      box-shadow: 10px 10px 0px var(--cyan);
+    }
   </style>
 </head>
 <body>
 
-  <!-- Toast Notification Hub -->
-  <div id="toastHub" class="toast-layer"></div>
+  <!-- Toast Notification Zone -->
+  <div id="toastZone" class="toast-zone"></div>
 
   <!-- =========================================================================
-       VIEW 1: CAMERA & LIVE CAPTURE
+       VIEW 1: CAMERA & PHOTO CAPTURE
        ========================================================================= -->
   <section id="cameraScreen" class="view-screen active">
-    <div class="editorial-header">
-      <div class="brand-mark">
-        <span class="brand-indicator"></span>
-        <span class="brand-title">HAIR LAB 2026</span>
+    <!-- Top Bar -->
+    <header class="top-brand-bar">
+      <div class="brand-logo">
+        <span>HAIR·LAB</span>
+        <span class="tag-ver">2026</span>
       </div>
       <div style="display: flex; gap: 8px;">
-        <button id="triggerUploadBtn" class="btn-icon" aria-label="Upload Photo"><i class="bi bi-arrow-up-circle"></i></button>
-        <button id="flipCameraBtn" class="btn-icon" aria-label="Flip Camera"><i class="bi bi-camera-reverse"></i></button>
-        <input type="file" id="photoInput" class="hidden" accept="image/*" />
-      </div>
-    </div>
-
-    <div class="camera-viewport">
-      <video id="cameraVideo" autoplay playsinline muted></video>
-    </div>
-
-    <div class="capture-dock">
-      <button id="shutterBtn" class="shutter-ring" aria-label="Capture Photo">
-        <div class="shutter-core"></div>
-      </button>
-    </div>
-  </section>
-
-  <!-- =========================================================================
-       VIEW 2: HAIRSTYLE LIBRARY & SELECTION STUDIO
-       ========================================================================= -->
-  <section id="studioScreen" class="view-screen">
-    <header class="studio-header">
-      <div class="studio-top-row">
-        <button id="backToCaptureBtn" class="btn-pill-secondary"><i class="bi bi-arrow-left"></i> RETAKE</button>
-        <h3>HAIRSTYLE CATALOGUE</h3>
-        <div style="width: 80px;"></div>
-      </div>
-
-      <!-- User Reference Bar & Instant Search -->
-      <div class="client-bar">
-        <img id="clientReferenceThumb" class="client-avatar" src="" alt="Client Reference" />
-        <div class="search-box">
-          <i class="bi bi-search"></i>
-          <input type="text" id="hairSearchInput" placeholder="Search 50 styles (e.g. Butterfly, Paranda, Juda)..." autocomplete="off" />
-        </div>
-      </div>
-
-      <!-- Filter Chips -->
-      <div class="category-scroll" id="categoryScroll">
-        <button class="cat-chip active" data-filter="all">All (50)</button>
-        <button class="cat-chip" data-filter="punjabi">Punjabi & Wedding</button>
-        <button class="cat-chip" data-filter="modern">Modern Cuts</button>
-        <button class="cat-chip" data-filter="open">Open & Blowouts</button>
-        <button class="cat-chip" data-filter="buns">Buns & Juda</button>
-        <button class="cat-chip" data-filter="braids">Braids</button>
-        <button class="cat-chip" data-filter="ponytail">Ponytails</button>
-        <button class="cat-chip" data-filter="bob">Bob & Short</button>
+        <button id="quickSampleBtn" class="btn-pill" style="background: var(--yellow);" title="Test with Demo Model">
+          <i class="bi bi-person-bounding-box"></i> DEMO PHOTO
+        </button>
+        <button id="triggerUploadBtn" class="btn-icon" aria-label="Upload Photo" title="Upload Photo">
+          <i class="bi bi-upload"></i>
+        </button>
+        <button id="switchCameraBtn" class="btn-icon" aria-label="Switch Camera" title="Flip Camera">
+          <i class="bi bi-arrow-repeat"></i>
+        </button>
+        <input type="file" id="photoFileInput" class="hidden" accept="image/*" />
       </div>
     </header>
 
-    <!-- 50 Hairstyle Grid -->
-    <main class="catalog-content">
-      <div id="hairstylesGrid" class="hairstyles-grid"></div>
-    </main>
+    <!-- Camera Viewport -->
+    <div class="camera-frame">
+      <video id="cameraFeed" autoplay playsinline muted></video>
 
-    <!-- Sticky Apply Bar -->
-    <div class="studio-action-dock">
-      <div class="selected-summary">
-        <span class="selected-label">Selected Style</span>
-        <span id="selectedHairLabel" class="selected-name">Select a hairstyle</span>
+      <!-- Viewfinder Guides -->
+      <div class="viewfinder-guide">
+        <div class="guide-tag">FACE & HAIR IN FRAME</div>
+        <div class="guide-tag" style="background: var(--lime); color: var(--black); border-color: var(--black);">KEEP SAME ANGLE</div>
       </div>
-      <button id="applyHairstyleBtn" class="btn-pill-primary" disabled>
-        APPLY HAIRSTYLE <i class="bi bi-stars"></i>
+
+      <!-- Fallback Box if camera is denied/inactive on localhost -->
+      <div id="cameraNotice" class="camera-notice-card hidden">
+        <i class="bi bi-camera-video-off" style="font-size: 3rem; color: var(--red); margin-bottom: 12px; display: block;"></i>
+        <h2>CAMERA NOT ACTIVE</h2>
+        <p style="margin: 10px 0 20px; font-size: 0.88rem; color: var(--muted);">
+          Camera permission was denied or running over an insecure origin. You can upload an image or load a demo portrait instantly!
+        </p>
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+          <button id="fallbackUploadBtn" class="btn-brutal-primary" style="background: var(--cyan);">
+            <i class="bi bi-folder2-open"></i> UPLOAD FROM DEVICE
+          </button>
+          <button id="fallbackSampleBtn" class="btn-pill" style="background: var(--yellow); justify-content: center;">
+            <i class="bi bi-stars"></i> LOAD DEMO PORTRAIT
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Floating Shutter Dock -->
+    <div class="floating-shutter-dock">
+      <button id="openUploadDockBtn" class="btn-icon" title="Upload from Device">
+        <i class="bi bi-image"></i>
+      </button>
+      <button id="captureShutterBtn" class="shutter-btn" aria-label="Take Photo"></button>
+      <button id="flipCameraDockBtn" class="btn-icon" title="Flip Camera">
+        <i class="bi bi-arrow-repeat"></i>
       </button>
     </div>
   </section>
 
   <!-- =========================================================================
-       VIEW 3: PROCESSING MODAL
+       VIEW 2: 50-HAIRSTYLE STUDIO CATALOGUE
        ========================================================================= -->
-  <div id="processingModal" class="processing-modal hidden">
-    <div class="metric-ring-container">
-      <svg class="spinner-svg" viewBox="0 0 100 100">
-        <circle cx="50" cy="50" r="44" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="6" />
-        <circle cx="50" cy="50" r="44" fill="none" stroke="var(--lime)" stroke-width="6" stroke-dasharray="80 200" stroke-linecap="round" />
-      </svg>
-      <i class="bi bi-scissors" style="font-size: 2rem; color: var(--lime);"></i>
+  <section id="studioScreen" class="view-screen">
+    <!-- Header with Photo Thumb & Search Bar -->
+    <header class="studio-header">
+      <div class="studio-nav-row">
+        <button id="retakePhotoBtn" class="btn-pill" style="padding: 8px 16px; font-size: 0.78rem;">
+          <i class="bi bi-camera"></i> RETAKE
+        </button>
+        <h3>HAIRSTYLE STUDIO [50]</h3>
+        <button id="changePhotoBtn" class="btn-pill" style="padding: 8px 14px; font-size: 0.78rem;">
+          <i class="bi bi-arrow-up-circle"></i> NEW PHOTO
+        </button>
+      </div>
+
+      <!-- Client Thumbnail Bar & Search Input -->
+      <div class="client-bar">
+        <img id="clientReferenceThumb" class="client-thumb" alt="Reference Photo" />
+        <div class="search-wrapper">
+          <i class="bi bi-search search-icon"></i>
+          <input type="text" id="hairSearchInput" class="search-input" placeholder="Search 50 hairstyles (e.g. Butterfly, Paranda, Bob)..." autocomplete="off" />
+          <button id="clearSearchBtn" class="clear-search-btn" aria-label="Clear Search"><i class="bi bi-x-circle-fill"></i></button>
+        </div>
+      </div>
+
+      <!-- Category Filter Pills -->
+      <div class="filter-track" id="categoryTrack">
+        <button class="cat-pill active" data-filter="all">ALL (50)</button>
+        <button class="cat-pill" data-filter="modern">MODERN CUTS (10)</button>
+        <button class="cat-pill" data-filter="bob">BOB & SHORT (5)</button>
+        <button class="cat-pill" data-filter="open">OPEN & WAVES (10)</button>
+        <button class="cat-pill" data-filter="ponytail">PONYTAILS (5)</button>
+        <button class="cat-pill" data-filter="buns">BUNS & JUDA (6)</button>
+        <button class="cat-pill" data-filter="braids">BRAIDS (7)</button>
+        <button class="cat-pill" data-filter="punjabi">PUNJABI & WEDDING (5)</button>
+        <button class="cat-pill" data-filter="bridal">HALF-UP & PARTY (2)</button>
+      </div>
+    </header>
+
+    <!-- Main Hairstyle Grid -->
+    <main class="catalogue-container">
+      <div id="hairstylesGrid" class="hairstyles-grid"></div>
+    </main>
+
+    <!-- Sticky Bottom Bar -->
+    <div class="studio-dock">
+      <div class="selection-summary">
+        <div class="summary-meta">CHOSEN STYLE:</div>
+        <div id="summaryStyleName" class="summary-name">SELECT A HAIRSTYLE</div>
+      </div>
+      <button id="applySelectedHairBtn" class="btn-brutal-primary" style="width: auto; min-width: 190px;" disabled>
+        APPLY CUT <i class="bi bi-scissors"></i>
+      </button>
     </div>
-    <h2 style="font-size: 2rem; margin-bottom: 8px;">STYLING...</h2>
-    <p id="timerDisplay" style="color: rgba(255,255,255,0.7); font-size: 0.95rem; font-weight: 500;">Preserving face geometry & lighting (0s)</p>
+  </section>
+
+  <!-- =========================================================================
+       VIEW 3: PROCESSING OVERLAY
+       ========================================================================= -->
+  <div id="processingOverlay" class="processing-overlay hidden">
+    <div class="brutal-spinner-box">
+      <i class="bi bi-scissors" style="font-size: 2.8rem; color: var(--black);"></i>
+    </div>
+    <h2 id="processTitle" style="font-size: 2rem; margin-bottom: 6px;">STYLING...</h2>
+    <p id="processStatus" style="font-size: 0.9rem; color: var(--muted); font-family: var(--font-mono);">
+      Preserving facial geometry & identity (0s)
+    </p>
+    <div class="progress-bar-brutal">
+      <div id="progressFill" class="progress-bar-fill"></div>
+    </div>
+    <div class="brutal-badge" style="background: var(--yellow);">
+      SECURE PROXY: API KEY STAYS SERVER-SIDE
+    </div>
   </div>
 
   <!-- =========================================================================
        VIEW 4: COMPARISON & RESULT VIEWER
        ========================================================================= -->
   <section id="compareScreen" class="view-screen">
-    <header class="editorial-header" style="position: relative; top: 0; left: 0; right: 0; padding: calc(var(--safe-top) + 12px) 20px 12px; background: var(--surface);">
-      <button id="compareBackBtn" class="btn-pill-secondary"><i class="bi bi-chevron-left"></i> STYLES</button>
-      <div class="view-mode-pill">
-        <button id="modeSplitBtn" class="mode-tab active">SPLIT</button>
-        <button id="modeSingleBtn" class="mode-tab">RESULT</button>
+    <header class="compare-header">
+      <button id="backToStudioBtn" class="btn-pill" style="padding: 8px 16px; font-size: 0.78rem;">
+        <i class="bi bi-arrow-left"></i> CATALOGUE
+      </button>
+      
+      <div class="compare-mode-switch">
+        <button id="modeSplitBtn" class="mode-tab-btn active">SPLIT SLIDER</button>
+        <button id="modeResultOnlyBtn" class="mode-tab-btn">RESULT ONLY</button>
       </div>
-      <button id="downloadResultBtn" class="btn-pill-primary" style="height: 40px; padding: 0 18px; font-size: 0.82rem;">SAVE <i class="bi bi-download"></i></button>
+
+      <button id="zoomModalBtn" class="btn-icon" style="width: 40px; height: 40px;" title="Full Size Preview">
+        <i class="bi bi-arrows-fullscreen" style="font-size: 1rem;"></i>
+      </button>
     </header>
 
     <div id="compareStage" class="compare-stage">
-      <img id="imgSource" class="stage-img" alt="Original Client" />
-      <img id="imgRendered" class="stage-img" alt="Virtual Hairstyle Applied" />
+      <!-- Original Photo -->
+      <img id="imgSource" class="compare-layer-img" alt="Original Photo" />
+      <!-- Rendered Hairstyle Result -->
+      <img id="imgRendered" class="compare-layer-img" alt="Hairstyle Result" />
 
-      <div id="sliderDivider" class="slider-divider">
-        <div class="divider-line"></div>
-        <div class="divider-pill"><i class="bi bi-arrows-collapse"></i></div>
+      <!-- Interactive Divider Handle -->
+      <div id="sliderHandleWrap" class="slider-handle-wrap">
+        <div class="slider-line-bar"></div>
+        <div class="slider-knob-btn"><i class="bi bi-arrows-collapse"></i></div>
       </div>
+    </div>
+
+    <!-- Floating Compare Action Bar -->
+    <div class="floating-compare-actions">
+      <button id="downloadResultBtn" class="btn-pill" style="background: var(--lime); color: var(--black); padding: 12px 24px;">
+        <i class="bi bi-download"></i> SAVE LOOK
+      </button>
+      <button id="tryAnotherStyleBtn" class="btn-pill" style="background: var(--cyan); color: var(--black); padding: 12px 24px;">
+        <i class="bi bi-shuffle"></i> ANOTHER STYLE
+      </button>
     </div>
   </section>
 
   <!-- =========================================================================
-       APPLICATION LOGIC & 50 HAIRSTYLE DATABASE
+       VIEW 5: FULL-SCREEN ZOOM MODAL
+       ========================================================================= -->
+  <div id="zoomModal" class="zoom-overlay hidden">
+    <button id="closeZoomModalBtn" class="btn-icon" style="position: absolute; top: 20px; right: 20px; background: var(--white); z-index: 210;">
+      <i class="bi bi-x-lg"></i>
+    </button>
+    <img id="zoomModalImg" src="" alt="Zoomed Hairstyle" />
+  </div>
+
+  <!-- =========================================================================
+       JAVASCRIPT APPLICATION CORE (ALL-IN-ONE)
        ========================================================================= -->
   <script>
-    // --- TOP 50 HAIRSTYLE LIBRARY ---
-    const HAIRSTYLES_LIBRARY = [
-      // 1. Modern cuts
-      { id: 'butterfly-cut', name: 'Butterfly Cut', category: 'modern', tag: 'Trending', color: 'var(--lime)', desc: 'Voluminous cascading layers with chin-length framing.', promptDetail: 'butterfly cut with bouncy 90s blowout layers, voluminous crown, and soft face-framing fringe' },
-      { id: 'long-layered-cut', name: 'Long Layered Cut', category: 'modern', tag: 'Classic', color: 'var(--peach)', desc: 'Graceful elongated layers providing fluid movement.', promptDetail: 'soft seamless long layered cut, natural root lift and flowing tapered ends' },
-      { id: 'face-framing-layers', name: 'Face-Framing Layers', category: 'modern', tag: 'Sculpting', color: 'var(--cyan)', desc: 'Curated layers accentuating cheekbones and jawline.', promptDetail: 'delicate face-framing layers hugging cheekbones and jawline with fluid soft texture' },
-      { id: 'feather-cut', name: 'Feather Cut', category: 'modern', tag: 'Volume', color: 'var(--lavender)', desc: 'Classic outward feathered layers with airy texture.', promptDetail: 'classic outward feathered cut with bouncy airy ends and polished finish' },
-      { id: 'curtain-bangs', name: 'Curtain Bangs', category: 'modern', tag: 'Framing', color: 'var(--pink)', desc: 'Center-parted swooping bangs blending into length.', promptDetail: 'chic curtain bangs parted in the center, framing both eyes with long subtle layers' },
-      { id: 'wolf-cut', name: 'Wolf Cut', category: 'modern', tag: 'Textured', color: 'var(--yellow)', desc: 'Wild hybrid of shag and mullet with choppy crown.', promptDetail: 'modern wolf cut with textured crown volume, choppy wispy layers, and curtain fringe' },
-      { id: 'hush-cut', name: 'Hush Cut', category: 'modern', tag: 'Soft', color: 'var(--cyan)', desc: 'Korean-inspired feather-light layered silhouette.', promptDetail: 'korean hush cut with airy weightless layers, soft see-through bangs, and whisper ends' },
-      { id: 'shag-cut', name: 'Shag Cut', category: 'modern', tag: 'Edgy', color: 'var(--lime)', desc: 'Retro choppy texture with generous natural body.', promptDetail: 'modern effortless shag cut with feathered crown layers and rock-chic movement' },
-      { id: 'u-cut', name: 'U-Cut', category: 'modern', tag: 'Shape', color: 'var(--peach)', desc: 'Smooth curved U-shaped perimeter preserving density.', promptDetail: 'clean polished U-cut perimeter with thick dense ends and soft movement' },
-      { id: 'v-cut', name: 'V-Cut', category: 'modern', tag: 'Drama', color: 'var(--lavender)', desc: 'Sharp tapering V-profile for elongated back drape.', promptDetail: 'dramatic deep V-cut cascading down the back with glossy tapered layers' },
+    /* ==========================================================================
+       CONFIG & THE 50-HAIRSTYLE DATABASE
+       ========================================================================== */
+    const APP_CONFIG = {
+      // Your serverless endpoint. Works on both Netlify Functions and
+      // Cloudflare Pages Functions — see the companion files:
+      //   Netlify:    netlify/functions/tryon.mjs
+      //   Cloudflare: functions/api/tryon.js
+      // The Gemini API key is read there from the environment variable
+      // GEMINI_API_KEY. It is NEVER exposed to the browser.
+      API_TRYON_ENDPOINT: '/api/tryon',
+      API_MODEL: 'gemini-2.5-flash-image'
+    };
 
-      // 2. Bob / shorter
-      { id: 'blunt-bob', name: 'Blunt Bob', category: 'bob', tag: 'Sharp', color: 'var(--pink)', desc: 'Razor-sharp chin-length cut with no graduation.', promptDetail: 'razor-sharp blunt bob cut hitting exactly at the jawline with high-gloss glass finish' },
-      { id: 'layered-bob', name: 'Layered Bob', category: 'bob', tag: 'Airy', color: 'var(--lime)', desc: 'Textured bob with graduated interior layers.', promptDetail: 'playful layered bob with textured wispy ends and effortless volume' },
-      { id: 'french-bob', name: 'French Bob', category: 'bob', tag: 'Parisian', color: 'var(--peach)', desc: 'Cheekbone-grazing bob paired with brow-line bangs.', promptDetail: 'classic french bob cut to the cheekbones with effortless brow-grazing fringe' },
-      { id: 'long-bob-lob', name: 'Long Bob / Lob', category: 'bob', tag: 'Versatile', color: 'var(--cyan)', desc: 'Collarbone-skimming bob styled with soft movement.', promptDetail: 'collarbone-length long bob (lob) with gentle inward bend and polished texture' },
-      { id: 'pixie-cut', name: 'Pixie Cut', category: 'bob', tag: 'Bold', color: 'var(--lavender)', desc: 'Ultra-chic short crop with textured crown pieces.', promptDetail: 'feminine sculpted pixie cut with soft side-swept bangs and neat neckline' },
+    const HAIRSTYLES_DATA = [
+      // 1. MODERN CUTS (10)
+      { id: 'butterfly-cut', name: 'Butterfly Cut', category: 'modern', tag: 'Trending', badgeBg: 'var(--lime)', desc: 'Voluminous cascading layers with chin-length bouncy framing.', promptDetail: 'butterfly cut with bouncy 90s blowout layers, voluminous crown lift, and feathered face-framing fringe' },
+      { id: 'long-layered-cut', name: 'Long Layered Cut', category: 'modern', tag: 'Classic', badgeBg: 'var(--yellow)', desc: 'Graceful elongated layers providing fluid movement.', promptDetail: 'soft seamless long layered cut with natural root lift and flowing tapered ends' },
+      { id: 'face-framing-layers', name: 'Face-Framing Layers', category: 'modern', tag: 'Sculpting', badgeBg: 'var(--cyan)', desc: 'Curated layers accentuating cheekbones and jawline.', promptDetail: 'delicate face-framing layers hugging cheekbones and jawline with fluid soft texture' },
+      { id: 'feather-cut', name: 'Feather Cut', category: 'modern', tag: 'Retro Glam', badgeBg: 'var(--purple)', desc: 'Classic outward feathered layers with airy texture.', promptDetail: 'classic outward feathered cut with bouncy airy ends and polished salon finish' },
+      { id: 'curtain-bangs', name: 'Curtain Bangs', category: 'modern', tag: 'Face Contouring', badgeBg: 'var(--pink)', desc: 'Center-parted swooping bangs blending into length.', promptDetail: 'chic curtain bangs parted in the center, framing both eyes with long subtle layers' },
+      { id: 'wolf-cut', name: 'Wolf Cut', category: 'modern', tag: 'Wild Chic', badgeBg: 'var(--orange)', desc: 'Wild hybrid of shag and mullet with choppy textured crown.', promptDetail: 'modern wolf cut with textured crown volume, choppy wispy layers, and soft curtain fringe' },
+      { id: 'hush-cut', name: 'Hush Cut', category: 'modern', tag: 'K-Beauty', badgeBg: 'var(--cyan)', desc: 'Korean-inspired feather-light layered silhouette.', promptDetail: 'korean hush cut with airy weightless layers, soft see-through bangs, and whisper ends' },
+      { id: 'shag-cut', name: 'Shag Cut', category: 'modern', tag: 'Rock Chic', badgeBg: 'var(--lime)', desc: 'Retro choppy texture with generous natural body.', promptDetail: 'modern effortless shag cut with feathered crown layers and rock-chic movement' },
+      { id: 'u-cut', name: 'U-Cut', category: 'modern', tag: 'Dense Ends', badgeBg: 'var(--yellow)', desc: 'Smooth curved U-shaped perimeter preserving density.', promptDetail: 'clean polished U-cut perimeter with thick dense ends and soft movement' },
+      { id: 'v-cut', name: 'V-Cut', category: 'modern', tag: 'Dramatic Drape', badgeBg: 'var(--pink)', desc: 'Sharp tapering V-profile for elongated back drape.', promptDetail: 'dramatic deep V-cut cascading down the back with glossy tapered layers' },
 
-      // 3. Open hair / styling
-      { id: 'sleek-straight-hair', name: 'Sleek Straight Hair', category: 'open', tag: 'Sleek', color: 'var(--pink)', desc: 'Impeccable pin-straight locks with mirror shine.', promptDetail: 'pin-straight glossy hair with zero frizz, precise parting, and silky drape' },
-      { id: 'glass-hair', name: 'Glass Hair', category: 'open', tag: 'High-Gloss', color: 'var(--cyan)', desc: 'Ultra-reflective, polished mirror-like texture.', promptDetail: 'ultra-reflective glass hair with immaculate smooth alignment and radiant gloss' },
-      { id: 'soft-waves', name: 'Soft Waves', category: 'open', tag: 'Everyday', color: 'var(--lime)', desc: 'Effortless gentle bends for relaxed natural glam.', promptDetail: 'relaxed soft S-waves flowing naturally over the shoulders with organic movement' },
-      { id: 'beach-waves', name: 'Beach Waves', category: 'open', tag: 'Casual', color: 'var(--yellow)', desc: 'Matte-finish undone waves with straight ends.', promptDetail: 'textured beach waves with tousled mid-lengths and undone natural ends' },
-      { id: 'hollywood-waves', name: 'Hollywood Waves', category: 'open', tag: 'Red Carpet', color: 'var(--lavender)', desc: 'Structured vintage uniform S-pattern waves.', promptDetail: 'glamorous red-carpet Hollywood waves with sculpted uniform ridges and lustrous finish' },
-      { id: 'soft-curls', name: 'Soft Curls', category: 'open', tag: 'Romantic', color: 'var(--pink)', desc: 'Springy, defined medium-barrel romantic curls.', promptDetail: 'romantic soft barrel curls cascading down with touchable definition and bounce' },
-      { id: 'voluminous-curls', name: 'Voluminous Curls', category: 'open', tag: 'Glam', color: 'var(--peach)', desc: 'Big, bold, maximum-volume dimensional curls.', promptDetail: 'voluminous bouncy curls with expansive body, lifted crown, and dense texture' },
-      { id: 'voluminous-blowout', name: 'Voluminous Blowout', category: 'open', tag: 'Dyson Style', color: 'var(--cyan)', desc: 'Salon-grade bouncy round-brush blowout.', promptDetail: 'runway 90s supermodel blowout with lifted root volume and rounded curled ends' },
-      { id: 'side-swept-waves', name: 'Side-Swept Waves', category: 'open', tag: 'Asymmetric', color: 'var(--lime)', desc: 'Deep side part with all waves draped over one shoulder.', promptDetail: 'glamorous side-swept waves cascading over one shoulder with deep side part' },
-      { id: 'mermaid-waves', name: 'Mermaid Waves', category: 'open', tag: 'Crimped', color: 'var(--yellow)', desc: 'Deep-triple-barrel ripple waves with dense body.', promptDetail: 'deep rippled mermaid waves with continuous crimped texture and full volume' },
+      // 2. BOB / SHORTER (5)
+      { id: 'blunt-bob', name: 'Blunt Bob', category: 'bob', tag: 'Sharp & Bold', badgeBg: 'var(--pink)', desc: 'Razor-sharp jaw-length cut with no graduation.', promptDetail: 'razor-sharp blunt bob cut hitting exactly at the jawline with high-gloss finish' },
+      { id: 'layered-bob', name: 'Layered Bob', category: 'bob', tag: 'Airy Motion', badgeBg: 'var(--lime)', desc: 'Textured bob with graduated interior layers.', promptDetail: 'playful layered bob with textured wispy ends and effortless root volume' },
+      { id: 'french-bob', name: 'French Bob', category: 'bob', tag: 'Parisian', badgeBg: 'var(--orange)', desc: 'Cheekbone-grazing bob paired with brow-line bangs.', promptDetail: 'classic french bob cut to the cheekbones with effortless brow-grazing fringe' },
+      { id: 'long-bob-lob', name: 'Long Bob / Lob', category: 'bob', tag: 'Versatile', badgeBg: 'var(--cyan)', desc: 'Collarbone-skimming bob styled with soft movement.', promptDetail: 'collarbone-length long bob (lob) with gentle inward bend and polished texture' },
+      { id: 'pixie-cut', name: 'Pixie Cut', category: 'bob', tag: 'Sculpted', badgeBg: 'var(--purple)', desc: 'Ultra-chic short crop with textured crown pieces.', promptDetail: 'feminine sculpted pixie cut with soft side-swept bangs and neat neckline' },
 
-      // 4. Ponytails
-      { id: 'high-ponytail', name: 'High Ponytail', category: 'ponytail', tag: 'Lifted', color: 'var(--lavender)', desc: 'Perky high ponytail anchored high at the crown.', promptDetail: 'high ponytail anchored at the crown with smooth hair wrapped around the base' },
-      { id: 'sleek-low-ponytail', name: 'Sleek Low Ponytail', category: 'ponytail', tag: 'Editorial', color: 'var(--cyan)', desc: 'Minimalist low nape ponytail with middle part.', promptDetail: 'clean editorial sleek low ponytail at the nape of the neck with center part' },
-      { id: 'messy-ponytail', name: 'Messy Ponytail', category: 'ponytail', tag: 'Tousled', color: 'var(--pink)', desc: 'Textured mid-height pony with loose tendrils.', promptDetail: 'effortless messy textured ponytail with soft face-framing tendrils and crown tease' },
-      { id: 'wavy-ponytail', name: 'Wavy Ponytail', category: 'ponytail', tag: 'Party', color: 'var(--lime)', desc: 'Rich wavy tail with volumized base wrap.', promptDetail: 'voluminous wavy ponytail with cascading textured body and lifted placement' },
-      { id: 'braided-ponytail', name: 'Braided Ponytail', category: 'ponytail', tag: 'Chic', color: 'var(--peach)', desc: 'Sleek high base flowing into a dense braid.', promptDetail: 'snatched high ponytail transitioning into a sleek tight three-strand braid' },
+      // 3. OPEN HAIR / STYLING (10)
+      { id: 'sleek-straight-hair', name: 'Sleek Straight Hair', category: 'open', tag: 'Silky Smooth', badgeBg: 'var(--cyan)', desc: 'Impeccable pin-straight locks with mirror shine.', promptDetail: 'pin-straight glossy hair with zero frizz, precise parting, and silky drape' },
+      { id: 'glass-hair', name: 'Glass Hair', category: 'open', tag: 'Reflective', badgeBg: 'var(--lime)', desc: 'Ultra-reflective, ultra-smooth mirror-like texture.', promptDetail: 'ultra-reflective glass hair with immaculate smooth alignment and radiant gloss' },
+      { id: 'soft-waves', name: 'Soft Waves', category: 'open', tag: 'Everyday Glow', badgeBg: 'var(--yellow)', desc: 'Effortless gentle bends for relaxed natural glam.', promptDetail: 'relaxed soft S-waves flowing naturally over the shoulders with organic movement' },
+      { id: 'beach-waves', name: 'Beach Waves', category: 'open', tag: 'Textured', badgeBg: 'var(--orange)', desc: 'Matte-finish undone waves with straight ends.', promptDetail: 'textured beach waves with tousled mid-lengths and undone natural ends' },
+      { id: 'hollywood-waves', name: 'Hollywood Waves', category: 'open', tag: 'Red Carpet', badgeBg: 'var(--purple)', desc: 'Structured vintage uniform S-pattern waves.', promptDetail: 'glamorous red-carpet Hollywood waves with sculpted uniform ridges and lustrous finish' },
+      { id: 'soft-curls', name: 'Soft Curls', category: 'open', tag: 'Romantic', badgeBg: 'var(--pink)', desc: 'Springy defined medium-barrel romantic curls.', promptDetail: 'romantic soft barrel curls cascading down with touchable definition and bounce' },
+      { id: 'voluminous-curls', name: 'Voluminous Curls', category: 'open', tag: 'Big Glamour', badgeBg: 'var(--yellow)', desc: 'Big, bold, maximum-volume dimensional curls.', promptDetail: 'voluminous bouncy curls with expansive body, lifted crown, and dense texture' },
+      { id: 'voluminous-blowout', name: 'Voluminous Blowout', category: 'open', tag: 'Supermodel 90s', badgeBg: 'var(--lime)', desc: 'Salon-grade bouncy round-brush blowout.', promptDetail: 'runway 90s supermodel blowout with lifted root volume and rounded curled ends' },
+      { id: 'side-swept-waves', name: 'Side-Swept Waves', category: 'open', tag: 'Asymmetric', badgeBg: 'var(--cyan)', desc: 'Deep side part with all waves draped over one shoulder.', promptDetail: 'glamorous side-swept waves cascading over one shoulder with deep side part' },
+      { id: 'mermaid-waves', name: 'Mermaid Waves', category: 'open', tag: 'Crimped Body', badgeBg: 'var(--pink)', desc: 'Deep triple-barrel ripple waves with dense body.', promptDetail: 'deep rippled mermaid waves with continuous crimped texture and full volume' },
 
-      // 5. Buns / Juda
-      { id: 'messy-bun', name: 'Messy Bun', category: 'buns', tag: 'Casual Chic', color: 'var(--yellow)', desc: 'Artfully undone high bun with wispy pieces.', promptDetail: 'effortless messy topknot bun with soft wispy face-framing strands and relaxed texture' },
-      { id: 'sleek-low-bun', name: 'Sleek Low Bun', category: 'buns', tag: 'Clean Girl', color: 'var(--cyan)', desc: 'Sculpted chignon sitting neatly at the nape.', promptDetail: 'sleek low chignon bun parted neatly in the center with glossy sculpted finish' },
-      { id: 'high-bun', name: 'High Bun', category: 'buns', tag: 'Formal', color: 'var(--lavender)', desc: 'Regal ballerina-inspired high rounded bun.', promptDetail: 'voluminous polished high ballerina bun centered smoothly on the crown' },
-      { id: 'classic-juda', name: 'Classic Juda', category: 'buns', tag: 'Traditional', color: 'var(--peach)', desc: 'Time-honored Indian structured bun for sarees & suits.', promptDetail: 'traditional Indian structured bridal juda bun firmly secured at mid-crown' },
-      { id: 'gajra-juda', name: 'Gajra Juda', category: 'buns', tag: 'Festive', color: 'var(--pink)', desc: 'Low circular bun encased in fresh white jasmine gajra.', promptDetail: 'traditional low Indian bridal bun densely encircled by fresh fragrant white jasmine gajra flowers' },
-      { id: 'mogra-bun', name: 'Mogra Bun', category: 'buns', tag: 'Bridal', color: 'var(--lime)', desc: 'Layered bun bordered with fresh mogra floral wreaths.', promptDetail: 'sculpted royal Indian bridal juda lavishly adorned with authentic fresh mogra buds' },
+      // 4. PONYTAILS (5)
+      { id: 'high-ponytail', name: 'High Ponytail', category: 'ponytail', tag: 'Lifted Sleek', badgeBg: 'var(--purple)', desc: 'Perky high ponytail anchored high at the crown.', promptDetail: 'high ponytail anchored at the crown with smooth hair wrapped around the base' },
+      { id: 'sleek-low-ponytail', name: 'Sleek Low Ponytail', category: 'ponytail', tag: 'Editorial', badgeBg: 'var(--cyan)', desc: 'Minimalist low nape ponytail with middle part.', promptDetail: 'clean editorial sleek low ponytail at the nape of the neck with center part' },
+      { id: 'messy-ponytail', name: 'Messy Ponytail', category: 'ponytail', tag: 'Tousled', badgeBg: 'var(--yellow)', desc: 'Textured mid-height pony with loose face tendrils.', promptDetail: 'effortless messy textured ponytail with soft face-framing tendrils and crown tease' },
+      { id: 'wavy-ponytail', name: 'Wavy Ponytail', category: 'ponytail', tag: 'Party Bounce', badgeBg: 'var(--lime)', desc: 'Rich wavy tail with volumized base wrap.', promptDetail: 'voluminous wavy ponytail with cascading textured body and lifted placement' },
+      { id: 'braided-ponytail', name: 'Braided Ponytail', category: 'ponytail', tag: 'Snappy', badgeBg: 'var(--orange)', desc: 'Sleek high base flowing into a dense braid.', promptDetail: 'snatched high ponytail transitioning into a sleek tight three-strand braid' },
 
-      // 6. Braids
-      { id: 'classic-three-strand-braid', name: 'Classic Three-Strand Braid', category: 'braids', tag: 'Staple', color: 'var(--cyan)', desc: 'Even, symmetric traditional three-strand braid.', promptDetail: 'neat classic three-strand braid with smooth consistent tension and natural finish' },
-      { id: 'french-braid', name: 'French Braid', category: 'braids', tag: 'Sculpted', color: 'var(--lavender)', desc: 'Interwoven braid starting neatly at the hairline.', promptDetail: 'flawless classic French braid incorporating hair smoothly from crown to tail' },
-      { id: 'fishtail-braid', name: 'Fishtail Braid', category: 'braids', tag: 'Boho', color: 'var(--peach)', desc: 'Intricate micro-strand weave pulled softly for volume.', promptDetail: 'intricate bohemian fishtail braid gently pulled apart for thick textured dimension' },
-      { id: 'dutch-braid', name: 'Dutch Braid', category: 'braids', tag: '3D Effect', color: 'var(--lime)', desc: 'Inverted reverse braid creating high-relief ridges.', promptDetail: 'raised 3D Dutch braid running symmetrically down with defined bold weave' },
-      { id: 'crown-braid', name: 'Crown Braid', category: 'braids', tag: 'Regal', color: 'var(--pink)', desc: 'Halo braid encircling the crown like a tiara.', promptDetail: 'ethereal crown halo braid wrapped smoothly around the head with soft romantic texture' },
-      { id: 'side-braid', name: 'Side Braid', category: 'braids', tag: 'Relaxed', color: 'var(--yellow)', desc: 'Gentle over-the-shoulder asymmetrical braid.', promptDetail: 'soft romantic side braid draped over the shoulder with relaxed face-framing tendrils' },
-      { id: 'half-up-braid', name: 'Half-Up Braid', category: 'braids', tag: 'Half-Up', color: 'var(--cyan)', desc: 'Braided crown accent with open flowing hair beneath.', promptDetail: 'half-up crown braid pinned at the back with long flowing soft waves underneath' },
+      // 5. BUNS / JUDA (6)
+      { id: 'messy-bun', name: 'Messy Bun', category: 'buns', tag: 'Off-Duty', badgeBg: 'var(--yellow)', desc: 'Artfully undone high bun with wispy pieces.', promptDetail: 'effortless messy topknot bun with soft wispy face-framing strands and relaxed texture' },
+      { id: 'sleek-low-bun', name: 'Sleek Low Bun', category: 'buns', tag: 'Clean Girl', badgeBg: 'var(--cyan)', desc: 'Sculpted chignon sitting neatly at the nape.', promptDetail: 'sleek low chignon bun parted neatly in the center with glossy sculpted finish' },
+      { id: 'high-bun', name: 'High Bun', category: 'buns', tag: 'Ballerina', badgeBg: 'var(--purple)', desc: 'Regal ballerina-inspired high rounded bun.', promptDetail: 'voluminous polished high ballerina bun centered smoothly on the crown' },
+      { id: 'classic-juda', name: 'Classic Juda', category: 'buns', tag: 'Traditional', badgeBg: 'var(--orange)', desc: 'Structured Indian bun ideal for sarees & suits.', promptDetail: 'traditional Indian structured bridal juda bun firmly secured at mid-crown' },
+      { id: 'gajra-juda', name: 'Gajra Juda', category: 'buns', tag: 'Jasmine Fresh', badgeBg: 'var(--lime)', desc: 'Low circular bun encased in fresh white jasmine gajra.', promptDetail: 'traditional low Indian bridal bun densely encircled by fresh fragrant white jasmine gajra flowers' },
+      { id: 'mogra-bun', name: 'Mogra Bun', category: 'buns', tag: 'Royal Bridal', badgeBg: 'var(--pink)', desc: 'Layered bun bordered with fresh mogra floral wreaths.', promptDetail: 'sculpted royal Indian bridal juda lavishly adorned with authentic fresh mogra buds' },
 
-      // 7. Punjabi / Indian (Punjab & Ludhiana Pride)
-      { id: 'punjabi-gutt-choti', name: 'Punjabi Gutt / Choti', category: 'punjabi', tag: 'Iconic Punjab', color: 'var(--lime)', desc: 'Traditional long Punjabi plait with neat center part.', promptDetail: 'authentic Punjabi gutt (choti) tightly braided with high shine and traditional Punjabi silhouette' },
-      { id: 'punjabi-paranda-braid', name: 'Punjabi Paranda Braid', category: 'punjabi', tag: 'Ludhiana Special', color: 'var(--pink)', desc: 'Braid interwoven with colorful tassels and golden parandi.', promptDetail: 'traditional Punjabi braid intricately woven with a vibrant ornamental Paranda featuring gold tassels, mirror-work, and silk threads' },
-      { id: 'gota-choti', name: 'Gota Choti', category: 'punjabi', tag: 'Jaggo Festive', color: 'var(--yellow)', desc: 'Laced with shimmering metallic gold gota ribbons.', promptDetail: 'Punjabi festive braid wrapped and criss-crossed with shimmering metallic golden gota patti ribbon' },
-      { id: 'punjabi-bridal-braid', name: 'Punjabi Bridal Braid', category: 'punjabi', tag: 'Anand Karaj', color: 'var(--peach)', desc: 'Opulent thick braid with gold clips, pearls, & florals.', promptDetail: 'luxurious Punjabi bridal braid embellished with gold jewelry clips, baby pearls, and fresh flowers' },
-      { id: 'floral-gajra-braid', name: 'Floral / Gajra Braid', category: 'punjabi', tag: 'Mehendi Glam', color: 'var(--cyan)', desc: 'Elongated braid entwined with baby’s breath & roses.', promptDetail: 'long textured bridal braid entwined with cascading baby’s breath (gypsophila) and delicate mini roses' },
+      // 6. BRAIDS (7)
+      { id: 'classic-three-strand-braid', name: 'Classic Three-Strand Braid', category: 'braids', tag: 'Timeless', badgeBg: 'var(--cyan)', desc: 'Even, symmetric traditional three-strand braid.', promptDetail: 'neat classic three-strand braid with smooth consistent tension and natural finish' },
+      { id: 'french-braid', name: 'French Braid', category: 'braids', tag: 'Sculpted', badgeBg: 'var(--purple)', desc: 'Interwoven braid starting neatly at the hairline.', promptDetail: 'flawless classic French braid incorporating hair smoothly from crown to tail' },
+      { id: 'fishtail-braid', name: 'Fishtail Braid', category: 'braids', tag: 'Bohemian', badgeBg: 'var(--yellow)', desc: 'Intricate micro-strand weave pulled softly for volume.', promptDetail: 'intricate bohemian fishtail braid gently pulled apart for thick textured dimension' },
+      { id: 'dutch-braid', name: 'Dutch Braid', category: 'braids', tag: '3D Effect', badgeBg: 'var(--lime)', desc: 'Inverted reverse braid creating high-relief ridges.', promptDetail: 'raised 3D Dutch braid running symmetrically down with defined bold weave' },
+      { id: 'crown-braid', name: 'Crown Braid', category: 'braids', tag: 'Regal Tiara', badgeBg: 'var(--pink)', desc: 'Halo braid encircling the crown like a tiara.', promptDetail: 'ethereal crown halo braid wrapped smoothly around the head with soft romantic texture' },
+      { id: 'side-braid', name: 'Side Braid', category: 'braids', tag: 'Relaxed', badgeBg: 'var(--orange)', desc: 'Gentle over-the-shoulder asymmetrical braid.', promptDetail: 'soft romantic side braid draped over the shoulder with relaxed face-framing tendrils' },
+      { id: 'half-up-braid', name: 'Half-Up Braid', category: 'braids', tag: 'Crown Detail', badgeBg: 'var(--cyan)', desc: 'Braided crown accent with open flowing hair beneath.', promptDetail: 'half-up crown braid pinned at the back with long flowing soft waves underneath' },
 
-      // 8. Half-up / bridal / party
-      { id: 'half-up-half-down', name: 'Half-Up Half-Down', category: 'bridal', tag: 'Versatile', color: 'var(--lavender)', desc: 'Pinned crown height with cascading open body.', promptDetail: 'elegant half-up half-down hairstyle with soft crown bouffant and glossy cascading waves' },
-      { id: 'bridal-half-up-curls', name: 'Bridal Half-Up Curls', category: 'bridal', tag: 'Cocktail Night', color: 'var(--pink)', desc: 'Textured twists pinned to accommodate maang tikka.', promptDetail: 'opulent bridal half-up hairstyle with intricate twisted crown pinned for maang tikka, cascading into voluminous glamorous barrel curls' }
+      // 7. PUNJABI / INDIAN (5)
+      { id: 'punjabi-gutt-choti', name: 'Punjabi Gutt / Choti', category: 'punjabi', tag: 'Iconic Punjab', badgeBg: 'var(--lime)', desc: 'Traditional long Punjabi plait with neat center part.', promptDetail: 'authentic Punjabi gutt (choti) tightly braided with high shine and traditional Punjabi silhouette' },
+      { id: 'punjabi-paranda-braid', name: 'Punjabi Paranda Braid', category: 'punjabi', tag: 'Ludhiana Pride', badgeBg: 'var(--pink)', desc: 'Braid interwoven with colorful tassels and golden parandi.', promptDetail: 'traditional Punjabi braid intricately woven with a vibrant ornamental Paranda featuring gold tassels, mirror-work, and silk threads' },
+      { id: 'gota-choti', name: 'Gota Choti', category: 'punjabi', tag: 'Jaggo Festive', badgeBg: 'var(--yellow)', desc: 'Laced with shimmering metallic gold gota ribbons.', promptDetail: 'Punjabi festive braid wrapped and criss-crossed with shimmering metallic golden gota patti ribbon' },
+      { id: 'punjabi-bridal-braid', name: 'Punjabi Bridal Braid', category: 'punjabi', tag: 'Anand Karaj', badgeBg: 'var(--orange)', desc: 'Opulent thick braid with gold clips, pearls, & florals.', promptDetail: 'luxurious Punjabi bridal braid embellished with gold jewelry clips, baby pearls, and fresh flowers' },
+      { id: 'floral-gajra-braid', name: 'Floral / Gajra Braid', category: 'punjabi', tag: 'Mehendi Glam', badgeBg: 'var(--purple)', desc: 'Elongated braid entwined with baby’s breath & roses.', promptDetail: 'long textured bridal braid entwined with cascading baby’s breath (gypsophila) and delicate mini roses' },
+
+      // 8. HALF-UP / BRIDAL / PARTY (2)
+      { id: 'half-up-half-down', name: 'Half-Up Half-Down', category: 'bridal', tag: 'Cocktail Night', badgeBg: 'var(--purple)', desc: 'Pinned crown height with cascading open body.', promptDetail: 'elegant half-up half-down hairstyle with soft crown bouffant and glossy cascading waves' },
+      { id: 'bridal-half-up-curls', name: 'Bridal Half-Up Curls', category: 'bridal', tag: 'Tikka Friendly', badgeBg: 'var(--pink)', desc: 'Textured twists pinned to accommodate maang tikka.', promptDetail: 'opulent bridal half-up hairstyle with intricate twisted crown pinned for maang tikka, cascading into voluminous glamorous barrel curls' }
     ];
 
-    // --- APPLICATION STATE ---
-    let cameraStream = null;
-    let cameraFacingMode = 'user';
-    let clientOriginalBase64 = null;
-    let selectedHairstyle = null;
-    let activeFilter = 'all';
-    let isSplitView = true;
+    /* ==========================================================================
+       STATE MANAGEMENT
+       ========================================================================== */
+    let currentStream = null;
+    let currentFacingMode = 'user';
+    let userOriginalDataUrl = null;
+    let userRenderedDataUrl = null;
+    let selectedHaircut = null;
+    let activeCategory = 'all';
+    let isSplitSliderMode = true;
+    let isDraggingSlider = false;
 
-    // --- DOM REFERENCES ---
+    // DOM Elements
     const cameraScreen = document.getElementById('cameraScreen');
     const studioScreen = document.getElementById('studioScreen');
     const compareScreen = document.getElementById('compareScreen');
-    const processingModal = document.getElementById('processingModal');
+    const processingOverlay = document.getElementById('processingOverlay');
+    const zoomModal = document.getElementById('zoomModal');
+    const zoomModalImg = document.getElementById('zoomModalImg');
 
-    const cameraVideo = document.getElementById('cameraVideo');
-    const shutterBtn = document.getElementById('shutterBtn');
-    const flipCameraBtn = document.getElementById('flipCameraBtn');
+    const cameraFeed = document.getElementById('cameraFeed');
+    const cameraNotice = document.getElementById('cameraNotice');
+    const captureShutterBtn = document.getElementById('captureShutterBtn');
+    const switchCameraBtn = document.getElementById('switchCameraBtn');
+    const flipCameraDockBtn = document.getElementById('flipCameraDockBtn');
     const triggerUploadBtn = document.getElementById('triggerUploadBtn');
-    const photoInput = document.getElementById('photoInput');
+    const openUploadDockBtn = document.getElementById('openUploadDockBtn');
+    const photoFileInput = document.getElementById('photoFileInput');
+    const quickSampleBtn = document.getElementById('quickSampleBtn');
+    const fallbackUploadBtn = document.getElementById('fallbackUploadBtn');
+    const fallbackSampleBtn = document.getElementById('fallbackSampleBtn');
 
     const clientReferenceThumb = document.getElementById('clientReferenceThumb');
     const hairSearchInput = document.getElementById('hairSearchInput');
-    const categoryScroll = document.getElementById('categoryScroll');
+    const clearSearchBtn = document.getElementById('clearSearchBtn');
+    const categoryTrack = document.getElementById('categoryTrack');
     const hairstylesGrid = document.getElementById('hairstylesGrid');
-    const selectedHairLabel = document.getElementById('selectedHairLabel');
-    const applyHairstyleBtn = document.getElementById('applyHairstyleBtn');
-    const backToCaptureBtn = document.getElementById('backToCaptureBtn');
+    const summaryStyleName = document.getElementById('summaryStyleName');
+    const applySelectedHairBtn = document.getElementById('applySelectedHairBtn');
+    const retakePhotoBtn = document.getElementById('retakePhotoBtn');
+    const changePhotoBtn = document.getElementById('changePhotoBtn');
 
     const imgSource = document.getElementById('imgSource');
     const imgRendered = document.getElementById('imgRendered');
-    const sliderDivider = document.getElementById('sliderDivider');
+    const sliderHandleWrap = document.getElementById('sliderHandleWrap');
     const compareStage = document.getElementById('compareStage');
     const modeSplitBtn = document.getElementById('modeSplitBtn');
-    const modeSingleBtn = document.getElementById('modeSingleBtn');
-    const compareBackBtn = document.getElementById('compareBackBtn');
+    const modeResultOnlyBtn = document.getElementById('modeResultOnlyBtn');
+    const backToStudioBtn = document.getElementById('backToStudioBtn');
     const downloadResultBtn = document.getElementById('downloadResultBtn');
-    const timerDisplay = document.getElementById('timerDisplay');
+    const tryAnotherStyleBtn = document.getElementById('tryAnotherStyleBtn');
+    const zoomModalBtn = document.getElementById('zoomModalBtn');
+    const closeZoomModalBtn = document.getElementById('closeZoomModalBtn');
 
-    // --- VIEW SWITCHER ---
-    function navigateTo(screen) {
+    const progressFill = document.getElementById('progressFill');
+    const processStatus = document.getElementById('processStatus');
+    const processTitle = document.getElementById('processTitle');
+
+    /* ==========================================================================
+       UTILITIES & TOASTS
+       ========================================================================== */
+    function navigateTo(screenElement) {
       [cameraScreen, studioScreen, compareScreen].forEach(s => s.classList.remove('active'));
-      screen.classList.add('active');
+      screenElement.classList.add('active');
     }
 
-    function showToast(msg) {
-      const hub = document.getElementById('toastHub');
+    function showToast(msg, isError = false) {
+      const zone = document.getElementById('toastZone');
       const toast = document.createElement('div');
-      toast.className = 'editorial-toast';
-      toast.innerHTML = `<i class="bi bi-info-circle"></i> ${msg}`;
-      hub.appendChild(toast);
+      toast.className = `brutal-toast ${isError ? 'error' : ''}`;
+      toast.innerHTML = `<i class="bi ${isError ? 'bi-exclamation-triangle-fill' : 'bi-check2-circle'}" style="font-size: 1.2rem;"></i> <span>${escapeHtml(msg)}</span>`;
+      zone.appendChild(toast);
       setTimeout(() => {
+        toast.style.transition = 'opacity 0.25s, transform 0.25s';
         toast.style.opacity = '0';
-        toast.style.transform = 'translateY(-10px)';
-        setTimeout(() => toast.remove(), 250);
-      }, 2800);
+        toast.style.transform = 'translateY(-12px)';
+        setTimeout(() => toast.remove(), 260);
+      }, 3000);
     }
 
-    // --- CAMERA INITIALIZATION ---
-    async function startCamera() {
-      if (cameraStream) cameraStream.getTracks().forEach(t => t.stop());
+    function escapeHtml(str) {
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
+
+    // Reads a Response as JSON without ever throwing on non-JSON bodies
+    // (e.g. a raw 404 HTML page from a misconfigured host).
+    async function readJson(res) {
+      const text = await res.text();
+      if (!text) return {};
       try {
-        cameraStream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: cameraFacingMode, width: { ideal: 1920 }, height: { ideal: 1080 } },
+        return JSON.parse(text);
+      } catch {
+        return { error: { message: text.slice(0, 240) || res.statusText } };
+      }
+    }
+
+    /* ==========================================================================
+       CAMERA INITIALIZATION WITH ROBUST FALLBACK
+       ========================================================================== */
+    async function initCamera() {
+      if (currentStream) {
+        currentStream.getTracks().forEach(track => track.stop());
+      }
+      cameraNotice.classList.add('hidden');
+
+      try {
+        currentStream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            facingMode: currentFacingMode,
+            width: { ideal: 1920 },
+            height: { ideal: 1080 }
+          },
           audio: false
         });
-        cameraVideo.srcObject = cameraStream;
+        cameraFeed.srcObject = currentStream;
       } catch (err) {
         try {
-          cameraStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
-          cameraVideo.srcObject = cameraStream;
-        } catch (e) {
-          showToast("Camera access unavailable. Please upload a photo.");
+          // Fallback if facingMode constraint fails
+          currentStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+          cameraFeed.srcObject = currentStream;
+        } catch (fatalErr) {
+          console.warn("Camera inaccessible on this device/environment. Fallback UI activated.");
+          cameraNotice.classList.remove('hidden');
         }
       }
     }
 
-    flipCameraBtn.addEventListener('click', () => {
-      cameraFacingMode = cameraFacingMode === 'user' ? 'environment' : 'user';
-      startCamera();
-    });
-
-    // --- CAPTURE & UPLOAD WORKFLOW ---
-    function processClientPhoto(dataUrl) {
-      clientOriginalBase64 = dataUrl;
-      clientReferenceThumb.src = dataUrl;
-      imgSource.src = dataUrl;
-      navigateTo(studioScreen);
-      renderHairstyles();
+    function toggleCameraFlip() {
+      currentFacingMode = currentFacingMode === 'user' ? 'environment' : 'user';
+      initCamera();
+      showToast(`Switched to ${currentFacingMode === 'user' ? 'Front' : 'Back'} Camera`);
     }
 
-    shutterBtn.addEventListener('click', () => {
-      if (!cameraVideo.videoWidth) {
-        showToast("Camera not ready. Upload a photo instead.");
+    switchCameraBtn.addEventListener('click', toggleCameraFlip);
+    flipCameraDockBtn.addEventListener('click', toggleCameraFlip);
+
+    /* ==========================================================================
+       IMAGE IMPORT & CANVAS NORMALIZATION
+       ========================================================================== */
+    function setClientPhoto(dataUrl) {
+      userOriginalDataUrl = dataUrl;
+      clientReferenceThumb.src = dataUrl;
+      imgSource.src = dataUrl;
+
+      // Reset selection state
+      selectedHaircut = null;
+      summaryStyleName.textContent = 'SELECT A HAIRSTYLE';
+      applySelectedHairBtn.disabled = true;
+
+      navigateTo(studioScreen);
+      renderHairstylesList();
+    }
+
+    function normalizeImageToCanvas(source, originalWidth, originalHeight) {
+      const MAX_DIM = 1920;
+      let w = originalWidth;
+      let h = originalHeight;
+      if (w > h) {
+        if (w > MAX_DIM) { h = Math.round(h * (MAX_DIM / w)); w = MAX_DIM; }
+      } else {
+        if (h > MAX_DIM) { w = Math.round(w * (MAX_DIM / h)); h = MAX_DIM; }
+      }
+
+      const canvas = document.createElement('canvas');
+      canvas.width = w;
+      canvas.height = h;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(source, 0, 0, w, h);
+      return canvas.toDataURL('image/jpeg', 0.92);
+    }
+
+    // Capture shutter click
+    captureShutterBtn.addEventListener('click', () => {
+      if (!cameraFeed.videoWidth) {
+        showToast("Camera is not ready yet. Please upload a photo.", true);
         return;
       }
       const canvas = document.createElement('canvas');
-      canvas.width = cameraVideo.videoWidth;
-      canvas.height = cameraVideo.videoHeight;
-      canvas.getContext('2d').drawImage(cameraVideo, 0, 0);
-      processClientPhoto(canvas.toDataURL('image/jpeg', 0.92));
+      canvas.width = cameraFeed.videoWidth;
+      canvas.height = cameraFeed.videoHeight;
+      const ctx = canvas.getContext('2d');
+      // If user camera, mirror for natural selfie feel
+      if (currentFacingMode === 'user') {
+        ctx.translate(canvas.width, 0);
+        ctx.scale(-1, 1);
+      }
+      ctx.drawImage(cameraFeed, 0, 0);
+      const normalizedData = normalizeImageToCanvas(canvas, canvas.width, canvas.height);
+      setClientPhoto(normalizedData);
+      showToast("Photo captured!");
     });
 
-    triggerUploadBtn.addEventListener('click', () => photoInput.click());
+    // File Upload handling
+    function openFilePicker() {
+      photoFileInput.value = '';
+      photoFileInput.click();
+    }
+    triggerUploadBtn.addEventListener('click', openFilePicker);
+    openUploadDockBtn.addEventListener('click', openFilePicker);
+    fallbackUploadBtn.addEventListener('click', openFilePicker);
+    changePhotoBtn.addEventListener('click', openFilePicker);
 
-    photoInput.addEventListener('change', (e) => {
+    photoFileInput.addEventListener('change', (e) => {
       const file = e.target.files[0];
       if (!file) return;
+
+      if (!file.type.startsWith('image/')) {
+        showToast("Please upload a valid image file.", true);
+        return;
+      }
+
       const reader = new FileReader();
-      reader.onload = (evt) => {
+      reader.onload = (event) => {
         const img = new Image();
         img.onload = () => {
-          const maxDim = 1920;
-          let w = img.width, h = img.height;
-          if (w > maxDim || h > maxDim) {
-            if (w > h) { h = Math.round((h * maxDim) / w); w = maxDim; }
-            else { w = Math.round((w * maxDim) / h); h = maxDim; }
-          }
-          const canvas = document.createElement('canvas');
-          canvas.width = w; canvas.height = h;
-          canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-          processClientPhoto(canvas.toDataURL('image/jpeg', 0.92));
+          const normalized = normalizeImageToCanvas(img, img.width, img.height);
+          setClientPhoto(normalized);
+          showToast("Photo loaded successfully!");
         };
-        img.src = evt.target.result;
+        img.onerror = () => showToast("Could not parse image.", true);
+        img.src = event.target.result;
       };
       reader.readAsDataURL(file);
     });
 
-    backToCaptureBtn.addEventListener('click', () => {
+    // Standalone instant demo model (for zero-friction local testing)
+    function loadDemoPortrait() {
+      const canvas = document.createElement('canvas');
+      canvas.width = 1000;
+      canvas.height = 1333;
+      const ctx = canvas.getContext('2d');
+
+      // Studio gradient backdrop
+      const bgGrad = ctx.createLinearGradient(0, 0, 1000, 1333);
+      bgGrad.addColorStop(0, '#EAE5D9');
+      bgGrad.addColorStop(1, '#C8C2B3');
+      ctx.fillStyle = bgGrad;
+      ctx.fillRect(0, 0, 1000, 1333);
+
+      // Model silhouette & face mock
+      ctx.fillStyle = '#1A1A1A';
+      ctx.beginPath(); // Shoulders
+      ctx.ellipse(500, 1150, 420, 280, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Neck
+      ctx.fillStyle = '#E5B896';
+      ctx.fillRect(430, 700, 140, 220);
+
+      // Face Oval
+      ctx.beginPath();
+      ctx.ellipse(500, 600, 200, 260, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Cheeks / Tone
+      ctx.fillStyle = 'rgba(235, 120, 120, 0.15)';
+      ctx.beginPath();
+      ctx.arc(380, 640, 45, 0, Math.PI * 2);
+      ctx.arc(620, 640, 45, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Eyes
+      ctx.fillStyle = '#1A1A1A';
+      ctx.beginPath();
+      ctx.ellipse(420, 560, 24, 12, 0, 0, Math.PI * 2);
+      ctx.ellipse(580, 560, 24, 12, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Eyebrows
+      ctx.lineWidth = 8;
+      ctx.strokeStyle = '#2B1A12';
+      ctx.beginPath();
+      ctx.arc(420, 535, 40, Math.PI * 1.1, Math.PI * 1.85);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(580, 535, 40, Math.PI * 1.15, Math.PI * 1.9);
+      ctx.stroke();
+
+      // Nose
+      ctx.strokeStyle = 'rgba(120, 70, 50, 0.4)';
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.moveTo(500, 560);
+      ctx.lineTo(505, 650);
+      ctx.lineTo(485, 665);
+      ctx.stroke();
+
+      // Lips
+      ctx.fillStyle = '#C85A65';
+      ctx.beginPath();
+      ctx.ellipse(500, 725, 45, 18, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Existing baseline hair (simple base)
+      ctx.fillStyle = '#221510';
+      ctx.beginPath();
+      ctx.arc(500, 460, 225, Math.PI, Math.PI * 2);
+      ctx.lineTo(730, 780);
+      ctx.lineTo(670, 790);
+      ctx.lineTo(650, 560);
+      ctx.lineTo(350, 560);
+      ctx.lineTo(330, 790);
+      ctx.lineTo(270, 780);
+      ctx.closePath();
+      ctx.fill();
+
+      // Neo-brutalist stamp
+      ctx.fillStyle = '#D4FF00';
+      ctx.fillRect(40, 40, 360, 60);
+      ctx.strokeStyle = '#121212';
+      ctx.lineWidth = 4;
+      ctx.strokeRect(40, 40, 360, 60);
+      ctx.fillStyle = '#121212';
+      ctx.font = 'bold 28px sans-serif';
+      ctx.fillText('STUDIO DEMO MODEL', 65, 82);
+
+      const demoUrl = canvas.toDataURL('image/jpeg', 0.95);
+      setClientPhoto(demoUrl);
+      showToast("Demo portrait loaded!");
+    }
+
+    quickSampleBtn.addEventListener('click', loadDemoPortrait);
+    fallbackSampleBtn.addEventListener('click', loadDemoPortrait);
+
+    retakePhotoBtn.addEventListener('click', () => {
       navigateTo(cameraScreen);
-      startCamera();
+      initCamera();
     });
 
-    // --- HAIRSTYLE CATALOGUE RENDERING ---
-    function renderHairstyles() {
-      const query = hairSearchInput.value.toLowerCase().trim();
+    /* ==========================================================================
+       CATALOGUE RENDERING & INSTANT SEARCH
+       ========================================================================== */
+    function renderHairstylesList() {
+      const searchTerm = hairSearchInput.value.toLowerCase().trim();
       hairstylesGrid.innerHTML = '';
 
-      const filtered = HAIRSTYLES_LIBRARY.filter(style => {
-        const matchesCategory = (activeFilter === 'all') || (style.category === activeFilter);
-        const matchesQuery = style.name.toLowerCase().includes(query) || style.desc.toLowerCase().includes(query);
+      const filtered = HAIRSTYLES_DATA.filter(style => {
+        const matchesCategory = (activeCategory === 'all') || (style.category === activeCategory);
+        const matchesQuery = style.name.toLowerCase().includes(searchTerm) ||
+                             style.desc.toLowerCase().includes(searchTerm) ||
+                             style.tag.toLowerCase().includes(searchTerm);
         return matchesCategory && matchesQuery;
       });
 
       if (filtered.length === 0) {
-        hairstylesGrid.innerHTML = `<div style="grid-column: 1/-1; text-align:center; padding: 40px; color: var(--text-muted);">No matching hairstyles found.</div>`;
+        hairstylesGrid.innerHTML = `
+          <div style="grid-column: 1/-1; text-align: center; padding: 48px 16px; background: var(--white); border: var(--border-thick); border-radius: var(--radius-md); box-shadow: var(--shadow-sm);">
+            <i class="bi bi-scissors" style="font-size: 2.5rem; color: var(--muted); display: block; margin-bottom: 12px;"></i>
+            <h3>NO HAIRSTYLES FOUND</h3>
+            <p style="color: var(--muted); font-size: 0.88rem; margin-top: 6px;">Try searching for "Butterfly", "Paranda", "Bob", or clear the filter.</p>
+          </div>
+        `;
         return;
       }
 
-      filtered.forEach(style => {
+      filtered.forEach((style, index) => {
         const card = document.createElement('div');
-        card.className = `hair-card ${selectedHairstyle?.id === style.id ? 'selected' : ''}`;
+        const isSelected = selectedHaircut?.id === style.id;
+        card.className = `hair-card ${isSelected ? 'selected' : ''}`;
+
         card.innerHTML = `
-          <div class="hair-tag" style="background:${style.color}; color:#000;">${style.tag}</div>
-          <div class="hair-title">${style.name}</div>
-          <div class="hair-desc">${style.desc}</div>
+          <div class="card-top">
+            <span class="brutal-badge" style="background:${style.badgeBg}; color:#000;">${escapeHtml(style.tag)}</span>
+            <span class="card-number">#${String(index + 1).padStart(2, '0')}</span>
+          </div>
+          <div>
+            <div class="hair-name">${escapeHtml(style.name)}</div>
+            <div class="hair-desc">${escapeHtml(style.desc)}</div>
+          </div>
+          <div class="card-action-bar">
+            <span style="font-size: 0.7rem; font-family: var(--font-mono); color: var(--muted); text-transform: uppercase;">
+              ${escapeHtml(style.category)}
+            </span>
+            <button class="btn-card-apply" aria-label="Select ${escapeHtml(style.name)}">
+              <span>SELECT</span> <i class="bi bi-arrow-right-short" style="font-size: 1.1rem;"></i>
+            </button>
+          </div>
         `;
-        card.onclick = () => {
-          selectedHairstyle = style;
-          selectedHairLabel.textContent = style.name;
-          applyHairstyleBtn.disabled = false;
-          renderHairstyles();
-        };
+
+        card.addEventListener('click', () => {
+          selectHairstyle(style);
+        });
+
         hairstylesGrid.appendChild(card);
       });
     }
 
-    // Filter Chips Event
-    categoryScroll.addEventListener('click', (e) => {
-      if (e.target.classList.contains('cat-chip')) {
-        document.querySelectorAll('.cat-chip').forEach(c => c.classList.remove('active'));
-        e.target.classList.add('active');
-        activeFilter = e.target.getAttribute('data-filter');
-        renderHairstyles();
-      }
-    });
-
-    // Debounced Search Input
-    let searchDebounce;
-    hairSearchInput.addEventListener('input', () => {
-      clearTimeout(searchDebounce);
-      searchDebounce = setTimeout(renderHairstyles, 180);
-    });
-
-    // --- AI PROMPT BUILDER & EXECUTION ---
-    function composeVirtualHairPrompt(style) {
-      return `Apply the "${style.name}" hairstyle onto the person in the photo.
-### Strict Identity & Pose Preservation:
-* Keep the person's exact face, identity, eyes, eyebrows, nose, lips, jawline, teeth, and skin tone 100% untouched.
-* Maintain the exact camera angle, head position, tilt, neck position, and lighting direction.
-* Keep the entire background, clothing, earrings, necklace, bindi, and outfit completely identical and intact.
-* Do not regenerate or smooth the facial skin texture.
-### Hairstyle Application Details:
-* Replace only the existing hair with a realistic ${style.name} (${style.promptDetail}).
-* Hair must show hyper-realistic individual human strands, natural roots along the hairline, realistic scalp attachment, realistic volume, and natural soft flyaways.
-* The hair must conform seamlessly to the person's exact head shape and shoulders.`;
+    function selectHairstyle(style) {
+      selectedHaircut = style;
+      summaryStyleName.textContent = style.name.toUpperCase();
+      applySelectedHairBtn.disabled = false;
+      applySelectedHairBtn.innerHTML = `APPLY ${escapeHtml(style.name).toUpperCase()} <i class="bi bi-scissors"></i>`;
+      renderHairstylesList();
     }
 
-    applyHairstyleBtn.addEventListener('click', async () => {
-      if (!selectedHairstyle || !clientOriginalBase64) return;
+    // Category Tabs filter
+    categoryTrack.addEventListener('click', (e) => {
+      const pill = e.target.closest('.cat-pill');
+      if (!pill) return;
+      document.querySelectorAll('.cat-pill').forEach(btn => btn.classList.remove('active'));
+      pill.classList.add('active');
+      activeCategory = pill.getAttribute('data-filter');
+      renderHairstylesList();
+    });
 
-      processingModal.classList.remove('hidden');
-      let seconds = 0;
-      timerDisplay.textContent = `Preserving face geometry & lighting (0s)`;
-      const interval = setInterval(() => {
-        seconds++;
-        timerDisplay.textContent = `Synthesizing ${selectedHairstyle.name} (${seconds}s)`;
-      }, 1000);
+    // Search bar listener with clear button
+    let searchDebounceTimer = null;
+    hairSearchInput.addEventListener('input', (e) => {
+      clearTimeout(searchDebounceTimer);
+      clearSearchBtn.style.display = e.target.value.length > 0 ? 'block' : 'none';
+      searchDebounceTimer = setTimeout(renderHairstylesList, 150);
+    });
 
-      const rawBase64 = clientOriginalBase64.split(',')[1];
-      const prompt = composeVirtualHairPrompt(selectedHairstyle);
+    clearSearchBtn.addEventListener('click', () => {
+      hairSearchInput.value = '';
+      clearSearchBtn.style.display = 'none';
+      renderHairstylesList();
+    });
+
+    /* ==========================================================================
+       AI SYNTHESIS PIPELINE (SERVERLESS PROXY → GEMINI IMAGE EDIT)
+       ========================================================================== */
+    function composeVirtualHairPrompt(style) {
+      return `Edit this photo by applying the "${style.name}" hairstyle onto the person in the photo.
+### Strict Preservation Requirements:
+* Keep my **face, facial expression, eyes, eyebrows, nose, lips, jawline, and skin 100% untouched**.
+* Keep my **body position, neck tilt, visible shoulders, and pose exactly unchanged**.
+* Keep the **entire background, room lighting, clothing, earrings, necklace, and jewelry exactly unchanged**.
+* Do not alter visible anatomy or skin tone.
+### Hairstyle Application Details:
+* Replace only the existing hair with an ultra-realistic **${style.name}** (${style.promptDetail}).
+* Render natural human hair texture, believable scalp attachment along the hairline, realistic volume, and soft individual flyaway strands conforming cleanly to head anatomy.`;
+    }
+
+    applySelectedHairBtn.addEventListener('click', async () => {
+      if (!selectedHaircut || !userOriginalDataUrl) return;
+
+      processingOverlay.classList.remove('hidden');
+      processTitle.textContent = "STYLING...";
+      progressFill.style.width = '8%';
+      let elapsedSeconds = 0;
+
+      const progressInterval = setInterval(() => {
+        elapsedSeconds++;
+        const pct = Math.min(8 + elapsedSeconds * 6, 92);
+        progressFill.style.width = `${pct}%`;
+
+        if (elapsedSeconds === 1) {
+          processStatus.textContent = `Analyzing head shape & hairline angles (${elapsedSeconds}s)`;
+        } else if (elapsedSeconds === 2) {
+          processStatus.textContent = `Synthesizing ${selectedHaircut.name} strands (${elapsedSeconds}s)`;
+        } else {
+          processStatus.textContent = `Refining specular highlights & lighting (${elapsedSeconds}s)`;
+        }
+      }, 800);
 
       try {
-        const response = await fetch('/api/tryon', {
+        const match = /^data:([^;]+);base64,(.*)$/.exec(userOriginalDataUrl);
+        if (!match) throw new Error('Source photo is not a valid base64 data URL.');
+        const mimeType = match[1];
+        const rawBase64 = match[2];
+
+        const response = await fetch(APP_CONFIG.API_TRYON_ENDPOINT, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            prompt: prompt,
+            prompt: composeVirtualHairPrompt(selectedHaircut),
             image: rawBase64,
-            model: 'gemini-3.1-flash-image'
+            mimeType: mimeType,
+            model: APP_CONFIG.API_MODEL
           })
         });
 
-        const data = await response.json();
-        if (!response.ok) throw new Error(data.error || "Generation endpoint error");
+        const resData = await readJson(response);
 
-        let generatedImage = null;
-        const parts = data.candidates?.[0]?.content?.parts || [];
-        for (const part of parts) {
-          const inline = part.inlineData || part.inline_data;
+        if (!response.ok) {
+          const apiMessage =
+            resData?.error?.message ||
+            (typeof resData?.error === 'string' ? resData.error : null) ||
+            `Request failed (${response.status})`;
+          throw new Error(apiMessage);
+        }
+
+        let fetchedImg = null;
+        const parts = resData?.candidates?.[0]?.content?.parts || [];
+        for (const p of parts) {
+          const inline = p.inlineData || p.inline_data;
           if (inline && inline.data) {
-            generatedImage = `data:${inline.mimeType || 'image/jpeg'};base64,${inline.data}`;
+            const outMime = inline.mimeType || inline.mime_type || 'image/png';
+            fetchedImg = `data:${outMime};base64,${inline.data}`;
             break;
           }
         }
 
-        if (!generatedImage) throw new Error("No image data returned from AI model.");
+        if (!fetchedImg) {
+          const blockReason = resData?.promptFeedback?.blockReason;
+          throw new Error(
+            blockReason
+              ? `Blocked by safety filter (${blockReason}). Try a different photo.`
+              : 'No image data returned from the model.'
+          );
+        }
 
-        imgRendered.src = generatedImage;
-        setupSplitViewer();
+        userRenderedDataUrl = fetchedImg;
+        imgRendered.src = userRenderedDataUrl;
+        setupSplitSlider();
         navigateTo(compareScreen);
-        showToast(`${selectedHairstyle.name} applied successfully!`);
+        showToast(`${selectedHaircut.name} successfully applied!`);
 
       } catch (err) {
-        console.error(err);
-        showToast("Styling failed. Please verify API configuration.");
+        console.error("Hairstyle styling error:", err);
+        showToast(err.message || "Styling process failed.", true);
       } finally {
-        clearInterval(interval);
-        processingModal.classList.add('hidden');
+        clearInterval(progressInterval);
+        processingOverlay.classList.add('hidden');
+        progressFill.style.width = '0%';
       }
     });
 
-    // --- BEFORE / AFTER SPLIT SLIDER ---
-    let isDraggingSlider = false;
-
-    function setupSplitViewer() {
+    /* ==========================================================================
+       BEFORE / AFTER SPLIT SLIDER & VIEWER
+       ========================================================================== */
+    function setupSplitSlider() {
       setSplitMode(true);
       imgRendered.style.clipPath = `polygon(50% 0, 100% 0, 100% 100%, 50% 100%)`;
-      sliderDivider.style.left = `50%`;
+      sliderHandleWrap.style.left = `50%`;
     }
 
     function setSplitMode(split) {
-      isSplitView = split;
+      isSplitSliderMode = split;
       if (split) {
         modeSplitBtn.classList.add('active');
-        modeSingleBtn.classList.remove('active');
-        sliderDivider.style.display = 'flex';
+        modeResultOnlyBtn.classList.remove('active');
+        sliderHandleWrap.style.display = 'flex';
         imgRendered.style.clipPath = `polygon(50% 0, 100% 0, 100% 100%, 50% 100%)`;
-        sliderDivider.style.left = `50%`;
+        sliderHandleWrap.style.left = `50%`;
       } else {
         modeSplitBtn.classList.remove('active');
-        modeSingleBtn.classList.add('active');
-        sliderDivider.style.display = 'none';
-        imgRendered.style.clipPath = `polygon(0 0, 100% 0, 100% 100%, 0 100%)`;
+        modeResultOnlyBtn.classList.add('active');
+        sliderHandleWrap.style.display = 'none';
+        imgRendered.style.clipPath = `polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)`;
       }
     }
 
     modeSplitBtn.addEventListener('click', () => setSplitMode(true));
-    modeSingleBtn.addEventListener('click', () => setSplitMode(false));
+    modeResultOnlyBtn.addEventListener('click', () => setSplitMode(false));
 
-    function updateSlider(clientX) {
-      if (!isSplitView) return;
+    function updateSliderPosition(clientX) {
+      if (!isSplitSliderMode) return;
       const rect = compareStage.getBoundingClientRect();
       let offsetX = clientX - rect.left;
       offsetX = Math.max(0, Math.min(offsetX, rect.width));
       const percentage = (offsetX / rect.width) * 100;
+
       imgRendered.style.clipPath = `polygon(${percentage}% 0, 100% 0, 100% 100%, ${percentage}% 100%)`;
-      sliderDivider.style.left = `${percentage}%`;
+      sliderHandleWrap.style.left = `${percentage}%`;
     }
 
-    compareStage.addEventListener('mousedown', (e) => { isDraggingSlider = true; updateSlider(e.clientX); });
-    window.addEventListener('mouseup', () => { isDraggingSlider = false; });
-    window.addEventListener('mousemove', (e) => { if (isDraggingSlider) updateSlider(e.clientX); });
-
-    compareStage.addEventListener('touchstart', (e) => { isDraggingSlider = true; updateSlider(e.touches[0].clientX); }, { passive: true });
-    window.addEventListener('touchend', () => { isDraggingSlider = false; });
-    window.addEventListener('touchmove', (e) => { if (isDraggingSlider) updateSlider(e.touches[0].clientX); }, { passive: true });
-
-    compareBackBtn.addEventListener('click', () => navigateTo(studioScreen));
-
-    downloadResultBtn.addEventListener('click', () => {
-      const a = document.createElement('a');
-      a.href = imgRendered.src;
-      a.download = `HairLab_${selectedHairstyle?.id || 'result'}_${Date.now()}.jpg`;
-      a.click();
-      showToast("Look saved to device!");
+    // Pointer events for desktop and mobile touch
+    compareStage.addEventListener('pointerdown', (e) => {
+      isDraggingSlider = true;
+      updateSliderPosition(e.clientX);
+    });
+    window.addEventListener('pointerup', () => { isDraggingSlider = false; });
+    window.addEventListener('pointermove', (e) => {
+      if (isDraggingSlider) updateSliderPosition(e.clientX);
     });
 
-    // --- APP STARTUP ---
+    backToStudioBtn.addEventListener('click', () => navigateTo(studioScreen));
+    tryAnotherStyleBtn.addEventListener('click', () => navigateTo(studioScreen));
+
+    // Save look
+    downloadResultBtn.addEventListener('click', () => {
+      if (!userRenderedDataUrl) return;
+      const link = document.createElement('a');
+      link.href = userRenderedDataUrl;
+      link.download = `HAIRLAB_${selectedHaircut ? selectedHaircut.id : 'hairstyle'}_${Date.now()}.jpg`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      showToast("Look saved to your downloads!");
+    });
+
+    // Zoom inspect modal
+    zoomModalBtn.addEventListener('click', () => {
+      zoomModalImg.src = userRenderedDataUrl || userOriginalDataUrl;
+      zoomModal.classList.remove('hidden');
+    });
+    closeZoomModalBtn.addEventListener('click', () => {
+      zoomModal.classList.add('hidden');
+    });
+
+    /* ==========================================================================
+       STARTUP
+       ========================================================================== */
     window.addEventListener('DOMContentLoaded', () => {
-      startCamera();
+      initCamera();
     });
   </script>
 </body>
