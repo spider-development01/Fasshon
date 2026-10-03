@@ -912,7 +912,7 @@
       <div id="progressFill" class="progress-bar-fill"></div>
     </div>
     <div class="brutal-badge" style="background: var(--yellow);">
-      SECURE PROXY: API KEY STAYS SERVER-SIDE
+      DIRECT GEMINI CALL: KEY IN CONFIG
     </div>
   </div>
 
@@ -970,6 +970,16 @@
   </div>
 
   <!-- =========================================================================
+       OPTIONAL: Inject API key from env var at deploy time.
+       On Netlify you can add this via a build snippet or a small edge function.
+       You can also simply paste your key directly into APP_CONFIG below.
+       ========================================================================= -->
+  <script>
+    // Example (uncomment + wire to your host's env injection if you want):
+    // window.__HAIRLAB_GEMINI_KEY__ = "{{ GEMINI_API_KEY }}";
+  </script>
+
+  <!-- =========================================================================
        JAVASCRIPT APPLICATION CORE (ALL-IN-ONE)
        ========================================================================= -->
   <script>
@@ -977,15 +987,17 @@
        CONFIG & THE 50-HAIRSTYLE DATABASE
        ========================================================================== */
     const APP_CONFIG = {
-      // Your serverless endpoint. Works on both Netlify Functions and
-      // Cloudflare Pages Functions — see the companion files:
-      //   Netlify:    netlify/functions/tryon.mjs
-      //   Cloudflare: functions/api/tryon.js
-      // The Gemini API key is read there from the environment variable
-      // GEMINI_API_KEY. It is NEVER exposed to the browser.
-      API_TRYON_ENDPOINT: '/api/tryon',
-      API_MODEL: 'gemini-2.5-flash-image'
+      // 👇 PASTE YOUR GEMINI API KEY HERE (https://aistudio.google.com/apikey)
+      // You can also inject it at runtime by setting window.__HAIRLAB_GEMINI_KEY__
+      // in a small <script> BEFORE this block (e.g. from a Netlify/CF env var).
+      GEMINI_API_KEY: '',
+      GEMINI_MODEL: 'gemini-3.1-flash-image',
+      GEMINI_ENDPOINT: 'https://generativelanguage.googleapis.com/v1beta/models'
     };
+
+    function getGeminiKey() {
+      return String(window.__HAIRLAB_GEMINI_KEY__ || APP_CONFIG.GEMINI_API_KEY || '').trim();
+    }
 
     const HAIRSTYLES_DATA = [
       // 1. MODERN CUTS (10)
@@ -1132,7 +1144,7 @@
         toast.style.opacity = '0';
         toast.style.transform = 'translateY(-12px)';
         setTimeout(() => toast.remove(), 260);
-      }, 3000);
+      }, 3500);
     }
 
     function escapeHtml(str) {
@@ -1141,8 +1153,7 @@
       return div.innerHTML;
     }
 
-    // Reads a Response as JSON without ever throwing on non-JSON bodies
-    // (e.g. a raw 404 HTML page from a misconfigured host).
+    // Reads a Response as JSON without ever throwing on non-JSON bodies.
     async function readJson(res) {
       const text = await res.text();
       if (!text) return {};
@@ -1477,7 +1488,7 @@
     });
 
     /* ==========================================================================
-       AI SYNTHESIS PIPELINE (SERVERLESS PROXY → GEMINI IMAGE EDIT)
+       AI SYNTHESIS PIPELINE (DIRECT GEMINI IMAGE EDIT CALL)
        ========================================================================== */
     function composeVirtualHairPrompt(style) {
       return `Edit this photo by applying the "${style.name}" hairstyle onto the person in the photo.
@@ -1488,11 +1499,18 @@
 * Do not alter visible anatomy or skin tone.
 ### Hairstyle Application Details:
 * Replace only the existing hair with an ultra-realistic **${style.name}** (${style.promptDetail}).
-* Render natural human hair texture, believable scalp attachment along the hairline, realistic volume, and soft individual flyaway strands conforming cleanly to head anatomy.`;
+* Render natural human hair texture, believable scalp attachment along the hairline, realistic volume, and soft individual flyaway strands conforming cleanly to head anatomy.
+* Output a single edited image.`;
     }
 
     applySelectedHairBtn.addEventListener('click', async () => {
       if (!selectedHaircut || !userOriginalDataUrl) return;
+
+      const apiKey = getGeminiKey();
+      if (!apiKey) {
+        showToast("Gemini API key missing. Add it to APP_CONFIG.GEMINI_API_KEY.", true);
+        return;
+      }
 
       processingOverlay.classList.remove('hidden');
       processTitle.textContent = "STYLING...";
@@ -1519,14 +1537,22 @@
         const mimeType = match[1];
         const rawBase64 = match[2];
 
-        const response = await fetch(APP_CONFIG.API_TRYON_ENDPOINT, {
+        const url = `${APP_CONFIG.GEMINI_ENDPOINT}/${APP_CONFIG.GEMINI_MODEL}:generateContent?key=${encodeURIComponent(apiKey)}`;
+
+        const response = await fetch(url, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            prompt: composeVirtualHairPrompt(selectedHaircut),
-            image: rawBase64,
-            mimeType: mimeType,
-            model: APP_CONFIG.API_MODEL
+            contents: [{
+              role: 'user',
+              parts: [
+                { text: composeVirtualHairPrompt(selectedHaircut) },
+                { inline_data: { mime_type: mimeType, data: rawBase64 } }
+              ]
+            }],
+            generationConfig: {
+              responseModalities: ['TEXT', 'IMAGE']
+            }
           })
         });
 
@@ -1553,10 +1579,13 @@
 
         if (!fetchedImg) {
           const blockReason = resData?.promptFeedback?.blockReason;
+          const finishReason = resData?.candidates?.[0]?.finishReason;
           throw new Error(
             blockReason
               ? `Blocked by safety filter (${blockReason}). Try a different photo.`
-              : 'No image data returned from the model.'
+              : finishReason && finishReason !== 'STOP'
+                ? `Model stopped: ${finishReason}.`
+                : 'No image data returned from the model.'
           );
         }
 
