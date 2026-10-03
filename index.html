@@ -3,1685 +3,1026 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <meta name="description" content="HAIR·LAB Neo-Brutalist Virtual Hairstyle Try-On Studio" />
-  <title>HAIR·LAB 2026 — Neo-Brutalist Hairstyle Studio</title>
-
-  <!-- Google Fonts: Anton, Archivo Black, Plus Jakarta Sans -->
+  <meta name="description" content="FASSHON - AI Virtual Try-On Experience" />
+  
+  <!-- Favicon -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%23111111'/><text y='54%' x='50%' dominant-baseline='middle' text-anchor='middle' font-size='70' fill='%23ffffff' font-family='sans-serif'>着</text></svg>">
+  
+  <title>FASSHON - Virtual Try-On</title>
+  
+  <!-- Supabase Web SDK (Deferred for faster initial render) -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+  
+  <!-- Bootstrap Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+  
+  <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo+Black&family=Plus+Jakarta+Sans:wght@500;700;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
-
-  <!-- Bootstrap Icons -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo+Black&family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
+  
   <style>
-    /* ==========================================================================
-       NEO-BRUTALIST DESIGN SYSTEM & TOKENS
-       ========================================================================== */
+    /* =========================================
+       CSS VARIABLES: EURO-BRUTALISM SCHEME
+       ========================================= */
     :root {
-      /* Palette */
-      --beige: #F5F5ED;
-      --card-bg: #FFFFFF;
-      --black: #121212;
+      --beige: #F4F4F0;
       --white: #FFFFFF;
-      --muted: #6B7280;
-
-      /* Neon Pastel Brutal Accents */
-      --lime: #D4FF00;
-      --cyan: #00E5FF;
-      --pink: #FF62A5;
-      --yellow: #FFD200;
-      --purple: #BA85FF;
+      --black: #1A1A1A;
       --red: #FF4742;
-      --orange: #FF8438;
-
-      /* Brutal Elevation & Strokes */
-      --border-thick: 3px solid var(--black);
-      --border-thin: 2px solid var(--black);
-      --shadow-sm: 3px 3px 0px var(--black);
-      --shadow-md: 5px 5px 0px var(--black);
-      --shadow-lg: 8px 8px 0px var(--black);
-
-      /* Typography */
+      --lime: #D4FF00;
+      --cyan: #1597D0;
+      --pink: #F04A83;
+      
       --font-display: 'Anton', sans-serif;
-      --font-heading: 'Archivo Black', sans-serif;
-      --font-mono: 'Space Grotesk', monospace;
-      --font-body: 'Plus Jakarta Sans', sans-serif;
+      --font-bold: 'Archivo Black', sans-serif;
+      --font-body: 'Noto Sans JP', sans-serif;
 
-      /* Radii */
-      --radius-sm: 8px;
-      --radius-md: 14px;
-      --radius-pill: 9999px;
-
-      /* Bounce curve */
+      --border-thick: 3px solid var(--black);
+      --shadow-solid: 6px 6px 0px var(--black);
+      --shadow-sm: 4px 4px 0px var(--black);
+      --radius-card: 16px;
+      --radius-pill: 100px;
+      
       --bounce: cubic-bezier(0.175, 0.885, 0.32, 1.275);
-
-      /* Safe-area insets */
+      
       --safe-top: env(safe-area-inset-top, 0px);
       --safe-bottom: env(safe-area-inset-bottom, 0px);
     }
 
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      -webkit-tap-highlight-color: transparent;
-    }
-
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    
     body {
       background-color: var(--beige);
       color: var(--black);
       font-family: var(--font-body);
-      font-weight: 700;
       overflow: hidden;
-      position: fixed;
-      inset: 0;
-      user-select: none;
+      overscroll-behavior-y: contain;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
       -webkit-font-smoothing: antialiased;
     }
 
-    /* Screen Views */
-    .view-screen {
-      position: absolute;
-      inset: 0;
-      display: flex;
-      flex-direction: column;
-      background: var(--beige);
-      opacity: 0;
-      pointer-events: none;
-      visibility: hidden;
-      transition: opacity 0.22s ease, visibility 0.22s;
-      z-index: 10;
-    }
-    .view-screen.active {
-      opacity: 1;
-      pointer-events: auto;
-      visibility: visible;
-      z-index: 20;
-    }
-
-    h1, h2, h3, h4 {
-      font-family: var(--font-heading);
-      text-transform: uppercase;
-      letter-spacing: -0.03em;
-      line-height: 1;
-    }
+    /* =========================================
+       TYPOGRAPHY & UTILS
+       ========================================= */
+    h1, h2, h3 { font-family: var(--font-bold); text-transform: uppercase; letter-spacing: -1px; line-height: 1; margin: 0; }
+    .text-red { color: var(--red); }
+    .text-cyan { color: var(--cyan); }
     .hidden { display: none !important; }
-
-    /* ==========================================================================
-       BUTTONS & TACTILE CONTROLS (NEO-BRUTALISM)
-       ========================================================================== */
-    button {
-      background: none;
-      border: none;
-      cursor: pointer;
-      font-family: var(--font-heading);
-      text-transform: uppercase;
-      letter-spacing: 0.02em;
-      outline: none;
-      transition: transform 0.15s var(--bounce), box-shadow 0.15s var(--bounce), background 0.15s;
-    }
-    button:hover:not(:disabled) {
-      transform: translate(-2px, -2px);
-      box-shadow: 6px 6px 0px var(--black);
-    }
-    button:active:not(:disabled) {
-      transform: translate(2px, 2px);
-      box-shadow: 1px 1px 0px var(--black) !important;
-    }
-    button:disabled {
-      opacity: 0.45;
-      cursor: not-allowed;
-      transform: none !important;
-      box-shadow: var(--shadow-sm) !important;
-    }
-
-    .btn-pill {
-      background: var(--white);
-      color: var(--black);
-      border: var(--border-thick);
-      border-radius: var(--radius-pill);
-      padding: 10px 20px;
-      font-size: 0.85rem;
-      box-shadow: var(--shadow-sm);
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      white-space: nowrap;
-    }
-
-    .btn-brutal-primary {
-      background: var(--lime);
-      color: var(--black);
-      border: var(--border-thick);
-      border-radius: var(--radius-pill);
-      padding: 16px 28px;
-      font-size: 1rem;
-      box-shadow: var(--shadow-md);
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
-      width: 100%;
-    }
-
-    .btn-icon {
-      width: 48px;
-      height: 48px;
-      border-radius: 50%;
-      background: var(--white);
-      border: var(--border-thick);
-      color: var(--black);
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.25rem;
-      box-shadow: var(--shadow-sm);
-      flex-shrink: 0;
-    }
-
-    /* Sticker / Angled Badges */
-    .brutal-badge {
-      display: inline-block;
-      font-family: var(--font-heading);
-      font-size: 0.68rem;
-      padding: 4px 10px;
-      border: var(--border-thin);
-      border-radius: 6px;
-      text-transform: uppercase;
-      box-shadow: 2px 2px 0px var(--black);
-      transform: rotate(-1.5deg);
-    }
-
-    /* ==========================================================================
-       VIEW 1: CAMERA & PHOTO CAPTURE
-       ========================================================================== */
-    .top-brand-bar {
-      position: absolute;
-      top: calc(var(--safe-top) + 16px);
-      left: 16px;
-      right: 16px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      z-index: 50;
-      pointer-events: none;
-    }
-    .top-brand-bar > * { pointer-events: auto; }
-
+    
     .brand-logo {
       font-family: var(--font-display);
-      font-size: 2.2rem;
+      font-size: 2.5rem;
       color: var(--black);
       text-shadow: 3px 3px 0px var(--cyan);
-      letter-spacing: 1px;
-      background: var(--white);
-      border: var(--border-thick);
-      padding: 4px 14px;
-      border-radius: 12px;
-      box-shadow: var(--shadow-sm);
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .brand-logo span.tag-ver {
-      font-family: var(--font-mono);
-      font-size: 0.65rem;
-      background: var(--yellow);
-      border: 2px solid var(--black);
-      padding: 2px 6px;
-      border-radius: 4px;
+      letter-spacing: 2px;
+      line-height: 1;
+      pointer-events: auto;
     }
 
-    .camera-frame {
-      position: absolute;
-      inset: 0;
-      background: var(--black);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      overflow: hidden;
+    /* View Transition System */
+    .view-container {
+      position: absolute; inset: 0;
+      background-color: var(--beige);
+      display: flex; flex-direction: column;
+      z-index: 10;
+      opacity: 0; pointer-events: none; visibility: hidden;
+      transition: opacity 0.3s ease, visibility 0.3s ease;
     }
-    #cameraFeed {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
+    .view-container.active {
+      opacity: 1; pointer-events: all; visibility: visible;
     }
 
-    /* Camera Viewfinder Crosshairs */
-    .viewfinder-guide {
-      position: absolute;
-      inset: 40px 24px calc(var(--safe-bottom) + 130px) 24px;
-      border: 2px dashed rgba(255, 255, 255, 0.45);
-      border-radius: 24px;
-      pointer-events: none;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      padding: 16px;
+    /* =========================================
+       BUTTONS & UI ELEMENTS
+       ========================================= */
+    button {
+      background: none; border: none; color: inherit; cursor: pointer;
+      font-family: var(--font-bold); text-transform: uppercase;
+      transition: transform 0.2s var(--bounce), box-shadow 0.2s var(--bounce);
     }
-    .guide-tag {
-      align-self: center;
-      background: var(--black);
-      color: var(--white);
-      border: 2px solid var(--white);
-      padding: 4px 12px;
-      border-radius: var(--radius-pill);
-      font-size: 0.72rem;
-      font-family: var(--font-mono);
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-    }
+    button:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; box-shadow: none !important; }
 
-    /* Fallback Card if Camera Unavailable */
-    .camera-notice-card {
-      position: absolute;
-      inset: 20px;
-      max-width: 440px;
-      margin: auto;
-      height: fit-content;
-      background: var(--beige);
-      border: var(--border-thick);
-      border-radius: 20px;
-      padding: 28px;
-      text-align: center;
-      box-shadow: var(--shadow-lg);
-      z-index: 40;
+    .btn-pill {
+      background: var(--white); color: var(--black);
+      border: var(--border-thick); border-radius: var(--radius-pill);
+      padding: 12px 24px; font-size: 1rem; font-weight: 900;
+      box-shadow: var(--shadow-sm); display: flex; align-items: center; justify-content: center; gap: 8px;
     }
+    .btn-pill:active:not(:disabled) { transform: translate(4px, 4px); box-shadow: 0px 0px 0px var(--black); }
+    
+    .btn-primary {
+      background: var(--red); color: var(--white);
+      border: var(--border-thick); border-radius: var(--radius-pill);
+      padding: 18px 30px; font-size: 1.1rem; width: 100%;
+      box-shadow: var(--shadow-solid);
+    }
+    .btn-primary:active:not(:disabled) { transform: translate(6px, 6px); box-shadow: 0px 0px 0px var(--black); }
 
-    .floating-shutter-dock {
-      position: absolute;
-      bottom: calc(var(--safe-bottom) + 24px);
-      left: 50%;
-      transform: translateX(-50%);
-      background: var(--white);
-      border: var(--border-thick);
-      border-radius: var(--radius-pill);
-      padding: 10px 22px;
-      display: flex;
-      align-items: center;
-      gap: 20px;
-      box-shadow: var(--shadow-lg);
-      z-index: 50;
+    .icon-btn {
+      width: 50px; height: 50px; border-radius: 50%;
+      background: var(--white); border: var(--border-thick);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.2rem; box-shadow: var(--shadow-sm); flex-shrink: 0;
+    }
+    .icon-btn:active:not(:disabled) { transform: translate(4px, 4px); box-shadow: 0px 0px 0px var(--black); }
+
+    .input-field {
+      width: 100%; background: var(--white); color: var(--black);
+      border: var(--border-thick); border-radius: 12px; padding: 16px;
+      font-size: 1rem; font-family: var(--font-body); font-weight: 700;
+      box-shadow: inset 3px 3px 0px rgba(0,0,0,0.05); outline: none;
+      transition: border-color 0.2s ease;
+    }
+    .input-field:focus { border-color: var(--cyan); box-shadow: var(--shadow-sm); }
+
+    /* =========================================
+       CAMERA & FLOATING DOCKS
+       ========================================= */
+    .camera-wrapper { position: absolute; inset: 0; background: var(--black); z-index: 10; }
+    #cameraFeed { position: absolute; width: 100%; height: 100%; object-fit: cover; }
+    
+    .error-overlay {
+      position: absolute; inset: 0; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; background: var(--beige);
+      z-index: 20; text-align: center; padding: 20px;
+      opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
+    }
+    .error-overlay.active { opacity: 1; pointer-events: all; }
+
+    .top-bar {
+      position: absolute; top: calc(var(--safe-top) + 20px); left: 20px; right: 20px;
+      display: flex; justify-content: space-between; align-items: center; 
+      z-index: 50; pointer-events: none;
+    }
+    .top-bar > * { pointer-events: auto; }
+
+    .floating-dock {
+      position: absolute; bottom: calc(var(--safe-bottom) + 30px); left: 50%; transform: translateX(-50%);
+      background: var(--white); border: var(--border-thick); border-radius: var(--radius-pill);
+      padding: 10px 20px; display: flex; align-items: center; gap: 20px;
+      box-shadow: var(--shadow-solid); z-index: 50; pointer-events: auto;
     }
 
     .shutter-btn {
-      width: 72px;
-      height: 72px;
-      border-radius: 50%;
-      background: var(--red);
-      border: var(--border-thick);
-      outline: 4px solid var(--white);
-      box-shadow: 0 4px 12px rgba(0,0,0,0.25);
-      transition: transform 0.15s ease;
-    }
-    .shutter-btn:active { transform: scale(0.9); }
-
-    /* ==========================================================================
-       VIEW 2: HAIRSTYLE CATALOGUE (50 STYLES & SEARCH)
-       ========================================================================== */
-    .studio-header {
-      padding: calc(var(--safe-top) + 14px) 16px 12px;
-      background: var(--white);
-      border-bottom: var(--border-thick);
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      z-index: 30;
-      box-shadow: 0 4px 0px rgba(0,0,0,0.04);
-    }
-
-    .studio-nav-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .client-bar {
-      display: flex;
-      gap: 12px;
-      align-items: center;
-      background: var(--beige);
-      border: var(--border-thick);
-      border-radius: var(--radius-md);
-      padding: 8px 12px;
-      box-shadow: var(--shadow-sm);
-    }
-    .client-thumb {
-      width: 52px;
-      height: 52px;
-      border-radius: 8px;
-      object-fit: cover;
-      border: var(--border-thin);
+      width: 64px; height: 64px; border-radius: 50%;
+      background: var(--red); border: var(--border-thick);
+      outline: 4px solid var(--white); box-shadow: 0 4px 10px rgba(0,0,0,0.3);
       flex-shrink: 0;
-      background: #E5E7EB;
     }
-    .search-wrapper {
-      position: relative;
-      flex: 1;
-      display: flex;
-      align-items: center;
-    }
-    .search-input {
-      width: 100%;
-      height: 42px;
-      background: var(--white);
-      border: var(--border-thick);
-      border-radius: var(--radius-pill);
-      padding: 0 36px 0 38px;
-      font-family: var(--font-body);
-      font-weight: 700;
-      font-size: 0.88rem;
-      outline: none;
-      color: var(--black);
-      box-shadow: inset 2px 2px 0px rgba(0,0,0,0.06);
-    }
-    .search-input:focus {
-      border-color: var(--black);
-      box-shadow: var(--shadow-sm);
-    }
-    .search-wrapper i.search-icon {
-      position: absolute;
-      left: 14px;
-      font-size: 1.1rem;
-      color: var(--black);
-      pointer-events: none;
-    }
-    .clear-search-btn {
-      position: absolute;
-      right: 12px;
-      font-size: 1rem;
-      color: var(--black);
-      display: none;
-    }
+    .shutter-btn:active { transform: scale(0.9); box-shadow: inset 0 4px 10px rgba(0,0,0,0.5); }
 
-    /* Category Filter Pills */
-    .filter-track {
-      display: flex;
-      gap: 8px;
-      overflow-x: auto;
-      padding: 2px 0 4px;
-      scrollbar-width: none;
-    }
-    .filter-track::-webkit-scrollbar { display: none; }
+    /* =========================================
+       GRIDS & CARDS
+       ========================================= */
+    .content-area { flex: 1; overflow-y: auto; padding: 20px; padding-bottom: calc(var(--safe-bottom) + 120px); }
+    .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
     
-    .cat-pill {
-      background: var(--white);
-      color: var(--black);
-      border: var(--border-thin);
-      border-radius: var(--radius-pill);
-      padding: 7px 16px;
-      font-family: var(--font-heading);
-      font-size: 0.75rem;
-      letter-spacing: 0.03em;
-      white-space: nowrap;
+    .card {
+      background: var(--white); border: var(--border-thick); border-radius: var(--radius-card);
+      overflow: hidden; position: relative; cursor: pointer;
+      box-shadow: var(--shadow-sm); transition: transform 0.2s var(--bounce);
+      aspect-ratio: 4/5; display: flex; flex-direction: column;
+    }
+    .card:active { transform: scale(0.95); }
+    .card.selected { border-color: var(--cyan); box-shadow: 0 0 0 4px var(--cyan), var(--shadow-sm); }
+    .card img { width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
+    
+    .card-label {
+      position: absolute; bottom: 10px; left: 10px; right: 10px;
+      background: var(--white); border: 2px solid var(--black); border-radius: var(--radius-pill);
+      padding: 6px 10px; font-size: 0.7rem; font-family: var(--font-bold);
+      text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
       box-shadow: 2px 2px 0px var(--black);
     }
-    .cat-pill.active {
-      background: var(--black);
-      color: var(--white);
-      transform: translate(2px, 2px);
-      box-shadow: 0 0 0 var(--black);
-    }
 
-    /* 50 Hairstyle Grid */
-    .catalogue-container {
-      flex: 1;
-      overflow-y: auto;
-      padding: 16px;
-      padding-bottom: calc(var(--safe-bottom) + 120px);
+    .badge {
+      position: absolute; top: 10px; right: 10px;
+      padding: 4px 8px; font-weight: 900; font-size: 0.65rem;
+      border: 2px solid var(--black); z-index: 5; text-transform: uppercase;
+      transform: rotate(4deg); box-shadow: 2px 2px 0px var(--black);
     }
-    .hairstyles-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 14px;
-    }
-    @media (min-width: 680px) {
-      .hairstyles-grid { grid-template-columns: repeat(3, 1fr); }
-    }
-    @media (min-width: 1024px) {
-      .hairstyles-grid { grid-template-columns: repeat(4, 1fr); gap: 18px; }
-    }
-
-    /* Neo-Brutalist Hairstyle Card */
-    .hair-card {
-      background: var(--card-bg);
-      border: var(--border-thick);
-      border-radius: var(--radius-md);
-      padding: 14px;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      min-height: 160px;
-      position: relative;
-      cursor: pointer;
-      box-shadow: var(--shadow-sm);
-      transition: transform 0.15s var(--bounce), box-shadow 0.15s, border-color 0.15s;
-    }
-    .hair-card:hover {
-      transform: translate(-3px, -3px);
-      box-shadow: var(--shadow-md);
-    }
-    .hair-card.selected {
-      background: #FFFDF0;
-      border-color: var(--black);
-      box-shadow: 6px 6px 0px var(--cyan);
-      transform: translate(-2px, -2px);
-    }
-    .hair-card.selected::after {
-      content: '✓ SELECTED';
-      position: absolute;
-      top: -10px;
-      right: 10px;
-      background: var(--lime);
-      color: var(--black);
-      font-family: var(--font-heading);
-      font-size: 0.65rem;
-      border: var(--border-thin);
-      padding: 2px 8px;
-      border-radius: 4px;
+    .badge-lime { background: var(--lime); color: var(--black); }
+    
+    .delete-card-btn {
+      position: absolute; top: 10px; left: 10px; background: var(--red);
+      color: var(--white); border: 2px solid var(--black); width: 32px; height: 32px;
+      border-radius: 50%; display: flex; align-items: center; justify-content: center; z-index: 10;
       box-shadow: 2px 2px 0px var(--black);
-      transform: rotate(2deg);
+    }
+    .delete-card-btn:active { transform: translate(2px, 2px); box-shadow: 0 0 0 var(--black); }
+
+    /* =========================================
+       MODALS & OVERLAYS
+       ========================================= */
+    .overlay-view {
+      position: fixed; inset: 0; z-index: 60; 
+      background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(5px);
+      display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px;
+      opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
+    }
+    .overlay-view.active { opacity: 1; pointer-events: all; }
+    
+    .modal-card {
+      background: var(--beige); border: var(--border-thick);
+      border-radius: 24px; width: 100%; max-width: 420px; padding: 30px;
+      display: flex; flex-direction: column; gap: 20px; 
+      box-shadow: 12px 12px 0px var(--cyan);
+      transform: translateY(40px) scale(0.95); transition: transform 0.4s var(--bounce);
+    }
+    .overlay-view.active .modal-card { transform: translateY(0) scale(1); }
+
+    .preview-box {
+      width: 100%; aspect-ratio: 1; background: var(--white);
+      border: 3px dashed var(--black); border-radius: 16px;
+      display: flex; align-items: center; justify-content: center;
+      overflow: hidden; cursor: pointer; position: relative;
+    }
+    .preview-box img { width: 100%; height: 100%; object-fit: contain; }
+
+    /* =========================================
+       COMPARISON SLIDER
+       ========================================= */
+    .compare-wrapper {
+      flex: 1; position: relative; overflow: hidden; background: var(--white);
+      border-bottom: var(--border-thick); border-radius: 0 0 24px 24px;
+      touch-action: none; /* Prevent scroll while sliding */
+    }
+    .compare-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; pointer-events: none; }
+    #imgGenerated { clip-path: polygon(50% 0, 100% 0, 100% 100%, 50% 100%); }
+
+    .slider-handle {
+      position: absolute; left: 50%; top: 0; bottom: 0; width: 40px;
+      transform: translateX(-50%); cursor: ew-resize; z-index: 20;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .slider-line { position: absolute; top: 0; bottom: 0; width: 4px; background: var(--black); }
+    .slider-btn {
+      position: relative; width: 44px; height: 44px; background: var(--lime);
+      border: var(--border-thick); border-radius: 50%; display: flex; align-items: center; justify-content: center;
+      box-shadow: 4px 4px 0px var(--black); color: var(--black); font-size: 1.2rem; pointer-events: none;
     }
 
-    .card-top {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      margin-bottom: 8px;
-      gap: 6px;
-    }
-    .card-number {
-      font-family: var(--font-mono);
-      font-size: 0.7rem;
-      font-weight: 700;
-      color: var(--muted);
-    }
-    .hair-name {
-      font-family: var(--font-heading);
-      font-size: 1.05rem;
-      line-height: 1.15;
-      margin-bottom: 6px;
-      color: var(--black);
-    }
-    .hair-desc {
-      font-size: 0.75rem;
-      color: var(--muted);
-      line-height: 1.3;
-      display: -webkit-box;
-      -webkit-line-clamp: 2;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
-      margin-bottom: 12px;
-    }
-    .card-action-bar {
-      margin-top: auto;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .btn-card-apply {
-      background: var(--white);
-      border: var(--border-thin);
-      border-radius: var(--radius-pill);
-      padding: 6px 12px;
-      font-size: 0.72rem;
-      box-shadow: 2px 2px 0px var(--black);
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-    }
-
-    /* Sticky Bottom Bar */
-    .studio-dock {
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      background: linear-gradient(180deg, rgba(245, 245, 237, 0) 0%, rgba(245, 245, 237, 0.95) 30%, rgba(245, 245, 237, 1) 100%);
-      padding: 16px 20px calc(var(--safe-bottom) + 16px);
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      z-index: 40;
-    }
-    .selection-summary {
-      flex: 1;
-      overflow: hidden;
-      background: var(--white);
-      border: var(--border-thick);
-      border-radius: var(--radius-md);
-      padding: 8px 14px;
+    .mode-toggle {
+      display: flex; background: var(--white); border: var(--border-thick);
+      border-radius: var(--radius-pill); padding: 4px; gap: 4px;
       box-shadow: var(--shadow-sm);
     }
-    .summary-meta {
-      font-size: 0.65rem;
-      font-family: var(--font-mono);
-      text-transform: uppercase;
-      color: var(--muted);
+    .mode-btn {
+      padding: 8px 16px; border-radius: var(--radius-pill); font-size: 0.8rem;
+      color: var(--black); transition: background 0.2s ease;
     }
-    .summary-name {
-      font-family: var(--font-heading);
-      font-size: 1.05rem;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
+    .mode-btn.active { background: var(--black); color: var(--white); }
 
-    /* ==========================================================================
-       VIEW 3: PROCESSING OVERLAY
-       ========================================================================== */
-    .processing-overlay {
-      position: absolute;
-      inset: 0;
-      background: rgba(245, 245, 237, 0.96);
-      backdrop-filter: blur(8px);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 24px;
-      text-align: center;
-      z-index: 100;
+    .loader-spinner {
+      width: 60px; height: 60px; border: 6px solid var(--black);
+      border-top-color: var(--lime); border-radius: 50%; animation: spin 1s linear infinite;
     }
-    .brutal-spinner-box {
-      width: 90px;
-      height: 90px;
-      background: var(--lime);
-      border: var(--border-thick);
-      border-radius: 20px;
-      box-shadow: var(--shadow-lg);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-bottom: 24px;
-      animation: brutalWiggle 1.4s infinite ease-in-out;
-    }
-    @keyframes brutalWiggle {
-      0%, 100% { transform: rotate(-6deg) scale(1); }
-      50% { transform: rotate(6deg) scale(1.06); }
-    }
-    .progress-bar-brutal {
-      width: 240px;
-      height: 16px;
-      background: var(--white);
-      border: var(--border-thick);
-      border-radius: var(--radius-pill);
-      margin: 16px 0;
-      overflow: hidden;
-      box-shadow: var(--shadow-sm);
-    }
-    .progress-bar-fill {
-      height: 100%;
-      width: 0%;
-      background: var(--red);
-      transition: width 0.2s linear;
-    }
+    @keyframes spin { 100% { transform: rotate(360deg); } }
 
-    /* ==========================================================================
-       VIEW 4: COMPARISON & RESULT VIEWER (SPLIT SLIDER)
-       ========================================================================== */
-    .compare-header {
-      padding: calc(var(--safe-top) + 14px) 16px 12px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      background: var(--white);
-      border-bottom: var(--border-thick);
-      z-index: 30;
+    /* =========================================
+       TOAST NOTIFICATIONS
+       ========================================= */
+    .toast-container {
+      position: fixed; top: calc(var(--safe-top) + 20px); left: 50%; transform: translateX(-50%);
+      z-index: 9999; display: flex; flex-direction: column; gap: 10px; pointer-events: none;
     }
-    .compare-stage {
-      flex: 1;
-      position: relative;
-      background: #1A1A1A;
-      overflow: hidden;
-      touch-action: none;
+    .toast {
+      background: var(--white); border: var(--border-thick); border-radius: var(--radius-pill);
+      padding: 12px 24px; font-family: var(--font-bold); font-size: 0.9rem;
+      box-shadow: var(--shadow-solid); display: flex; align-items: center; gap: 10px;
+      animation: slideDown 0.3s var(--bounce) forwards, fadeOut 0.3s ease 2.7s forwards;
     }
-    .compare-layer-img {
-      position: absolute;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      object-fit: contain;
-      pointer-events: none;
-    }
-    #imgRendered {
-      clip-path: polygon(50% 0, 100% 0, 100% 100%, 50% 100%);
-    }
-
-    .slider-handle-wrap {
-      position: absolute;
-      top: 0;
-      bottom: 0;
-      left: 50%;
-      width: 44px;
-      transform: translateX(-50%);
-      cursor: ew-resize;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 35;
-    }
-    .slider-line-bar {
-      position: absolute;
-      top: 0;
-      bottom: 0;
-      width: 4px;
-      background: var(--black);
-      box-shadow: 0 0 10px rgba(0,0,0,0.5);
-    }
-    .slider-knob-btn {
-      position: relative;
-      width: 44px;
-      height: 44px;
-      background: var(--lime);
-      border: var(--border-thick);
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.1rem;
-      box-shadow: var(--shadow-sm);
-      color: var(--black);
-    }
-
-    .compare-mode-switch {
-      display: flex;
-      background: var(--white);
-      border: var(--border-thick);
-      border-radius: var(--radius-pill);
-      padding: 3px;
-      box-shadow: var(--shadow-sm);
-    }
-    .mode-tab-btn {
-      padding: 6px 16px;
-      border-radius: var(--radius-pill);
-      font-size: 0.75rem;
-      color: var(--black);
-    }
-    .mode-tab-btn.active {
-      background: var(--black);
-      color: var(--white);
-    }
-
-    .floating-compare-actions {
-      position: absolute;
-      bottom: calc(var(--safe-bottom) + 24px);
-      left: 50%;
-      transform: translateX(-50%);
-      display: flex;
-      gap: 12px;
-      z-index: 50;
-    }
-
-    /* ==========================================================================
-       TOAST NOTIFICATIONS (BRUTALIST TOASTS)
-       ========================================================================== */
-    .toast-zone {
-      position: fixed;
-      top: calc(var(--safe-top) + 16px);
-      left: 50%;
-      transform: translateX(-50%);
-      z-index: 9999;
-      pointer-events: none;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      width: 90%;
-      max-width: 420px;
-    }
-    .brutal-toast {
-      background: var(--white);
-      color: var(--black);
-      border: var(--border-thick);
-      border-radius: var(--radius-pill);
-      padding: 12px 20px;
-      font-family: var(--font-heading);
-      font-size: 0.88rem;
-      box-shadow: var(--shadow-md);
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      animation: slideInDown 0.25s var(--bounce) forwards;
-    }
-    .brutal-toast.error { background: var(--red); color: var(--white); }
-    @keyframes slideInDown {
-      from { transform: translateY(-30px); opacity: 0; }
-      to { transform: translateY(0); opacity: 1; }
-    }
-
-    /* Modal / Zoom inspect */
-    .zoom-overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.9);
-      z-index: 200;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-    }
-    .zoom-overlay img {
-      max-width: 100%;
-      max-height: 80vh;
-      border: var(--border-thick);
-      border-radius: 12px;
-      box-shadow: 10px 10px 0px var(--cyan);
-    }
+    .toast.error { background: var(--red); color: var(--white); }
+    @keyframes slideDown { from { transform: translateY(-50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    @keyframes fadeOut { to { opacity: 0; transform: translateY(-20px); } }
   </style>
 </head>
 <body>
 
-  <!-- Toast Notification Zone -->
-  <div id="toastZone" class="toast-zone"></div>
+  <!-- Toast Container -->
+  <div id="toastContainer" class="toast-container"></div>
 
-  <!-- =========================================================================
-       VIEW 1: CAMERA & PHOTO CAPTURE
-       ========================================================================= -->
-  <section id="cameraScreen" class="view-screen active">
-    <!-- Top Bar -->
-    <header class="top-brand-bar">
-      <div class="brand-logo">
-        <span>HAIR·LAB</span>
-        <span class="tag-ver">2026</span>
+  <!-- VIEW 1: Camera Interface -->
+  <div id="cameraView" class="view-container active">
+    <div class="top-bar">
+      <div class="brand-logo">FASSHON</div>
+      <div style="display: flex; gap: 10px;">
+        <button id="openAddGarmentBtn" class="btn-pill" aria-label="Add Suit"><i class="bi bi-plus-lg"></i> SUIT</button>
+        <button id="uploadBtn" class="icon-btn" aria-label="Upload Photo"><i class="bi bi-image"></i></button>
+        <input type="file" id="fileInput" class="hidden" accept="image/*" />
       </div>
-      <div style="display: flex; gap: 8px;">
-        <button id="quickSampleBtn" class="btn-pill" style="background: var(--yellow);" title="Test with Demo Model">
-          <i class="bi bi-person-bounding-box"></i> DEMO PHOTO
-        </button>
-        <button id="triggerUploadBtn" class="btn-icon" aria-label="Upload Photo" title="Upload Photo">
-          <i class="bi bi-upload"></i>
-        </button>
-        <button id="switchCameraBtn" class="btn-icon" aria-label="Switch Camera" title="Flip Camera">
-          <i class="bi bi-arrow-repeat"></i>
-        </button>
-        <input type="file" id="photoFileInput" class="hidden" accept="image/*" />
-      </div>
-    </header>
-
-    <!-- Camera Viewport -->
-    <div class="camera-frame">
-      <video id="cameraFeed" autoplay playsinline muted></video>
-
-      <!-- Viewfinder Guides -->
-      <div class="viewfinder-guide">
-        <div class="guide-tag">FACE & HAIR IN FRAME</div>
-        <div class="guide-tag" style="background: var(--lime); color: var(--black); border-color: var(--black);">KEEP SAME ANGLE</div>
-      </div>
-
-      <!-- Fallback Box if camera is denied/inactive on localhost -->
-      <div id="cameraNotice" class="camera-notice-card hidden">
-        <i class="bi bi-camera-video-off" style="font-size: 3rem; color: var(--red); margin-bottom: 12px; display: block;"></i>
-        <h2>CAMERA NOT ACTIVE</h2>
-        <p style="margin: 10px 0 20px; font-size: 0.88rem; color: var(--muted);">
-          Camera permission was denied or running over an insecure origin. You can upload an image or load a demo portrait instantly!
-        </p>
-        <div style="display: flex; flex-direction: column; gap: 10px;">
-          <button id="fallbackUploadBtn" class="btn-brutal-primary" style="background: var(--cyan);">
-            <i class="bi bi-folder2-open"></i> UPLOAD FROM DEVICE
-          </button>
-          <button id="fallbackSampleBtn" class="btn-pill" style="background: var(--yellow); justify-content: center;">
-            <i class="bi bi-stars"></i> LOAD DEMO PORTRAIT
-          </button>
-        </div>
+    </div>
+    
+    <div class="camera-wrapper">
+      <video id="cameraFeed" autoplay playsinline></video>
+      <div id="cameraErrorMsg" class="error-overlay">
+        <i class="bi bi-camera-video-off" style="font-size: 3.5rem; color: var(--black); margin-bottom: 10px;"></i>
+        <h2>CAMERA ERROR</h2>
+        <p style="font-weight: 700; margin: 10px 0 25px; color: var(--black);">Access denied or not found.</p>
+        <button onclick="document.getElementById('fileInput').click()" class="btn-primary" style="width: auto;">UPLOAD PHOTO</button>
       </div>
     </div>
 
-    <!-- Floating Shutter Dock -->
-    <div class="floating-shutter-dock">
-      <button id="openUploadDockBtn" class="btn-icon" title="Upload from Device">
-        <i class="bi bi-image"></i>
-      </button>
-      <button id="captureShutterBtn" class="shutter-btn" aria-label="Take Photo"></button>
-      <button id="flipCameraDockBtn" class="btn-icon" title="Flip Camera">
-        <i class="bi bi-arrow-repeat"></i>
-      </button>
-    </div>
-  </section>
-
-  <!-- =========================================================================
-       VIEW 2: 50-HAIRSTYLE STUDIO CATALOGUE
-       ========================================================================= -->
-  <section id="studioScreen" class="view-screen">
-    <!-- Header with Photo Thumb & Search Bar -->
-    <header class="studio-header">
-      <div class="studio-nav-row">
-        <button id="retakePhotoBtn" class="btn-pill" style="padding: 8px 16px; font-size: 0.78rem;">
-          <i class="bi bi-camera"></i> RETAKE
-        </button>
-        <h3>HAIRSTYLE STUDIO [50]</h3>
-        <button id="changePhotoBtn" class="btn-pill" style="padding: 8px 14px; font-size: 0.78rem;">
-          <i class="bi bi-arrow-up-circle"></i> NEW PHOTO
-        </button>
-      </div>
-
-      <!-- Client Thumbnail Bar & Search Input -->
-      <div class="client-bar">
-        <img id="clientReferenceThumb" class="client-thumb" alt="Reference Photo" />
-        <div class="search-wrapper">
-          <i class="bi bi-search search-icon"></i>
-          <input type="text" id="hairSearchInput" class="search-input" placeholder="Search 50 hairstyles (e.g. Butterfly, Paranda, Bob)..." autocomplete="off" />
-          <button id="clearSearchBtn" class="clear-search-btn" aria-label="Clear Search"><i class="bi bi-x-circle-fill"></i></button>
-        </div>
-      </div>
-
-      <!-- Category Filter Pills -->
-      <div class="filter-track" id="categoryTrack">
-        <button class="cat-pill active" data-filter="all">ALL (50)</button>
-        <button class="cat-pill" data-filter="modern">MODERN CUTS (10)</button>
-        <button class="cat-pill" data-filter="bob">BOB & SHORT (5)</button>
-        <button class="cat-pill" data-filter="open">OPEN & WAVES (10)</button>
-        <button class="cat-pill" data-filter="ponytail">PONYTAILS (5)</button>
-        <button class="cat-pill" data-filter="buns">BUNS & JUDA (6)</button>
-        <button class="cat-pill" data-filter="braids">BRAIDS (7)</button>
-        <button class="cat-pill" data-filter="punjabi">PUNJABI & WEDDING (5)</button>
-        <button class="cat-pill" data-filter="bridal">HALF-UP & PARTY (2)</button>
-      </div>
-    </header>
-
-    <!-- Main Hairstyle Grid -->
-    <main class="catalogue-container">
-      <div id="hairstylesGrid" class="hairstyles-grid"></div>
-    </main>
-
-    <!-- Sticky Bottom Bar -->
-    <div class="studio-dock">
-      <div class="selection-summary">
-        <div class="summary-meta">CHOSEN STYLE:</div>
-        <div id="summaryStyleName" class="summary-name">SELECT A HAIRSTYLE</div>
-      </div>
-      <button id="applySelectedHairBtn" class="btn-brutal-primary" style="width: auto; min-width: 190px;" disabled>
-        APPLY CUT <i class="bi bi-scissors"></i>
-      </button>
-    </div>
-  </section>
-
-  <!-- =========================================================================
-       VIEW 3: PROCESSING OVERLAY
-       ========================================================================= -->
-  <div id="processingOverlay" class="processing-overlay hidden">
-    <div class="brutal-spinner-box">
-      <i class="bi bi-scissors" style="font-size: 2.8rem; color: var(--black);"></i>
-    </div>
-    <h2 id="processTitle" style="font-size: 2rem; margin-bottom: 6px;">STYLING...</h2>
-    <p id="processStatus" style="font-size: 0.9rem; color: var(--muted); font-family: var(--font-mono);">
-      Preserving facial geometry & identity (0s)
-    </p>
-    <div class="progress-bar-brutal">
-      <div id="progressFill" class="progress-bar-fill"></div>
-    </div>
-    <div class="brutal-badge" style="background: var(--yellow);">
-      DIRECT GEMINI CALL: KEY IN CONFIG
+    <div class="floating-dock">
+      <button id="openLibraryBtn" class="icon-btn" aria-label="Open Gallery" style="background-size: cover; background-position: center;"></button>
+      <button id="captureBtn" class="shutter-btn" aria-label="Take Photo"></button>
+      <button id="switchCameraBtn" class="icon-btn" aria-label="Switch Camera"><i class="bi bi-arrow-repeat" style="font-size: 1.5rem;"></i></button>
     </div>
   </div>
 
-  <!-- =========================================================================
-       VIEW 4: COMPARISON & RESULT VIEWER
-       ========================================================================= -->
-  <section id="compareScreen" class="view-screen">
-    <header class="compare-header">
-      <button id="backToStudioBtn" class="btn-pill" style="padding: 8px 16px; font-size: 0.78rem;">
-        <i class="bi bi-arrow-left"></i> CATALOGUE
-      </button>
+  <!-- VIEW 2: Add Garment Modal -->
+  <div id="addGarmentView" class="overlay-view">
+    <div class="modal-card">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+        <div>
+          <div style="background: var(--cyan); color: var(--white); display: inline-block; padding: 4px 10px; font-weight: 900; font-size: 0.7rem; text-transform: uppercase; border: 2px solid var(--black); margin-bottom: 10px; transform: rotate(-2deg); box-shadow: 2px 2px 0px var(--black);">Wardrobe</div>
+          <h1 style="font-size: 2rem;">ADD NEW SUIT</h1>
+        </div>
+        <button id="closeAddGarmentBtn" class="icon-btn" style="width: 40px; height: 40px;" aria-label="Close"><i class="bi bi-x-lg"></i></button>
+      </div>
       
-      <div class="compare-mode-switch">
-        <button id="modeSplitBtn" class="mode-tab-btn active">SPLIT SLIDER</button>
-        <button id="modeResultOnlyBtn" class="mode-tab-btn">RESULT ONLY</button>
+      <div id="garmentPreviewContainer" class="preview-box">
+        <div style="text-align: center; color: var(--black);">
+          <i id="garmentPreviewIcon" class="bi bi-camera" style="font-size: 2.5rem;"></i>
+          <p style="font-size: 0.8rem; margin-top: 8px; font-weight: 700;">Select 1 or 2 Images<br/><span style="color: var(--red);">Will auto-stitch side-by-side</span></p>
+        </div>
+        <img id="garmentPreviewImg" class="hidden" style="position: absolute; inset: 0;" alt="Garment Preview" />
       </div>
-
-      <button id="zoomModalBtn" class="btn-icon" style="width: 40px; height: 40px;" title="Full Size Preview">
-        <i class="bi bi-arrows-fullscreen" style="font-size: 1rem;"></i>
-      </button>
-    </header>
-
-    <div id="compareStage" class="compare-stage">
-      <!-- Original Photo -->
-      <img id="imgSource" class="compare-layer-img" alt="Original Photo" />
-      <!-- Rendered Hairstyle Result -->
-      <img id="imgRendered" class="compare-layer-img" alt="Hairstyle Result" />
-
-      <!-- Interactive Divider Handle -->
-      <div id="sliderHandleWrap" class="slider-handle-wrap">
-        <div class="slider-line-bar"></div>
-        <div class="slider-knob-btn"><i class="bi bi-arrows-collapse"></i></div>
-      </div>
+      <input type="file" id="garmentFileInput" class="hidden" accept="image/*" multiple />
+      
+      <input type="text" id="garmentNameInput" placeholder="E.g. Vintage Pink Combo" class="input-field" autocomplete="off" />
+      <button id="saveGarmentBtn" class="btn-primary">SAVE TO WARDROBE</button>
     </div>
-
-    <!-- Floating Compare Action Bar -->
-    <div class="floating-compare-actions">
-      <button id="downloadResultBtn" class="btn-pill" style="background: var(--lime); color: var(--black); padding: 12px 24px;">
-        <i class="bi bi-download"></i> SAVE LOOK
-      </button>
-      <button id="tryAnotherStyleBtn" class="btn-pill" style="background: var(--cyan); color: var(--black); padding: 12px 24px;">
-        <i class="bi bi-shuffle"></i> ANOTHER STYLE
-      </button>
-    </div>
-  </section>
-
-  <!-- =========================================================================
-       VIEW 5: FULL-SCREEN ZOOM MODAL
-       ========================================================================= -->
-  <div id="zoomModal" class="zoom-overlay hidden">
-    <button id="closeZoomModalBtn" class="btn-icon" style="position: absolute; top: 20px; right: 20px; background: var(--white); z-index: 210;">
-      <i class="bi bi-x-lg"></i>
-    </button>
-    <img id="zoomModalImg" src="" alt="Zoomed Hairstyle" />
   </div>
 
-  <!-- =========================================================================
-       OPTIONAL: Inject API key from env var at deploy time.
-       On Netlify you can add this via a build snippet or a small edge function.
-       You can also simply paste your key directly into APP_CONFIG below.
-       ========================================================================= -->
+  <!-- VIEW 3: Garment Selection -->
+  <div id="garmentSelectView" class="view-container">
+    <div style="padding: calc(var(--safe-top) + 20px) 20px 10px; display: flex; justify-content: space-between; align-items: center; border-bottom: var(--border-thick); background: var(--white); z-index: 20;">
+      <button id="cancelSelectBtn" class="btn-pill" style="padding: 8px 16px; font-size: 0.8rem;">CANCEL</button>
+      <h2 style="font-size: 1.5rem;">CHOOSE SUIT</h2>
+      <div style="width: 70px;"></div>
+    </div>
+    
+    <div class="content-area">
+      <div style="display: flex; gap: 12px; background: var(--white); padding: 12px; border: var(--border-thick); border-radius: 16px; box-shadow: var(--shadow-sm); margin-bottom: 20px;">
+        <img id="capturedThumb" style="width: 60px; height: 60px; object-fit: cover; border: 2px solid var(--black); border-radius: 8px;" alt="Captured" />
+        <div style="position: relative; flex: 1; display: flex; align-items: center;">
+          <i class="bi bi-search" style="position: absolute; left: 12px; font-size: 1.2rem;"></i>
+          <input type="text" id="searchInput" placeholder="SEARCH..." class="input-field" style="padding-left: 40px; border: none; box-shadow: none; background: transparent;" />
+        </div>
+      </div>
+      <div id="garmentsGrid" class="grid-2"></div>
+    </div>
+
+    <div style="position: absolute; bottom: 0; left: 0; right: 0; padding: 20px calc(var(--safe-bottom) + 20px); background: linear-gradient(transparent, var(--beige) 80%); z-index: 20;">
+      <button id="generateTryOnBtn" disabled class="btn-primary" style="box-shadow: 8px 8px 0px var(--cyan);">GENERATE TRY-ON</button>
+    </div>
+  </div>
+
+  <!-- VIEW 4: Processing Overlay -->
+  <div id="processingView" class="overlay-view" style="background: var(--beige);">
+    <div class="loader-spinner"></div>
+    <h1 id="timerText" style="font-size: 2.5rem; margin-top: 30px; color: var(--black);">STYLING... 0S</h1>
+    <div style="background: var(--lime); border: 2px solid var(--black); padding: 5px 15px; border-radius: 100px; font-weight: 900; margin-top: 15px; box-shadow: 2px 2px 0px var(--black);">
+      MAY TAKE UP TO 30 SECONDS
+    </div>
+  </div>
+
+  <!-- VIEW 5: Comparison / Result View -->
+  <div id="comparisonView" class="view-container">
+    <div style="padding: calc(var(--safe-top) + 15px) 20px; display: flex; justify-content: space-between; align-items: center; background: var(--beige); z-index: 20;">
+      <button id="closeComparisonBtn" class="btn-pill" style="padding: 8px 16px; font-size: 0.8rem;">BACK</button>
+      <div class="mode-toggle">
+        <button id="modeCompareBtn" class="mode-btn active">COMPARE</button>
+        <button id="modeResultBtn" class="mode-btn">RESULT</button>
+      </div>
+      <div style="width: 70px;"></div>
+    </div>
+    
+    <div id="compareContainer" class="compare-wrapper">
+      <img id="imgOriginal" class="compare-img" alt="Original" />
+      <img id="imgGenerated" class="compare-img" alt="Generated" />
+      
+      <div id="sliderHandle" class="slider-handle">
+        <div class="slider-line"></div>
+        <div class="slider-btn"><i class="bi bi-arrows-collapse"></i></div>
+      </div>
+    </div>
+    
+    <div style="position: absolute; bottom: calc(var(--safe-bottom) + 30px); left: 50%; transform: translateX(-50%); display: flex; gap: 15px; z-index: 30;">
+      <button id="zoomBtn" class="icon-btn" aria-label="Zoom" style="background: var(--white);"><i class="bi bi-arrows-fullscreen"></i></button>
+      <button id="downloadBtn" class="btn-pill" style="background: var(--cyan); color: var(--white);">SAVE <i class="bi bi-download"></i></button>
+      <button id="deleteBtn" class="icon-btn" aria-label="Delete" style="background: var(--red); color: var(--white);"><i class="bi bi-trash"></i></button>
+    </div>
+  </div>
+
+  <!-- VIEW 6: Library Gallery -->
+  <div id="libraryView" class="view-container">
+    <div style="padding: calc(var(--safe-top) + 20px) 20px 10px; display: flex; justify-content: space-between; align-items: center; border-bottom: var(--border-thick); background: var(--white); z-index: 20;">
+      <button id="closeLibraryBtn" class="btn-pill" style="padding: 8px 16px; font-size: 0.8rem;">CAMERA</button>
+      <h2 style="font-size: 1.5rem;">GALLERY</h2>
+      <div style="width: 70px;"></div>
+    </div>
+    <div class="content-area">
+      <div id="galleryGrid" class="grid-2"></div>
+    </div>
+  </div>
+
+  <!-- VIEW 7: Fullscreen Zoom Overlay -->
+  <div id="zoomOverlay" class="view-container" style="background: #000; z-index: 70;">
+    <div style="position: absolute; top: calc(var(--safe-top) + 20px); left: 20px; right: 20px; display: flex; justify-content: space-between; z-index: 71; pointer-events: none;">
+      <button id="closeZoomBtn" class="icon-btn" aria-label="Close Zoom" style="pointer-events: auto;"><i class="bi bi-x-lg"></i></button>
+      <div class="mode-toggle" style="box-shadow: none; pointer-events: auto;">
+         <button id="zoomOutBtn" class="icon-btn" aria-label="Zoom Out" style="width: 40px; height: 40px; box-shadow: none;"><i class="bi bi-zoom-out"></i></button>
+         <button id="zoomInBtn" class="icon-btn" aria-label="Zoom In" style="width: 40px; height: 40px; box-shadow: none;"><i class="bi bi-zoom-in"></i></button>
+      </div>
+    </div>
+    <div id="zoomPanContainer" style="width: 100%; height: 100%; overflow: auto; -webkit-overflow-scrolling: touch; display: flex; align-items: flex-start; justify-content: flex-start; background: var(--beige);">
+      <img id="zoomImg" style="width: 100%; height: auto; margin: auto; object-fit: contain; transition: width 0.2s ease-out;" alt="Zoomed Result" />
+    </div>
+  </div>
+
   <script>
-    // Example (uncomment + wire to your host's env injection if you want):
-    // window.__HAIRLAB_GEMINI_KEY__ = "{{ GEMINI_API_KEY }}";
-  </script>
+    // Execute after DOM is fully loaded to ensure Supabase SDK is available
+    window.addEventListener('DOMContentLoaded', () => {
+      
+      // --- SUPABASE CONFIGURATION ---
+      // NOTE: Ensure Row Level Security (RLS) is enabled in your Supabase dashboard 
+      // since Anon Keys are exposed in client-side applications.
+      const SUPABASE_URL = 'https://rmfubnduytozikcgzvok.supabase.co';
+      const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJtZnVibmR1eXRvemlrY2d6dm9rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2OTIyMDgsImV4cCI6MjA5NzI2ODIwOH0.XmxDD8mH8rgq3OZmD7jVophtH2W3NNDgSRJKC3RXvJU';
+      const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-  <!-- =========================================================================
-       JAVASCRIPT APPLICATION CORE (ALL-IN-ONE)
-       ========================================================================= -->
-  <script>
-    /* ==========================================================================
-       CONFIG & THE 50-HAIRSTYLE DATABASE
-       ========================================================================== */
-    const APP_CONFIG = {
-      // 👇 PASTE YOUR GEMINI API KEY HERE (https://aistudio.google.com/apikey)
-      // You can also inject it at runtime by setting window.__HAIRLAB_GEMINI_KEY__
-      // in a small <script> BEFORE this block (e.g. from a Netlify/CF env var).
-      GEMINI_API_KEY: 'AQ.Ab8RN6KCDYextIzUIruGHAhj0111tR69P7jhdDqQ9VeTn1b-hQ',
-      GEMINI_MODEL: 'gemini-3.1-flash-image',
-      GEMINI_ENDPOINT: 'https://generativelanguage.googleapis.com/v1beta/models'
-    };
+      // --- STATE & PROMPT ---
+      let videoStream = null;
+      let currentFacingMode = 'environment';
+      let currentOriginalDataUrl = null; 
+      let selectedGarmentBase64 = null;
+      let allGarments = [];
+      let isCompareMode = true; 
+      
+      const VIRTUAL_TRY_ON_PROMPT = `Edit the **first photo** by replacing only the clothing/outfit with the **exact suit shown in the second reference photo**.
+### Strict preservation requirements
+* Keep my **face 100% unchanged**.
+* Keep my **body position and pose exactly unchanged**.
+* Keep the **entire background exactly unchanged**.
+* Keep my **hands, arms, neck, head position, and visible body proportions exactly as they are**.
+### Suit replacement
+Use the **second photo only as the clothing reference**. Recreate its suit accurately on my body. The suit must naturally conform to my **existing body position and anatomy**.`;
 
-    function getGeminiKey() {
-      return String(window.__HAIRLAB_GEMINI_KEY__ || APP_CONFIG.GEMINI_API_KEY || '').trim();
-    }
+      let isViewingGalleryItem = false;
+      let currentActiveDocId = null;
+      let currentActiveOrigPath = null;
+      let currentActiveGenPath = null;
 
-    const HAIRSTYLES_DATA = [
-      // 1. MODERN CUTS (10)
-      { id: 'butterfly-cut', name: 'Butterfly Cut', category: 'modern', tag: 'Trending', badgeBg: 'var(--lime)', desc: 'Voluminous cascading layers with chin-length bouncy framing.', promptDetail: 'butterfly cut with bouncy 90s blowout layers, voluminous crown lift, and feathered face-framing fringe' },
-      { id: 'long-layered-cut', name: 'Long Layered Cut', category: 'modern', tag: 'Classic', badgeBg: 'var(--yellow)', desc: 'Graceful elongated layers providing fluid movement.', promptDetail: 'soft seamless long layered cut with natural root lift and flowing tapered ends' },
-      { id: 'face-framing-layers', name: 'Face-Framing Layers', category: 'modern', tag: 'Sculpting', badgeBg: 'var(--cyan)', desc: 'Curated layers accentuating cheekbones and jawline.', promptDetail: 'delicate face-framing layers hugging cheekbones and jawline with fluid soft texture' },
-      { id: 'feather-cut', name: 'Feather Cut', category: 'modern', tag: 'Retro Glam', badgeBg: 'var(--purple)', desc: 'Classic outward feathered layers with airy texture.', promptDetail: 'classic outward feathered cut with bouncy airy ends and polished salon finish' },
-      { id: 'curtain-bangs', name: 'Curtain Bangs', category: 'modern', tag: 'Face Contouring', badgeBg: 'var(--pink)', desc: 'Center-parted swooping bangs blending into length.', promptDetail: 'chic curtain bangs parted in the center, framing both eyes with long subtle layers' },
-      { id: 'wolf-cut', name: 'Wolf Cut', category: 'modern', tag: 'Wild Chic', badgeBg: 'var(--orange)', desc: 'Wild hybrid of shag and mullet with choppy textured crown.', promptDetail: 'modern wolf cut with textured crown volume, choppy wispy layers, and soft curtain fringe' },
-      { id: 'hush-cut', name: 'Hush Cut', category: 'modern', tag: 'K-Beauty', badgeBg: 'var(--cyan)', desc: 'Korean-inspired feather-light layered silhouette.', promptDetail: 'korean hush cut with airy weightless layers, soft see-through bangs, and whisper ends' },
-      { id: 'shag-cut', name: 'Shag Cut', category: 'modern', tag: 'Rock Chic', badgeBg: 'var(--lime)', desc: 'Retro choppy texture with generous natural body.', promptDetail: 'modern effortless shag cut with feathered crown layers and rock-chic movement' },
-      { id: 'u-cut', name: 'U-Cut', category: 'modern', tag: 'Dense Ends', badgeBg: 'var(--yellow)', desc: 'Smooth curved U-shaped perimeter preserving density.', promptDetail: 'clean polished U-cut perimeter with thick dense ends and soft movement' },
-      { id: 'v-cut', name: 'V-Cut', category: 'modern', tag: 'Dramatic Drape', badgeBg: 'var(--pink)', desc: 'Sharp tapering V-profile for elongated back drape.', promptDetail: 'dramatic deep V-cut cascading down the back with glossy tapered layers' },
+      // DOM Elements
+      const cameraFeed = document.getElementById('cameraFeed');
+      const cameraView = document.getElementById('cameraView');
+      const garmentSelectView = document.getElementById('garmentSelectView');
+      const processingView = document.getElementById('processingView');
+      const comparisonView = document.getElementById('comparisonView');
+      const libraryView = document.getElementById('libraryView');
+      const addGarmentView = document.getElementById('addGarmentView');
 
-      // 2. BOB / SHORTER (5)
-      { id: 'blunt-bob', name: 'Blunt Bob', category: 'bob', tag: 'Sharp & Bold', badgeBg: 'var(--pink)', desc: 'Razor-sharp jaw-length cut with no graduation.', promptDetail: 'razor-sharp blunt bob cut hitting exactly at the jawline with high-gloss finish' },
-      { id: 'layered-bob', name: 'Layered Bob', category: 'bob', tag: 'Airy Motion', badgeBg: 'var(--lime)', desc: 'Textured bob with graduated interior layers.', promptDetail: 'playful layered bob with textured wispy ends and effortless root volume' },
-      { id: 'french-bob', name: 'French Bob', category: 'bob', tag: 'Parisian', badgeBg: 'var(--orange)', desc: 'Cheekbone-grazing bob paired with brow-line bangs.', promptDetail: 'classic french bob cut to the cheekbones with effortless brow-grazing fringe' },
-      { id: 'long-bob-lob', name: 'Long Bob / Lob', category: 'bob', tag: 'Versatile', badgeBg: 'var(--cyan)', desc: 'Collarbone-skimming bob styled with soft movement.', promptDetail: 'collarbone-length long bob (lob) with gentle inward bend and polished texture' },
-      { id: 'pixie-cut', name: 'Pixie Cut', category: 'bob', tag: 'Sculpted', badgeBg: 'var(--purple)', desc: 'Ultra-chic short crop with textured crown pieces.', promptDetail: 'feminine sculpted pixie cut with soft side-swept bangs and neat neckline' },
-
-      // 3. OPEN HAIR / STYLING (10)
-      { id: 'sleek-straight-hair', name: 'Sleek Straight Hair', category: 'open', tag: 'Silky Smooth', badgeBg: 'var(--cyan)', desc: 'Impeccable pin-straight locks with mirror shine.', promptDetail: 'pin-straight glossy hair with zero frizz, precise parting, and silky drape' },
-      { id: 'glass-hair', name: 'Glass Hair', category: 'open', tag: 'Reflective', badgeBg: 'var(--lime)', desc: 'Ultra-reflective, ultra-smooth mirror-like texture.', promptDetail: 'ultra-reflective glass hair with immaculate smooth alignment and radiant gloss' },
-      { id: 'soft-waves', name: 'Soft Waves', category: 'open', tag: 'Everyday Glow', badgeBg: 'var(--yellow)', desc: 'Effortless gentle bends for relaxed natural glam.', promptDetail: 'relaxed soft S-waves flowing naturally over the shoulders with organic movement' },
-      { id: 'beach-waves', name: 'Beach Waves', category: 'open', tag: 'Textured', badgeBg: 'var(--orange)', desc: 'Matte-finish undone waves with straight ends.', promptDetail: 'textured beach waves with tousled mid-lengths and undone natural ends' },
-      { id: 'hollywood-waves', name: 'Hollywood Waves', category: 'open', tag: 'Red Carpet', badgeBg: 'var(--purple)', desc: 'Structured vintage uniform S-pattern waves.', promptDetail: 'glamorous red-carpet Hollywood waves with sculpted uniform ridges and lustrous finish' },
-      { id: 'soft-curls', name: 'Soft Curls', category: 'open', tag: 'Romantic', badgeBg: 'var(--pink)', desc: 'Springy defined medium-barrel romantic curls.', promptDetail: 'romantic soft barrel curls cascading down with touchable definition and bounce' },
-      { id: 'voluminous-curls', name: 'Voluminous Curls', category: 'open', tag: 'Big Glamour', badgeBg: 'var(--yellow)', desc: 'Big, bold, maximum-volume dimensional curls.', promptDetail: 'voluminous bouncy curls with expansive body, lifted crown, and dense texture' },
-      { id: 'voluminous-blowout', name: 'Voluminous Blowout', category: 'open', tag: 'Supermodel 90s', badgeBg: 'var(--lime)', desc: 'Salon-grade bouncy round-brush blowout.', promptDetail: 'runway 90s supermodel blowout with lifted root volume and rounded curled ends' },
-      { id: 'side-swept-waves', name: 'Side-Swept Waves', category: 'open', tag: 'Asymmetric', badgeBg: 'var(--cyan)', desc: 'Deep side part with all waves draped over one shoulder.', promptDetail: 'glamorous side-swept waves cascading over one shoulder with deep side part' },
-      { id: 'mermaid-waves', name: 'Mermaid Waves', category: 'open', tag: 'Crimped Body', badgeBg: 'var(--pink)', desc: 'Deep triple-barrel ripple waves with dense body.', promptDetail: 'deep rippled mermaid waves with continuous crimped texture and full volume' },
-
-      // 4. PONYTAILS (5)
-      { id: 'high-ponytail', name: 'High Ponytail', category: 'ponytail', tag: 'Lifted Sleek', badgeBg: 'var(--purple)', desc: 'Perky high ponytail anchored high at the crown.', promptDetail: 'high ponytail anchored at the crown with smooth hair wrapped around the base' },
-      { id: 'sleek-low-ponytail', name: 'Sleek Low Ponytail', category: 'ponytail', tag: 'Editorial', badgeBg: 'var(--cyan)', desc: 'Minimalist low nape ponytail with middle part.', promptDetail: 'clean editorial sleek low ponytail at the nape of the neck with center part' },
-      { id: 'messy-ponytail', name: 'Messy Ponytail', category: 'ponytail', tag: 'Tousled', badgeBg: 'var(--yellow)', desc: 'Textured mid-height pony with loose face tendrils.', promptDetail: 'effortless messy textured ponytail with soft face-framing tendrils and crown tease' },
-      { id: 'wavy-ponytail', name: 'Wavy Ponytail', category: 'ponytail', tag: 'Party Bounce', badgeBg: 'var(--lime)', desc: 'Rich wavy tail with volumized base wrap.', promptDetail: 'voluminous wavy ponytail with cascading textured body and lifted placement' },
-      { id: 'braided-ponytail', name: 'Braided Ponytail', category: 'ponytail', tag: 'Snappy', badgeBg: 'var(--orange)', desc: 'Sleek high base flowing into a dense braid.', promptDetail: 'snatched high ponytail transitioning into a sleek tight three-strand braid' },
-
-      // 5. BUNS / JUDA (6)
-      { id: 'messy-bun', name: 'Messy Bun', category: 'buns', tag: 'Off-Duty', badgeBg: 'var(--yellow)', desc: 'Artfully undone high bun with wispy pieces.', promptDetail: 'effortless messy topknot bun with soft wispy face-framing strands and relaxed texture' },
-      { id: 'sleek-low-bun', name: 'Sleek Low Bun', category: 'buns', tag: 'Clean Girl', badgeBg: 'var(--cyan)', desc: 'Sculpted chignon sitting neatly at the nape.', promptDetail: 'sleek low chignon bun parted neatly in the center with glossy sculpted finish' },
-      { id: 'high-bun', name: 'High Bun', category: 'buns', tag: 'Ballerina', badgeBg: 'var(--purple)', desc: 'Regal ballerina-inspired high rounded bun.', promptDetail: 'voluminous polished high ballerina bun centered smoothly on the crown' },
-      { id: 'classic-juda', name: 'Classic Juda', category: 'buns', tag: 'Traditional', badgeBg: 'var(--orange)', desc: 'Structured Indian bun ideal for sarees & suits.', promptDetail: 'traditional Indian structured bridal juda bun firmly secured at mid-crown' },
-      { id: 'gajra-juda', name: 'Gajra Juda', category: 'buns', tag: 'Jasmine Fresh', badgeBg: 'var(--lime)', desc: 'Low circular bun encased in fresh white jasmine gajra.', promptDetail: 'traditional low Indian bridal bun densely encircled by fresh fragrant white jasmine gajra flowers' },
-      { id: 'mogra-bun', name: 'Mogra Bun', category: 'buns', tag: 'Royal Bridal', badgeBg: 'var(--pink)', desc: 'Layered bun bordered with fresh mogra floral wreaths.', promptDetail: 'sculpted royal Indian bridal juda lavishly adorned with authentic fresh mogra buds' },
-
-      // 6. BRAIDS (7)
-      { id: 'classic-three-strand-braid', name: 'Classic Three-Strand Braid', category: 'braids', tag: 'Timeless', badgeBg: 'var(--cyan)', desc: 'Even, symmetric traditional three-strand braid.', promptDetail: 'neat classic three-strand braid with smooth consistent tension and natural finish' },
-      { id: 'french-braid', name: 'French Braid', category: 'braids', tag: 'Sculpted', badgeBg: 'var(--purple)', desc: 'Interwoven braid starting neatly at the hairline.', promptDetail: 'flawless classic French braid incorporating hair smoothly from crown to tail' },
-      { id: 'fishtail-braid', name: 'Fishtail Braid', category: 'braids', tag: 'Bohemian', badgeBg: 'var(--yellow)', desc: 'Intricate micro-strand weave pulled softly for volume.', promptDetail: 'intricate bohemian fishtail braid gently pulled apart for thick textured dimension' },
-      { id: 'dutch-braid', name: 'Dutch Braid', category: 'braids', tag: '3D Effect', badgeBg: 'var(--lime)', desc: 'Inverted reverse braid creating high-relief ridges.', promptDetail: 'raised 3D Dutch braid running symmetrically down with defined bold weave' },
-      { id: 'crown-braid', name: 'Crown Braid', category: 'braids', tag: 'Regal Tiara', badgeBg: 'var(--pink)', desc: 'Halo braid encircling the crown like a tiara.', promptDetail: 'ethereal crown halo braid wrapped smoothly around the head with soft romantic texture' },
-      { id: 'side-braid', name: 'Side Braid', category: 'braids', tag: 'Relaxed', badgeBg: 'var(--orange)', desc: 'Gentle over-the-shoulder asymmetrical braid.', promptDetail: 'soft romantic side braid draped over the shoulder with relaxed face-framing tendrils' },
-      { id: 'half-up-braid', name: 'Half-Up Braid', category: 'braids', tag: 'Crown Detail', badgeBg: 'var(--cyan)', desc: 'Braided crown accent with open flowing hair beneath.', promptDetail: 'half-up crown braid pinned at the back with long flowing soft waves underneath' },
-
-      // 7. PUNJABI / INDIAN (5)
-      { id: 'punjabi-gutt-choti', name: 'Punjabi Gutt / Choti', category: 'punjabi', tag: 'Iconic Punjab', badgeBg: 'var(--lime)', desc: 'Traditional long Punjabi plait with neat center part.', promptDetail: 'authentic Punjabi gutt (choti) tightly braided with high shine and traditional Punjabi silhouette' },
-      { id: 'punjabi-paranda-braid', name: 'Punjabi Paranda Braid', category: 'punjabi', tag: 'Ludhiana Pride', badgeBg: 'var(--pink)', desc: 'Braid interwoven with colorful tassels and golden parandi.', promptDetail: 'traditional Punjabi braid intricately woven with a vibrant ornamental Paranda featuring gold tassels, mirror-work, and silk threads' },
-      { id: 'gota-choti', name: 'Gota Choti', category: 'punjabi', tag: 'Jaggo Festive', badgeBg: 'var(--yellow)', desc: 'Laced with shimmering metallic gold gota ribbons.', promptDetail: 'Punjabi festive braid wrapped and criss-crossed with shimmering metallic golden gota patti ribbon' },
-      { id: 'punjabi-bridal-braid', name: 'Punjabi Bridal Braid', category: 'punjabi', tag: 'Anand Karaj', badgeBg: 'var(--orange)', desc: 'Opulent thick braid with gold clips, pearls, & florals.', promptDetail: 'luxurious Punjabi bridal braid embellished with gold jewelry clips, baby pearls, and fresh flowers' },
-      { id: 'floral-gajra-braid', name: 'Floral / Gajra Braid', category: 'punjabi', tag: 'Mehendi Glam', badgeBg: 'var(--purple)', desc: 'Elongated braid entwined with baby’s breath & roses.', promptDetail: 'long textured bridal braid entwined with cascading baby’s breath (gypsophila) and delicate mini roses' },
-
-      // 8. HALF-UP / BRIDAL / PARTY (2)
-      { id: 'half-up-half-down', name: 'Half-Up Half-Down', category: 'bridal', tag: 'Cocktail Night', badgeBg: 'var(--purple)', desc: 'Pinned crown height with cascading open body.', promptDetail: 'elegant half-up half-down hairstyle with soft crown bouffant and glossy cascading waves' },
-      { id: 'bridal-half-up-curls', name: 'Bridal Half-Up Curls', category: 'bridal', tag: 'Tikka Friendly', badgeBg: 'var(--pink)', desc: 'Textured twists pinned to accommodate maang tikka.', promptDetail: 'opulent bridal half-up hairstyle with intricate twisted crown pinned for maang tikka, cascading into voluminous glamorous barrel curls' }
-    ];
-
-    /* ==========================================================================
-       STATE MANAGEMENT
-       ========================================================================== */
-    let currentStream = null;
-    let currentFacingMode = 'user';
-    let userOriginalDataUrl = null;
-    let userRenderedDataUrl = null;
-    let selectedHaircut = null;
-    let activeCategory = 'all';
-    let isSplitSliderMode = true;
-    let isDraggingSlider = false;
-
-    // DOM Elements
-    const cameraScreen = document.getElementById('cameraScreen');
-    const studioScreen = document.getElementById('studioScreen');
-    const compareScreen = document.getElementById('compareScreen');
-    const processingOverlay = document.getElementById('processingOverlay');
-    const zoomModal = document.getElementById('zoomModal');
-    const zoomModalImg = document.getElementById('zoomModalImg');
-
-    const cameraFeed = document.getElementById('cameraFeed');
-    const cameraNotice = document.getElementById('cameraNotice');
-    const captureShutterBtn = document.getElementById('captureShutterBtn');
-    const switchCameraBtn = document.getElementById('switchCameraBtn');
-    const flipCameraDockBtn = document.getElementById('flipCameraDockBtn');
-    const triggerUploadBtn = document.getElementById('triggerUploadBtn');
-    const openUploadDockBtn = document.getElementById('openUploadDockBtn');
-    const photoFileInput = document.getElementById('photoFileInput');
-    const quickSampleBtn = document.getElementById('quickSampleBtn');
-    const fallbackUploadBtn = document.getElementById('fallbackUploadBtn');
-    const fallbackSampleBtn = document.getElementById('fallbackSampleBtn');
-
-    const clientReferenceThumb = document.getElementById('clientReferenceThumb');
-    const hairSearchInput = document.getElementById('hairSearchInput');
-    const clearSearchBtn = document.getElementById('clearSearchBtn');
-    const categoryTrack = document.getElementById('categoryTrack');
-    const hairstylesGrid = document.getElementById('hairstylesGrid');
-    const summaryStyleName = document.getElementById('summaryStyleName');
-    const applySelectedHairBtn = document.getElementById('applySelectedHairBtn');
-    const retakePhotoBtn = document.getElementById('retakePhotoBtn');
-    const changePhotoBtn = document.getElementById('changePhotoBtn');
-
-    const imgSource = document.getElementById('imgSource');
-    const imgRendered = document.getElementById('imgRendered');
-    const sliderHandleWrap = document.getElementById('sliderHandleWrap');
-    const compareStage = document.getElementById('compareStage');
-    const modeSplitBtn = document.getElementById('modeSplitBtn');
-    const modeResultOnlyBtn = document.getElementById('modeResultOnlyBtn');
-    const backToStudioBtn = document.getElementById('backToStudioBtn');
-    const downloadResultBtn = document.getElementById('downloadResultBtn');
-    const tryAnotherStyleBtn = document.getElementById('tryAnotherStyleBtn');
-    const zoomModalBtn = document.getElementById('zoomModalBtn');
-    const closeZoomModalBtn = document.getElementById('closeZoomModalBtn');
-
-    const progressFill = document.getElementById('progressFill');
-    const processStatus = document.getElementById('processStatus');
-    const processTitle = document.getElementById('processTitle');
-
-    /* ==========================================================================
-       UTILITIES & TOASTS
-       ========================================================================== */
-    function navigateTo(screenElement) {
-      [cameraScreen, studioScreen, compareScreen].forEach(s => s.classList.remove('active'));
-      screenElement.classList.add('active');
-    }
-
-    function showToast(msg, isError = false) {
-      const zone = document.getElementById('toastZone');
-      const toast = document.createElement('div');
-      toast.className = `brutal-toast ${isError ? 'error' : ''}`;
-      toast.innerHTML = `<i class="bi ${isError ? 'bi-exclamation-triangle-fill' : 'bi-check2-circle'}" style="font-size: 1.2rem;"></i> <span>${escapeHtml(msg)}</span>`;
-      zone.appendChild(toast);
-      setTimeout(() => {
-        toast.style.transition = 'opacity 0.25s, transform 0.25s';
-        toast.style.opacity = '0';
-        toast.style.transform = 'translateY(-12px)';
-        setTimeout(() => toast.remove(), 260);
-      }, 3500);
-    }
-
-    function escapeHtml(str) {
-      const div = document.createElement('div');
-      div.textContent = str;
-      return div.innerHTML;
-    }
-
-    // Reads a Response as JSON without ever throwing on non-JSON bodies.
-    async function readJson(res) {
-      const text = await res.text();
-      if (!text) return {};
-      try {
-        return JSON.parse(text);
-      } catch {
-        return { error: { message: text.slice(0, 240) || res.statusText } };
+      // --- UTILITIES ---
+      function showView(viewElement) {
+        [cameraView, garmentSelectView, comparisonView, libraryView].forEach(v => v.classList.remove('active'));
+        if(viewElement) viewElement.classList.add('active');
       }
-    }
 
-    /* ==========================================================================
-       CAMERA INITIALIZATION WITH ROBUST FALLBACK
-       ========================================================================== */
-    async function initCamera() {
-      if (currentStream) {
-        currentStream.getTracks().forEach(track => track.stop());
+      function showToast(message, isError = false) {
+        const container = document.getElementById('toastContainer');
+        const toast = document.createElement('div');
+        toast.className = `toast ${isError ? 'error' : ''}`;
+        toast.innerHTML = `<i class="bi ${isError ? 'bi-exclamation-triangle' : 'bi-check-circle'}"></i> ${message}`;
+        container.appendChild(toast);
+        setTimeout(() => toast.remove(), 3000);
       }
-      cameraNotice.classList.add('hidden');
 
-      try {
-        currentStream = await navigator.mediaDevices.getUserMedia({
-          video: {
-            facingMode: currentFacingMode,
-            width: { ideal: 1920 },
-            height: { ideal: 1080 }
-          },
-          audio: false
-        });
-        cameraFeed.srcObject = currentStream;
-      } catch (err) {
+      // --- CAMERA INIT ---
+      async function initCamera() {
+        if (videoStream) {
+          videoStream.getTracks().forEach(track => track.stop());
+        }
         try {
-          // Fallback if facingMode constraint fails
-          currentStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
-          cameraFeed.srcObject = currentStream;
-        } catch (fatalErr) {
-          console.warn("Camera inaccessible on this device/environment. Fallback UI activated.");
-          cameraNotice.classList.remove('hidden');
-        }
-      }
-    }
-
-    function toggleCameraFlip() {
-      currentFacingMode = currentFacingMode === 'user' ? 'environment' : 'user';
-      initCamera();
-      showToast(`Switched to ${currentFacingMode === 'user' ? 'Front' : 'Back'} Camera`);
-    }
-
-    switchCameraBtn.addEventListener('click', toggleCameraFlip);
-    flipCameraDockBtn.addEventListener('click', toggleCameraFlip);
-
-    /* ==========================================================================
-       IMAGE IMPORT & CANVAS NORMALIZATION
-       ========================================================================== */
-    function setClientPhoto(dataUrl) {
-      userOriginalDataUrl = dataUrl;
-      clientReferenceThumb.src = dataUrl;
-      imgSource.src = dataUrl;
-
-      // Reset selection state
-      selectedHaircut = null;
-      summaryStyleName.textContent = 'SELECT A HAIRSTYLE';
-      applySelectedHairBtn.disabled = true;
-
-      navigateTo(studioScreen);
-      renderHairstylesList();
-    }
-
-    function normalizeImageToCanvas(source, originalWidth, originalHeight) {
-      const MAX_DIM = 1920;
-      let w = originalWidth;
-      let h = originalHeight;
-      if (w > h) {
-        if (w > MAX_DIM) { h = Math.round(h * (MAX_DIM / w)); w = MAX_DIM; }
-      } else {
-        if (h > MAX_DIM) { w = Math.round(w * (MAX_DIM / h)); h = MAX_DIM; }
-      }
-
-      const canvas = document.createElement('canvas');
-      canvas.width = w;
-      canvas.height = h;
-      const ctx = canvas.getContext('2d');
-      ctx.drawImage(source, 0, 0, w, h);
-      return canvas.toDataURL('image/jpeg', 0.92);
-    }
-
-    // Capture shutter click
-    captureShutterBtn.addEventListener('click', () => {
-      if (!cameraFeed.videoWidth) {
-        showToast("Camera is not ready yet. Please upload a photo.", true);
-        return;
-      }
-      const canvas = document.createElement('canvas');
-      canvas.width = cameraFeed.videoWidth;
-      canvas.height = cameraFeed.videoHeight;
-      const ctx = canvas.getContext('2d');
-      // If user camera, mirror for natural selfie feel
-      if (currentFacingMode === 'user') {
-        ctx.translate(canvas.width, 0);
-        ctx.scale(-1, 1);
-      }
-      ctx.drawImage(cameraFeed, 0, 0);
-      const normalizedData = normalizeImageToCanvas(canvas, canvas.width, canvas.height);
-      setClientPhoto(normalizedData);
-      showToast("Photo captured!");
-    });
-
-    // File Upload handling
-    function openFilePicker() {
-      photoFileInput.value = '';
-      photoFileInput.click();
-    }
-    triggerUploadBtn.addEventListener('click', openFilePicker);
-    openUploadDockBtn.addEventListener('click', openFilePicker);
-    fallbackUploadBtn.addEventListener('click', openFilePicker);
-    changePhotoBtn.addEventListener('click', openFilePicker);
-
-    photoFileInput.addEventListener('change', (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
-
-      if (!file.type.startsWith('image/')) {
-        showToast("Please upload a valid image file.", true);
-        return;
-      }
-
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        const img = new Image();
-        img.onload = () => {
-          const normalized = normalizeImageToCanvas(img, img.width, img.height);
-          setClientPhoto(normalized);
-          showToast("Photo loaded successfully!");
-        };
-        img.onerror = () => showToast("Could not parse image.", true);
-        img.src = event.target.result;
-      };
-      reader.readAsDataURL(file);
-    });
-
-    // Standalone instant demo model (for zero-friction local testing)
-    function loadDemoPortrait() {
-      const canvas = document.createElement('canvas');
-      canvas.width = 1000;
-      canvas.height = 1333;
-      const ctx = canvas.getContext('2d');
-
-      // Studio gradient backdrop
-      const bgGrad = ctx.createLinearGradient(0, 0, 1000, 1333);
-      bgGrad.addColorStop(0, '#EAE5D9');
-      bgGrad.addColorStop(1, '#C8C2B3');
-      ctx.fillStyle = bgGrad;
-      ctx.fillRect(0, 0, 1000, 1333);
-
-      // Model silhouette & face mock
-      ctx.fillStyle = '#1A1A1A';
-      ctx.beginPath(); // Shoulders
-      ctx.ellipse(500, 1150, 420, 280, 0, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Neck
-      ctx.fillStyle = '#E5B896';
-      ctx.fillRect(430, 700, 140, 220);
-
-      // Face Oval
-      ctx.beginPath();
-      ctx.ellipse(500, 600, 200, 260, 0, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Cheeks / Tone
-      ctx.fillStyle = 'rgba(235, 120, 120, 0.15)';
-      ctx.beginPath();
-      ctx.arc(380, 640, 45, 0, Math.PI * 2);
-      ctx.arc(620, 640, 45, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Eyes
-      ctx.fillStyle = '#1A1A1A';
-      ctx.beginPath();
-      ctx.ellipse(420, 560, 24, 12, 0, 0, Math.PI * 2);
-      ctx.ellipse(580, 560, 24, 12, 0, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Eyebrows
-      ctx.lineWidth = 8;
-      ctx.strokeStyle = '#2B1A12';
-      ctx.beginPath();
-      ctx.arc(420, 535, 40, Math.PI * 1.1, Math.PI * 1.85);
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.arc(580, 535, 40, Math.PI * 1.15, Math.PI * 1.9);
-      ctx.stroke();
-
-      // Nose
-      ctx.strokeStyle = 'rgba(120, 70, 50, 0.4)';
-      ctx.lineWidth = 4;
-      ctx.beginPath();
-      ctx.moveTo(500, 560);
-      ctx.lineTo(505, 650);
-      ctx.lineTo(485, 665);
-      ctx.stroke();
-
-      // Lips
-      ctx.fillStyle = '#C85A65';
-      ctx.beginPath();
-      ctx.ellipse(500, 725, 45, 18, 0, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Existing baseline hair (simple base)
-      ctx.fillStyle = '#221510';
-      ctx.beginPath();
-      ctx.arc(500, 460, 225, Math.PI, Math.PI * 2);
-      ctx.lineTo(730, 780);
-      ctx.lineTo(670, 790);
-      ctx.lineTo(650, 560);
-      ctx.lineTo(350, 560);
-      ctx.lineTo(330, 790);
-      ctx.lineTo(270, 780);
-      ctx.closePath();
-      ctx.fill();
-
-      // Neo-brutalist stamp
-      ctx.fillStyle = '#D4FF00';
-      ctx.fillRect(40, 40, 360, 60);
-      ctx.strokeStyle = '#121212';
-      ctx.lineWidth = 4;
-      ctx.strokeRect(40, 40, 360, 60);
-      ctx.fillStyle = '#121212';
-      ctx.font = 'bold 28px sans-serif';
-      ctx.fillText('STUDIO DEMO MODEL', 65, 82);
-
-      const demoUrl = canvas.toDataURL('image/jpeg', 0.95);
-      setClientPhoto(demoUrl);
-      showToast("Demo portrait loaded!");
-    }
-
-    quickSampleBtn.addEventListener('click', loadDemoPortrait);
-    fallbackSampleBtn.addEventListener('click', loadDemoPortrait);
-
-    retakePhotoBtn.addEventListener('click', () => {
-      navigateTo(cameraScreen);
-      initCamera();
-    });
-
-    /* ==========================================================================
-       CATALOGUE RENDERING & INSTANT SEARCH
-       ========================================================================== */
-    function renderHairstylesList() {
-      const searchTerm = hairSearchInput.value.toLowerCase().trim();
-      hairstylesGrid.innerHTML = '';
-
-      const filtered = HAIRSTYLES_DATA.filter(style => {
-        const matchesCategory = (activeCategory === 'all') || (style.category === activeCategory);
-        const matchesQuery = style.name.toLowerCase().includes(searchTerm) ||
-                             style.desc.toLowerCase().includes(searchTerm) ||
-                             style.tag.toLowerCase().includes(searchTerm);
-        return matchesCategory && matchesQuery;
-      });
-
-      if (filtered.length === 0) {
-        hairstylesGrid.innerHTML = `
-          <div style="grid-column: 1/-1; text-align: center; padding: 48px 16px; background: var(--white); border: var(--border-thick); border-radius: var(--radius-md); box-shadow: var(--shadow-sm);">
-            <i class="bi bi-scissors" style="font-size: 2.5rem; color: var(--muted); display: block; margin-bottom: 12px;"></i>
-            <h3>NO HAIRSTYLES FOUND</h3>
-            <p style="color: var(--muted); font-size: 0.88rem; margin-top: 6px;">Try searching for "Butterfly", "Paranda", "Bob", or clear the filter.</p>
-          </div>
-        `;
-        return;
-      }
-
-      filtered.forEach((style, index) => {
-        const card = document.createElement('div');
-        const isSelected = selectedHaircut?.id === style.id;
-        card.className = `hair-card ${isSelected ? 'selected' : ''}`;
-
-        card.innerHTML = `
-          <div class="card-top">
-            <span class="brutal-badge" style="background:${style.badgeBg}; color:#000;">${escapeHtml(style.tag)}</span>
-            <span class="card-number">#${String(index + 1).padStart(2, '0')}</span>
-          </div>
-          <div>
-            <div class="hair-name">${escapeHtml(style.name)}</div>
-            <div class="hair-desc">${escapeHtml(style.desc)}</div>
-          </div>
-          <div class="card-action-bar">
-            <span style="font-size: 0.7rem; font-family: var(--font-mono); color: var(--muted); text-transform: uppercase;">
-              ${escapeHtml(style.category)}
-            </span>
-            <button class="btn-card-apply" aria-label="Select ${escapeHtml(style.name)}">
-              <span>SELECT</span> <i class="bi bi-arrow-right-short" style="font-size: 1.1rem;"></i>
-            </button>
-          </div>
-        `;
-
-        card.addEventListener('click', () => {
-          selectHairstyle(style);
-        });
-
-        hairstylesGrid.appendChild(card);
-      });
-    }
-
-    function selectHairstyle(style) {
-      selectedHaircut = style;
-      summaryStyleName.textContent = style.name.toUpperCase();
-      applySelectedHairBtn.disabled = false;
-      applySelectedHairBtn.innerHTML = `APPLY ${escapeHtml(style.name).toUpperCase()} <i class="bi bi-scissors"></i>`;
-      renderHairstylesList();
-    }
-
-    // Category Tabs filter
-    categoryTrack.addEventListener('click', (e) => {
-      const pill = e.target.closest('.cat-pill');
-      if (!pill) return;
-      document.querySelectorAll('.cat-pill').forEach(btn => btn.classList.remove('active'));
-      pill.classList.add('active');
-      activeCategory = pill.getAttribute('data-filter');
-      renderHairstylesList();
-    });
-
-    // Search bar listener with clear button
-    let searchDebounceTimer = null;
-    hairSearchInput.addEventListener('input', (e) => {
-      clearTimeout(searchDebounceTimer);
-      clearSearchBtn.style.display = e.target.value.length > 0 ? 'block' : 'none';
-      searchDebounceTimer = setTimeout(renderHairstylesList, 150);
-    });
-
-    clearSearchBtn.addEventListener('click', () => {
-      hairSearchInput.value = '';
-      clearSearchBtn.style.display = 'none';
-      renderHairstylesList();
-    });
-
-    /* ==========================================================================
-       AI SYNTHESIS PIPELINE (DIRECT GEMINI IMAGE EDIT CALL)
-       ========================================================================== */
-    function composeVirtualHairPrompt(style) {
-      return `Edit this photo by applying the "${style.name}" hairstyle onto the person in the photo.
-### Strict Preservation Requirements:
-* Keep my **face, facial expression, eyes, eyebrows, nose, lips, jawline, and skin 100% untouched**.
-* Keep my **body position, neck tilt, visible shoulders, and pose exactly unchanged**.
-* Keep the **entire background, room lighting, clothing, earrings, necklace, and jewelry exactly unchanged**.
-* Do not alter visible anatomy or skin tone.
-### Hairstyle Application Details:
-* Replace only the existing hair with an ultra-realistic **${style.name}** (${style.promptDetail}).
-* Render natural human hair texture, believable scalp attachment along the hairline, realistic volume, and soft individual flyaway strands conforming cleanly to head anatomy.
-* Output a single edited image.`;
-    }
-
-    applySelectedHairBtn.addEventListener('click', async () => {
-      if (!selectedHaircut || !userOriginalDataUrl) return;
-
-      const apiKey = getGeminiKey();
-      if (!apiKey) {
-        showToast("Gemini API key missing. Add it to APP_CONFIG.GEMINI_API_KEY.", true);
-        return;
-      }
-
-      processingOverlay.classList.remove('hidden');
-      processTitle.textContent = "STYLING...";
-      progressFill.style.width = '8%';
-      let elapsedSeconds = 0;
-
-      const progressInterval = setInterval(() => {
-        elapsedSeconds++;
-        const pct = Math.min(8 + elapsedSeconds * 6, 92);
-        progressFill.style.width = `${pct}%`;
-
-        if (elapsedSeconds === 1) {
-          processStatus.textContent = `Analyzing head shape & hairline angles (${elapsedSeconds}s)`;
-        } else if (elapsedSeconds === 2) {
-          processStatus.textContent = `Synthesizing ${selectedHaircut.name} strands (${elapsedSeconds}s)`;
-        } else {
-          processStatus.textContent = `Refining specular highlights & lighting (${elapsedSeconds}s)`;
-        }
-      }, 800);
-
-      try {
-        const match = /^data:([^;]+);base64,(.*)$/.exec(userOriginalDataUrl);
-        if (!match) throw new Error('Source photo is not a valid base64 data URL.');
-        const mimeType = match[1];
-        const rawBase64 = match[2];
-
-        const url = `${APP_CONFIG.GEMINI_ENDPOINT}/${APP_CONFIG.GEMINI_MODEL}:generateContent?key=${encodeURIComponent(apiKey)}`;
-
-        const response = await fetch(url, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents: [{
-              role: 'user',
-              parts: [
-                { text: composeVirtualHairPrompt(selectedHaircut) },
-                { inline_data: { mime_type: mimeType, data: rawBase64 } }
-              ]
-            }],
-            generationConfig: {
-              responseModalities: ['TEXT', 'IMAGE']
-            }
-          })
-        });
-
-        const resData = await readJson(response);
-
-        if (!response.ok) {
-          const apiMessage =
-            resData?.error?.message ||
-            (typeof resData?.error === 'string' ? resData.error : null) ||
-            `Request failed (${response.status})`;
-          throw new Error(apiMessage);
-        }
-
-        let fetchedImg = null;
-        const parts = resData?.candidates?.[0]?.content?.parts || [];
-        for (const p of parts) {
-          const inline = p.inlineData || p.inline_data;
-          if (inline && inline.data) {
-            const outMime = inline.mimeType || inline.mime_type || 'image/png';
-            fetchedImg = `data:${outMime};base64,${inline.data}`;
-            break;
+          videoStream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: currentFacingMode, width: { ideal: 1920 }, height: { ideal: 1080 } },
+            audio: false
+          });
+          cameraFeed.srcObject = videoStream;
+          document.getElementById('cameraErrorMsg').classList.remove('active');
+        } catch (err) { 
+          try {
+            // Fallback for devices without facingMode support
+            videoStream = await navigator.mediaDevices.getUserMedia({ video: { width: { ideal: 1920 }, height: { ideal: 1080 } }, audio: false });
+            cameraFeed.srcObject = videoStream;
+            document.getElementById('cameraErrorMsg').classList.remove('active');
+          } catch (fallbackErr) {
+            document.getElementById('cameraErrorMsg').classList.add('active');
           }
         }
+        loadGalleryThumbnail();
+      }
 
-        if (!fetchedImg) {
-          const blockReason = resData?.promptFeedback?.blockReason;
-          const finishReason = resData?.candidates?.[0]?.finishReason;
-          throw new Error(
-            blockReason
-              ? `Blocked by safety filter (${blockReason}). Try a different photo.`
-              : finishReason && finishReason !== 'STOP'
-                ? `Model stopped: ${finishReason}.`
-                : 'No image data returned from the model.'
-          );
+      document.getElementById('switchCameraBtn').addEventListener('click', () => {
+        currentFacingMode = currentFacingMode === 'environment' ? 'user' : 'environment';
+        initCamera();
+      });
+
+      // --- IMAGE CAPTURE & UPLOAD ---
+      function prepareGarmentSelection(source, originalWidth, originalHeight) {
+        const MAX_SIZE = 2048; 
+        let width = originalWidth; let height = originalHeight;
+        
+        if (width > height) { if (width > MAX_SIZE) { height = Math.round(height * (MAX_SIZE / width)); width = MAX_SIZE; } } 
+        else { if (height > MAX_SIZE) { width = Math.round(width * (MAX_SIZE / height)); height = MAX_SIZE; } }
+
+        const tempCanvas = document.createElement('canvas');
+        tempCanvas.width = width; tempCanvas.height = height;
+        tempCanvas.getContext('2d').drawImage(source, 0, 0, width, height);
+        
+        currentOriginalDataUrl = tempCanvas.toDataURL('image/webp', 0.9);
+        document.getElementById('capturedThumb').src = currentOriginalDataUrl;
+        
+        selectedGarmentBase64 = null;
+        document.getElementById('generateTryOnBtn').disabled = true;
+        document.getElementById('searchInput').value = '';
+        
+        loadGarments();
+        showView(garmentSelectView);
+      }
+
+      document.getElementById('captureBtn').addEventListener('click', () => {
+        if(!cameraFeed.videoWidth) {
+          showToast("Camera not ready. Please use the upload button.", true);
+          return;
+        }
+        const tempCanvas = document.createElement('canvas');
+        tempCanvas.width = cameraFeed.videoWidth; tempCanvas.height = cameraFeed.videoHeight;
+        tempCanvas.getContext('2d').drawImage(cameraFeed, 0, 0);
+        prepareGarmentSelection(tempCanvas, tempCanvas.width, tempCanvas.height);
+      });
+
+      document.getElementById('uploadBtn').addEventListener('click', () => {
+        const fileInput = document.getElementById('fileInput');
+        fileInput.value = ''; // Reset to allow re-uploading the same file
+        fileInput.click();
+      });
+      
+      document.getElementById('fileInput').addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          const img = new Image();
+          img.onload = () => prepareGarmentSelection(img, img.width, img.height);
+          img.src = event.target.result;
+        };
+        reader.readAsDataURL(file);
+      });
+
+      document.getElementById('cancelSelectBtn').addEventListener('click', () => {
+        showView(cameraView);
+        document.getElementById('fileInput').value = '';
+      });
+
+      // --- ADD GARMENT UI ---
+      document.getElementById('openAddGarmentBtn').addEventListener('click', () => addGarmentView.classList.add('active'));
+      document.getElementById('closeAddGarmentBtn').addEventListener('click', () => addGarmentView.classList.remove('active'));
+
+      const garmentPreviewContainer = document.getElementById('garmentPreviewContainer');
+      const garmentFileInput = document.getElementById('garmentFileInput');
+      const garmentPreviewImg = document.getElementById('garmentPreviewImg');
+      let newGarmentDataUrl = null;
+
+      garmentPreviewContainer.addEventListener('click', () => {
+        garmentFileInput.value = '';
+        garmentFileInput.click();
+      });
+      
+      function loadImageFromFile(file) {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            const img = new Image();
+            img.onload = () => resolve(img);
+            img.onerror = reject;
+            img.src = e.target.result;
+          };
+          reader.readAsDataURL(file);
+        });
+      }
+
+      garmentFileInput.addEventListener('change', async (e) => {
+        const files = e.target.files;
+        if (!files || files.length === 0) return;
+        
+        try {
+          if (files.length === 1) {
+            const img = await loadImageFromFile(files[0]);
+            const canvas = document.createElement('canvas');
+            canvas.width = img.width; canvas.height = img.height;
+            canvas.getContext('2d').drawImage(img, 0, 0);
+            newGarmentDataUrl = canvas.toDataURL('image/webp', 0.9);
+          } else if (files.length >= 2) {
+            const img1 = await loadImageFromFile(files[0]);
+            const img2 = await loadImageFromFile(files[1]);
+            
+            const targetHeight = Math.max(img1.height, img2.height);
+            const w1 = img1.width * (targetHeight / img1.height);
+            const w2 = img2.width * (targetHeight / img2.height);
+            
+            const canvas = document.createElement('canvas');
+            canvas.width = w1 + w2; canvas.height = targetHeight;
+            const ctx = canvas.getContext('2d');
+            
+            ctx.fillStyle = '#FFFFFF'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(img1, 0, 0, w1, targetHeight);
+            ctx.drawImage(img2, w1, 0, w2, targetHeight);
+            
+            newGarmentDataUrl = canvas.toDataURL('image/webp', 0.9);
+          }
+          garmentPreviewImg.src = newGarmentDataUrl;
+          garmentPreviewImg.classList.remove('hidden');
+        } catch (err) { 
+          showToast("Error loading images.", true); 
+        }
+      });
+
+      document.getElementById('saveGarmentBtn').addEventListener('click', async () => {
+        const name = document.getElementById('garmentNameInput').value.trim();
+        if(!name || !newGarmentDataUrl) {
+          showToast("Please provide both a name and an image.", true);
+          return;
+        }
+        
+        const btn = document.getElementById('saveGarmentBtn');
+        const originalHTML = btn.innerHTML;
+        btn.innerHTML = `<div class="loader-spinner" style="width: 24px; height: 24px; border-width: 3px; border-top-color: var(--white); margin: 0 auto;"></div>`;
+        btn.disabled = true;
+        
+        try {
+          const blob = await convertToWebP(newGarmentDataUrl);
+          const path = `garment_${Date.now()}.webp`;
+          await supabaseClient.storage.from('garments').upload(path, blob, { contentType: 'image/webp' });
+          await supabaseClient.from('garments').insert([{ name: name, image_path: path }]);
+          
+          addGarmentView.classList.remove('active');
+          document.getElementById('garmentNameInput').value = '';
+          garmentPreviewImg.classList.add('hidden');
+          newGarmentDataUrl = null; 
+          garmentFileInput.value = '';
+          showToast("Suit added to wardrobe!");
+          if(garmentSelectView.classList.contains('active')) loadGarments();
+        } catch (err) { 
+          showToast("Upload failed.", true); 
+        } finally { 
+          btn.innerHTML = originalHTML;
+          btn.disabled = false;
+        }
+      });
+
+      // --- GARMENT SELECTION ---
+      async function loadGarments() {
+        const grid = document.getElementById('garmentsGrid');
+        grid.innerHTML = Array(6).fill(`<div class="card" style="background: #e0e0e0; animation: pulse 1.5s infinite;"></div>`).join('');
+        
+        const { data, error } = await supabaseClient.from('garments').select('*').order('created_at', { ascending: false });
+        if(error) {
+          showToast("Failed to load wardrobe.", true);
+          return;
+        }
+        
+        allGarments = data; 
+        renderGarments(allGarments);
+      }
+
+      function renderGarments(garments) {
+        const grid = document.getElementById('garmentsGrid');
+        grid.innerHTML = '';
+        
+        if(garments.length === 0) {
+          grid.innerHTML = `<div style="grid-column: span 2; text-align: center; padding: 20px; color: var(--black);">No suits found.</div>`;
+          return;
         }
 
-        userRenderedDataUrl = fetchedImg;
-        imgRendered.src = userRenderedDataUrl;
-        setupSplitSlider();
-        navigateTo(compareScreen);
-        showToast(`${selectedHaircut.name} successfully applied!`);
+        garments.forEach((g, index) => {
+          const url = supabaseClient.storage.from('garments').getPublicUrl(g.image_path).data.publicUrl;
+          const div = document.createElement('div');
+          div.className = "card";
+          div.innerHTML = `
+            <img src="${url}" crossorigin="anonymous" loading="lazy" alt="${g.name}" />
+            ${index === 0 ? '<div class="badge badge-lime">NEW</div>' : ''}
+            <div class="card-label">${g.name}</div>
+            <button class="delete-card-btn" aria-label="Delete Suit"><i class="bi bi-trash"></i></button>
+          `;
+          
+          div.querySelector('.delete-card-btn').onclick = async (e) => {
+            e.stopPropagation(); 
+            if(!confirm(`Delete "${g.name}" from your wardrobe?`)) return;
+            try {
+              await supabaseClient.from('garments').delete().eq('id', g.id);
+              await supabaseClient.storage.from('garments').remove([g.image_path]);
+              showToast("Suit deleted.");
+              loadGarments();
+            } catch(err) { showToast("Failed to delete suit.", true); }
+          };
 
-      } catch (err) {
-        console.error("Hairstyle styling error:", err);
-        showToast(err.message || "Styling process failed.", true);
-      } finally {
-        clearInterval(progressInterval);
-        processingOverlay.classList.add('hidden');
-        progressFill.style.width = '0%';
+          div.onclick = async () => {
+            Array.from(grid.children).forEach(c => c.classList.remove('selected'));
+            div.classList.add('selected');
+            
+            try {
+              const response = await fetch(url);
+              const blob = await response.blob();
+              const reader = new FileReader();
+              reader.onloadend = () => {
+                selectedGarmentBase64 = reader.result.split(',')[1];
+                document.getElementById('generateTryOnBtn').disabled = false;
+              };
+              reader.readAsDataURL(blob);
+            } catch(e) {
+              showToast("Error selecting garment.", true);
+            }
+          };
+          grid.appendChild(div);
+        });
       }
-    });
 
-    /* ==========================================================================
-       BEFORE / AFTER SPLIT SLIDER & VIEWER
-       ========================================================================== */
-    function setupSplitSlider() {
-      setSplitMode(true);
-      imgRendered.style.clipPath = `polygon(50% 0, 100% 0, 100% 100%, 50% 100%)`;
-      sliderHandleWrap.style.left = `50%`;
-    }
+      // Debounced search
+      let searchTimeout;
+      document.getElementById('searchInput').addEventListener('input', (e) => {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+          const term = e.target.value.toLowerCase();
+          renderGarments(allGarments.filter(g => g.name.toLowerCase().includes(term)));
+        }, 300);
+      });
 
-    function setSplitMode(split) {
-      isSplitSliderMode = split;
-      if (split) {
-        modeSplitBtn.classList.add('active');
-        modeResultOnlyBtn.classList.remove('active');
-        sliderHandleWrap.style.display = 'flex';
-        imgRendered.style.clipPath = `polygon(50% 0, 100% 0, 100% 100%, 50% 100%)`;
-        sliderHandleWrap.style.left = `50%`;
-      } else {
-        modeSplitBtn.classList.remove('active');
-        modeResultOnlyBtn.classList.add('active');
-        sliderHandleWrap.style.display = 'none';
-        imgRendered.style.clipPath = `polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)`;
+      // --- GENERATION & AUTO-SAVE ---
+      document.getElementById('generateTryOnBtn').addEventListener('click', async () => {
+        if(!selectedGarmentBase64) return;
+        
+        const base64Image = currentOriginalDataUrl.split(',')[1];
+        const btn = document.getElementById('generateTryOnBtn');
+
+        processingView.classList.add('active');
+        let seconds = 0;
+        const timerText = document.getElementById('timerText');
+        timerText.textContent = `STYLING... 0S`;
+        const timer = setInterval(() => { seconds++; timerText.textContent = `STYLING... ${seconds}S`; }, 1000);
+
+        try {
+          const response = await fetch('/api/tryon', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ prompt: VIRTUAL_TRY_ON_PROMPT, image: base64Image, mask: selectedGarmentBase64, model: 'gemini-3.1-flash-image' })
+          });
+
+          const data = await response.json();
+          if (!response.ok) throw new Error(data.error || "Server error");
+
+          const candidateParts = data.candidates?.[0]?.content?.parts || [];
+          let generatedImgSrc = null;
+
+          candidateParts.forEach((part) => {
+            const inlineImg = part.inlineData || part.inline_data;
+            if (inlineImg && inlineImg.data) {
+              generatedImgSrc = `data:${inlineImg.mimeType || 'image/webp'};base64,${inlineImg.data}`;
+            }
+          });
+
+          if (!generatedImgSrc) throw new Error("No image data returned from AI.");
+
+          timerText.textContent = `SAVING...`;
+          
+          const timestamp = Date.now();
+          const origPath = `original_${timestamp}.webp`;
+          const genPath = `generated_${timestamp}.webp`;
+
+          const origBlob = await convertToWebP(currentOriginalDataUrl);
+          const genBlob = await convertToWebP(generatedImgSrc);
+
+          await Promise.all([
+            supabaseClient.storage.from('photos').upload(origPath, origBlob, { contentType: 'image/webp' }),
+            supabaseClient.storage.from('photos').upload(genPath, genBlob, { contentType: 'image/webp' })
+          ]);
+
+          const { data: insertedData } = await supabaseClient.from('gallery').insert([{ original_image_path: origPath, generated_image_path: genPath }]).select();
+
+          isViewingGalleryItem = false;
+          currentActiveDocId = insertedData[0].id;
+          currentActiveOrigPath = origPath;
+          currentActiveGenPath = genPath;
+
+          document.getElementById('closeComparisonBtn').textContent = "RETAKE";
+          setupComparison(currentOriginalDataUrl, generatedImgSrc);
+          loadGalleryThumbnail();
+          showToast("Try-on successful!");
+
+        } catch (err) {
+          const originalText = btn.innerHTML;
+          btn.textContent = "FAILED - TRY AGAIN";
+          showToast("Generation failed. Please try again.", true);
+          setTimeout(() => { btn.innerHTML = originalText; }, 3000);
+        } finally {
+          clearInterval(timer);
+          processingView.classList.remove('active');
+        }
+      });
+
+      // --- CONSTRAINED COMPARISON SLIDER (OPTIMIZED) ---
+      const compareContainer = document.getElementById('compareContainer');
+      const imgGen = document.getElementById('imgGenerated');
+      const sliderHandle = document.getElementById('sliderHandle');
+      let isSliding = false;
+
+      function setupComparison(origSrc, genSrc) {
+        document.getElementById('imgOriginal').src = origSrc;
+        imgGen.src = genSrc;
+        setCompareMode(true);
+        showView(comparisonView);
+        // Reset slider position
+        imgGen.style.clipPath = `polygon(50% 0, 100% 0, 100% 100%, 50% 100%)`;
+        sliderHandle.style.left = `50%`;
       }
-    }
 
-    modeSplitBtn.addEventListener('click', () => setSplitMode(true));
-    modeResultOnlyBtn.addEventListener('click', () => setSplitMode(false));
+      function handleSlide(e) {
+        if (!isSliding || !isCompareMode) return;
+        if(e.cancelable) e.preventDefault(); 
+        
+        let clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
+        const rect = compareContainer.getBoundingClientRect();
+        
+        let x = clientX - rect.left;
+        x = Math.max(0, Math.min(x, rect.width));
+        
+        let percent = (x / rect.width) * 100;
+        imgGen.style.clipPath = `polygon(${percent}% 0, 100% 0, 100% 100%, ${percent}% 100%)`;
+        
+        const handleWidth = 40; 
+        let handleX = Math.max(handleWidth / 2, Math.min(x, rect.width - handleWidth / 2));
+        let handlePercent = (handleX / rect.width) * 100;
+        
+        sliderHandle.style.left = `${handlePercent}%`;
+      }
 
-    function updateSliderPosition(clientX) {
-      if (!isSplitSliderMode) return;
-      const rect = compareStage.getBoundingClientRect();
-      let offsetX = clientX - rect.left;
-      offsetX = Math.max(0, Math.min(offsetX, rect.width));
-      const percentage = (offsetX / rect.width) * 100;
+      // Attach event listeners ONLY ONCE to prevent memory leaks and exponential firing
+      compareContainer.addEventListener('mousedown', (e) => { isSliding = true; handleSlide(e); });
+      window.addEventListener('mouseup', () => { isSliding = false; });
+      window.addEventListener('mousemove', handleSlide);
 
-      imgRendered.style.clipPath = `polygon(${percentage}% 0, 100% 0, 100% 100%, ${percentage}% 100%)`;
-      sliderHandleWrap.style.left = `${percentage}%`;
-    }
+      compareContainer.addEventListener('touchstart', (e) => { isSliding = true; handleSlide(e); }, { passive: false });
+      window.addEventListener('touchend', () => { isSliding = false; });
+      window.addEventListener('touchmove', handleSlide, { passive: false });
 
-    // Pointer events for desktop and mobile touch
-    compareStage.addEventListener('pointerdown', (e) => {
-      isDraggingSlider = true;
-      updateSliderPosition(e.clientX);
-    });
-    window.addEventListener('pointerup', () => { isDraggingSlider = false; });
-    window.addEventListener('pointermove', (e) => {
-      if (isDraggingSlider) updateSliderPosition(e.clientX);
-    });
+      const btnCompare = document.getElementById('modeCompareBtn');
+      const btnResult = document.getElementById('modeResultBtn');
 
-    backToStudioBtn.addEventListener('click', () => navigateTo(studioScreen));
-    tryAnotherStyleBtn.addEventListener('click', () => navigateTo(studioScreen));
+      function setCompareMode(isCompare) {
+        isCompareMode = isCompare;
+        if (isCompare) {
+          btnCompare.classList.add('active'); btnResult.classList.remove('active');
+          sliderHandle.style.display = 'flex';
+          imgGen.style.clipPath = `polygon(50% 0, 100% 0, 100% 100%, 50% 100%)`;
+          sliderHandle.style.left = `50%`;
+        } else {
+          btnCompare.classList.remove('active'); btnResult.classList.add('active');
+          sliderHandle.style.display = 'none';
+          imgGen.style.clipPath = `polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)`;
+        }
+      }
 
-    // Save look
-    downloadResultBtn.addEventListener('click', () => {
-      if (!userRenderedDataUrl) return;
-      const link = document.createElement('a');
-      link.href = userRenderedDataUrl;
-      link.download = `HAIRLAB_${selectedHaircut ? selectedHaircut.id : 'hairstyle'}_${Date.now()}.jpg`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      showToast("Look saved to your downloads!");
-    });
+      btnCompare.addEventListener('click', () => setCompareMode(true));
+      btnResult.addEventListener('click', () => setCompareMode(false));
 
-    // Zoom inspect modal
-    zoomModalBtn.addEventListener('click', () => {
-      zoomModalImg.src = userRenderedDataUrl || userOriginalDataUrl;
-      zoomModal.classList.remove('hidden');
-    });
-    closeZoomModalBtn.addEventListener('click', () => {
-      zoomModal.classList.add('hidden');
-    });
+      // --- FULLSCREEN ZOOM HANDLING ---
+      const zoomOverlay = document.getElementById('zoomOverlay');
+      const zoomImg = document.getElementById('zoomImg');
+      const zoomPanContainer = document.getElementById('zoomPanContainer');
+      let currentZoom = 1; let initialDistance = null; let initialZoom = 1;
 
-    /* ==========================================================================
-       STARTUP
-       ========================================================================== */
-    window.addEventListener('DOMContentLoaded', () => {
+      function applyZoom() { zoomImg.style.width = `${currentZoom * 100}%`; }
+
+      document.getElementById('zoomBtn').addEventListener('click', () => {
+        zoomImg.src = document.getElementById('imgGenerated').src;
+        zoomOverlay.classList.add('active');
+        currentZoom = 1; applyZoom();
+      });
+
+      document.getElementById('closeZoomBtn').addEventListener('click', () => zoomOverlay.classList.remove('active'));
+      document.getElementById('zoomInBtn').addEventListener('click', () => { currentZoom = Math.min(currentZoom + 0.5, 5); applyZoom(); });
+      document.getElementById('zoomOutBtn').addEventListener('click', () => { currentZoom = Math.max(currentZoom - 0.5, 1); applyZoom(); });
+
+      zoomPanContainer.addEventListener('touchstart', (e) => {
+        if (e.touches.length === 2) {
+          initialDistance = Math.hypot(e.touches[0].pageX - e.touches[1].pageX, e.touches[0].pageY - e.touches[1].pageY);
+          initialZoom = currentZoom;
+        }
+      });
+      zoomPanContainer.addEventListener('touchmove', (e) => {
+        if (e.touches.length === 2 && initialDistance) {
+          e.preventDefault();
+          const currentDistance = Math.hypot(e.touches[0].pageX - e.touches[1].pageX, e.touches[0].pageY - e.touches[1].pageY);
+          const scale = currentDistance / initialDistance;
+          currentZoom = Math.min(Math.max(initialZoom * scale, 1), 5);
+          applyZoom();
+        }
+      }, { passive: false });
+      zoomPanContainer.addEventListener('touchend', (e) => { if (e.touches.length < 2) initialDistance = null; });
+
+      // --- UTILS & GALLERY ACTIONS ---
+      async function convertToWebP(src) {
+        return new Promise((resolve, reject) => {
+          const img = new Image(); img.crossOrigin = 'Anonymous'; 
+          img.onload = () => {
+            const canvas = document.createElement('canvas');
+            canvas.width = img.width; canvas.height = img.height;
+            canvas.getContext('2d').drawImage(img, 0, 0);
+            canvas.toBlob((blob) => resolve(blob), 'image/webp', 0.9);
+          };
+          img.onerror = reject; img.src = src;
+        });
+      }
+
+      document.getElementById('deleteBtn').addEventListener('click', async () => {
+        if(!confirm("Delete this try-on from your gallery?")) return;
+        try {
+          await supabaseClient.from('gallery').delete().eq('id', currentActiveDocId);
+          await supabaseClient.storage.from('photos').remove([currentActiveOrigPath, currentActiveGenPath]);
+          showToast("Photo deleted.");
+          if(isViewingGalleryItem) { showView(libraryView); loadGallery(); } else { showView(cameraView); }
+          loadGalleryThumbnail();
+        } catch (err) { showToast("Failed to delete.", true); }
+      });
+
+      document.getElementById('downloadBtn').addEventListener('click', async () => {
+        try {
+          const response = await fetch(document.getElementById('imgGenerated').src);
+          const blob = await response.blob();
+          const blobUrl = URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = blobUrl; link.download = `VirtualTryOn_${Date.now()}.webp`;
+          document.body.appendChild(link); link.click(); document.body.removeChild(link); URL.revokeObjectURL(blobUrl);
+          showToast("Image downloaded!");
+        } catch (err) { showToast("Failed to download.", true); }
+      });
+
+      document.getElementById('closeComparisonBtn').addEventListener('click', () => {
+        if(isViewingGalleryItem) showView(libraryView); else showView(cameraView);
+      });
+
+      // --- LIBRARY GALLERY ---
+      document.getElementById('openLibraryBtn').addEventListener('click', () => {
+        showView(libraryView); loadGallery();
+      });
+      document.getElementById('closeLibraryBtn').addEventListener('click', () => showView(cameraView));
+
+      async function loadGalleryThumbnail() {
+        const { data } = await supabaseClient.from('gallery').select('generated_image_path').order('created_at', { ascending: false }).limit(1);
+        if (data && data.length > 0) {
+          const { data: { publicUrl } } = supabaseClient.storage.from('photos').getPublicUrl(data[0].generated_image_path);
+          document.getElementById('openLibraryBtn').style.backgroundImage = `url('${publicUrl}')`;
+        } else {
+          document.getElementById('openLibraryBtn').style.backgroundImage = 'none';
+        }
+      }
+
+      async function loadGallery() {
+        const grid = document.getElementById('galleryGrid');
+        grid.innerHTML = Array(6).fill(`<div class="card" style="background: #e0e0e0; animation: pulse 1.5s infinite;"></div>`).join('');
+        
+        const { data: docs, error } = await supabaseClient.from('gallery').select('*').order('created_at', { ascending: false });
+        if (!error && docs) {
+          grid.innerHTML = '';
+          if(docs.length === 0) {
+            grid.innerHTML = `<div style="grid-column: span 2; text-align: center; padding: 20px; color: var(--black);">Gallery is empty.</div>`;
+            return;
+          }
+          docs.forEach(doc => {
+            const genUrl = supabaseClient.storage.from('photos').getPublicUrl(doc.generated_image_path).data.publicUrl;
+            const origUrl = supabaseClient.storage.from('photos').getPublicUrl(doc.original_image_path).data.publicUrl;
+            
+            const div = document.createElement('div');
+            div.className = "card";
+            div.innerHTML = `<img src="${genUrl}" loading="lazy" alt="Gallery Try-On" />`;
+            
+            div.onclick = () => {
+              isViewingGalleryItem = true;
+              currentActiveDocId = doc.id; currentActiveOrigPath = doc.original_image_path; currentActiveGenPath = doc.generated_image_path;
+              document.getElementById('closeComparisonBtn').textContent = "BACK";
+              setupComparison(origUrl, genUrl);
+            };
+            grid.appendChild(div);
+          });
+        } else {
+          showToast("Failed to load gallery.", true);
+        }
+      }
+
+      // Initialize Application
       initCamera();
     });
   </script>
