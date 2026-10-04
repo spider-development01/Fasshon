@@ -6,11 +6,13 @@
   <link rel="icon" href="data:," />
   <title>KAMI — AI Hairstyle Studio</title>
 
-  <!-- Neo-Brutalist Typography -->
+  <!-- Typography & Icons -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo+Black&family=Plus+Jakarta+Sans:wght@500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <!-- Supabase JS Client -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <style>
     :root {
@@ -77,7 +79,7 @@
       cursor: pointer;
       font-family: var(--font-heading);
       text-transform: uppercase;
-      transition: transform 0.15s var(--bounce), box-shadow 0.15s var(--bounce), background 0.15s ease;
+      transition: transform 0.15s var(--bounce), box-shadow 0.15s var(--bounce);
       user-select: none;
     }
     button:disabled { opacity: 0.45; cursor: not-allowed; transform: none !important; box-shadow: none !important; }
@@ -129,7 +131,6 @@
       flex-shrink: 0;
     }
     .btn-icon:active:not(:disabled) { transform: translate(3px, 3px); box-shadow: none; }
-    .btn-icon.active { background: var(--lime); transform: translate(3px, 3px); box-shadow: none; }
 
     .badge {
       display: inline-flex;
@@ -141,6 +142,25 @@
       border: var(--border-thin);
       box-shadow: var(--shadow-xs);
       border-radius: 6px;
+    }
+
+    /* VIEW 0: LOGIN MODAL / SCREEN */
+    #loginScreen {
+      z-index: 1000;
+      background: var(--beige);
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    .login-card {
+      background: var(--white);
+      border: var(--border-thick);
+      border-radius: var(--radius-card);
+      box-shadow: var(--shadow-solid);
+      padding: 28px;
+      max-width: 400px;
+      width: 100%;
+      text-align: center;
     }
 
     /* VIEW 1: CAMERA SCREEN */
@@ -157,14 +177,10 @@
       justify-content: space-between;
       align-items: center;
       z-index: 50;
-      pointer-events: none;
     }
-    .top-dock > * { pointer-events: auto; }
-    .top-dock-right { display: flex; gap: 8px; }
-
     .brand-logo {
       font-family: var(--font-display);
-      font-size: 2.4rem;
+      font-size: 2.2rem;
       background: var(--yellow);
       border: var(--border-thick);
       padding: 2px 14px;
@@ -190,17 +206,16 @@
       z-index: 50;
     }
     .shutter-btn {
-      width: 70px;
-      height: 70px;
+      width: 72px;
+      height: 72px;
       border-radius: 50%;
       background: var(--red);
       border: var(--border-thick);
       outline: 4px solid var(--white);
       box-shadow: 0 4px 12px rgba(0,0,0,0.3);
     }
-    .shutter-btn:active { transform: scale(0.9); }
 
-    /* VIEW 2: CROP SCREEN */
+    /* VIEW 2: 1024x1024 MANUAL CROP */
     .crop-viewport {
       flex: 1;
       display: flex;
@@ -231,8 +246,6 @@
       transform-origin: center center;
       user-select: none;
       pointer-events: none;
-      max-width: none;
-      max-height: none;
     }
     .crop-grid {
       position: absolute;
@@ -245,7 +258,7 @@
     }
     .crop-grid div { border: 1px solid rgba(255,255,255,0.2); }
 
-    /* VIEW 3: STUDIO SCREEN */
+    /* VIEW 3: STUDIO */
     .studio-header {
       padding: 16px 20px;
       background: var(--beige);
@@ -253,8 +266,6 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      gap: 8px;
-      flex-shrink: 0;
     }
     .studio-content {
       flex: 1;
@@ -266,9 +277,7 @@
       max-width: 800px;
       margin: 0 auto;
       width: 100%;
-      -webkit-overflow-scrolling: touch;
     }
-
     .square-card {
       background: var(--white);
       border: var(--border-thick);
@@ -276,7 +285,6 @@
       padding: 14px;
       box-shadow: var(--shadow-solid);
     }
-
     .preview-box-1024 {
       width: 100%;
       aspect-ratio: 1 / 1;
@@ -286,20 +294,13 @@
       border-radius: 12px;
       overflow: hidden;
       margin: 0 auto;
-      position: relative;
     }
-    .preview-box-1024 img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      display: block;
-    }
+    .preview-box-1024 img { width: 100%; height: 100%; object-fit: cover; }
 
-    /* MODE TABS */
     .mode-tabs { display: flex; gap: 10px; }
     .mode-tab {
       flex: 1;
-      padding: 13px 10px;
+      padding: 12px;
       border: var(--border-thick);
       border-radius: 14px;
       background: var(--white);
@@ -311,17 +312,8 @@
       gap: 8px;
     }
     .mode-tab.active { background: var(--black); color: var(--white); }
-    .mode-tab:active { transform: translate(3px, 3px); box-shadow: none; }
 
-    /* CATEGORY TABS */
-    .cat-tabs {
-      display: flex;
-      gap: 8px;
-      overflow-x: auto;
-      padding: 4px 2px 10px;
-      -webkit-overflow-scrolling: touch;
-      scrollbar-width: none;
-    }
+    .cat-tabs { display: flex; gap: 8px; overflow-x: auto; padding: 4px 2px 10px; scrollbar-width: none; }
     .cat-tabs::-webkit-scrollbar { display: none; }
     .cat-tab {
       flex: 0 0 auto;
@@ -333,9 +325,8 @@
       box-shadow: var(--shadow-xs);
       white-space: nowrap;
     }
-    .cat-tab.active { background: var(--lime); box-shadow: var(--shadow-sm); transform: translate(-1px,-1px); }
+    .cat-tab.active { background: var(--lime); box-shadow: var(--shadow-sm); }
 
-    /* STYLE CHIP GRID (With Uniform Scissors) */
     .chip-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
@@ -346,28 +337,15 @@
       border: var(--border-thin);
       border-radius: 12px;
       padding: 10px 12px;
-      font-family: var(--font-body);
       font-weight: 800;
       font-size: 0.74rem;
-      text-transform: none;
-      text-align: left;
-      line-height: 1.25;
       box-shadow: var(--shadow-xs);
       display: flex;
       align-items: center;
       gap: 8px;
-      min-height: 48px;
     }
-    .style-chip i { font-size: 0.85rem; opacity: 0.6; flex-shrink: 0; }
-    .style-chip.selected {
-      background: var(--lime);
-      box-shadow: var(--shadow-sm);
-      transform: translate(-2px, -2px);
-    }
-    .style-chip.selected i { opacity: 1; }
-    .style-chip:active { transform: translate(2px, 2px); box-shadow: none; }
+    .style-chip.selected { background: var(--lime); box-shadow: var(--shadow-sm); transform: translate(-2px, -2px); }
 
-    /* REFERENCE UPLOADER */
     .ref-uploader {
       background: var(--beige-surface);
       border: var(--border-thick);
@@ -379,12 +357,11 @@
       cursor: pointer;
     }
     .ref-thumb {
-      width: 54px;
-      height: 54px;
+      width: 52px;
+      height: 52px;
       border-radius: 8px;
       border: var(--border-thin);
       background: var(--white);
-      object-fit: cover;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -394,72 +371,7 @@
     }
     .ref-thumb img { width: 100%; height: 100%; object-fit: cover; }
 
-    /* COLOR CONTROLS */
-    .color-head { display: flex; align-items: center; gap: 14px; }
-    .swatch-lg {
-      width: 62px;
-      height: 62px;
-      border-radius: 14px;
-      border: var(--border-thick);
-      box-shadow: var(--shadow-sm);
-      flex-shrink: 0;
-      background: #6040FF;
-      cursor: pointer;
-      position: relative;
-    }
-    .hex-input {
-      flex: 1;
-      min-width: 0;
-      padding: 10px 12px;
-      border: var(--border-thick);
-      border-radius: 10px;
-      font-weight: 800;
-      font-family: var(--font-body);
-      font-size: 0.9rem;
-      text-transform: uppercase;
-      background: var(--white);
-      color: var(--black);
-      outline: none;
-      box-shadow: var(--shadow-xs);
-    }
-    .hex-input:focus { background: var(--lime); }
-
-    .preset-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(40px, 1fr));
-      gap: 8px;
-      margin-top: 14px;
-    }
-    .preset-swatch {
-      aspect-ratio: 1 / 1;
-      border: var(--border-thin);
-      border-radius: 8px;
-      box-shadow: var(--shadow-xs);
-      padding: 0;
-    }
-    .preset-swatch.active { outline: 3px solid var(--black); outline-offset: 2px; }
-
-    .panel-label {
-      font-family: var(--font-heading);
-      font-size: 0.7rem;
-      text-transform: uppercase;
-      letter-spacing: 0.6px;
-      margin-bottom: 8px;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .action-dock {
-      position: sticky;
-      bottom: 0;
-      margin-top: auto;
-      padding: 14px 0 20px;
-      background: linear-gradient(to bottom, rgba(244,244,240,0) 0%, var(--beige) 35%);
-      z-index: 6;
-    }
-
-    /* VIEW 4: PROCESSING OVERLAY */
+    /* VIEW 4: PROCESSING */
     .processing-overlay {
       position: absolute;
       inset: 0;
@@ -544,7 +456,80 @@
       box-shadow: var(--shadow-sm);
     }
 
-    /* CUSTOM NEO-BRUTALIST COLOR PICKER MODAL */
+    /* VIEW 6: GALLERY & LIGHTBOX */
+    #galleryModal {
+      position: fixed;
+      inset: 0;
+      background: var(--beige);
+      z-index: 200;
+      display: flex;
+      flex-direction: column;
+    }
+    .gallery-grid {
+      flex: 1;
+      overflow-y: auto;
+      padding: 18px;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 12px;
+      max-width: 900px;
+      margin: 0 auto;
+      width: 100%;
+    }
+    .gallery-card {
+      background: var(--white);
+      border: var(--border-thick);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: var(--shadow-xs);
+      cursor: pointer;
+    }
+    .gallery-card img { width: 100%; aspect-ratio: 1/1; object-fit: cover; display: block; }
+    .gallery-card-body { padding: 8px; font-size: 0.7rem; font-weight: 800; }
+
+    /* LIGHTBOX WITH ZOOM & SWIPE */
+    #lightboxModal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.95);
+      z-index: 300;
+      display: flex;
+      flex-direction: column;
+      touch-action: none;
+    }
+    .lightbox-toolbar {
+      padding: 16px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: white;
+      z-index: 310;
+    }
+    .lightbox-stage {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    #lightboxImg {
+      max-width: 92vw;
+      max-height: 80vh;
+      object-fit: contain;
+      user-select: none;
+      transform-origin: center center;
+      transition: transform 0.15s ease-out;
+    }
+    .lightbox-bottom {
+      padding: 16px;
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      z-index: 310;
+    }
+
+    /* COLOR PICKER MODAL */
     .modal-backdrop {
       position: fixed;
       inset: 0;
@@ -565,12 +550,6 @@
       box-shadow: var(--shadow-solid);
       position: relative;
     }
-    .picker-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 14px;
-    }
     .sv-area {
       position: relative;
       width: 100%;
@@ -583,7 +562,6 @@
       cursor: crosshair;
       touch-action: none;
     }
-    #svCanvas { display: block; width: 100%; height: 100%; }
     .hue-area {
       position: relative;
       width: 100%;
@@ -596,7 +574,6 @@
       cursor: ew-resize;
       touch-action: none;
     }
-    #hueCanvas { display: block; width: 100%; height: 100%; }
     .cursor {
       position: absolute;
       width: 18px;
@@ -608,45 +585,6 @@
       transform: translate(-50%, -50%);
       z-index: 10;
     }
-    .picker-controls {
-      display: flex;
-      gap: 12px;
-      align-items: center;
-      margin-bottom: 14px;
-    }
-    .color-preview {
-      width: 52px;
-      height: 52px;
-      border-radius: 10px;
-      border: var(--border-thick);
-      box-shadow: var(--shadow-xs);
-      flex-shrink: 0;
-    }
-    .picker-presets {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(34px, 1fr));
-      gap: 6px;
-      margin-bottom: 14px;
-    }
-    .picker-preset {
-      aspect-ratio: 1 / 1;
-      border: var(--border-thin);
-      border-radius: 6px;
-      box-shadow: var(--shadow-xs);
-      padding: 0;
-    }
-
-    /* DECORATIVE NEO-BRUTALIST STICKERS */
-    .deco-icon {
-      position: absolute;
-      color: var(--black);
-      pointer-events: none;
-      z-index: 5;
-    }
-    .deco-bandaid { top: -14px; right: 38px; transform: rotate(18deg); font-size: 1.7rem; }
-    .deco-star1 { bottom: -12px; left: 16px; transform: rotate(-22deg); font-size: 2rem; color: var(--yellow); }
-    .deco-star2 { top: 22px; left: -14px; transform: rotate(45deg); font-size: 1.3rem; color: var(--pink); }
-    .deco-heart { bottom: 32px; right: -14px; transform: rotate(12deg); font-size: 1.5rem; color: var(--red); }
 
     .toast {
       position: fixed;
@@ -667,45 +605,62 @@
       pointer-events: none;
     }
     .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-
     .hidden { display: none !important; }
   </style>
 </head>
 <body>
 
-  <!-- Toast -->
-  <div id="toast" class="toast">TOAST MESSAGE</div>
+  <div id="toast" class="toast">TOAST</div>
 
   <!-- =========================================================================
-       VIEW 1: CAMERA & CAPTURE
+       VIEW 0: USER LOGIN
        ========================================================================= -->
-  <section id="cameraScreen" class="view-screen active">
+  <section id="loginScreen" class="view-screen active">
+    <div class="login-card">
+      <div class="brand-logo" style="display:inline-block; margin-bottom:16px;">KAMI</div>
+      <h2 style="font-size:1.2rem; margin-bottom:8px;">CLIENT ACCESS</h2>
+      <p style="font-size:0.78rem; font-weight:700; color:#555; margin-bottom:20px;">
+        Enter your registered phone number to open your personal studio &amp; vault.
+      </p>
+      <input type="tel" id="loginPhoneInput" placeholder="+1234567890" style="width:100%; padding:14px; border:var(--border-thick); border-radius:12px; font-size:1.1rem; font-weight:800; font-family:var(--font-heading); margin-bottom:14px; text-align:center;" />
+      <button id="loginBtn" class="btn-primary" style="background:var(--lime); color:var(--black);">
+        ENTER STUDIO <i class="bi bi-arrow-right"></i>
+      </button>
+    </div>
+  </section>
+
+  <!-- =========================================================================
+       VIEW 1: CAMERA SCREEN
+       ========================================================================= -->
+  <section id="cameraScreen" class="view-screen">
     <div class="top-dock">
       <div class="brand-logo">KAMI</div>
-      <div class="top-dock-right">
+      <div style="display:flex; gap:8px;">
+        <button id="logoutBtn" class="btn-pill" style="padding:8px 12px; font-size:0.75rem;"><i class="bi bi-box-arrow-right"></i></button>
         <button id="uploadPhotoBtn" class="btn-icon" aria-label="Upload"><i class="bi bi-image"></i></button>
         <input type="file" id="clientFileInput" class="hidden" accept="image/*" />
       </div>
     </div>
 
-    <div class="camera-wrapper" id="cameraWrapper">
+    <div class="camera-wrapper">
       <video id="cameraFeed" class="mirrored" autoplay playsinline muted></video>
     </div>
 
     <div class="bottom-dock">
       <button id="switchCameraBtn" class="btn-icon" aria-label="Flip"><i class="bi bi-arrow-repeat"></i></button>
       <button id="shutterBtn" class="shutter-btn" aria-label="Take Photo"></button>
-      <button id="galleryBtn" class="btn-icon" aria-label="Gallery"><i class="bi bi-folder2-open"></i></button>
+      <!-- VAULT / GALLERY BUTTON (ALONG WITH CAPTURE BUTTON) -->
+      <button id="openGalleryBtn" class="btn-icon" aria-label="Open Vault"><i class="bi bi-collection"></i></button>
     </div>
   </section>
 
   <!-- =========================================================================
-       VIEW 2: CROP SCREEN (1024x1024 MANUAL CROP)
+       VIEW 2: 1024x1024 MANUAL CROP
        ========================================================================= -->
   <section id="cropScreen" class="view-screen">
     <header class="studio-header">
       <button id="cropCancelBtn" class="btn-pill"><i class="bi bi-x-lg"></i> CANCEL</button>
-      <h2 style="font-family: var(--font-heading); font-size: 0.95rem;">CROP 1024×1024</h2>
+      <h2 style="font-size:0.95rem;">CROP 1024×1024</h2>
       <button id="cropConfirmBtn" class="btn-pill" style="background:var(--lime);"><i class="bi bi-check2"></i> DONE</button>
     </header>
     <div class="crop-viewport">
@@ -718,7 +673,7 @@
         </div>
       </div>
     </div>
-    <div style="padding: 12px; text-align: center; font-size: 0.72rem; font-weight: 800; color: #555;">
+    <div style="padding:12px; text-align:center; font-size:0.72rem; font-weight:800; color:#555;">
       DRAG TO PAN • PINCH / SCROLL TO ZOOM
     </div>
   </section>
@@ -729,75 +684,65 @@
   <section id="studioScreen" class="view-screen">
     <header class="studio-header">
       <button id="retakeBtn" class="btn-pill"><i class="bi bi-arrow-left"></i> RETAKE</button>
-      <h2 style="font-family: var(--font-heading); font-size: 1rem;">STUDIO</h2>
-      <div class="badge" style="background: var(--lime);">1024×1024</div>
+      <div class="badge" id="clientPhoneBadge" style="background:var(--lime);">CLIENT</div>
+      <button id="openGalleryFromStudioBtn" class="btn-pill" style="background:var(--cyan); color:white;"><i class="bi bi-collection"></i> VAULT</button>
     </header>
 
     <main class="studio-content">
-
-      <!-- 1024 Base Preview -->
       <div class="square-card" style="padding:10px;">
-        <div class="preview-box-1024" id="previewBox">
-          <img id="client1024Preview" alt="Client 1024x1024" />
+        <div class="preview-box-1024">
+          <img id="client1024Preview" alt="Client" />
         </div>
       </div>
 
-      <!-- MODE TABS -->
       <div class="mode-tabs">
         <button class="mode-tab active" data-mode="style"><i class="bi bi-scissors"></i> HAIRSTYLE</button>
-        <button class="mode-tab" data-mode="color"><i class="bi bi-palette-fill"></i> HAIR COLOUR</button>
+        <button class="mode-tab" data-mode="color"><i class="bi bi-palette-fill"></i> COLOUR</button>
       </div>
 
-      <!-- ============ STYLE PANEL ============ -->
+      <!-- STYLE PANEL -->
       <div id="stylePanel">
         <div class="square-card">
-          <div class="panel-label"><i class="bi bi-scissors"></i> 50 HAIRSTYLES</div>
           <div class="cat-tabs" id="catTabs"></div>
           <div class="chip-grid" id="styleGrid"></div>
         </div>
 
-        <!-- Optional Reference Cut -->
         <div class="square-card" style="margin-top:14px;">
           <div class="ref-uploader" id="refCard">
-            <div class="ref-thumb" id="refThumbBox">
+            <div class="ref-thumb">
               <i class="bi bi-pin-angle" id="refIcon"></i>
-              <img id="refImg" class="hidden" alt="Style Ref" />
+              <img id="refImg" class="hidden" alt="Ref" />
             </div>
             <div style="flex:1; min-width:0;">
-              <div class="badge" style="background: var(--yellow); margin-bottom:4px;">OPTIONAL</div>
-              <h4 style="font-size: 0.88rem;">REFERENCE PHOTO</h4>
-              <p id="refSubtext" style="font-size: 0.72rem; color:#555; font-weight: 700;">Tap to upload shape &amp; fringe reference</p>
+              <div class="badge" style="background:var(--yellow); margin-bottom:4px;">OPTIONAL</div>
+              <h4 style="font-size:0.85rem;">REFERENCE CUT</h4>
+              <p id="refSubtext" style="font-size:0.7rem; color:#555; font-weight:700;">Tap to upload shape &amp; fringe reference</p>
             </div>
-            <button id="clearRefBtn" class="hidden btn-pill" style="padding:4px 10px; font-size:0.7rem; background:var(--red); color:white;">X</button>
+            <button id="clearRefBtn" class="hidden btn-pill" style="padding:4px 8px; font-size:0.7rem; background:var(--red); color:white;">X</button>
           </div>
           <input type="file" id="refFileInput" class="hidden" accept="image/*" />
         </div>
       </div>
 
-      <!-- ============ COLOR PANEL ============ -->
+      <!-- COLOR PANEL -->
       <div id="colorPanel" class="hidden">
         <div class="square-card">
-          <div class="panel-label"><i class="bi bi-droplet-half"></i> HAIR COLOUR ONLY</div>
-
-          <div class="color-head">
-            <div class="swatch-lg" id="colorSwatch" title="Open Colour Picker"></div>
-            <div style="flex:1; min-width:0;">
-              <div class="badge" style="background: var(--yellow); margin-bottom:4px;">RECOLOUR (NO RESTYLE)</div>
-              <input type="text" id="hexInput" class="hex-input" value="#6040FF" maxlength="7" spellcheck="false" />
+          <div class="color-head" style="display:flex; align-items:center; gap:14px;">
+            <div class="swatch-lg" id="colorSwatch" style="width:58px; height:58px; border-radius:12px; border:var(--border-thick); cursor:pointer;"></div>
+            <div style="flex:1;">
+              <div class="badge" style="background:var(--yellow); margin-bottom:4px;">RECOLOUR ONLY</div>
+              <input type="text" id="hexInput" style="width:100%; padding:10px; border:var(--border-thick); border-radius:10px; font-weight:800; font-family:var(--font-heading);" value="#6040FF" />
             </div>
           </div>
-
-          <div class="preset-grid" id="presetGrid"></div>
+          <div id="presetGrid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(38px, 1fr)); gap:6px; margin-top:12px;"></div>
         </div>
       </div>
 
-      <!-- 1-CLICK ACTION -->
-      <div class="action-dock">
+      <div class="action-dock" style="margin-top:auto; padding:12px 0 20px;">
         <button id="executeBtn" class="btn-primary">
-          TRANSFORM TO PIXIE CUT <i class="bi bi-stars"></i>
+          TRANSFORM WITH KAMI AI <i class="bi bi-stars"></i>
         </button>
       </div>
-
     </main>
   </section>
 
@@ -806,28 +751,26 @@
        ========================================================================= -->
   <div id="processingScreen" class="processing-overlay hidden">
     <div class="brutal-spinner"></div>
-    <h1 id="timerText" style="font-family:var(--font-heading); font-size: 2rem; margin-top: 22px;">STYLING... 0S</h1>
-    <div id="progressStep" class="badge" style="background: var(--lime); font-size: 0.75rem; padding: 8px 16px; margin-top: 14px; border-radius: var(--radius-pill);">
-      UPLOADING TO FAL STORAGE
+    <h1 id="timerText" style="font-family:var(--font-heading); font-size:2rem; margin-top:22px;">STYLING... 0S</h1>
+    <div id="progressStep" class="badge" style="background:var(--lime); font-size:0.75rem; padding:8px 16px; margin-top:14px; border-radius:var(--radius-pill);">
+      UPLOADING TO KAMI AI...
     </div>
   </div>
 
   <!-- =========================================================================
-       VIEW 5: COMPARISON SPLIT SCREEN
+       VIEW 5: SPLIT COMPARISON
        ========================================================================= -->
   <section id="compareScreen" class="view-screen">
     <header class="studio-header">
       <button id="backToStudioBtn" class="btn-pill"><i class="bi bi-chevron-left"></i> EDIT</button>
-      <div id="resultBadge" class="badge" style="background:var(--pink); color:white;">FLUX 4B RESULT</div>
+      <div id="resultBadge" class="badge" style="background:var(--pink); color:white;">KAMI RESULT</div>
       <button id="downloadBtn" class="btn-pill" style="background:var(--cyan); color:white;">SAVE <i class="bi bi-download"></i></button>
     </header>
-
     <div class="compare-viewport">
       <div id="compareStage" class="compare-stage">
         <img id="imgSource" class="stage-img" alt="Before" />
         <img id="imgRendered" class="stage-img" alt="After" />
-
-        <div id="sliderDivider" class="slider-divider" role="slider" tabindex="0">
+        <div id="sliderDivider" class="slider-divider" role="slider">
           <div class="divider-line"></div>
           <div class="divider-btn"><i class="bi bi-arrows-collapse"></i></div>
         </div>
@@ -836,79 +779,89 @@
   </section>
 
   <!-- =========================================================================
-       CUSTOM NEO-BRUTALIST COLOR PICKER MODAL
+       VIEW 6: USER VAULT / GALLERY MODAL (MAX 30 PHOTOS)
        ========================================================================= -->
-  <div id="colorPickerModal" class="modal-backdrop hidden">
-    <div class="modal-card">
-      <i class="bi bi-bandaid deco-icon deco-bandaid"></i>
-      <i class="bi bi-star-fill deco-icon deco-star1"></i>
-      <i class="bi bi-star-fill deco-icon deco-star2"></i>
-      <i class="bi bi-heart-fill deco-icon deco-heart"></i>
+  <div id="galleryModal" class="hidden">
+    <header class="studio-header">
+      <button id="closeGalleryBtn" class="btn-pill"><i class="bi bi-x-lg"></i> CLOSE</button>
+      <h2 style="font-size:1rem;">MY KAMI VAULT</h2>
+      <div id="vaultCountBadge" class="badge" style="background:var(--lime);">0 / 30</div>
+    </header>
+    <div class="gallery-grid" id="galleryGrid"></div>
+  </div>
 
-      <div class="picker-header">
-        <h3 style="font-size: 1.15rem; font-family: var(--font-heading);">COLOUR PICKER</h3>
-        <button id="closeColorPickerBtn" class="btn-icon" style="width:36px;height:36px;font-size:0.95rem;"><i class="bi bi-x-lg"></i></button>
-      </div>
+  <!-- =========================================================================
+       VIEW 7: LIGHTBOX (WITH SMOOTH ZOOM & SLIDE)
+       ========================================================================= -->
+  <div id="lightboxModal" class="hidden">
+    <div class="lightbox-toolbar">
+      <button id="closeLightboxBtn" class="btn-pill" style="padding:6px 14px; font-size:0.75rem;"><i class="bi bi-arrow-left"></i> BACK</button>
+      <span id="lightboxIndexText" style="font-family:var(--font-heading); font-size:0.85rem;">1 / 1</span>
+      <button id="downloadLightboxBtn" class="btn-pill" style="padding:6px 14px; font-size:0.75rem; background:var(--cyan); color:white;"><i class="bi bi-download"></i></button>
+    </div>
 
-      <div class="sv-area" id="svArea">
-        <canvas id="svCanvas" width="300" height="300"></canvas>
-        <div id="svCursor" class="cursor" style="left: 50%; top: 50%;"></div>
-      </div>
+    <div class="lightbox-stage" id="lightboxStage">
+      <img id="lightboxImg" alt="KAMI Creation" />
+    </div>
 
-      <div class="hue-area" id="hueArea">
-        <canvas id="hueCanvas" width="300" height="28"></canvas>
-        <div id="hueCursor" class="cursor" style="left: 50%; top: 50%;"></div>
-      </div>
-
-      <div class="picker-controls">
-        <div class="color-preview" id="pickerPreview"></div>
-        <input type="text" id="pickerHex" class="hex-input" value="#6040FF" maxlength="7" spellcheck="false" style="font-size: 1rem; padding: 12px 14px;" />
-      </div>
-
-      <div class="picker-presets" id="pickerPresets"></div>
-
-      <button id="applyColorBtn" class="btn-primary color-mode" style="padding: 13px 20px; font-size: 0.95rem;">APPLY COLOUR</button>
+    <div class="lightbox-bottom">
+      <button id="zoomOutBtn" class="btn-icon" style="width:40px; height:40px; font-size:1rem;"><i class="bi bi-zoom-out"></i></button>
+      <button id="zoomResetBtn" class="btn-pill" style="padding:6px 14px; font-size:0.75rem;">1x</button>
+      <button id="zoomInBtn" class="btn-icon" style="width:40px; height:40px; font-size:1rem;"><i class="bi bi-zoom-in"></i></button>
     </div>
   </div>
 
+  <!-- =========================================================================
+       COLOR PICKER MODAL
+       ========================================================================= -->
+  <div id="colorPickerModal" class="modal-backdrop hidden">
+    <div class="modal-card">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+        <h3 style="font-family:var(--font-heading); font-size:1.1rem;">COLOUR PICKER</h3>
+        <button id="closeColorPickerBtn" class="btn-icon" style="width:34px; height:34px; font-size:0.9rem;"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div class="sv-area" id="svArea"><canvas id="svCanvas" width="300" height="300"></canvas><div id="svCursor" class="cursor" style="left:50%; top:50%;"></div></div>
+      <div class="hue-area" id="hueArea"><canvas id="hueCanvas" width="300" height="28"></canvas><div id="hueCursor" class="cursor" style="left:50%; top:50%;"></div></div>
+      <div style="display:flex; gap:10px; align-items:center; margin-bottom:12px;">
+        <div id="pickerPreview" style="width:48px; height:48px; border-radius:10px; border:var(--border-thick);"></div>
+        <input type="text" id="pickerHex" style="flex:1; padding:10px; border:var(--border-thick); border-radius:10px; font-family:var(--font-heading);" value="#6040FF" />
+      </div>
+      <button id="applyColorBtn" class="btn-primary color-mode" style="padding:12px;">APPLY COLOUR</button>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       APPLICATION LOGIC & SUPABASE INTEGRATION
+       ========================================================================= -->
   <script>
     /* ==========================================================================
-       PROMPTS (FLUX 2 KLEIN 4B EDIT - FULLY HARDCODED & OPTIMIZED)
+       CONFIG: SUPABASE CREDENTIALS (REPLACE WITH YOURS)
+       ========================================================================== */
+    const SUPABASE_URL = 'https://rmfubnduytozikcgzvok.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJtZnVibmR1eXRvemlrY2d6dm9rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2OTIyMDgsImV4cCI6MjA5NzI2ODIwOH0.XmxDD8mH8rgq3OZmD7jVophtH2W3NNDgSRJKC3RXvJU';
+    const supabase = window.supabase?.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    /* ==========================================================================
+       HARDCODED TUNED PROMPTS
        ========================================================================== */
     const STYLE_TEMPLATE = (desc) =>
       `Edit only the hair. Change the existing hairstyle into ${desc}. ` +
       `Keep the original hair colour exactly as it is in the source photo. ` +
-      `The hair must grow naturally from the scalp with visible roots, individual strands, flyaways and natural shadows, ` +
-      `and must follow the original lighting, head shape and head angle. ` +
-      `Do not change the face, expression, head angle, pose, skin, clothing, lighting, background or camera. ` +
-      `Realistic photograph, not a wig or helmet.`;
+      `The hair must grow naturally from the scalp with visible roots, individual strands, flyaways and natural shadows. ` +
+      `Do not change the face, expression, head angle, pose, skin, clothing, lighting, background or camera. Realistic photograph, not a wig or helmet.`;
 
-    const COLOR_TEMPLATE = (hex, name) =>
-      `Edit only the hair colour. Recolour the existing hair to a realistic ${name} shade, exactly ${hex}. ` +
-      `Keep the exact same hairstyle, cut, length, layers, texture, volume and silhouette as the source photo — do not restyle, reshape or change the hair in any way. ` +
-      `Recolour every strand from root to tip, following the original lighting, highlights, shadows and shine so the colour looks like real dyed hair with visible roots and individual strands. ` +
-      `Do not change the face, expression, head angle, pose, skin tone, clothing, lighting, background or camera. Realistic photograph.`;
+    const COLOR_TEMPLATE = (hex) =>
+      `Edit only the hair colour. Recolour the existing hair to a realistic salon dyed shade, exactly ${hex}. ` +
+      `Keep the exact same hairstyle, cut, length, layers, texture, volume and silhouette as the source photo. ` +
+      `Recolour every strand from root to tip, following the original lighting and highlights. ` +
+      `Do not change the face, expression, head angle, pose, skin tone, clothing, lighting, background or camera.`;
 
     const REF_IMAGE_CLAUSE = ` Use image 2 only for the hair shape, length, layering and fringe. Ignore the reference person, hair colour, pose, lighting and background.`;
+    const NEGATIVE_PROMPT = `wig, hairpiece, hair cap, helmet hair, CGI hair, plastic hair, artificial overlay, bowl cut, buzz cut, shaved sides, undercut, excessive crown volume, perfectly symmetrical hair, fake hairline, cartoon, 2D, illustration, changed face, altered facial proportions, modified jawline, modified forehead, changed ears, different person, beautified face, altered background, changed lighting, changed pose, different head angle, turned face, profile view, unrealistic hair.`;
 
-    const NEGATIVE_STYLE =
-      `wig, hairpiece, hair cap, helmet hair, CGI hair, plastic hair, artificial overlay, bowl cut, buzz cut, ` +
-      `shaved sides, undercut, excessive crown volume, perfectly symmetrical hair, fake hairline, cartoon, 2D, ` +
-      `illustration, changed face, altered facial proportions, modified jawline, modified forehead, changed ears, ` +
-      `different person, beautified face, altered background, changed lighting, changed pose, different head angle, ` +
-      `turned face, profile view, unrealistic hair, changed hair colour.`;
-
-    const NEGATIVE_COLOR =
-      `changed hairstyle, restyled hair, different haircut, changed hair length, altered hair texture, new hair shape, ` +
-      `wig, hairpiece, flat uniform colour, patchy dye, blotchy colour, colour bleeding onto skin, tinted scalp, ` +
-      `discoloured skin, painted hair, plastic hair, CGI hair, artificial overlay, cartoon, 2D, illustration, ` +
-      `changed face, altered facial proportions, different person, beautified face, altered background, changed lighting, ` +
-      `changed pose, different head angle.`;
-
-    /* ==========================================================================
-       50 HAIRSTYLES (ALL SCISSORS ICON)
-       ========================================================================== */
+    /* 50 HAIRSTYLES (ALL SCISSORS ICON) */
     const HAIRSTYLES = [
+      { id:'pixie', cat:'Bob & Short', name:'Pixie Cut', desc:'a realistic short textured feminine pixie cut with tapered sides and nape, slightly longer layered top, soft side-swept fringe and natural temple pieces' },
       { id:'butterfly', cat:'Modern Cuts', name:'Butterfly Cut', desc:'a realistic butterfly cut with long cascading layers, short curtain bangs and soft flipped ends' },
       { id:'longlayered', cat:'Modern Cuts', name:'Long Layered Cut', desc:'a realistic long layered cut with smooth graduated layers and natural movement at the ends' },
       { id:'faceframing', cat:'Modern Cuts', name:'Face-Framing Layers', desc:'a realistic cut with soft face-framing layers curving around cheekbones and jawline' },
@@ -923,7 +876,6 @@
       { id:'layeredbob', cat:'Bob & Short', name:'Layered Bob', desc:'a realistic layered bob with soft interior layers adding volume and movement' },
       { id:'frenchbob', cat:'Bob & Short', name:'French Bob', desc:'a realistic French bob, chin-length and textured with a short soft fringe' },
       { id:'lob', cat:'Bob & Short', name:'Long Bob / Lob', desc:'a realistic long bob (lob) falling past the collarbone with soft blended layers' },
-      { id:'pixie', cat:'Bob & Short', name:'Pixie Cut', desc:'a realistic short textured feminine pixie cut with tapered sides and nape, slightly longer layered top, soft side-swept fringe and natural temple pieces' },
       { id:'sleekstraight', cat:'Open & Styling', name:'Sleek Straight Hair', desc:'a realistic sleek straight style, pin-straight and glossy with smooth drape' },
       { id:'glasshair', cat:'Open & Styling', name:'Glass Hair', desc:'a realistic glass hair look, ultra-sleek mirror-shiny perfectly straight hair with a blunt cut' },
       { id:'softwaves', cat:'Open & Styling', name:'Soft Waves', desc:'a realistic soft wavy style with gentle romantic S-waves flowing through lengths' },
@@ -960,24 +912,20 @@
       { id:'halfuphalfdown', cat:'Half-Up & Bridal', name:'Half-Up Half-Down', desc:'a realistic half-up half-down style with top pinned back and rest cascading in soft waves' },
       { id:'bridalhalfup', cat:'Half-Up & Bridal', name:'Bridal Half-Up Curls', desc:'a realistic bridal half-up style with twisted crown pinned for maang tikka and cascading curls' }
     ];
-
-    const CATEGORIES = ['Modern Cuts','Bob & Short','Open & Styling','Ponytails','Buns & Juda','Braids','Punjabi & Indian','Half-Up & Bridal'];
-
-    const COLOR_PRESETS = [
-      { hex:'#0B0B0B', name:'jet black' }, { hex:'#2E1F14', name:'dark brown' }, { hex:'#4A2C17', name:'chocolate brown' },
-      { hex:'#6B4423', name:'coffee brown' }, { hex:'#C99A4B', name:'honey blonde' }, { hex:'#E8DFC8', name:'platinum blonde' },
-      { hex:'#7B3F1D', name:'auburn' }, { hex:'#B4551F', name:'copper' }, { hex:'#5C1A2B', name:'burgundy' },
-      { hex:'#E8467C', name:'hot pink' }, { hex:'#B9A2E0', name:'lavender' }, { hex:'#C9C9C9', name:'silver grey' },
-      { hex:'#1F6E6E', name:'teal' }, { hex:'#6040FF', name:'electric violet' }, { hex:'#1F6B4A', name:'emerald green' }
-    ];
+    const CATEGORIES = ['Bob & Short','Modern Cuts','Open & Styling','Ponytails','Buns & Juda','Braids','Punjabi & Indian','Half-Up & Bridal'];
 
     /* ==========================================================================
-       APP STATE
+       STATE & VARIABLES
        ========================================================================== */
+    let currentUserPhone = localStorage.getItem('kami_user_phone') || null;
     let cameraStream = null;
     let cameraFacingMode = 'user';
     let base1024Blob = null;
     let ref1024Blob = null;
+    let currentStyleId = 'pixie';
+    let currentCategory = 'Bob & Short';
+    let currentColor = '#6040FF';
+    let activeMode = 'style';
 
     // Crop State
     let cropImgX = 0, cropImgY = 0, cropImgScale = 1;
@@ -986,27 +934,31 @@
     const activePointers = new Map();
     let prevDiff = -1;
 
-    // Color Picker State
-    let currentH = 260, currentS = 0.75, currentV = 1.0;
-    let mode = 'style';
-    let selectedCategory = 'Bob & Short';
-    let selectedStyleId = 'pixie';
-    let hairColor = { hex: '#6040FF', name: 'electric violet' };
+    // Gallery & Lightbox State
+    let userGenerations = [];
+    let activeLightboxIndex = 0;
+    let lightboxScale = 1;
+    let lightboxTouchStartX = 0;
 
-    /* ==========================================================================
-       DOM REFERENCES
-       ========================================================================== */
+    // Elements
+    const loginScreen = document.getElementById('loginScreen');
+    const loginPhoneInput = document.getElementById('loginPhoneInput');
+    const loginBtn = document.getElementById('loginBtn');
+    const logoutBtn = document.getElementById('logoutBtn');
+    const clientPhoneBadge = document.getElementById('clientPhoneBadge');
+
     const cameraScreen = document.getElementById('cameraScreen');
     const cropScreen = document.getElementById('cropScreen');
     const studioScreen = document.getElementById('studioScreen');
     const processingScreen = document.getElementById('processingScreen');
     const compareScreen = document.getElementById('compareScreen');
+    const galleryModal = document.getElementById('galleryModal');
+    const lightboxModal = document.getElementById('lightboxModal');
 
     const cameraFeed = document.getElementById('cameraFeed');
     const shutterBtn = document.getElementById('shutterBtn');
     const switchCameraBtn = document.getElementById('switchCameraBtn');
     const uploadPhotoBtn = document.getElementById('uploadPhotoBtn');
-    const galleryBtn = document.getElementById('galleryBtn');
     const clientFileInput = document.getElementById('clientFileInput');
 
     const cropStage = document.getElementById('cropStage');
@@ -1015,13 +967,32 @@
     const cropConfirmBtn = document.getElementById('cropConfirmBtn');
 
     const client1024Preview = document.getElementById('client1024Preview');
-    const retakeBtn = document.getElementById('retakeBtn');
     const executeBtn = document.getElementById('executeBtn');
+    const retakeBtn = document.getElementById('retakeBtn');
+    const timerText = document.getElementById('timerText');
+    const progressStep = document.getElementById('progressStep');
 
-    const catTabs = document.getElementById('catTabs');
-    const styleGrid = document.getElementById('styleGrid');
-    const stylePanel = document.getElementById('stylePanel');
-    const colorPanel = document.getElementById('colorPanel');
+    const imgSource = document.getElementById('imgSource');
+    const imgRendered = document.getElementById('imgRendered');
+    const sliderDivider = document.getElementById('sliderDivider');
+    const compareStage = document.getElementById('compareStage');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const backToStudioBtn = document.getElementById('backToStudioBtn');
+
+    const openGalleryBtn = document.getElementById('openGalleryBtn');
+    const openGalleryFromStudioBtn = document.getElementById('openGalleryFromStudioBtn');
+    const closeGalleryBtn = document.getElementById('closeGalleryBtn');
+    const galleryGrid = document.getElementById('galleryGrid');
+    const vaultCountBadge = document.getElementById('vaultCountBadge');
+
+    const closeLightboxBtn = document.getElementById('closeLightboxBtn');
+    const lightboxImg = document.getElementById('lightboxImg');
+    const lightboxStage = document.getElementById('lightboxStage');
+    const lightboxIndexText = document.getElementById('lightboxIndexText');
+    const downloadLightboxBtn = document.getElementById('downloadLightboxBtn');
+    const zoomInBtn = document.getElementById('zoomInBtn');
+    const zoomOutBtn = document.getElementById('zoomOutBtn');
+    const zoomResetBtn = document.getElementById('zoomResetBtn');
 
     const refCard = document.getElementById('refCard');
     const refFileInput = document.getElementById('refFileInput');
@@ -1030,53 +1001,73 @@
     const refSubtext = document.getElementById('refSubtext');
     const clearRefBtn = document.getElementById('clearRefBtn');
 
-    const colorSwatch = document.getElementById('colorSwatch');
-    const hexInput = document.getElementById('hexInput');
-    const presetGrid = document.getElementById('presetGrid');
-
-    const timerText = document.getElementById('timerText');
-    const progressStep = document.getElementById('progressStep');
-
-    const imgSource = document.getElementById('imgSource');
-    const imgRendered = document.getElementById('imgRendered');
-    const sliderDivider = document.getElementById('sliderDivider');
-    const compareStage = document.getElementById('compareStage');
-    const backToStudioBtn = document.getElementById('backToStudioBtn');
-    const downloadBtn = document.getElementById('downloadBtn');
-    const resultBadge = document.getElementById('resultBadge');
-
-    const colorPickerModal = document.getElementById('colorPickerModal');
-    const closeColorPickerBtn = document.getElementById('closeColorPickerBtn');
-    const svArea = document.getElementById('svArea');
-    const svCanvas = document.getElementById('svCanvas');
-    const svCursor = document.getElementById('svCursor');
-    const hueArea = document.getElementById('hueArea');
-    const hueCanvas = document.getElementById('hueCanvas');
-    const hueCursor = document.getElementById('hueCursor');
-    const pickerPreview = document.getElementById('pickerPreview');
-    const pickerHex = document.getElementById('pickerHex');
-    const pickerPresets = document.getElementById('pickerPresets');
-    const applyColorBtn = document.getElementById('applyColorBtn');
-    const toast = document.getElementById('toast');
-
     /* ==========================================================================
-       ROUTING & TOAST
+       AUTHENTICATION & USER SESSION
        ========================================================================== */
+    function checkAuthSession() {
+      if (currentUserPhone) {
+        clientPhoneBadge.textContent = currentUserPhone;
+        navigate(cameraScreen);
+        initCamera();
+      } else {
+        navigate(loginScreen);
+      }
+    }
+
+    loginBtn.addEventListener('click', async () => {
+      const phone = loginPhoneInput.value.trim();
+      if (!phone) {
+        showToast('PLEASE ENTER MOBILE NUMBER');
+        return;
+      }
+      try {
+        loginBtn.disabled = true;
+        loginBtn.textContent = 'CHECKING ACCESS...';
+
+        // Lookup in Supabase
+        const { data, error } = await supabase.from('users').select('*').eq('phone', phone).single();
+        if (error || !data) {
+          alert('ACCESS DENIED: Mobile number not registered.\nPlease ask the salon administrator to add your number in admin.html.');
+          return;
+        }
+
+        currentUserPhone = phone;
+        localStorage.setItem('kami_user_phone', phone);
+        clientPhoneBadge.textContent = phone;
+        showToast('WELCOME TO KAMI AI');
+        navigate(cameraScreen);
+        initCamera();
+      } catch (err) {
+        alert('Authentication error: ' + err.message);
+      } finally {
+        loginBtn.disabled = false;
+        loginBtn.innerHTML = 'ENTER STUDIO <i class="bi bi-arrow-right"></i>';
+      }
+    });
+
+    logoutBtn.addEventListener('click', () => {
+      if (confirm('Log out from this device?')) {
+        localStorage.removeItem('kami_user_phone');
+        currentUserPhone = null;
+        if (cameraStream) cameraStream.getTracks().forEach(t => t.stop());
+        navigate(loginScreen);
+      }
+    });
+
     function navigate(screen) {
-      [cameraScreen, cropScreen, studioScreen, compareScreen].forEach(s => s.classList.remove('active'));
+      [loginScreen, cameraScreen, cropScreen, studioScreen, compareScreen].forEach(s => s.classList.remove('active'));
       screen.classList.add('active');
     }
 
-    let toastTimer = null;
     function showToast(msg) {
+      const toast = document.getElementById('toast');
       toast.textContent = msg;
       toast.classList.add('show');
-      clearTimeout(toastTimer);
-      toastTimer = setTimeout(() => toast.classList.remove('show'), 2400);
+      setTimeout(() => toast.classList.remove('show'), 2200);
     }
 
     /* ==========================================================================
-       CAMERA FEED
+       CAMERA & CAPTURE
        ========================================================================== */
     async function initCamera() {
       if (cameraStream) cameraStream.getTracks().forEach(t => t.stop());
@@ -1088,7 +1079,7 @@
         cameraFeed.srcObject = cameraStream;
         cameraFeed.className = cameraFacingMode === 'user' ? 'mirrored' : '';
       } catch (err) {
-        console.warn('Camera inactive, upload mode active', err);
+        console.warn('Camera inactive', err);
       }
     }
 
@@ -1098,7 +1089,7 @@
     });
 
     /* ==========================================================================
-       MANUAL 1024x1024 CROP ENGINE
+       MANUAL 1024x1024 CROP
        ========================================================================== */
     function loadImageForCrop(sourceBlob) {
       const url = URL.createObjectURL(sourceBlob);
@@ -1107,7 +1098,6 @@
         const imgW = cropImage.naturalWidth;
         const imgH = cropImage.naturalHeight;
 
-        // Cover the square stage completely
         cropImgScale = Math.max(stageW / imgW, stageW / imgH);
         cropImgX = 0;
         cropImgY = 0;
@@ -1124,7 +1114,6 @@
       cropImage.style.transform = `translate(-50%, -50%) translate(${cropImgX}px, ${cropImgY}px) scale(${cropImgScale})`;
     }
 
-    // Pointer Events for Drag & Pinch-Zoom
     cropStage.addEventListener('pointerdown', (e) => {
       activePointers.set(e.pointerId, e);
       if (activePointers.size === 1) {
@@ -1137,8 +1126,6 @@
 
     cropStage.addEventListener('pointermove', (e) => {
       activePointers.set(e.pointerId, e);
-
-      // 2-Finger Pinch Zoom
       if (activePointers.size === 2) {
         const pts = Array.from(activePointers.values());
         const curDiff = Math.hypot(pts[0].clientX - pts[1].clientX, pts[0].clientY - pts[1].clientY);
@@ -1150,8 +1137,6 @@
         prevDiff = curDiff;
         return;
       }
-
-      // 1-Finger Pan
       if (isCroppingPointer && activePointers.size === 1) {
         cropImgX = e.clientX - cropStartX;
         cropImgY = e.clientY - cropStartY;
@@ -1167,11 +1152,9 @@
         try { cropStage.releasePointerCapture(e.pointerId); } catch (_) {}
       }
     }
-
     cropStage.addEventListener('pointerup', handlePointerUp);
     cropStage.addEventListener('pointercancel', handlePointerUp);
 
-    // Mouse Wheel Zoom
     cropStage.addEventListener('wheel', (e) => {
       e.preventDefault();
       const delta = e.deltaY > 0 ? 0.92 : 1.08;
@@ -1179,11 +1162,9 @@
       updateCropTransform();
     }, { passive: false });
 
-    cropCancelBtn.addEventListener('click', () => {
-      navigate(cameraScreen);
-      initCamera();
-    });
+    cropCancelBtn.addEventListener('click', () => { navigate(cameraScreen); initCamera(); });
 
+    // ULTRA-COMPRESSED WEBP EXPORT (HIGH QUALITY, MINIMAL KB STORAGE)
     cropConfirmBtn.addEventListener('click', () => {
       const stageW = cropStage.clientWidth || 400;
       const canvas = document.createElement('canvas');
@@ -1199,356 +1180,118 @@
 
       ctx.drawImage(cropImage, cx - dw / 2, cy - dh / 2, dw, dh);
 
+      // Export as WebP (~65KB-90KB)
       canvas.toBlob((blob) => {
         base1024Blob = blob;
         const url = URL.createObjectURL(blob);
         client1024Preview.src = url;
         imgSource.src = url;
         navigate(studioScreen);
-      }, 'image/png');
+      }, 'image/webp', 0.85);
     });
 
-    /* ==========================================================================
-       PHOTO CAPTURE / UPLOAD TRIGGER
-       ========================================================================== */
     shutterBtn.addEventListener('click', () => {
       const vw = cameraFeed.videoWidth, vh = cameraFeed.videoHeight;
       if (!vw || !vh) return;
       const c = document.createElement('canvas');
       c.width = vw; c.height = vh;
       const ctx = c.getContext('2d');
-      if (cameraFacingMode === 'user') {
-        ctx.translate(vw, 0);
-        ctx.scale(-1, 1);
-      }
+      if (cameraFacingMode === 'user') { ctx.translate(vw, 0); ctx.scale(-1, 1); }
       ctx.drawImage(cameraFeed, 0, 0);
-      c.toBlob((blob) => loadImageForCrop(blob), 'image/png');
+      c.toBlob((blob) => loadImageForCrop(blob), 'image/webp', 0.92);
     });
 
     uploadPhotoBtn.addEventListener('click', () => clientFileInput.click());
-    galleryBtn.addEventListener('click', () => clientFileInput.click());
-
     clientFileInput.addEventListener('change', (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
-      loadImageForCrop(file);
+      if (e.target.files?.[0]) loadImageForCrop(e.target.files[0]);
       clientFileInput.value = '';
     });
-
-    retakeBtn.addEventListener('click', () => {
-      navigate(cameraScreen);
-      initCamera();
-    });
+    retakeBtn.addEventListener('click', () => { navigate(cameraScreen); initCamera(); });
 
     /* ==========================================================================
-       60 FPS GPU-ACCELERATED COLOR PICKER (NEO-BRUTALIST)
+       STUDIO TABS & 50 STYLES
        ========================================================================== */
-    function hsvToRgb(h, s, v) {
-      let r, g, b;
-      const i = Math.floor(h * 6);
-      const f = h * 6 - i;
-      const p = v * (1 - s);
-      const q = v * (1 - f * s);
-      const t = v * (1 - (1 - f) * s);
-      switch (i % 6) {
-        case 0: r = v; g = t; b = p; break;
-        case 1: r = q; g = v; b = p; break;
-        case 2: r = p; g = v; b = t; break;
-        case 3: r = p; g = q; b = v; break;
-        case 4: r = t; g = p; b = v; break;
-        case 5: r = v; g = p; b = q; break;
-      }
-      return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
-    }
-
-    function rgbToHex(r, g, b) {
-      return '#' + [r, g, b].map(x => Math.max(0, Math.min(255, x)).toString(16).padStart(2, '0')).join('').toUpperCase();
-    }
-
-    function hexToRgb(hex) {
-      const h = hex.replace('#', '');
-      const full = h.length === 3 ? h.split('').map(c => c + c).join('') : h;
-      return {
-        r: parseInt(full.slice(0, 2), 16),
-        g: parseInt(full.slice(2, 4), 16),
-        b: parseInt(full.slice(4, 6), 16)
-      };
-    }
-
-    function rgbToHsv(r, g, b) {
-      r /= 255; g /= 255; b /= 255;
-      const max = Math.max(r, g, b), min = Math.min(r, g, b);
-      let h, s, v = max;
-      const d = max - min;
-      s = max === 0 ? 0 : d / max;
-      if (max === min) {
-        h = 0;
-      } else {
-        switch (max) {
-          case r: h = (g - b) / d + (g < b ? 6 : 0); break;
-          case g: h = (b - r) / d + 2; break;
-          case b: h = (r - g) / d + 4; break;
-        }
-        h /= 6;
-      }
-      return [h * 360, s, v];
-    }
-
-    function drawSVCanvas() {
-      const ctx = svCanvas.getContext('2d');
-      const w = svCanvas.width, h = svCanvas.height;
-
-      // 1. Fill base Hue
-      ctx.fillStyle = `hsl(${currentH}, 100%, 50%)`;
-      ctx.fillRect(0, 0, w, h);
-
-      // 2. Horizontal Saturation gradient (white -> transparent)
-      const whiteGrad = ctx.createLinearGradient(0, 0, w, 0);
-      whiteGrad.addColorStop(0, 'rgba(255, 255, 255, 1)');
-      whiteGrad.addColorStop(1, 'rgba(255, 255, 255, 0)');
-      ctx.fillStyle = whiteGrad;
-      ctx.fillRect(0, 0, w, h);
-
-      // 3. Vertical Value gradient (transparent -> black)
-      const blackGrad = ctx.createLinearGradient(0, 0, 0, h);
-      blackGrad.addColorStop(0, 'rgba(0, 0, 0, 0)');
-      blackGrad.addColorStop(1, 'rgba(0, 0, 0, 1)');
-      ctx.fillStyle = blackGrad;
-      ctx.fillRect(0, 0, w, h);
-    }
-
-    function drawHueCanvas() {
-      const ctx = hueCanvas.getContext('2d');
-      const w = hueCanvas.width, h = hueCanvas.height;
-      const grad = ctx.createLinearGradient(0, 0, w, 0);
-      for (let i = 0; i <= 6; i++) {
-        grad.addColorStop(i / 6, `hsl(${i * 60}, 100%, 50%)`);
-      }
-      ctx.fillStyle = grad;
-      ctx.fillRect(0, 0, w, h);
-    }
-
-    function updatePickerUI() {
-      const [r, g, b] = hsvToRgb(currentH / 360, currentS, currentV);
-      const hex = rgbToHex(r, g, b);
-      pickerPreview.style.background = hex;
-      pickerHex.value = hex;
-
-      svCursor.style.left = (currentS * 100) + '%';
-      svCursor.style.top = ((1 - currentV) * 100) + '%';
-
-      hueCursor.style.left = ((currentH / 360) * 100) + '%';
-      hueCursor.style.top = '50%';
-    }
-
-    function setPickerColorFromHex(hex) {
-      if (!/^#?([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$/.test(hex)) return;
-      const rgb = hexToRgb(hex);
-      const [h, s, v] = rgbToHsv(rgb.r, rgb.g, rgb.b);
-      currentH = h; currentS = s; currentV = v;
-      drawSVCanvas();
-      updatePickerUI();
-    }
-
-    // Touch/Pointer Drag for Saturation & Value
-    function handleSVPointer(e) {
-      const rect = svArea.getBoundingClientRect();
-      const x = Math.max(0, Math.min(rect.width, e.clientX - rect.left));
-      const y = Math.max(0, Math.min(rect.height, e.clientY - rect.top));
-      currentS = x / rect.width;
-      currentV = 1 - (y / rect.height);
-      updatePickerUI();
-    }
-
-    svArea.addEventListener('pointerdown', (e) => {
-      svArea.setPointerCapture(e.pointerId);
-      handleSVPointer(e);
-    });
-    svArea.addEventListener('pointermove', (e) => {
-      if (e.buttons === 1) handleSVPointer(e);
-    });
-
-    // Touch/Pointer Drag for Hue Slider
-    function handleHuePointer(e) {
-      const rect = hueArea.getBoundingClientRect();
-      const x = Math.max(0, Math.min(rect.width, e.clientX - rect.left));
-      currentH = (x / rect.width) * 360;
-      drawSVCanvas();
-      updatePickerUI();
-    }
-
-    hueArea.addEventListener('pointerdown', (e) => {
-      hueArea.setPointerCapture(e.pointerId);
-      handleHuePointer(e);
-    });
-    hueArea.addEventListener('pointermove', (e) => {
-      if (e.buttons === 1) handleHuePointer(e);
-    });
-
-    pickerHex.addEventListener('change', (e) => {
-      let v = e.target.value.trim();
-      if (!v.startsWith('#')) v = '#' + v;
-      setPickerColorFromHex(v);
-    });
-
-    function renderPickerPresets() {
-      pickerPresets.innerHTML = '';
-      COLOR_PRESETS.forEach(p => {
-        const b = document.createElement('button');
-        b.className = 'picker-preset';
-        b.style.background = p.hex;
-        b.title = p.name;
-        b.addEventListener('click', () => setPickerColorFromHex(p.hex));
-        pickerPresets.appendChild(b);
-      });
-    }
-
-    colorSwatch.addEventListener('click', () => {
-      setPickerColorFromHex(hairColor.hex);
-      drawHueCanvas();
-      drawSVCanvas();
-      updatePickerUI();
-      renderPickerPresets();
-      colorPickerModal.classList.remove('hidden');
-    });
-
-    closeColorPickerBtn.addEventListener('click', () => colorPickerModal.classList.add('hidden'));
-
-    applyColorBtn.addEventListener('click', () => {
-      const [r, g, b] = hsvToRgb(currentH / 360, currentS, currentV);
-      const hex = rgbToHex(r, g, b);
-      applyHairColor(hex);
-      colorPickerModal.classList.add('hidden');
-      setMode('color');
-      showToast('Colour applied: ' + hex);
-    });
-
-    function applyHairColor(hex) {
-      hairColor.hex = hex.toUpperCase();
-      hexInput.value = hairColor.hex;
-      colorSwatch.style.background = hairColor.hex;
-      renderPresets();
-      updateExecuteButton();
-    }
-
-    hexInput.addEventListener('change', (e) => {
-      let v = e.target.value.trim();
-      if (!v.startsWith('#')) v = '#' + v;
-      if (/^#?([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$/.test(v)) {
-        applyHairColor(v);
-      }
-    });
-
-    function renderPresets() {
-      presetGrid.innerHTML = '';
-      COLOR_PRESETS.forEach(p => {
-        const b = document.createElement('button');
-        b.className = 'preset-swatch' + (p.hex.toUpperCase() === hairColor.hex ? ' active' : '');
-        b.style.background = p.hex;
-        b.title = p.name;
-        b.addEventListener('click', () => applyHairColor(p.hex));
-        presetGrid.appendChild(b);
-      });
-    }
-
-    /* ==========================================================================
-       HAIRSTYLE SELECTION (ALL SCISSORS)
-       ========================================================================== */
-    function setMode(next) {
-      mode = next;
-      document.querySelectorAll('.mode-tab').forEach(t => {
-        t.classList.toggle('active', t.dataset.mode === next);
-      });
-      stylePanel.classList.toggle('hidden', next !== 'style');
-      colorPanel.classList.toggle('hidden', next !== 'color');
-      updateExecuteButton();
-    }
-
-    document.querySelectorAll('.mode-tab').forEach(tab => {
-      tab.addEventListener('click', () => setMode(tab.dataset.mode));
-    });
-
-    function renderCatTabs() {
+    function renderStudioStyles() {
+      const catTabs = document.getElementById('catTabs');
       catTabs.innerHTML = '';
       CATEGORIES.forEach(cat => {
         const b = document.createElement('button');
-        b.className = 'cat-tab' + (cat === selectedCategory ? ' active' : '');
+        b.className = 'cat-tab' + (cat === currentCategory ? ' active' : '');
         b.textContent = cat;
         b.addEventListener('click', () => {
-          selectedCategory = cat;
-          renderCatTabs();
-          renderStyleGrid();
+          currentCategory = cat;
+          renderStudioStyles();
         });
         catTabs.appendChild(b);
       });
-    }
 
-    function renderStyleGrid() {
+      const styleGrid = document.getElementById('styleGrid');
       styleGrid.innerHTML = '';
-      HAIRSTYLES.filter(s => s.cat === selectedCategory).forEach(style => {
+      HAIRSTYLES.filter(s => s.cat === currentCategory).forEach(style => {
         const b = document.createElement('button');
-        b.className = 'style-chip' + (style.id === selectedStyleId ? ' selected' : '');
-        // ALL ICONS REPLACED WITH SCISSORS
+        b.className = 'style-chip' + (style.id === currentStyleId ? ' selected' : '');
         b.innerHTML = `<i class="bi bi-scissors"></i><span>${style.name}</span>`;
         b.addEventListener('click', () => {
-          selectedStyleId = style.id;
-          renderStyleGrid();
-          updateExecuteButton();
+          currentStyleId = style.id;
+          renderStudioStyles();
+          updateExecuteBtnText();
         });
         styleGrid.appendChild(b);
       });
+      updateExecuteBtnText();
     }
 
-    function getSelectedStyle() {
-      return HAIRSTYLES.find(s => s.id === selectedStyleId) || HAIRSTYLES.find(s => s.id === 'pixie');
-    }
-
-    function updateExecuteButton() {
-      if (mode === 'style') {
-        const s = getSelectedStyle();
+    function updateExecuteBtnText() {
+      const s = HAIRSTYLES.find(x => x.id === currentStyleId) || HAIRSTYLES[0];
+      if (activeMode === 'style') {
         executeBtn.className = 'btn-primary';
-        executeBtn.innerHTML = `TRANSFORM TO ${s.name.toUpperCase()} <i class="bi bi-stars"></i>`;
+        executeBtn.innerHTML = `TRANSFORM TO ${s.name.toUpperCase()} WITH KAMI AI <i class="bi bi-stars"></i>`;
       } else {
         executeBtn.className = 'btn-primary color-mode';
-        executeBtn.innerHTML = `APPLY ${hairColor.hex} COLOUR <i class="bi bi-palette-fill"></i>`;
+        executeBtn.innerHTML = `APPLY ${currentColor} COLOUR WITH KAMI AI <i class="bi bi-palette-fill"></i>`;
       }
     }
 
-    /* ==========================================================================
-       REFERENCE IMAGE UPLOAD
-       ========================================================================== */
+    document.querySelectorAll('.mode-tab').forEach(t => {
+      t.addEventListener('click', () => {
+        document.querySelectorAll('.mode-tab').forEach(x => x.classList.remove('active'));
+        t.classList.add('active');
+        activeMode = t.dataset.mode;
+        document.getElementById('stylePanel').classList.toggle('hidden', activeMode !== 'style');
+        document.getElementById('colorPanel').classList.toggle('hidden', activeMode !== 'color');
+        updateExecuteBtnText();
+      });
+    });
+
+    /* REFERENCE IMAGE */
     refCard.addEventListener('click', (e) => {
       if (e.target !== clearRefBtn && !clearRefBtn.contains(e.target)) refFileInput.click();
     });
-
     refFileInput.addEventListener('change', (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
+      const f = e.target.files?.[0];
+      if (!f) return;
       const img = new Image();
       img.onload = () => {
-        const TARGET = 1024;
         const canvas = document.createElement('canvas');
-        canvas.width = TARGET; canvas.height = TARGET;
+        canvas.width = 1024; canvas.height = 1024;
         const ctx = canvas.getContext('2d');
-        const sw = img.naturalWidth, sh = img.naturalHeight;
-        const aspect = sw / sh;
-        let cropW, cropH, sx, sy;
-        if (aspect > 1) { cropH = sh; cropW = sh; sx = (sw - cropW) / 2; sy = 0; }
-        else { cropW = sw; cropH = sw; sx = 0; sy = (sh - cropH) / 2; }
-        ctx.drawImage(img, sx, sy, cropW, cropH, 0, 0, TARGET, TARGET);
-        canvas.toBlob((blob) => {
+        const aspect = img.width / img.height;
+        let cropW = img.width, cropH = img.height, sx = 0, sy = 0;
+        if (aspect > 1) { cropW = img.height; sx = (img.width - cropW) / 2; }
+        else { cropH = img.width; sy = (img.height - cropH) / 2; }
+        ctx.drawImage(img, sx, sy, cropW, cropH, 0, 0, 1024, 1024);
+        canvas.toBlob(blob => {
           ref1024Blob = blob;
           refImg.src = URL.createObjectURL(blob);
           refImg.classList.remove('hidden');
           refIcon.classList.add('hidden');
           clearRefBtn.classList.remove('hidden');
-          refSubtext.textContent = 'Reference loaded (1024×1024)';
-        }, 'image/png');
+          refSubtext.textContent = 'Reference loaded (1024×1024 WebP)';
+        }, 'image/webp', 0.85);
       };
-      img.src = URL.createObjectURL(file);
+      img.src = URL.createObjectURL(f);
       refFileInput.value = '';
     });
-
     clearRefBtn.addEventListener('click', (e) => {
       e.stopPropagation();
       ref1024Blob = null;
@@ -1556,112 +1299,107 @@
       refImg.classList.add('hidden');
       refIcon.classList.remove('hidden');
       clearRefBtn.classList.add('hidden');
-      refFileInput.value = '';
       refSubtext.textContent = 'Tap to upload shape & fringe reference';
     });
 
     /* ==========================================================================
-       STORAGE & BACKEND DISPATCH (ALL IN ENV, NO LOCAL KEYS)
+       KAMI AI SYNTHESIS & 30-IMAGE LIMIT STORAGE PIPELINE
        ========================================================================== */
-    async function uploadToFalBackend(blob) {
-      const initRes = await fetch('/api/upload', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          file_name: `kami_${Date.now()}_${Math.random().toString(36).slice(2, 7)}.png`,
-          content_type: 'image/png'
-        })
+    async function uploadBlobToSupabaseStorage(blob, filename) {
+      const path = `${currentUserPhone}/${Date.now()}_${filename}.webp`;
+      const { data, error } = await supabase.storage.from('kami-images').upload(path, blob, {
+        contentType: 'image/webp',
+        upsert: true
       });
-
-      let initData = {};
-      try { initData = await initRes.json(); } catch (_) {}
-
-      if (!initRes.ok) {
-        throw new Error(initData.error || `Upload failed (HTTP ${initRes.status}). Verify FAL_KEY in Cloudflare Pages environment variables.`);
-      }
-
-      const put = await fetch(initData.upload_url, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'image/png' },
-        body: blob
-      });
-
-      if (!put.ok) throw new Error('Image binary upload failed.');
-      return initData.file_url;
+      if (error) throw new Error('KAMI Vault Upload: ' + error.message);
+      const { data: pubData } = supabase.storage.from('kami-images').getPublicUrl(path);
+      return pubData.publicUrl;
     }
 
     executeBtn.addEventListener('click', async () => {
-      if (!base1024Blob) {
-        showToast('Please capture or upload a photo first.');
-        return;
-      }
-
+      if (!base1024Blob) return;
       processingScreen.classList.remove('hidden');
       let sec = 0;
-      timerText.textContent = 'STYLING... 0S';
+      timerText.textContent = 'STYLING WITH KAMI AI... 0S';
       const timer = setInterval(() => {
         sec++;
-        timerText.textContent = `STYLING... ${sec}S`;
+        timerText.textContent = `STYLING WITH KAMI AI... ${sec}S`;
       }, 1000);
 
       try {
-        progressStep.textContent = 'UPLOADING TO FAL STORAGE...';
-        const baseRemoteUrl = await uploadToFalBackend(base1024Blob);
+        progressStep.textContent = 'UPLOADING TO KAMI AI...';
+        const baseRemoteUrl = await uploadBlobToSupabaseStorage(base1024Blob, 'base');
 
         const imageUrls = [baseRemoteUrl];
-        let finalPrompt, finalNegative;
+        let finalPrompt;
 
-        if (mode === 'style') {
-          const style = getSelectedStyle();
-          finalPrompt = STYLE_TEMPLATE(style.desc);
-          finalNegative = NEGATIVE_STYLE;
-
+        if (activeMode === 'style') {
+          const s = HAIRSTYLES.find(x => x.id === currentStyleId) || HAIRSTYLES[0];
+          finalPrompt = STYLE_TEMPLATE(s.desc);
           if (ref1024Blob) {
-            progressStep.textContent = 'UPLOADING REFERENCE PHOTO...';
-            const refRemoteUrl = await uploadToFalBackend(ref1024Blob);
+            progressStep.textContent = 'PROCESSING REFERENCE CUT WITH KAMI AI...';
+            const refRemoteUrl = await uploadBlobToSupabaseStorage(ref1024Blob, 'reference');
             imageUrls.push(refRemoteUrl);
             finalPrompt += REF_IMAGE_CLAUSE;
           }
-          progressStep.textContent = `FLUX 4B — ${style.name.toUpperCase()}...`;
+          progressStep.textContent = `CREATING IMAGE WITH KAMI AI (${s.name.toUpperCase()})...`;
         } else {
-          finalPrompt = COLOR_TEMPLATE(hairColor.hex, hairColor.hex);
-          finalNegative = NEGATIVE_COLOR;
-          progressStep.textContent = `FLUX 4B — COLOUR ${hairColor.hex}...`;
+          finalPrompt = COLOR_TEMPLATE(currentColor);
+          progressStep.textContent = `COLOURING HAIR WITH KAMI AI (${currentColor})...`;
         }
 
+        // Call backend tryon API
         const res = await fetch('/api/tryon', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             prompt: finalPrompt,
-            negative_prompt: finalNegative,
+            negative_prompt: NEGATIVE_PROMPT,
             image_urls: imageUrls
           })
         });
 
-        let data = {};
-        try { data = await res.json(); } catch (_) {}
-
-        if (!res.ok) {
-          throw new Error(data.error || data.detail?.[0]?.msg || `HTTP ${res.status}. Check FAL_KEY in Cloudflare Pages.`);
-        }
-
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.error || 'Kami AI Engine error');
         const finalUrl = data.images?.[0]?.url || data.image?.url;
-        if (!finalUrl) throw new Error('No image returned from Flux 2 Klein model.');
+        if (!finalUrl) throw new Error('No output from Kami AI');
 
-        imgRendered.src = finalUrl;
+        // Download result and compress to tiny WebP before storing to Supabase
+        progressStep.textContent = 'SAVING TO KAMI AI VAULT...';
+        const imgFetch = await fetch(finalUrl);
+        const imgBlob = await imgFetch.blob();
+        
+        // Convert returned image into high-res low-KB WebP
+        const convertedWebpBlob = await new Promise(resolve => {
+          const tempImg = new Image();
+          tempImg.crossOrigin = 'anonymous';
+          tempImg.onload = () => {
+            const canv = document.createElement('canvas');
+            canv.width = 1024; canv.height = 1024;
+            canv.getContext('2d').drawImage(tempImg, 0, 0, 1024, 1024);
+            canv.toBlob(resolve, 'image/webp', 0.85);
+          };
+          tempImg.src = URL.createObjectURL(imgBlob);
+        });
 
-        if (mode === 'style') {
-          const style = getSelectedStyle();
-          resultBadge.textContent = style.name.toUpperCase();
-          resultBadge.style.background = 'var(--pink)';
-        } else {
-          resultBadge.textContent = 'COLOUR ' + hairColor.hex;
-          resultBadge.style.background = hairColor.hex;
-        }
+        const vaultWebpUrl = await uploadBlobToSupabaseStorage(convertedWebpBlob, 'result');
 
+        // Record in Supabase database (auto-enforces 30 image limit via trigger)
+        const currentStyleName = activeMode === 'style' 
+          ? (HAIRSTYLES.find(x => x.id === currentStyleId)?.name || 'Pixie Cut')
+          : `Colour ${currentColor}`;
+
+        await supabase.from('generations').insert({
+          user_phone: currentUserPhone,
+          image_url: vaultWebpUrl,
+          style_name: currentStyleName,
+          category: activeMode === 'style' ? currentCategory : 'Hair Colour'
+        });
+
+        imgRendered.src = vaultWebpUrl;
         resetSlider();
         navigate(compareScreen);
+        showToast('SAVED TO KAMI VAULT');
 
       } catch (err) {
         alert(err.message);
@@ -1672,13 +1410,12 @@
     });
 
     /* ==========================================================================
-       BEFORE / AFTER COMPARISON SLIDER
+       SLIDER COMPARISON
        ========================================================================== */
     function resetSlider() {
       imgRendered.style.clipPath = `polygon(50% 0, 100% 0, 100% 100%, 50% 100%)`;
       sliderDivider.style.left = `50%`;
     }
-
     function moveSlider(clientX) {
       const rect = compareStage.getBoundingClientRect();
       const x = Math.max(0, Math.min(clientX - rect.left, rect.width));
@@ -1686,35 +1423,246 @@
       imgRendered.style.clipPath = `polygon(${pct}% 0, 100% 0, 100% 100%, ${pct}% 100%)`;
       sliderDivider.style.left = `${pct}%`;
     }
-
-    sliderDivider.addEventListener('pointerdown', (e) => {
-      sliderDivider.setPointerCapture(e.pointerId);
-    });
-    sliderDivider.addEventListener('pointermove', (e) => {
-      if (e.buttons === 1) moveSlider(e.clientX);
-    });
-
+    sliderDivider.addEventListener('pointerdown', (e) => sliderDivider.setPointerCapture(e.pointerId));
+    sliderDivider.addEventListener('pointermove', (e) => { if (e.buttons === 1) moveSlider(e.clientX); });
     backToStudioBtn.addEventListener('click', () => navigate(studioScreen));
-
     downloadBtn.addEventListener('click', () => {
-      if (!imgRendered.src) return;
       const a = document.createElement('a');
       a.href = imgRendered.src;
-      const tag = mode === 'style' ? getSelectedStyle().name.replace(/[^a-z0-9]+/gi, '_') : hairColor.hex.replace('#', '');
-      a.download = `KAMI_${tag}_${Date.now()}.png`;
-      a.target = '_blank';
+      a.download = `KAMI_${Date.now()}.webp`;
       a.click();
     });
 
     /* ==========================================================================
-       INITIALIZATION
+       USER VAULT & ROCK-SOLID LIGHTBOX (ZOOM + SWIPE)
+       ========================================================================== */
+    async function loadUserVault() {
+      galleryGrid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:30px; font-weight:800;">LOADING KAMI VAULT...</div>';
+      galleryModal.classList.remove('hidden');
+
+      const { data, error } = await supabase
+        .from('generations')
+        .select('*')
+        .eq('user_phone', currentUserPhone)
+        .order('created_at', { ascending: false });
+
+      if (error || !data || data.length === 0) {
+        galleryGrid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:30px; font-weight:800;">NO KAMI CREATIONS YET</div>';
+        vaultCountBadge.textContent = '0 / 30';
+        userGenerations = [];
+        return;
+      }
+
+      userGenerations = data;
+      vaultCountBadge.textContent = `${data.length} / 30`;
+      galleryGrid.innerHTML = '';
+
+      data.forEach((item, index) => {
+        const card = document.createElement('div');
+        card.className = 'gallery-card';
+        card.innerHTML = `
+          <img src="${item.image_url}" loading="lazy" alt="${item.style_name}" />
+          <div class="gallery-card-body">
+            <div style="font-family:var(--font-heading); text-overflow:ellipsis; overflow:hidden; white-space:nowrap;">${item.style_name}</div>
+            <div style="font-size:0.65rem; color:#666;">${new Date(item.created_at).toLocaleDateString()}</div>
+          </div>
+        `;
+        card.addEventListener('click', () => openLightbox(index));
+        galleryGrid.appendChild(card);
+      });
+    }
+
+    openGalleryBtn.addEventListener('click', loadUserVault);
+    openGalleryFromStudioBtn.addEventListener('click', loadUserVault);
+    closeGalleryBtn.addEventListener('click', () => galleryModal.classList.add('hidden'));
+
+    /* ZERO-ERROR LIGHTBOX IMPLEMENTATION */
+    function openLightbox(index) {
+      activeLightboxIndex = index;
+      lightboxScale = 1;
+      updateLightboxDisplay();
+      lightboxModal.classList.remove('hidden');
+    }
+
+    function updateLightboxDisplay() {
+      const item = userGenerations[activeLightboxIndex];
+      if (!item) return;
+      lightboxImg.src = item.image_url;
+      lightboxScale = 1;
+      lightboxImg.style.transform = `scale(1)`;
+      lightboxIndexText.textContent = `${activeLightboxIndex + 1} / ${userGenerations.length}`;
+      zoomResetBtn.textContent = '1x';
+    }
+
+    closeLightboxBtn.addEventListener('click', () => lightboxModal.classList.add('hidden'));
+
+    // Zoom Controls
+    zoomInBtn.addEventListener('click', () => {
+      lightboxScale = Math.min(lightboxScale + 0.5, 4.0);
+      lightboxImg.style.transform = `scale(${lightboxScale})`;
+      zoomResetBtn.textContent = `${lightboxScale.toFixed(1)}x`;
+    });
+    zoomOutBtn.addEventListener('click', () => {
+      lightboxScale = Math.max(lightboxScale - 0.5, 1.0);
+      lightboxImg.style.transform = `scale(${lightboxScale})`;
+      zoomResetBtn.textContent = `${lightboxScale.toFixed(1)}x`;
+    });
+    zoomResetBtn.addEventListener('click', () => {
+      lightboxScale = 1.0;
+      lightboxImg.style.transform = `scale(1)`;
+      zoomResetBtn.textContent = '1x';
+    });
+
+    // Touch Swipe Left/Right Navigation
+    lightboxStage.addEventListener('touchstart', (e) => {
+      if (e.touches.length === 1) lightboxTouchStartX = e.touches[0].clientX;
+    }, { passive: true });
+
+    lightboxStage.addEventListener('touchend', (e) => {
+      if (lightboxScale > 1.0) return; // Don't slide if zoomed in
+      const touchEndX = e.changedTouches[0].clientX;
+      const diff = touchEndX - lightboxTouchStartX;
+      if (diff > 50 && activeLightboxIndex > 0) {
+        // Swipe Right -> Prev
+        activeLightboxIndex--;
+        updateLightboxDisplay();
+      } else if (diff < -50 && activeLightboxIndex < userGenerations.length - 1) {
+        // Swipe Left -> Next
+        activeLightboxIndex++;
+        updateLightboxDisplay();
+      }
+    });
+
+    downloadLightboxBtn.addEventListener('click', () => {
+      const item = userGenerations[activeLightboxIndex];
+      if (!item) return;
+      const a = document.createElement('a');
+      a.href = item.image_url;
+      a.download = `KAMI_Creation_${activeLightboxIndex + 1}.webp`;
+      a.click();
+    });
+
+    /* ==========================================================================
+       COLOR PICKER (GPU GRADIENT)
+       ========================================================================== */
+    const colorSwatch = document.getElementById('colorSwatch');
+    const hexInput = document.getElementById('hexInput');
+    const presetGrid = document.getElementById('presetGrid');
+    const colorPickerModal = document.getElementById('colorPickerModal');
+    const closeColorPickerBtn = document.getElementById('closeColorPickerBtn');
+    const svCanvas = document.getElementById('svCanvas');
+    const hueCanvas = document.getElementById('hueCanvas');
+    const svArea = document.getElementById('svArea');
+    const hueArea = document.getElementById('hueArea');
+    const svCursor = document.getElementById('svCursor');
+    const hueCursor = document.getElementById('hueCursor');
+    const pickerPreview = document.getElementById('pickerPreview');
+    const pickerHex = document.getElementById('pickerHex');
+    const applyColorBtn = document.getElementById('applyColorBtn');
+
+    let curH = 265, curS = 0.75, curV = 1.0;
+
+    function drawSV() {
+      const ctx = svCanvas.getContext('2d');
+      const w = 300, h = 300;
+      ctx.fillStyle = `hsl(${curH}, 100%, 50%)`;
+      ctx.fillRect(0, 0, w, h);
+
+      const wGrad = ctx.createLinearGradient(0, 0, w, 0);
+      wGrad.addColorStop(0, '#fff'); wGrad.addColorStop(1, 'transparent');
+      ctx.fillStyle = wGrad; ctx.fillRect(0, 0, w, h);
+
+      const bGrad = ctx.createLinearGradient(0, 0, 0, h);
+      bGrad.addColorStop(0, 'transparent'); bGrad.addColorStop(1, '#000');
+      ctx.fillStyle = bGrad; ctx.fillRect(0, 0, w, h);
+    }
+
+    function drawHue() {
+      const ctx = hueCanvas.getContext('2d');
+      const grad = ctx.createLinearGradient(0, 0, 300, 0);
+      for (let i = 0; i <= 6; i++) grad.addColorStop(i / 6, `hsl(${i * 60}, 100%, 50%)`);
+      ctx.fillStyle = grad; ctx.fillRect(0, 0, 300, 28);
+    }
+
+    function updatePicker() {
+      const [r, g, b] = hsvToRgb(curH / 360, curS, curV);
+      const hex = rgbToHex(r, g, b);
+      pickerPreview.style.background = hex;
+      pickerHex.value = hex;
+      svCursor.style.left = (curS * 100) + '%';
+      svCursor.style.top = ((1 - curV) * 100) + '%';
+      hueCursor.style.left = ((curH / 360) * 100) + '%';
+      hueCursor.style.top = '50%';
+    }
+
+    function hsvToRgb(h, s, v) {
+      let r, g, b;
+      const i = Math.floor(h * 6), f = h * 6 - i, p = v * (1 - s), q = v * (1 - f * s), t = v * (1 - (1 - f) * s);
+      switch (i % 6) {
+        case 0: r = v; g = t; b = p; break; case 1: r = q; g = v; b = p; break;
+        case 2: r = p; g = v; b = t; break; case 3: r = p; g = q; b = v; break;
+        case 4: r = t; g = p; b = v; break; case 5: r = v; g = p; b = q; break;
+      }
+      return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
+    }
+    function rgbToHex(r, g, b) {
+      return '#' + [r, g, b].map(x => Math.max(0, Math.min(255, x)).toString(16).padStart(2, '0')).join('').toUpperCase();
+    }
+
+    svArea.addEventListener('pointerdown', (e) => { svArea.setPointerCapture(e.pointerId); handleSV(e); });
+    svArea.addEventListener('pointermove', (e) => { if (e.buttons === 1) handleSV(e); });
+    function handleSV(e) {
+      const r = svArea.getBoundingClientRect();
+      curS = Math.max(0, Math.min(1, (e.clientX - r.left) / r.width));
+      curV = 1 - Math.max(0, Math.min(1, (e.clientY - r.top) / r.height));
+      updatePicker();
+    }
+
+    hueArea.addEventListener('pointerdown', (e) => { hueArea.setPointerCapture(e.pointerId); handleHue(e); });
+    hueArea.addEventListener('pointermove', (e) => { if (e.buttons === 1) handleHue(e); });
+    function handleHue(e) {
+      const r = hueArea.getBoundingClientRect();
+      curH = Math.max(0, Math.min(360, ((e.clientX - r.left) / r.width) * 360));
+      drawSV(); updatePicker();
+    }
+
+    colorSwatch.addEventListener('click', () => {
+      drawHue(); drawSV(); updatePicker();
+      colorPickerModal.classList.remove('hidden');
+    });
+    closeColorPickerBtn.addEventListener('click', () => colorPickerModal.classList.add('hidden'));
+    applyColorBtn.addEventListener('click', () => {
+      currentColor = pickerHex.value;
+      colorSwatch.style.background = currentColor;
+      hexInput.value = currentColor;
+      colorPickerModal.classList.add('hidden');
+      updateExecuteBtnText();
+    });
+
+    // Preset Swatches
+    const PRESETS = ['#0B0B0B','#4A2C17','#C99A4B','#E8DFC8','#B4551F','#5C1A2B','#E8467C','#6040FF','#1F6E6E'];
+    PRESETS.forEach(hex => {
+      const b = document.createElement('button');
+      b.style.background = hex;
+      b.style.height = '32px';
+      b.style.borderRadius = '6px';
+      b.style.border = '2px solid black';
+      b.addEventListener('click', () => {
+        currentColor = hex;
+        colorSwatch.style.background = hex;
+        hexInput.value = hex;
+        updateExecuteBtnText();
+      });
+      presetGrid.appendChild(b);
+    });
+
+    /* ==========================================================================
+       INIT
        ========================================================================== */
     window.addEventListener('DOMContentLoaded', () => {
-      initCamera();
-      renderCatTabs();
-      renderStyleGrid();
-      applyHairColor(hairColor.hex);
-      setMode('style');
+      colorSwatch.style.background = currentColor;
+      renderStudioStyles();
+      checkAuthSession();
     });
   </script>
 </body>
