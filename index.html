@@ -26,6 +26,7 @@
       --pink: #FF5E97;
       --red: #FF4742;
       --yellow: #FFE600;
+      --blue: #2563EB;
 
       --font-display: 'Anton', sans-serif;
       --font-heading: 'Archivo Black', sans-serif;
@@ -173,7 +174,7 @@
       text-align: center;
     }
 
-    /* VIEW 1: CAMERA SCREEN */
+    /* VIEW 1: CAMERA WITH UPI-STYLE VIEWFINDER */
     .camera-wrapper { position: absolute; inset: 0; background: var(--black); overflow: hidden; }
     #cameraFeed { width: 100%; height: 100%; object-fit: cover; }
     #cameraFeed.mirrored { transform: scaleX(-1); }
@@ -200,6 +201,67 @@
       transform: rotate(-2deg);
     }
 
+    /* Unique User Status Bar */
+    .user-session-bar {
+      display: inline-flex;
+      align-items: center;
+      background: var(--white);
+      border: var(--border-thick);
+      border-radius: var(--radius-pill);
+      box-shadow: var(--shadow-sm);
+      overflow: hidden;
+    }
+    .user-session-phone {
+      padding: 6px 12px;
+      font-family: var(--font-heading);
+      font-size: 0.75rem;
+      color: var(--black);
+    }
+    .logout-btn-unique {
+      background: var(--red);
+      color: var(--white);
+      border: none;
+      padding: 8px 12px;
+      font-family: var(--font-heading);
+      font-size: 0.72rem;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      cursor: pointer;
+    }
+
+    /* UPI / QR Scanner Overlay */
+    .scanner-overlay {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+      z-index: 20;
+    }
+    .scanner-frame {
+      position: relative;
+      width: min(80vw, 340px);
+      aspect-ratio: 1 / 1;
+      box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.62);
+      border-radius: 20px;
+      border: 3px solid rgba(255, 255, 255, 0.35);
+    }
+    .scanner-frame .corner {
+      position: absolute;
+      width: 26px;
+      height: 26px;
+      border-color: var(--lime);
+      border-style: solid;
+      border-width: 0;
+    }
+    .corner-tl { top: -4px; left: -4px; border-top-width: 6px; border-left-width: 6px; border-top-left-radius: 18px; }
+    .corner-tr { top: -4px; right: -4px; border-top-width: 6px; border-right-width: 6px; border-top-right-radius: 18px; }
+    .corner-bl { bottom: -4px; left: -4px; border-bottom-width: 6px; border-left-width: 6px; border-bottom-left-radius: 18px; }
+    .corner-br { bottom: -4px; right: -4px; border-bottom-width: 6px; border-right-width: 6px; border-bottom-right-radius: 18px; }
+
     .bottom-dock {
       position: absolute;
       bottom: 24px;
@@ -225,7 +287,7 @@
       box-shadow: 0 4px 12px rgba(0,0,0,0.3);
     }
 
-    /* VIEW 2: 1024x1024 MANUAL CROP */
+    /* VIEW 2: MANUAL CROP (GALLERY FALLBACK) */
     .crop-viewport {
       flex: 1;
       display: flex;
@@ -383,7 +445,7 @@
     }
     .ref-thumb img { width: 100%; height: 100%; object-fit: cover; }
 
-    /* VIEW 4: PROCESSING OVERLAY & CLEAN LOADER */
+    /* VIEW 4: PROCESSING OVERLAY */
     .processing-overlay {
       position: absolute;
       inset: 0;
@@ -414,7 +476,7 @@
     }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-    /* VIEW 5: COMPARISON SCREEN (100% NEO-BRUTALIST KAMI THEME) */
+    /* VIEW 5: COMPARISON SCREEN (100% KAMI NEO-BRUTALIST THEME) */
     .compare-top-nav {
       padding: 14px 18px;
       background: var(--beige);
@@ -574,7 +636,7 @@
       z-index: 45;
     }
 
-    /* VIEW 6: VAULT SCREEN (WHOLE CARD IS CLICKABLE) */
+    /* VIEW 6: VAULT SCREEN */
     .gallery-grid {
       flex: 1;
       overflow-y: auto;
@@ -618,7 +680,29 @@
       gap: 4px;
     }
 
-    /* COLOR PICKER MODAL (100% CANVAS SIZING FIX) */
+    /* CUSTOM NEO-BRUTALIST MODAL (NO BROWSER ALERTS) */
+    .brutal-modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.75);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      z-index: 2000;
+    }
+    .brutal-modal-card {
+      background: var(--beige);
+      border: var(--border-thick);
+      border-radius: var(--radius-card);
+      box-shadow: var(--shadow-solid);
+      padding: 24px;
+      max-width: 380px;
+      width: 100%;
+      text-align: center;
+    }
+
+    /* COLOR PICKER MODAL */
     .modal-backdrop {
       position: fixed;
       inset: 0;
@@ -704,6 +788,19 @@
 
   <div id="toast" class="toast">TOAST</div>
 
+  <!-- CUSTOM NEO-BRUTALIST POPUP (REPLACES ALERTS/CONFIRMS) -->
+  <div id="brutalModal" class="brutal-modal-backdrop hidden">
+    <div class="brutal-modal-card">
+      <div id="modalBadge" class="badge" style="background:var(--yellow); margin-bottom:8px;">KAMI NOTICE</div>
+      <h3 id="modalTitle" style="font-family:var(--font-heading); font-size:1.15rem; margin-bottom:8px;">TITLE</h3>
+      <p id="modalMessage" style="font-size:0.8rem; color:#444; font-weight:700; margin-bottom:18px; line-height:1.35;"></p>
+      <div style="display:flex; justify-content:center; gap:10px;">
+        <button id="modalCancelBtn" class="btn-pill" style="background:var(--white);">CANCEL</button>
+        <button id="modalConfirmBtn" class="btn-pill" style="background:var(--lime);">OK</button>
+      </div>
+    </div>
+  </div>
+
   <!-- VIEW 0: USER LOGIN -->
   <section id="loginScreen" class="view-screen active">
     <div class="login-card">
@@ -719,12 +816,16 @@
     </div>
   </section>
 
-  <!-- VIEW 1: CAMERA SCREEN -->
+  <!-- VIEW 1: CAMERA WITH UPI-STYLE SQUARE VIEWFINDER -->
   <section id="cameraScreen" class="view-screen">
     <div class="top-dock">
       <div class="brand-logo">KAMI</div>
-      <div style="display:flex; gap:8px;">
-        <button id="logoutBtn" class="btn-pill" style="padding:8px 12px; font-size:0.75rem;"><i class="bi bi-box-arrow-right"></i></button>
+      <div style="display:flex; align-items:center; gap:8px;">
+        <!-- Unique Logout Pill -->
+        <div class="user-session-bar">
+          <span class="user-session-phone" id="userSessionPhone">CLIENT</span>
+          <button id="logoutBtn" class="logout-btn-unique"><i class="bi bi-power"></i> EXIT</button>
+        </div>
         <button id="uploadPhotoBtn" class="btn-icon" aria-label="Upload"><i class="bi bi-image"></i></button>
         <input type="file" id="clientFileInput" class="hidden" accept="image/*" />
       </div>
@@ -732,6 +833,19 @@
 
     <div class="camera-wrapper">
       <video id="cameraFeed" class="mirrored" autoplay playsinline muted></video>
+
+      <!-- UPI QR-Style Square Scanner Frame -->
+      <div class="scanner-overlay">
+        <div class="scanner-frame" id="scannerFrame">
+          <div class="corner corner-tl"></div>
+          <div class="corner corner-tr"></div>
+          <div class="corner corner-bl"></div>
+          <div class="corner corner-br"></div>
+        </div>
+        <div class="badge" style="background:var(--lime); color:var(--black); margin-top:14px;">
+          <i class="bi bi-view-finder" style="margin-right:4px;"></i> ALIGN FACE IN SQUARE
+        </div>
+      </div>
     </div>
 
     <div class="bottom-dock">
@@ -741,7 +855,7 @@
     </div>
   </section>
 
-  <!-- VIEW 2: 1024x1024 MANUAL CROP -->
+  <!-- VIEW 2: 1024x1024 MANUAL CROP (USED FOR GALLERY UPLOADS) -->
   <section id="cropScreen" class="view-screen">
     <header class="studio-header">
       <button id="cropCancelBtn" class="btn-pill"><i class="bi bi-x-lg"></i> CANCEL</button>
@@ -838,16 +952,19 @@
     </div>
   </div>
 
-  <!-- VIEW 5: COMPARISON SCREEN (PEAK NEO-BRUTALIST KAMI THEME) -->
+  <!-- VIEW 5: COMPARISON SCREEN (CONTEXT-AWARE NAVIGATION) -->
   <section id="compareScreen" class="view-screen">
-    <!-- Top Nav: Clean Neo-Brutalist Layout -->
+    <!-- Top Nav: Single clean back button that adapts to origin -->
     <div class="compare-top-nav">
-      <button id="compareBackToStudioBtn" class="btn-pill" style="background:var(--white);"><i class="bi bi-arrow-left"></i> STUDIO</button>
+      <button id="compareBackBtn" class="btn-pill" style="background:var(--white);">
+        <i class="bi bi-arrow-left"></i> <span id="compareBackTxt">STUDIO</span>
+      </button>
+
       <div id="compareRecordBadge" class="badge" style="background:var(--pink); color:var(--white); font-size:0.75rem;">
         <i class="bi bi-scissors" style="margin-right:4px;"></i> <span id="compareRecordName">STYLE</span>
       </div>
+
       <div style="display:flex; gap:8px;">
-        <button id="compareBackToVaultBtn" class="btn-pill" style="background:var(--cyan); color:var(--white);"><i class="bi bi-collection"></i> VAULT</button>
         <button id="compareDeleteBtn" class="btn-icon" style="background:var(--red); color:var(--white);" title="Delete"><i class="bi bi-trash"></i></button>
         <button id="compareExportBtn" class="btn-pill" style="background:var(--lime); color:var(--black);"><i class="bi bi-download"></i> SAVE</button>
       </div>
@@ -878,6 +995,7 @@
           <img id="imgRendered" class="stage-img" alt="Inpainted" />
         </div>
 
+        <!-- Slider Line (Hidden when in PAN mode) -->
         <div id="sliderDivider" class="slider-divider" role="slider">
           <div class="divider-line"></div>
           <div class="divider-btn"><i class="bi bi-arrows-expand" style="transform:rotate(45deg);"></i></div>
@@ -886,7 +1004,7 @@
     </div>
   </section>
 
-  <!-- VIEW 6: VAULT SCREEN (WHOLE CARD IS CLICKABLE) -->
+  <!-- VIEW 6: VAULT SCREEN -->
   <section id="galleryScreen" class="view-screen">
     <header class="studio-header">
       <button id="closeGalleryBtn" class="btn-pill"><i class="bi bi-arrow-left"></i> BACK</button>
@@ -949,6 +1067,7 @@
     let currentColor = '#6040FF';
     let activeMode = 'style';
     let currentGenerationItem = null;
+    let compareNavOrigin = 'studio'; // 'studio' or 'vault'
 
     // Crop State
     let cropImgX = 0, cropImgY = 0, cropImgScale = 1;
@@ -973,6 +1092,7 @@
     const loginPhoneInput = document.getElementById('loginPhoneInput');
     const loginBtn = document.getElementById('loginBtn');
     const logoutBtn = document.getElementById('logoutBtn');
+    const userSessionPhone = document.getElementById('userSessionPhone');
     const clientPhoneBadge = document.getElementById('clientPhoneBadge');
 
     const cameraScreen = document.getElementById('cameraScreen');
@@ -983,6 +1103,7 @@
     const galleryScreen = document.getElementById('galleryScreen');
 
     const cameraFeed = document.getElementById('cameraFeed');
+    const scannerFrame = document.getElementById('scannerFrame');
     const shutterBtn = document.getElementById('shutterBtn');
     const switchCameraBtn = document.getElementById('switchCameraBtn');
     const uploadPhotoBtn = document.getElementById('uploadPhotoBtn');
@@ -1005,8 +1126,8 @@
     const sliderDivider = document.getElementById('sliderDivider');
     const compareStage = document.getElementById('compareStage');
     const stageWrapper = document.getElementById('stageWrapper');
-    const compareBackToStudioBtn = document.getElementById('compareBackToStudioBtn');
-    const compareBackToVaultBtn = document.getElementById('compareBackToVaultBtn');
+    const compareBackBtn = document.getElementById('compareBackBtn');
+    const compareBackTxt = document.getElementById('compareBackTxt');
     const compareRecordName = document.getElementById('compareRecordName');
     const compareDeleteBtn = document.getElementById('compareDeleteBtn');
     const compareExportBtn = document.getElementById('compareExportBtn');
@@ -1028,6 +1149,46 @@
     const refIcon = document.getElementById('refIcon');
     const refSubtext = document.getElementById('refSubtext');
     const clearRefBtn = document.getElementById('clearRefBtn');
+
+    // Custom Modal Elements
+    const brutalModal = document.getElementById('brutalModal');
+    const modalBadge = document.getElementById('modalBadge');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalMessage = document.getElementById('modalMessage');
+    const modalCancelBtn = document.getElementById('modalCancelBtn');
+    const modalConfirmBtn = document.getElementById('modalConfirmBtn');
+
+    /* ==========================================================================
+       CUSTOM NEO-BRUTALIST DIALOG (REPLACES ALERTS/CONFIRMS)
+       ========================================================================== */
+    function showBrutalDialog({ title = 'KAMI NOTICE', message = '', badge = 'NOTICE', type = 'alert', confirmText = 'OK', cancelText = 'CANCEL' }) {
+      return new Promise((resolve) => {
+        modalBadge.textContent = badge;
+        modalTitle.textContent = title;
+        modalMessage.textContent = message;
+
+        if (type === 'confirm') {
+          modalCancelBtn.classList.remove('hidden');
+          modalCancelBtn.textContent = cancelText;
+        } else {
+          modalCancelBtn.classList.add('hidden');
+        }
+        modalConfirmBtn.textContent = confirmText;
+        brutalModal.classList.remove('hidden');
+
+        const onConfirm = () => { cleanup(); resolve(true); };
+        const onCancel = () => { cleanup(); resolve(false); };
+
+        function cleanup() {
+          brutalModal.classList.add('hidden');
+          modalConfirmBtn.removeEventListener('click', onConfirm);
+          modalCancelBtn.removeEventListener('click', onCancel);
+        }
+
+        modalConfirmBtn.addEventListener('click', onConfirm);
+        modalCancelBtn.addEventListener('click', onCancel);
+      });
+    }
 
     /* ==========================================================================
        DYNAMIC SUPABASE STYLES & PROMPTS
@@ -1072,6 +1233,7 @@
        ========================================================================== */
     function checkAuthSession() {
       if (currentUserPhone) {
+        userSessionPhone.textContent = currentUserPhone;
         clientPhoneBadge.textContent = currentUserPhone;
         navigate(cameraScreen);
         initCamera();
@@ -1089,26 +1251,40 @@
 
         const { data, error } = await sb.from('users').select('*').eq('phone', phone).single();
         if (error || !data) {
-          alert('ACCESS DENIED: Phone number not registered.\nPlease have the salon admin add your number in admin.html.');
+          await showBrutalDialog({
+            badge: 'ACCESS DENIED',
+            title: 'PHONE NOT REGISTERED',
+            message: 'Your phone number is not yet registered. Please contact the salon supervisor to add your number.',
+            confirmText: 'GOT IT'
+          });
           return;
         }
 
         currentUserPhone = phone;
         localStorage.setItem('kami_user_phone', phone);
+        userSessionPhone.textContent = phone;
         clientPhoneBadge.textContent = phone;
         showToast('WELCOME TO KAMI AI');
         navigate(cameraScreen);
         initCamera();
       } catch (err) {
-        alert('Authentication error: ' + err.message);
+        await showBrutalDialog({ title: 'ERROR', message: err.message });
       } finally {
         loginBtn.disabled = false;
         loginBtn.innerHTML = 'ENTER STUDIO <i class="bi bi-arrow-right"></i>';
       }
     });
 
-    logoutBtn.addEventListener('click', () => {
-      if (confirm('Log out from this device?')) {
+    logoutBtn.addEventListener('click', async () => {
+      const confirmed = await showBrutalDialog({
+        badge: 'SECURITY',
+        title: 'LOG OUT OF KAMI?',
+        message: 'Are you sure you want to end your session on this device?',
+        type: 'confirm',
+        confirmText: 'LOG OUT',
+        cancelText: 'STAY'
+      });
+      if (confirmed) {
         localStorage.removeItem('kami_user_phone');
         currentUserPhone = null;
         if (cameraStream) cameraStream.getTracks().forEach(t => t.stop());
@@ -1128,9 +1304,6 @@
       setTimeout(() => toast.classList.remove('show'), 2200);
     }
 
-    /* ==========================================================================
-       DIRECT DEVICE DOWNLOAD HELPER
-       ========================================================================== */
     async function forceDownload(url, filename = 'KAMI_hair.webp') {
       try {
         showToast('DOWNLOADING...');
@@ -1151,7 +1324,7 @@
     }
 
     /* ==========================================================================
-       CAMERA & CAPTURE
+       CAMERA & UPI SCANNER CAPTURE (NO CROPPING STEP NEEDED FOR CAMERA)
        ========================================================================== */
     async function initCamera() {
       if (cameraStream) {
@@ -1175,8 +1348,64 @@
       initCamera();
     });
 
+    // Directly extracts what's inside the scanner frame into 1024x1024 WebP
+    function captureFromScanner() {
+      const vw = cameraFeed.videoWidth;
+      const vh = cameraFeed.videoHeight;
+      if (!vw || !vh) return;
+
+      const vRect = cameraFeed.getBoundingClientRect();
+      const fRect = scannerFrame.getBoundingClientRect();
+
+      // Calculate object-fit: cover scaling
+      const scale = Math.max(vRect.width / vw, vRect.height / vh);
+      const dispW = vw * scale;
+      const dispH = vh * scale;
+      const offX = (vRect.width - dispW) / 2;
+      const offY = (vRect.height - dispH) / 2;
+
+      let sx = (fRect.left - vRect.left - offX) / scale;
+      let sy = (fRect.top - vRect.top - offY) / scale;
+      let sw = fRect.width / scale;
+      let sh_crop = fRect.height / scale;
+
+      if (cameraFacingMode === 'user') {
+        sx = vw - sx - sw;
+      }
+
+      const canvas = document.createElement('canvas');
+      canvas.width = 1024;
+      canvas.height = 1024;
+      const ctx = canvas.getContext('2d');
+
+      if (cameraFacingMode === 'user') {
+        ctx.translate(1024, 0);
+        ctx.scale(-1, 1);
+      }
+
+      ctx.drawImage(cameraFeed, sx, sy, sw, sh_crop, 0, 0, 1024, 1024);
+
+      canvas.toBlob((blob) => {
+        base1024Blob = blob;
+        const url = URL.createObjectURL(blob);
+        client1024Preview.src = url;
+        imgSource.src = url;
+        navigate(studioScreen); // Instantly opens Studio with the 1:1 image!
+      }, 'image/webp', 0.85);
+    }
+
+    shutterBtn.addEventListener('click', captureFromScanner);
+
+    // Gallery Upload Fallback with manual crop
+    uploadPhotoBtn.addEventListener('click', () => clientFileInput.click());
+    clientFileInput.addEventListener('change', (e) => {
+      if (e.target.files?.[0]) loadImageForCrop(e.target.files[0]);
+      clientFileInput.value = '';
+    });
+    retakeBtn.addEventListener('click', () => { navigate(cameraScreen); initCamera(); });
+
     /* ==========================================================================
-       1024x1024 MANUAL CROP
+       MANUAL CROP ENGINE (USED WHEN USER PICKS FROM GALLERY)
        ========================================================================== */
     function loadImageForCrop(sourceBlob) {
       const url = URL.createObjectURL(sourceBlob);
@@ -1275,26 +1504,8 @@
       }, 'image/webp', 0.85);
     });
 
-    shutterBtn.addEventListener('click', () => {
-      const vw = cameraFeed.videoWidth, vh = cameraFeed.videoHeight;
-      if (!vw || !vh) return;
-      const c = document.createElement('canvas');
-      c.width = vw; c.height = vh;
-      const ctx = c.getContext('2d');
-      if (cameraFacingMode === 'user') { ctx.translate(vw, 0); ctx.scale(-1, 1); }
-      ctx.drawImage(cameraFeed, 0, 0);
-      c.toBlob((blob) => loadImageForCrop(blob), 'image/webp', 0.92);
-    });
-
-    uploadPhotoBtn.addEventListener('click', () => clientFileInput.click());
-    clientFileInput.addEventListener('change', (e) => {
-      if (e.target.files?.[0]) loadImageForCrop(e.target.files[0]);
-      clientFileInput.value = '';
-    });
-    retakeBtn.addEventListener('click', () => { navigate(cameraScreen); initCamera(); });
-
     /* ==========================================================================
-       STUDIO TABS & 50 STYLES
+       STUDIO UI & PRESERVED STATE
        ========================================================================== */
     function renderStudioStyles() {
       const catTabs = document.getElementById('catTabs');
@@ -1471,7 +1682,6 @@
           ? (liveHairstyles.find(x => x.id === currentStyleId)?.name || 'Pixie Cut')
           : `Colour ${currentColor}`;
 
-        // Robust DB Insert (Prevents 400 Bad Request by inserting standard fields)
         let insertedRecord = null;
         try {
           const { data: rec, error: insertErr } = await sb.from('generations').insert({
@@ -1485,7 +1695,6 @@
           if (!insertErr && rec) {
             insertedRecord = rec;
           } else {
-            // Fallback if source_image_url column is not present in user's table
             const { data: recFallback } = await sb.from('generations').insert({
               user_phone: currentUserPhone,
               image_url: vaultWebpUrl,
@@ -1504,11 +1713,11 @@
           category: activeMode === 'style' ? currentCategory : 'Hair Colour'
         };
 
-        openCompareView(vaultWebpUrl, currentStyleName, baseRemoteUrl);
+        openCompareView(vaultWebpUrl, currentStyleName, baseRemoteUrl, 'studio');
         showToast('SAVED TO KAMI VAULT');
 
       } catch (err) {
-        alert(err.message);
+        await showBrutalDialog({ title: 'STYLING NOTICE', message: err.message });
       } finally {
         clearInterval(timer);
         processingScreen.classList.add('hidden');
@@ -1516,16 +1725,22 @@
     });
 
     /* ==========================================================================
-       COMPARISON SCREEN (SLIDE & PAN, 100% KAMI NEO-BRUTALIST THEME)
+       COMPARISON SCREEN (SLIDER HIDDEN IN PAN MODE)
        ========================================================================== */
-    function openCompareView(renderedUrl, recordTitle, sourceUrl) {
+    function openCompareView(renderedUrl, recordTitle, sourceUrl, origin = 'studio') {
       imgRendered.src = renderedUrl;
       imgSource.src = sourceUrl || client1024Preview.src || renderedUrl;
       compareRecordName.textContent = recordTitle || 'STYLE';
+      compareNavOrigin = origin;
+
+      // Update back button label to match origin
+      compareBackTxt.textContent = origin === 'vault' ? 'VAULT' : 'STUDIO';
       
+      // Default to Slide Mode with divider visible
       compareInteraction = 'slide';
       modeSlideBtn.classList.add('active');
       modePanBtn.classList.remove('active');
+      sliderDivider.style.display = 'flex';
       setCompareZoom(1.0);
       setSliderPercent(50);
 
@@ -1552,17 +1767,19 @@
       stageWrapper.style.transform = `scale(${compareZoomScale}) translate(${comparePanX / compareZoomScale}px, ${comparePanY / compareZoomScale}px)`;
     }
 
-    // Interaction Modes: Slide vs Pan
+    // Toggle: Slide vs Pan (Pan hides the divider line)
     modeSlideBtn.addEventListener('click', () => {
       compareInteraction = 'slide';
       modeSlideBtn.classList.add('active');
       modePanBtn.classList.remove('active');
+      sliderDivider.style.display = 'flex'; // Restore divider
     });
 
     modePanBtn.addEventListener('click', () => {
       compareInteraction = 'pan';
       modePanBtn.classList.add('active');
       modeSlideBtn.classList.remove('active');
+      sliderDivider.style.display = 'none'; // Completely hide slider bar in Pan mode!
       if (compareZoomScale === 1.0) setCompareZoom(1.5);
     });
 
@@ -1607,13 +1824,13 @@
       setSliderPercent((x / rect.width) * 100);
     }
 
-    // Deterministic Compare Navigation Buttons
-    compareBackToStudioBtn.addEventListener('click', () => {
-      navigate(studioScreen);
-    });
-
-    compareBackToVaultBtn.addEventListener('click', () => {
-      loadUserVault();
+    // Contextual Back Button: Returns to exactly where you came from
+    compareBackBtn.addEventListener('click', () => {
+      if (compareNavOrigin === 'vault') {
+        loadUserVault();
+      } else {
+        navigate(studioScreen);
+      }
     });
 
     compareExportBtn.addEventListener('click', () => {
@@ -1627,10 +1844,22 @@
         navigate(studioScreen);
         return;
       }
-      if (confirm('Delete this generated image permanently?')) {
+      const confirmed = await showBrutalDialog({
+        badge: 'CONFIRM',
+        title: 'DELETE IMAGE?',
+        message: 'This will permanently remove this generated hairstyle from your vault.',
+        type: 'confirm',
+        confirmText: 'DELETE',
+        cancelText: 'KEEP'
+      });
+      if (confirmed) {
         await sb.from('generations').delete().eq('id', currentGenerationItem.id);
         showToast('IMAGE DELETED');
-        navigate(studioScreen);
+        if (compareNavOrigin === 'vault') {
+          loadUserVault();
+        } else {
+          navigate(studioScreen);
+        }
       }
     });
 
@@ -1675,10 +1904,10 @@
           </div>
         `;
 
-        // Whole Card Click: Opens Compare Screen
+        // Clicking the whole card opens comparison immediately
         card.addEventListener('click', () => {
           currentGenerationItem = item;
-          openCompareView(item.image_url, item.style_name, item.source_image_url || null);
+          openCompareView(item.image_url, item.style_name, item.source_image_url || null, 'vault');
         });
 
         // Download Action
@@ -1690,7 +1919,15 @@
         // Delete Action
         card.querySelector('.vault-del-btn').addEventListener('click', async (e) => {
           e.stopPropagation();
-          if (confirm(`Delete "${item.style_name}"?`)) {
+          const confirmed = await showBrutalDialog({
+            badge: 'DELETE',
+            title: `REMOVE "${item.style_name}"?`,
+            message: 'Permanently remove this photo from your vault?',
+            type: 'confirm',
+            confirmText: 'REMOVE',
+            cancelText: 'KEEP'
+          });
+          if (confirmed) {
             await sb.from('generations').delete().eq('id', item.id);
             showToast('DELETED');
             loadUserVault();
@@ -1703,12 +1940,13 @@
 
     openGalleryBtn.addEventListener('click', loadUserVault);
     openGalleryFromStudioBtn.addEventListener('click', loadUserVault);
+    // Vault Back Button cleanly returns to Studio with state preserved
     closeGalleryBtn.addEventListener('click', () => {
       navigate(studioScreen);
     });
 
     /* ==========================================================================
-       COLOR PICKER (100% CANVAS SIZING FIX)
+       COLOR PICKER (100% RESPONSIVE CANVAS SIZING)
        ========================================================================== */
     const colorSwatch = document.getElementById('colorSwatch');
     const hexInput = document.getElementById('hexInput');
