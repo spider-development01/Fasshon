@@ -130,15 +130,15 @@
     .btn-primary.color-mode { background: var(--cyan); }
 
     .btn-icon {
-      width: 46px;
-      height: 46px;
+      width: 44px;
+      height: 44px;
       border-radius: 50%;
       background: var(--white);
       border: var(--border-thick);
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      font-size: 1.2rem;
+      font-size: 1.15rem;
       box-shadow: var(--shadow-sm);
       flex-shrink: 0;
     }
@@ -384,7 +384,7 @@
     }
     .ref-thumb img { width: 100%; height: 100%; object-fit: cover; }
 
-    /* VIEW 4: PROCESSING OVERLAY & LOADER FIX */
+    /* VIEW 4: PROCESSING OVERLAY */
     .processing-overlay {
       position: absolute;
       inset: 0;
@@ -402,7 +402,7 @@
       text-align: center;
       z-index: 100;
     }
-    /* Fixed Circular Loader with zero asymmetric shadow */
+    /* Fixed Circular Loader */
     .brutal-spinner {
       width: 76px;
       height: 76px;
@@ -416,7 +416,7 @@
     }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-    /* VIEW 5: COMPARISON SCREEN (IMAGE 4 REPLICA) */
+    /* VIEW 5: COMPARISON SCREEN */
     #compareScreen {
       background: #000;
       color: #fff;
@@ -426,7 +426,7 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      background: rgba(0,0,0,0.85);
+      background: rgba(0,0,0,0.9);
       z-index: 50;
       gap: 8px;
     }
@@ -435,7 +435,7 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      background: rgba(0,0,0,0.85);
+      background: rgba(0,0,0,0.9);
       z-index: 50;
       gap: 10px;
       border-bottom: 1px solid #222;
@@ -448,8 +448,8 @@
       border: 1px solid #27272a;
     }
     .seg-btn {
-      padding: 6px 14px;
-      font-size: 0.72rem;
+      padding: 6px 16px;
+      font-size: 0.75rem;
       border-radius: var(--radius-pill);
       color: #a1a1aa;
       font-family: var(--font-body);
@@ -464,13 +464,13 @@
       align-items: center;
       background: #18181b;
       border-radius: var(--radius-pill);
-      padding: 2px 6px;
+      padding: 2px 8px;
       border: 1px solid #27272a;
-      gap: 4px;
+      gap: 6px;
     }
     .zoom-btn {
       color: #fff;
-      font-size: 0.8rem;
+      font-size: 0.85rem;
       padding: 4px 8px;
     }
 
@@ -514,7 +514,6 @@
       clip-path: polygon(50% 0, 100% 0, 100% 100%, 50% 100%);
     }
 
-    /* Floating Badges inside Stage (Image 4) */
     .stage-badge {
       position: absolute;
       top: 14px;
@@ -562,20 +561,20 @@
       box-shadow: 0 0 8px rgba(0,0,0,0.6);
     }
     .divider-btn {
-      width: 32px;
-      height: 32px;
+      width: 34px;
+      height: 34px;
       border-radius: 50%;
       background: #ffffff;
       color: var(--blue);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 0.85rem;
+      font-size: 0.9rem;
       box-shadow: 0 2px 8px rgba(0,0,0,0.5);
       z-index: 45;
     }
 
-    /* VIEW 6: VAULT & CARDS (IMAGE 3 FIX) */
+    /* VIEW 6: VAULT & CARDS (WHOLE CARD CLICKABLE) */
     #galleryModal {
       position: fixed;
       inset: 0;
@@ -589,7 +588,6 @@
       display: flex;
       flex-direction: column;
     }
-    /* Fixed: align-content: start prevents tall stretched cards */
     .gallery-grid {
       flex: 1;
       overflow-y: auto;
@@ -598,7 +596,7 @@
       grid-template-columns: repeat(2, 1fr);
       gap: 14px;
       align-content: start;
-      max-width: 600px;
+      max-width: 650px;
       margin: 0 auto;
       width: 100%;
     }
@@ -613,22 +611,27 @@
       box-shadow: var(--shadow-sm);
       display: flex;
       flex-direction: column;
+      cursor: pointer;
+      transition: transform 0.15s var(--bounce);
+    }
+    .gallery-card:active {
+      transform: translate(2px, 2px);
+      box-shadow: none;
     }
     .gallery-card img {
       width: 100%;
       aspect-ratio: 1 / 1;
       object-fit: cover;
       display: block;
-      cursor: pointer;
     }
     .gallery-card-body {
-      padding: 8px 10px 10px;
+      padding: 10px;
       display: flex;
       flex-direction: column;
       gap: 4px;
     }
 
-    /* COLOR PICKER MODAL (IMAGE 1 FIX) */
+    /* COLOR PICKER MODAL (100% CANVAS SIZING FIX) */
     .modal-backdrop {
       position: fixed;
       inset: 0;
@@ -848,7 +851,7 @@
     </div>
   </div>
 
-  <!-- VIEW 5: COMPARISON SCREEN (IMAGE 4 DESIGN REPLICA) -->
+  <!-- VIEW 5: COMPARISON SCREEN (CLEAN, NO VARIATION BUTTON) -->
   <section id="compareScreen" class="view-screen">
     <!-- Top Nav: Records, Record status, Trash, Export -->
     <div class="compare-top-nav">
@@ -871,16 +874,12 @@
       </div>
     </div>
 
-    <!-- Controls Bar: Slide vs Pan & Zoom & Variate -->
+    <!-- Controls Bar: Slide vs Pan & Zoom (No Variation Button) -->
     <div class="compare-controls-bar">
       <div class="segmented-control">
         <button id="modeSlideBtn" class="seg-btn active"><i class="bi bi-arrows-expand-vertical" style="transform:rotate(90deg); display:inline-block;"></i> Slide</button>
         <button id="modePanBtn" class="seg-btn"><i class="bi bi-hand-index"></i> Pan</button>
       </div>
-
-      <button id="variationBtn" class="btn-pill" style="background:#18181b; color:#fff; border:1px solid #333; padding:5px 12px; font-size:0.72rem;">
-        <i class="bi bi-arrow-repeat text-yellow-400"></i> Variate
-      </button>
 
       <div class="zoom-toolbar">
         <button id="zoomMinusBtn" class="zoom-btn"><i class="bi bi-dash"></i></button>
@@ -892,7 +891,6 @@
     <!-- Viewport Container -->
     <div class="compare-viewport" id="compareViewport">
       <div id="compareStage" class="compare-stage">
-        <!-- Floating Badges inside Stage -->
         <div class="stage-badge stage-badge-left">INPAINTED</div>
         <div class="stage-badge stage-badge-right">ORIGINAL</div>
 
@@ -910,7 +908,7 @@
     </div>
   </section>
 
-  <!-- VIEW 6: USER VAULT MODAL (FIXED GRID HEIGHT & ACTIONS) -->
+  <!-- VIEW 6: VAULT MODAL (WHOLE CARD IS CLICKABLE) -->
   <div id="galleryModal" class="hidden">
     <header class="studio-header">
       <button id="closeGalleryBtn" class="btn-pill"><i class="bi bi-x-lg"></i> CLOSE</button>
@@ -920,7 +918,7 @@
     <div class="gallery-grid" id="galleryGrid"></div>
   </div>
 
-  <!-- COLOR PICKER MODAL (FIXED 100% CANVAS SIZING) -->
+  <!-- COLOR PICKER MODAL (100% RESPONSIVE CANVAS FIX) -->
   <div id="colorPickerModal" class="modal-backdrop hidden">
     <div class="modal-card">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
@@ -981,8 +979,8 @@
     const activePointers = new Map();
     let prevDiff = -1;
 
-    // Compare Screen State (Image 4)
-    let compareInteraction = 'slide'; // 'slide' or 'pan'
+    // Compare Screen State
+    let compareInteraction = 'slide';
     let compareZoomScale = 1.0;
     let comparePanX = 0;
     let comparePanY = 0;
@@ -1023,7 +1021,7 @@
     const timerText = document.getElementById('timerText');
     const progressStep = document.getElementById('progressStep');
 
-    // Compare Elements (Image 4)
+    // Compare Elements
     const imgSource = document.getElementById('imgSource');
     const imgRendered = document.getElementById('imgRendered');
     const sliderDivider = document.getElementById('sliderDivider');
@@ -1035,7 +1033,6 @@
     const compareExportBtn = document.getElementById('compareExportBtn');
     const modeSlideBtn = document.getElementById('modeSlideBtn');
     const modePanBtn = document.getElementById('modePanBtn');
-    const variationBtn = document.getElementById('variationBtn');
     const zoomMinusBtn = document.getElementById('zoomMinusBtn');
     const zoomPlusBtn = document.getElementById('zoomPlusBtn');
     const zoomPercentText = document.getElementById('zoomPercentText');
@@ -1153,7 +1150,7 @@
     }
 
     /* ==========================================================================
-       DEVICE DOWNLOAD HELPER (NO NEW TABS)
+       DIRECT DEVICE DOWNLOAD HELPER
        ========================================================================== */
     async function forceDownload(url, filename = 'KAMI_hair.webp') {
       try {
@@ -1422,14 +1419,14 @@
       return pubData.publicUrl;
     }
 
-    async function runTransformation(isVariation = false) {
+    executeBtn.addEventListener('click', async () => {
       if (!base1024Blob) return;
       processingScreen.classList.remove('hidden');
       let sec = 0;
-      timerText.textContent = isVariation ? 'GENERATING VARIATION... 0S' : 'STYLING WITH KAMI AI... 0S';
+      timerText.textContent = 'STYLING WITH KAMI AI... 0S';
       const timer = setInterval(() => {
         sec++;
-        timerText.textContent = (isVariation ? 'GENERATING VARIATION... ' : 'STYLING WITH KAMI AI... ') + `${sec}S`;
+        timerText.textContent = `STYLING WITH KAMI AI... ${sec}S`;
       }, 1000);
 
       try {
@@ -1443,9 +1440,6 @@
           const s = liveHairstyles.find(x => x.id === currentStyleId) || liveHairstyles[0];
           const desc = s.desc_prompt || s.desc || s.name;
           finalPrompt = systemPrompts.base_style.replace('{DESC}', desc);
-          if (isVariation) {
-            finalPrompt += " High detail subtle natural variation with organic flyaways and authentic roots.";
-          }
           if (ref1024Blob) {
             progressStep.textContent = 'PROCESSING REFERENCE CUT WITH KAMI AI...';
             const refRemoteUrl = await uploadBlobToSupabaseStorage(ref1024Blob, 'reference');
@@ -1495,9 +1489,11 @@
           ? (liveHairstyles.find(x => x.id === currentStyleId)?.name || 'Pixie Cut')
           : `Colour ${currentColor}`;
 
+        // Save record with source_image_url so comparison works from Vault anytime
         const { data: insertedRecord } = await sb.from('generations').insert({
           user_phone: currentUserPhone,
           image_url: vaultWebpUrl,
+          source_image_url: baseRemoteUrl,
           style_name: currentStyleName,
           category: activeMode === 'style' ? currentCategory : 'Hair Colour'
         }).select().single();
@@ -1505,11 +1501,12 @@
         currentGenerationItem = insertedRecord || {
           id: null,
           image_url: vaultWebpUrl,
+          source_image_url: baseRemoteUrl,
           style_name: currentStyleName,
           category: activeMode === 'style' ? currentCategory : 'Hair Colour'
         };
 
-        openCompareView(vaultWebpUrl, currentStyleName);
+        openCompareView(vaultWebpUrl, currentStyleName, baseRemoteUrl);
         showToast('SAVED TO KAMI VAULT');
 
       } catch (err) {
@@ -1518,15 +1515,14 @@
         clearInterval(timer);
         processingScreen.classList.add('hidden');
       }
-    }
-
-    executeBtn.addEventListener('click', () => runTransformation(false));
+    });
 
     /* ==========================================================================
-       IMAGE 4 DESIGN REPLICA (COMPARISON, ZOOM, SLIDE & PAN)
+       COMPARISON SCREEN (SLIDE & PAN, NO VARIATION BUTTON)
        ========================================================================== */
-    function openCompareView(renderedUrl, recordTitle) {
+    function openCompareView(renderedUrl, recordTitle, sourceUrl) {
       imgRendered.src = renderedUrl;
+      imgSource.src = sourceUrl || client1024Preview.src || renderedUrl;
       compareRecordName.textContent = recordTitle || 'Record';
       
       // Reset Compare Engine
@@ -1577,7 +1573,7 @@
     zoomPlusBtn.addEventListener('click', () => setCompareZoom(compareZoomScale + 0.5));
     zoomMinusBtn.addEventListener('click', () => setCompareZoom(compareZoomScale - 0.5));
 
-    // Slider Divider Drag vs Pan Drag
+    // Pointer Handler for Slide vs Pan
     compareStage.addEventListener('pointerdown', (e) => {
       if (compareInteraction === 'slide') {
         sliderDivider.setPointerCapture(e.pointerId);
@@ -1614,9 +1610,9 @@
       setSliderPercent((x / rect.width) * 100);
     }
 
-    // Compare Toolbar Buttons
+    // Comparison Toolbar Navigation
     compareBackToVaultBtn.addEventListener('click', () => {
-      loadUserVault();
+      loadUserVault(); // Directly brings back to Records/Vault
     });
 
     compareExportBtn.addEventListener('click', () => {
@@ -1627,22 +1623,18 @@
 
     compareDeleteBtn.addEventListener('click', async () => {
       if (!currentGenerationItem?.id) {
-        navigate(studioScreen);
+        loadUserVault();
         return;
       }
       if (confirm('Delete this generated image permanently?')) {
         await sb.from('generations').delete().eq('id', currentGenerationItem.id);
         showToast('IMAGE DELETED');
-        navigate(studioScreen);
+        loadUserVault();
       }
     });
 
-    variationBtn.addEventListener('click', () => {
-      runTransformation(true);
-    });
-
     /* ==========================================================================
-       USER VAULT (FIXED GRID HEIGHT & ACTION BUTTONS)
+       USER VAULT (WHOLE CARD IS CLICKABLE)
        ========================================================================== */
     async function loadUserVault() {
       galleryGrid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:30px; font-weight:800;">LOADING VAULT...</div>';
@@ -1672,32 +1664,30 @@
           <img src="${item.image_url}" loading="lazy" alt="${item.style_name}" />
           <div class="gallery-card-body">
             <div style="font-family:var(--font-heading); font-size:0.75rem; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;">${item.style_name}</div>
-            <div style="font-size:0.62rem; color:#666;">${new Date(item.created_at).toLocaleDateString()}</div>
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:4px;">
-              <button class="vault-open-btn btn-pill" style="padding:4px 8px; font-size:0.65rem; background:var(--blue); color:#fff; border:none;"><i class="bi bi-arrows-expand"></i> Slide</button>
-              <div style="display:flex; gap:4px;">
-                <button class="vault-dl-btn btn-icon" style="width:26px; height:26px; font-size:0.75rem;"><i class="bi bi-download"></i></button>
-                <button class="vault-del-btn btn-icon" style="width:26px; height:26px; font-size:0.75rem; color:#ef4444;"><i class="bi bi-trash"></i></button>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:2px;">
+              <span style="font-size:0.62rem; color:#666;">${new Date(item.created_at).toLocaleDateString()}</span>
+              <div style="display:flex; gap:6px;">
+                <button class="vault-dl-btn btn-icon" style="width:28px; height:28px; font-size:0.75rem;"><i class="bi bi-download"></i></button>
+                <button class="vault-del-btn btn-icon" style="width:28px; height:28px; font-size:0.75rem; color:#ef4444;"><i class="bi bi-trash"></i></button>
               </div>
             </div>
           </div>
         `;
 
-        // Open in Compare view
-        card.querySelector('.vault-open-btn').addEventListener('click', (e) => {
-          e.stopPropagation();
+        // WHOLE CARD CLICKABLE: Opens comparison view
+        card.addEventListener('click', () => {
           currentGenerationItem = item;
           galleryModal.classList.add('hidden');
-          openCompareView(item.image_url, item.style_name);
+          openCompareView(item.image_url, item.style_name, item.source_image_url || null);
         });
 
-        // Direct Download
+        // Download Action
         card.querySelector('.vault-dl-btn').addEventListener('click', (e) => {
           e.stopPropagation();
           forceDownload(item.image_url, `KAMI_${item.style_name.replace(/\s+/g,'_')}.webp`);
         });
 
-        // Direct Delete
+        // Delete Action
         card.querySelector('.vault-del-btn').addEventListener('click', async (e) => {
           e.stopPropagation();
           if (confirm(`Delete "${item.style_name}"?`)) {
@@ -1713,10 +1703,14 @@
 
     openGalleryBtn.addEventListener('click', loadUserVault);
     openGalleryFromStudioBtn.addEventListener('click', loadUserVault);
-    closeGalleryBtn.addEventListener('click', () => galleryModal.classList.add('hidden'));
+    // CLOSE button smoothly returns to Studio screen
+    closeGalleryBtn.addEventListener('click', () => {
+      galleryModal.classList.add('hidden');
+      navigate(studioScreen);
+    });
 
     /* ==========================================================================
-       COLOR PICKER (100% RESPONSIVE CANVAS FIX)
+       COLOR PICKER (100% CANVAS SIZING FIX)
        ========================================================================== */
     const colorSwatch = document.getElementById('colorSwatch');
     const hexInput = document.getElementById('hexInput');
@@ -1756,18 +1750,18 @@
       const h = svCanvas.height;
       ctx.clearRect(0, 0, w, h);
 
-      // Base Hue Fill
+      // 1. Base Hue
       ctx.fillStyle = `hsl(${curH}, 100%, 50%)`;
       ctx.fillRect(0, 0, w, h);
 
-      // White Horizontal Gradient (Saturation)
+      // 2. White Horizontal Gradient (Saturation)
       const wGrad = ctx.createLinearGradient(0, 0, w, 0);
       wGrad.addColorStop(0, '#ffffff');
       wGrad.addColorStop(1, 'rgba(255, 255, 255, 0)');
       ctx.fillStyle = wGrad;
       ctx.fillRect(0, 0, w, h);
 
-      // Black Vertical Gradient (Value/Brightness)
+      // 3. Black Vertical Gradient (Value)
       const bGrad = ctx.createLinearGradient(0, 0, 0, h);
       bGrad.addColorStop(0, 'rgba(0, 0, 0, 0)');
       bGrad.addColorStop(1, '#000000');
