@@ -1,6 +1,3 @@
-// functions/api/tryon.js
-// Proxy for fal.ai Flux 2 Klein 4B Edit — keeps FAL_KEY server-side.
-
 export async function onRequestPost(context) {
   const { request, env } = context;
   const FAL_KEY = env.FAL_KEY;
@@ -42,11 +39,7 @@ export async function onRequestPost(context) {
     const data = await falRes.json().catch(() => ({}));
 
     if (!falRes.ok) {
-      const msg =
-        data?.detail?.[0]?.msg ||
-        data?.message ||
-        data?.error ||
-        `Model error (${falRes.status})`;
+      const msg = data?.detail?.[0]?.msg || data?.message || data?.error || `Model error (${falRes.status})`;
       return json({ error: msg }, falRes.status);
     }
 
@@ -56,16 +49,9 @@ export async function onRequestPost(context) {
   }
 }
 
-export async function onRequestGet() {
-  return json({ error: 'Use POST.' }, 405);
-}
-
 function json(obj, status = 200) {
   return new Response(JSON.stringify(obj), {
     status,
-    headers: {
-      'Content-Type': 'application/json',
-      'Cache-Control': 'no-store',
-    },
+    headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' },
   });
 }
