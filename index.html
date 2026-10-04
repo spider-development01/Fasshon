@@ -201,6 +201,7 @@
       text-align: center;
       text-transform: uppercase;
       font-family: var(--font-heading);
+      line-height: 1.35;
     }
 
     .bottom-dock {
@@ -595,14 +596,14 @@
     <div class="top-dock">
       <div class="brand-logo">KAMI</div>
       <div class="top-dock-right">
-        <button id="livePickBtn" class="btn-icon" aria-label="Pick color from camera"><i class="bi bi-eyedropper"></i></button>
+        <button id="livePickBtn" class="btn-icon" aria-label="Pick colour from camera"><i class="bi bi-eyedropper"></i></button>
         <button id="uploadPhotoBtn" class="btn-icon" aria-label="Upload"><i class="bi bi-image"></i></button>
         <input type="file" id="clientFileInput" class="hidden" accept="image/*" />
       </div>
     </div>
 
     <div id="keyWarning" class="key-warning hidden">
-      <i class="bi bi-exclamation-triangle-fill"></i> FAL_KEY missing — set it in your environment
+      <i class="bi bi-exclamation-triangle-fill"></i> FAL_KEY not set — add it in Cloudflare Pages → Settings → Environment variables → <strong>FAL_KEY</strong>
     </div>
 
     <div class="camera-wrapper" id="cameraWrapper">
@@ -737,16 +738,6 @@
   <div id="toast" class="toast"><span class="dot" id="toastDot"></span><span id="toastText">COLOUR CAPTURED</span></div>
 
   <script>
-    /* ==========================================================================
-       ENVIRONMENT KEY DISCOVERY  (no localStorage, no manual entry)
-       ========================================================================== */
-    function getFalApiKey() {
-      if (typeof process !== 'undefined' && process.env && process.env.FAL_KEY) return process.env.FAL_KEY;
-      if (window.__ENV__ && window.__ENV__.FAL_KEY) return window.__ENV__.FAL_KEY;
-      if (window.FAL_KEY) return window.FAL_KEY;
-      return '';
-    }
-
     /* ==========================================================================
        PROMPT LIBRARY — FLUX 2 KLEIN 4B EDIT
        ========================================================================== */
@@ -952,7 +943,7 @@
     let ref1024Blob = null;
     let isDraggingSlider = false;
 
-    let mode = 'style';                       // 'style' | 'color'
+    let mode = 'style';
     let selectedCategory = 'Bob & Short';
     let selectedStyleId = 'pixie';
     let hairColor = { hex: '#3B2314', name: 'dark chocolate brown' };
@@ -1029,16 +1020,6 @@
       return '#' + [r, g, b].map(v => Math.max(0, Math.min(255, v)).toString(16).padStart(2, '0')).join('').toUpperCase();
     }
 
-    function hexToRgb(hex) {
-      const h = hex.replace('#', '');
-      const full = h.length === 3 ? h.split('').map(c => c + c).join('') : h;
-      return {
-        r: parseInt(full.slice(0, 2), 16),
-        g: parseInt(full.slice(2, 4), 16),
-        b: parseInt(full.slice(4, 6), 16)
-      };
-    }
-
     function isValidHex(v) { return /^#?([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$/.test(v); }
 
     let toastTimer = null;
@@ -1068,7 +1049,7 @@
         cameraFeed.srcObject = cameraStream;
         cameraFeed.className = cameraFacingMode === 'user' ? 'mirrored' : '';
       } catch (err) {
-        console.warn('Camera unavailable, upload mode ready');
+        console.warn('Camera unavailable, upload mode ready', err);
       }
     }
 
@@ -1093,9 +1074,9 @@
       const aspect = sw / sh;
       let cropW, cropH, sx, sy;
 
-      if (aspect > 1) {          // Landscape
+      if (aspect > 1) {
         cropH = sh; cropW = sh; sx = (sw - cropW) / 2; sy = 0;
-      } else {                   // Portrait / Square
+      } else {
         cropW = sw; cropH = sw; sx = 0; sy = (sh - cropH) / 2;
       }
 
@@ -1115,7 +1096,6 @@
       imgSource.src = url;
     }
 
-    /* Capture */
     shutterBtn.addEventListener('click', () => {
       cropTo1024(cameraFeed, (blob, url) => {
         setBaseImage(blob, url);
@@ -1123,7 +1103,6 @@
       });
     });
 
-    /* Upload */
     uploadPhotoBtn.addEventListener('click', () => clientFileInput.click());
     galleryBtn.addEventListener('click', () => clientFileInput.click());
 
@@ -1198,7 +1177,7 @@
     });
 
     /* ==========================================================================
-       STUDIO EYEDROPPER (from the 1024 photo)
+       STUDIO EYEDROPPER
        ========================================================================== */
     function getBaseSampleCanvas() {
       if (!client1024Preview.complete || !client1024Preview.naturalWidth) return null;
@@ -1260,9 +1239,7 @@
       updateExecuteButton();
     }
 
-    colorPicker.addEventListener('input', (e) => {
-      applyHairColor(e.target.value, 'custom');
-    });
+    colorPicker.addEventListener('input', (e) => applyHairColor(e.target.value, 'custom'));
 
     hexInput.addEventListener('change', (e) => {
       let v = e.target.value.trim();
@@ -1398,37 +1375,42 @@
     });
 
     /* ==========================================================================
-       FAL STORAGE UPLOAD
+       FAL STORAGE UPLOAD  (via /api/upload)
        ========================================================================== */
-    async function uploadToFal(blob, apiKey) {
-      const init = await fetch('https://rest.alpha.fal.ai/storage/upload/initiate', {
+    async function uploadToFal(blob) {
+      const initRes = await fetch('/api/upload', {
         method: 'POST',
-        headers: { 'Authorization': `Key ${apiKey}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ file_name: `kami_${Date.now()}.png`, content_type: 'image/png' })
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          file_name: `kami_${Date.now()}_${Math.random().toString(36).slice(2, 8)}.png`,
+          content_type: 'image/png'
+        })
       });
-      if (!init.ok) throw new Error('Fal storage initiation failed');
-      const { upload_url, file_url } = await init.json();
 
-      const put = await fetch(upload_url, {
+      let initData = {};
+      try { initData = await initRes.json(); } catch (_) {}
+
+      if (!initRes.ok) {
+        throw new Error(initData.error || `Upload initiate failed (${initRes.status})`);
+      }
+      if (!initData.upload_url || !initData.file_url) {
+        throw new Error('Malformed upload response');
+      }
+
+      const put = await fetch(initData.upload_url, {
         method: 'PUT',
         headers: { 'Content-Type': 'image/png' },
         body: blob
       });
-      if (!put.ok) throw new Error('Fal image binary upload failed');
+      if (!put.ok) throw new Error(`Binary upload failed (${put.status})`);
 
-      return file_url;
+      return initData.file_url;
     }
 
     /* ==========================================================================
-       1-CLICK EXECUTE
+       1-CLICK EXECUTE  (via /api/tryon)
        ========================================================================== */
     executeBtn.addEventListener('click', async () => {
-      const key = getFalApiKey();
-      if (!key) {
-        keyWarning.classList.remove('hidden');
-        alert('FAL_KEY is not available. Add it to your environment variables (process.env.FAL_KEY or window.__ENV__.FAL_KEY).');
-        return;
-      }
       if (!base1024Blob) {
         alert('No photo loaded yet.');
         return;
@@ -1445,7 +1427,7 @@
 
       try {
         progressStep.textContent = 'UPLOADING PHOTO TO FAL STORAGE...';
-        const baseRemoteUrl = await uploadToFal(base1024Blob, key);
+        const baseRemoteUrl = await uploadToFal(base1024Blob);
 
         const imageUrls = [baseRemoteUrl];
         let finalPrompt, finalNegative;
@@ -1457,7 +1439,7 @@
 
           if (ref1024Blob) {
             progressStep.textContent = 'UPLOADING REFERENCE IMAGE...';
-            const refRemoteUrl = await uploadToFal(ref1024Blob, key);
+            const refRemoteUrl = await uploadToFal(ref1024Blob);
             imageUrls.push(refRemoteUrl);
             finalPrompt += REF_IMAGE_CLAUSE;
           }
@@ -1468,12 +1450,9 @@
           progressStep.textContent = `RUNNING FLUX 4B — COLOUR ${hairColor.hex}...`;
         }
 
-        const res = await fetch('https://fal.run/fal-ai/flux-2/klein/4b/edit', {
+        const res = await fetch('/api/tryon', {
           method: 'POST',
-          headers: {
-            'Authorization': `Key ${key}`,
-            'Content-Type': 'application/json'
-          },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             prompt: finalPrompt,
             negative_prompt: finalNegative,
@@ -1481,13 +1460,18 @@
           })
         });
 
+        let data = {};
+        try { data = await res.json(); } catch (_) {}
+
         if (!res.ok) {
-          const errData = await res.json().catch(() => ({}));
-          const errMsg = errData.detail?.[0]?.msg || errData.message || `HTTP ${res.status}`;
-          throw new Error(errMsg);
+          const msg =
+            data.error ||
+            data.detail?.[0]?.msg ||
+            data.message ||
+            `HTTP ${res.status}`;
+          throw new Error(msg);
         }
 
-        const data = await res.json();
         const finalUrl = data.images?.[0]?.url || data.image?.url;
         if (!finalUrl) throw new Error('No image returned by the model');
 
@@ -1548,23 +1532,34 @@
       if (!imgRendered.src) return;
       const a = document.createElement('a');
       a.href = imgRendered.src;
-      const tag = mode === 'style' ? getSelectedStyle().name.replace(/[^a-z0-9]+/gi, '_') : hairColor.hex.replace('#', '');
+      const tag = mode === 'style'
+        ? getSelectedStyle().name.replace(/[^a-z0-9]+/gi, '_')
+        : hairColor.hex.replace('#', '');
       a.download = `KAMI_${tag}_${Date.now()}.png`;
+      a.target = '_blank';
+      a.rel = 'noopener';
       a.click();
     });
 
     /* ==========================================================================
        INIT
        ========================================================================== */
-    window.addEventListener('DOMContentLoaded', () => {
+    window.addEventListener('DOMContentLoaded', async () => {
       initCamera();
-
-      if (!getFalApiKey()) keyWarning.classList.remove('hidden');
-
       renderCatTabs();
       renderStyleGrid();
       applyHairColor(hairColor.hex, hairColor.name);
       setMode('style');
+
+      try {
+        const r = await fetch('/api/health', { cache: 'no-store' });
+        if (r.ok) {
+          const d = await r.json();
+          if (!d.hasKey) keyWarning.classList.remove('hidden');
+        }
+      } catch (_) {
+        /* Functions not available (e.g., opened via file://). Silent. */
+      }
     });
   </script>
 </body>
