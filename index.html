@@ -6,12 +6,13 @@
   <link rel="icon" href="data:," />
   <title>KAMI — AI Hairstyle Studio</title>
 
-  <!-- Typography & Icons -->
+  <!-- Neo-Brutalist Typography -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo+Black&family=Plus+Jakarta+Sans:wght@500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-  <!-- Supabase JS Client -->
+  
+  <!-- Supabase JS Library -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <style>
@@ -44,6 +45,11 @@
 
     body {
       background-color: var(--beige);
+      background-image: 
+        radial-gradient(rgba(26, 26, 26, 0.16) 1.5px, transparent 1.5px), 
+        radial-gradient(rgba(26, 26, 26, 0.16) 1.5px, var(--beige) 1.5px);
+      background-size: 22px 22px;
+      background-position: 0 0, 11px 11px;
       color: var(--black);
       font-family: var(--font-body);
       overflow: hidden;
@@ -58,7 +64,12 @@
       inset: 0;
       display: flex;
       flex-direction: column;
-      background: var(--beige);
+      background-color: var(--beige);
+      background-image: 
+        radial-gradient(rgba(26, 26, 26, 0.14) 1.5px, transparent 1.5px), 
+        radial-gradient(rgba(26, 26, 26, 0.14) 1.5px, var(--beige) 1.5px);
+      background-size: 22px 22px;
+      background-position: 0 0, 11px 11px;
       opacity: 0;
       pointer-events: none;
       visibility: hidden;
@@ -144,10 +155,9 @@
       border-radius: 6px;
     }
 
-    /* VIEW 0: LOGIN MODAL / SCREEN */
+    /* VIEW 0: LOGIN */
     #loginScreen {
       z-index: 1000;
-      background: var(--beige);
       align-items: center;
       justify-content: center;
       padding: 24px;
@@ -344,6 +354,7 @@
       align-items: center;
       gap: 8px;
     }
+    .style-chip i { font-size: 0.85rem; }
     .style-chip.selected { background: var(--lime); box-shadow: var(--shadow-sm); transform: translate(-2px, -2px); }
 
     .ref-uploader {
@@ -371,11 +382,16 @@
     }
     .ref-thumb img { width: 100%; height: 100%; object-fit: cover; }
 
-    /* VIEW 4: PROCESSING */
+    /* VIEW 4: PROCESSING OVERLAY */
     .processing-overlay {
       position: absolute;
       inset: 0;
       background: var(--beige);
+      background-image: 
+        radial-gradient(rgba(26, 26, 26, 0.16) 1.5px, transparent 1.5px), 
+        radial-gradient(rgba(26, 26, 26, 0.16) 1.5px, var(--beige) 1.5px);
+      background-size: 22px 22px;
+      background-position: 0 0, 11px 11px;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -384,18 +400,21 @@
       text-align: center;
       z-index: 100;
     }
+    /* Accurate Centered Geometric Circular Spinner */
     .brutal-spinner {
-      width: 70px;
-      height: 70px;
+      width: 72px;
+      height: 72px;
       border: 8px solid var(--black);
       border-top-color: var(--lime);
       border-radius: 50%;
-      animation: spin 0.9s linear infinite;
+      animation: spin 0.85s linear infinite;
+      box-sizing: border-box;
       box-shadow: var(--shadow-sm);
+      margin: 0 auto;
     }
-    @keyframes spin { 100% { transform: rotate(360deg); } }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-    /* VIEW 5: COMPARISON SPLIT VIEWER */
+    /* VIEW 5: SPLIT COMPARISON */
     .compare-viewport {
       flex: 1;
       display: flex;
@@ -460,7 +479,12 @@
     #galleryModal {
       position: fixed;
       inset: 0;
-      background: var(--beige);
+      background-color: var(--beige);
+      background-image: 
+        radial-gradient(rgba(26, 26, 26, 0.16) 1.5px, transparent 1.5px), 
+        radial-gradient(rgba(26, 26, 26, 0.16) 1.5px, var(--beige) 1.5px);
+      background-size: 22px 22px;
+      background-position: 0 0, 11px 11px;
       z-index: 200;
       display: flex;
       flex-direction: column;
@@ -487,7 +511,7 @@
     .gallery-card img { width: 100%; aspect-ratio: 1/1; object-fit: cover; display: block; }
     .gallery-card-body { padding: 8px; font-size: 0.7rem; font-weight: 800; }
 
-    /* LIGHTBOX WITH ZOOM & SWIPE */
+    /* LIGHTBOX */
     #lightboxModal {
       position: fixed;
       inset: 0;
@@ -612,15 +636,13 @@
 
   <div id="toast" class="toast">TOAST</div>
 
-  <!-- =========================================================================
-       VIEW 0: USER LOGIN
-       ========================================================================= -->
+  <!-- VIEW 0: USER LOGIN -->
   <section id="loginScreen" class="view-screen active">
     <div class="login-card">
       <div class="brand-logo" style="display:inline-block; margin-bottom:16px;">KAMI</div>
       <h2 style="font-size:1.2rem; margin-bottom:8px;">CLIENT ACCESS</h2>
       <p style="font-size:0.78rem; font-weight:700; color:#555; margin-bottom:20px;">
-        Enter your registered phone number to open your personal studio &amp; vault.
+        Enter your registered mobile number to open your personal studio &amp; vault.
       </p>
       <input type="tel" id="loginPhoneInput" placeholder="+1234567890" style="width:100%; padding:14px; border:var(--border-thick); border-radius:12px; font-size:1.1rem; font-weight:800; font-family:var(--font-heading); margin-bottom:14px; text-align:center;" />
       <button id="loginBtn" class="btn-primary" style="background:var(--lime); color:var(--black);">
@@ -629,9 +651,7 @@
     </div>
   </section>
 
-  <!-- =========================================================================
-       VIEW 1: CAMERA SCREEN
-       ========================================================================= -->
+  <!-- VIEW 1: CAMERA SCREEN -->
   <section id="cameraScreen" class="view-screen">
     <div class="top-dock">
       <div class="brand-logo">KAMI</div>
@@ -649,14 +669,11 @@
     <div class="bottom-dock">
       <button id="switchCameraBtn" class="btn-icon" aria-label="Flip"><i class="bi bi-arrow-repeat"></i></button>
       <button id="shutterBtn" class="shutter-btn" aria-label="Take Photo"></button>
-      <!-- VAULT / GALLERY BUTTON (ALONG WITH CAPTURE BUTTON) -->
       <button id="openGalleryBtn" class="btn-icon" aria-label="Open Vault"><i class="bi bi-collection"></i></button>
     </div>
   </section>
 
-  <!-- =========================================================================
-       VIEW 2: 1024x1024 MANUAL CROP
-       ========================================================================= -->
+  <!-- VIEW 2: 1024x1024 MANUAL CROP -->
   <section id="cropScreen" class="view-screen">
     <header class="studio-header">
       <button id="cropCancelBtn" class="btn-pill"><i class="bi bi-x-lg"></i> CANCEL</button>
@@ -678,9 +695,7 @@
     </div>
   </section>
 
-  <!-- =========================================================================
-       VIEW 3: STUDIO
-       ========================================================================= -->
+  <!-- VIEW 3: STUDIO -->
   <section id="studioScreen" class="view-screen">
     <header class="studio-header">
       <button id="retakeBtn" class="btn-pill"><i class="bi bi-arrow-left"></i> RETAKE</button>
@@ -746,9 +761,7 @@
     </main>
   </section>
 
-  <!-- =========================================================================
-       VIEW 4: PROCESSING OVERLAY
-       ========================================================================= -->
+  <!-- VIEW 4: PROCESSING OVERLAY -->
   <div id="processingScreen" class="processing-overlay hidden">
     <div class="brutal-spinner"></div>
     <h1 id="timerText" style="font-family:var(--font-heading); font-size:2rem; margin-top:22px;">STYLING... 0S</h1>
@@ -757,9 +770,7 @@
     </div>
   </div>
 
-  <!-- =========================================================================
-       VIEW 5: SPLIT COMPARISON
-       ========================================================================= -->
+  <!-- VIEW 5: SPLIT COMPARISON -->
   <section id="compareScreen" class="view-screen">
     <header class="studio-header">
       <button id="backToStudioBtn" class="btn-pill"><i class="bi bi-chevron-left"></i> EDIT</button>
@@ -778,9 +789,7 @@
     </div>
   </section>
 
-  <!-- =========================================================================
-       VIEW 6: USER VAULT / GALLERY MODAL (MAX 30 PHOTOS)
-       ========================================================================= -->
+  <!-- VIEW 6: USER VAULT MODAL (MAX 30 PHOTOS) -->
   <div id="galleryModal" class="hidden">
     <header class="studio-header">
       <button id="closeGalleryBtn" class="btn-pill"><i class="bi bi-x-lg"></i> CLOSE</button>
@@ -790,9 +799,7 @@
     <div class="gallery-grid" id="galleryGrid"></div>
   </div>
 
-  <!-- =========================================================================
-       VIEW 7: LIGHTBOX (WITH SMOOTH ZOOM & SLIDE)
-       ========================================================================= -->
+  <!-- VIEW 7: LIGHTBOX (ZOOM + SWIPE) -->
   <div id="lightboxModal" class="hidden">
     <div class="lightbox-toolbar">
       <button id="closeLightboxBtn" class="btn-pill" style="padding:6px 14px; font-size:0.75rem;"><i class="bi bi-arrow-left"></i> BACK</button>
@@ -811,9 +818,7 @@
     </div>
   </div>
 
-  <!-- =========================================================================
-       COLOR PICKER MODAL
-       ========================================================================= -->
+  <!-- COLOR PICKER MODAL -->
   <div id="colorPickerModal" class="modal-backdrop hidden">
     <div class="modal-card">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
@@ -830,93 +835,26 @@
     </div>
   </div>
 
-  <!-- =========================================================================
-       APPLICATION LOGIC & SUPABASE INTEGRATION
-       ========================================================================= -->
   <script>
     /* ==========================================================================
-       CONFIG: SUPABASE CREDENTIALS (REPLACE WITH YOURS)
+       SUPABASE CLIENT (Fixed Identifier Conflict by using 'sb')
        ========================================================================== */
     const SUPABASE_URL = 'https://rmfubnduytozikcgzvok.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJtZnVibmR1eXRvemlrY2d6dm9rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2OTIyMDgsImV4cCI6MjA5NzI2ODIwOH0.XmxDD8mH8rgq3OZmD7jVophtH2W3NNDgSRJKC3RXvJU';
-    const supabase = window.supabase?.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const sb = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
 
-    /* ==========================================================================
-       HARDCODED TUNED PROMPTS
-       ========================================================================== */
-    const STYLE_TEMPLATE = (desc) =>
-      `Edit only the hair. Change the existing hairstyle into ${desc}. ` +
-      `Keep the original hair colour exactly as it is in the source photo. ` +
-      `The hair must grow naturally from the scalp with visible roots, individual strands, flyaways and natural shadows. ` +
-      `Do not change the face, expression, head angle, pose, skin, clothing, lighting, background or camera. Realistic photograph, not a wig or helmet.`;
+    /* Fallback default prompt templates if app_config is empty */
+    let systemPrompts = {
+      base_style: "Edit only the hair. Change the existing hairstyle into {DESC}. Keep the original hair colour exactly as it is in the source photo. The hair must grow naturally from the scalp with visible roots, individual strands, flyaways and natural shadows. Do not change the face, expression, head angle, pose, skin, clothing, lighting, background or camera. Realistic photograph, not a wig or helmet.",
+      base_color: "Edit only the hair colour. Recolour the existing hair to a realistic salon dyed shade, exactly {HEX}. Keep the exact same hairstyle, cut, length, layers, texture, volume and silhouette as the source photo. Recolour every strand from root to tip, following the original lighting and highlights. Do not change the face, expression, head angle, pose, skin tone, clothing, lighting, background or camera.",
+      ref_clause: " Use image 2 only for the hair shape, length, layering and fringe. Ignore the reference person, hair colour, pose, lighting and background.",
+      negative: "wig, hairpiece, hair cap, helmet hair, CGI hair, plastic hair, artificial overlay, bowl cut, buzz cut, shaved sides, undercut, excessive crown volume, perfectly symmetrical hair, fake hairline, cartoon, 2D, illustration, changed face, altered facial proportions, modified jawline, modified forehead, changed ears, different person, beautified face, altered background, changed lighting, changed pose, different head angle, turned face, profile view, unrealistic hair."
+    };
 
-    const COLOR_TEMPLATE = (hex) =>
-      `Edit only the hair colour. Recolour the existing hair to a realistic salon dyed shade, exactly ${hex}. ` +
-      `Keep the exact same hairstyle, cut, length, layers, texture, volume and silhouette as the source photo. ` +
-      `Recolour every strand from root to tip, following the original lighting and highlights. ` +
-      `Do not change the face, expression, head angle, pose, skin tone, clothing, lighting, background or camera.`;
+    let liveHairstyles = [];
+    let liveCategories = [];
 
-    const REF_IMAGE_CLAUSE = ` Use image 2 only for the hair shape, length, layering and fringe. Ignore the reference person, hair colour, pose, lighting and background.`;
-    const NEGATIVE_PROMPT = `wig, hairpiece, hair cap, helmet hair, CGI hair, plastic hair, artificial overlay, bowl cut, buzz cut, shaved sides, undercut, excessive crown volume, perfectly symmetrical hair, fake hairline, cartoon, 2D, illustration, changed face, altered facial proportions, modified jawline, modified forehead, changed ears, different person, beautified face, altered background, changed lighting, changed pose, different head angle, turned face, profile view, unrealistic hair.`;
-
-    /* 50 HAIRSTYLES (ALL SCISSORS ICON) */
-    const HAIRSTYLES = [
-      { id:'pixie', cat:'Bob & Short', name:'Pixie Cut', desc:'a realistic short textured feminine pixie cut with tapered sides and nape, slightly longer layered top, soft side-swept fringe and natural temple pieces' },
-      { id:'butterfly', cat:'Modern Cuts', name:'Butterfly Cut', desc:'a realistic butterfly cut with long cascading layers, short curtain bangs and soft flipped ends' },
-      { id:'longlayered', cat:'Modern Cuts', name:'Long Layered Cut', desc:'a realistic long layered cut with smooth graduated layers and natural movement at the ends' },
-      { id:'faceframing', cat:'Modern Cuts', name:'Face-Framing Layers', desc:'a realistic cut with soft face-framing layers curving around cheekbones and jawline' },
-      { id:'feather', cat:'Modern Cuts', name:'Feather Cut', desc:'a realistic feather cut with feather-light graduated layers tapering softly toward the ends' },
-      { id:'curtainbangs', cat:'Modern Cuts', name:'Curtain Bangs', desc:'a realistic cut with long curtain bangs parted in the middle and swept outward' },
-      { id:'wolf', cat:'Modern Cuts', name:'Wolf Cut', desc:'a realistic wolf cut with choppy crown layers, heavy volume and longer tapered ends' },
-      { id:'hush', cat:'Modern Cuts', name:'Hush Cut', desc:'a realistic hush cut with soft airy layers, wispy ends and light face-framing pieces' },
-      { id:'shag', cat:'Modern Cuts', name:'Shag Cut', desc:'a realistic shag cut with choppy razored layers, textured ends and a soft wispy fringe' },
-      { id:'ucut', cat:'Modern Cuts', name:'U-Cut', desc:'a realistic U-cut with a smooth rounded U-shaped hemline and even blended length' },
-      { id:'vcut', cat:'Modern Cuts', name:'V-Cut', desc:'a realistic V-cut with a deep V-shaped layered hemline tapering to a point at the back' },
-      { id:'bluntbob', cat:'Bob & Short', name:'Blunt Bob', desc:'a realistic blunt bob cut straight across at jaw length with a crisp even hemline' },
-      { id:'layeredbob', cat:'Bob & Short', name:'Layered Bob', desc:'a realistic layered bob with soft interior layers adding volume and movement' },
-      { id:'frenchbob', cat:'Bob & Short', name:'French Bob', desc:'a realistic French bob, chin-length and textured with a short soft fringe' },
-      { id:'lob', cat:'Bob & Short', name:'Long Bob / Lob', desc:'a realistic long bob (lob) falling past the collarbone with soft blended layers' },
-      { id:'sleekstraight', cat:'Open & Styling', name:'Sleek Straight Hair', desc:'a realistic sleek straight style, pin-straight and glossy with smooth drape' },
-      { id:'glasshair', cat:'Open & Styling', name:'Glass Hair', desc:'a realistic glass hair look, ultra-sleek mirror-shiny perfectly straight hair with a blunt cut' },
-      { id:'softwaves', cat:'Open & Styling', name:'Soft Waves', desc:'a realistic soft wavy style with gentle romantic S-waves flowing through lengths' },
-      { id:'beachwaves', cat:'Open & Styling', name:'Beach Waves', desc:'a realistic beach wave style with relaxed tousled salt-spray texture and undone ends' },
-      { id:'hollywoodwaves', cat:'Open & Styling', name:'Hollywood Waves', desc:'a realistic Hollywood wave style with deep glossy uniform vintage waves cascading down' },
-      { id:'softcurls', cat:'Open & Styling', name:'Soft Curls', desc:'a realistic soft curl style with loose bouncy well-defined curls' },
-      { id:'voluminouscurls', cat:'Open & Styling', name:'Voluminous Curls', desc:'a realistic voluminous curly style with big bouncy well-defined curls full of body' },
-      { id:'blowout', cat:'Open & Styling', name:'Voluminous Blowout', desc:'a realistic voluminous blowout with lifted roots and rounded bouncy ends' },
-      { id:'sidesweptwaves', cat:'Open & Styling', name:'Side-Swept Waves', desc:'a realistic side-swept wavy style with all hair swept over one shoulder in soft waves' },
-      { id:'mermaidwaves', cat:'Open & Styling', name:'Mermaid Waves', desc:'a realistic mermaid wave style with long flowing rippled waves falling past shoulders' },
-      { id:'highpony', cat:'Ponytails', name:'High Ponytail', desc:'a realistic high ponytail secured at the crown with a long swinging tail' },
-      { id:'sleeklowpony', cat:'Ponytails', name:'Sleek Low Ponytail', desc:'a realistic sleek low ponytail tied at the nape, smooth and glossy with centre part' },
-      { id:'messypony', cat:'Ponytails', name:'Messy Ponytail', desc:'a realistic messy ponytail with textured volume and loose face-framing pieces' },
-      { id:'wavypony', cat:'Ponytails', name:'Wavy Ponytail', desc:'a realistic wavy ponytail with soft waves through the tail and a smooth base' },
-      { id:'braidedpony', cat:'Ponytails', name:'Braided Ponytail', desc:'a realistic braided ponytail with a sleek base leading into a long braided tail' },
-      { id:'messybun', cat:'Buns & Juda', name:'Messy Bun', desc:'a realistic messy bun gathered high on the head with loose textured loops and soft flyaways' },
-      { id:'sleeklowbun', cat:'Buns & Juda', name:'Sleek Low Bun', desc:'a realistic sleek low bun at the nape, smooth and polished with a centre part' },
-      { id:'highbun', cat:'Buns & Juda', name:'High Bun', desc:'a realistic high bun top knot sitting neatly on the crown, rounded and smooth' },
-      { id:'classicjuda', cat:'Buns & Juda', name:'Classic Juda', desc:'a realistic classic juda, a smooth rounded traditional bun resting at the back' },
-      { id:'gajrajuda', cat:'Buns & Juda', name:'Gajra Juda', desc:'a realistic traditional juda bun encircled by a gajra of fresh white jasmine flowers' },
-      { id:'mograbun', cat:'Buns & Juda', name:'Mogra Bun', desc:'a realistic mogra bun decorated with small white jasmine (mogra) flowers pinned around it' },
-      { id:'braid3', cat:'Braids', name:'Classic Three-Strand Braid', desc:'a realistic classic three-strand braid running neatly down the back' },
-      { id:'frenchbraid', cat:'Braids', name:'French Braid', desc:'a realistic French braid starting at the crown and weaving neatly down the back' },
-      { id:'fishtail', cat:'Braids', name:'Fishtail Braid', desc:'a realistic fishtail braid with fine herringbone-patterned interwoven strands' },
-      { id:'dutchbraid', cat:'Braids', name:'Dutch Braid', desc:'a realistic Dutch braid sitting raised on top of the hair with clean 3D weave' },
-      { id:'crownbraid', cat:'Braids', name:'Crown Braid', desc:'a realistic crown braid wrapped around the head like a halo' },
-      { id:'sidebraid', cat:'Braids', name:'Side Braid', desc:'a realistic side braid draped over one shoulder with relaxed face-framing tendrils' },
-      { id:'halfupbraid', cat:'Braids', name:'Half-Up Braid', desc:'a realistic half-up style with top section braided and pinned back with flowing hair beneath' },
-      { id:'punjabigutt', cat:'Punjabi & Indian', name:'Punjabi Gutt / Choti', desc:'a realistic Punjabi gutt (choti), a single long thick plait with smooth centre-parted front' },
-      { id:'paranda', cat:'Punjabi & Indian', name:'Punjabi Paranda Braid', desc:'a realistic Punjabi paranda braid with colourful tasselled paranda woven into the braid' },
-      { id:'gotachoti', cat:'Punjabi & Indian', name:'Gota Choti', desc:'a realistic gota choti braid wrapped with gold gota patti ribbon along its length' },
-      { id:'bridalbraid', cat:'Punjabi & Indian', name:'Punjabi Bridal Braid', desc:'a realistic Punjabi bridal braid, long and thick with traditional gold clips and baby pearls' },
-      { id:'gajrabraid', cat:'Punjabi & Indian', name:'Floral / Gajra Braid', desc:'a realistic braid decorated with fresh white jasmine flowers wrapped along its length' },
-      { id:'halfuphalfdown', cat:'Half-Up & Bridal', name:'Half-Up Half-Down', desc:'a realistic half-up half-down style with top pinned back and rest cascading in soft waves' },
-      { id:'bridalhalfup', cat:'Half-Up & Bridal', name:'Bridal Half-Up Curls', desc:'a realistic bridal half-up style with twisted crown pinned for maang tikka and cascading curls' }
-    ];
-    const CATEGORIES = ['Bob & Short','Modern Cuts','Open & Styling','Ponytails','Buns & Juda','Braids','Punjabi & Indian','Half-Up & Bridal'];
-
-    /* ==========================================================================
-       STATE & VARIABLES
-       ========================================================================== */
+    /* App State */
     let currentUserPhone = localStorage.getItem('kami_user_phone') || null;
     let cameraStream = null;
     let cameraFacingMode = 'user';
@@ -927,20 +865,18 @@
     let currentColor = '#6040FF';
     let activeMode = 'style';
 
-    // Crop State
     let cropImgX = 0, cropImgY = 0, cropImgScale = 1;
     let isCroppingPointer = false;
     let cropStartX = 0, cropStartY = 0;
     const activePointers = new Map();
     let prevDiff = -1;
 
-    // Gallery & Lightbox State
     let userGenerations = [];
     let activeLightboxIndex = 0;
     let lightboxScale = 1;
     let lightboxTouchStartX = 0;
 
-    // Elements
+    // DOM Elements
     const loginScreen = document.getElementById('loginScreen');
     const loginPhoneInput = document.getElementById('loginPhoneInput');
     const loginBtn = document.getElementById('loginBtn');
@@ -1002,7 +938,48 @@
     const clearRefBtn = document.getElementById('clearRefBtn');
 
     /* ==========================================================================
-       AUTHENTICATION & USER SESSION
+       DYNAMIC SUPABASE PROMPT & STYLE FETCHER
+       ========================================================================== */
+    async function loadDynamicPromptsAndStyles() {
+      if (!sb) return;
+      try {
+        // Fetch Master Prompts
+        const { data: configData } = await sb.from('app_config').select('*');
+        if (configData && configData.length > 0) {
+          configData.forEach(item => {
+            if (systemPrompts[item.key] !== undefined) {
+              systemPrompts[item.key] = item.value;
+            }
+          });
+        }
+
+        // Fetch Dynamic Hairstyles
+        const { data: styleData } = await sb.from('hairstyles').select('*').order('created_at', { ascending: true });
+        if (styleData && styleData.length > 0) {
+          liveHairstyles = styleData;
+          liveCategories = [...new Set(styleData.map(s => s.category))];
+          if (!liveCategories.includes(currentCategory)) {
+            currentCategory = liveCategories[0];
+          }
+          currentStyleId = liveHairstyles[0]?.id || 'pixie';
+        } else {
+          // Default fallbacks if empty
+          liveHairstyles = [
+            { id:'pixie', cat:'Bob & Short', name:'Pixie Cut', desc_prompt:'a realistic short textured feminine pixie cut with tapered sides and nape, slightly longer layered top, soft side-swept fringe and natural temple pieces' },
+            { id:'butterfly', cat:'Modern Cuts', name:'Butterfly Cut', desc_prompt:'a realistic butterfly cut with long cascading layers, short curtain bangs and soft flipped ends' },
+            { id:'wolf', cat:'Modern Cuts', name:'Wolf Cut', desc_prompt:'a realistic wolf cut with choppy crown layers, heavy volume and longer tapered ends' },
+            { id:'frenchbob', cat:'Bob & Short', name:'French Bob', desc_prompt:'a realistic French bob, chin-length and textured with a short soft fringe' }
+          ];
+          liveCategories = ['Bob & Short', 'Modern Cuts'];
+        }
+        renderStudioStyles();
+      } catch (err) {
+        console.warn('Could not load dynamic styles from Supabase, using defaults', err);
+      }
+    }
+
+    /* ==========================================================================
+       AUTHENTICATION & SESSION
        ========================================================================== */
     function checkAuthSession() {
       if (currentUserPhone) {
@@ -1016,18 +993,14 @@
 
     loginBtn.addEventListener('click', async () => {
       const phone = loginPhoneInput.value.trim();
-      if (!phone) {
-        showToast('PLEASE ENTER MOBILE NUMBER');
-        return;
-      }
+      if (!phone) { showToast('PLEASE ENTER MOBILE NUMBER'); return; }
       try {
         loginBtn.disabled = true;
         loginBtn.textContent = 'CHECKING ACCESS...';
 
-        // Lookup in Supabase
-        const { data, error } = await supabase.from('users').select('*').eq('phone', phone).single();
+        const { data, error } = await sb.from('users').select('*').eq('phone', phone).single();
         if (error || !data) {
-          alert('ACCESS DENIED: Mobile number not registered.\nPlease ask the salon administrator to add your number in admin.html.');
+          alert('ACCESS DENIED: Phone number not registered.\nPlease have the salon admin add your number in admin.html.');
           return;
         }
 
@@ -1089,7 +1062,7 @@
     });
 
     /* ==========================================================================
-       MANUAL 1024x1024 CROP
+       1024x1024 MANUAL CROP ENGINE
        ========================================================================== */
     function loadImageForCrop(sourceBlob) {
       const url = URL.createObjectURL(sourceBlob);
@@ -1164,7 +1137,6 @@
 
     cropCancelBtn.addEventListener('click', () => { navigate(cameraScreen); initCamera(); });
 
-    // ULTRA-COMPRESSED WEBP EXPORT (HIGH QUALITY, MINIMAL KB STORAGE)
     cropConfirmBtn.addEventListener('click', () => {
       const stageW = cropStage.clientWidth || 400;
       const canvas = document.createElement('canvas');
@@ -1180,7 +1152,6 @@
 
       ctx.drawImage(cropImage, cx - dw / 2, cy - dh / 2, dw, dh);
 
-      // Export as WebP (~65KB-90KB)
       canvas.toBlob((blob) => {
         base1024Blob = blob;
         const url = URL.createObjectURL(blob);
@@ -1209,12 +1180,12 @@
     retakeBtn.addEventListener('click', () => { navigate(cameraScreen); initCamera(); });
 
     /* ==========================================================================
-       STUDIO TABS & 50 STYLES
+       STUDIO UI & SCISSORS CHIP RENDERING
        ========================================================================== */
     function renderStudioStyles() {
       const catTabs = document.getElementById('catTabs');
       catTabs.innerHTML = '';
-      CATEGORIES.forEach(cat => {
+      liveCategories.forEach(cat => {
         const b = document.createElement('button');
         b.className = 'cat-tab' + (cat === currentCategory ? ' active' : '');
         b.textContent = cat;
@@ -1227,7 +1198,7 @@
 
       const styleGrid = document.getElementById('styleGrid');
       styleGrid.innerHTML = '';
-      HAIRSTYLES.filter(s => s.cat === currentCategory).forEach(style => {
+      liveHairstyles.filter(s => s.cat === currentCategory || s.category === currentCategory).forEach(style => {
         const b = document.createElement('button');
         b.className = 'style-chip' + (style.id === currentStyleId ? ' selected' : '');
         b.innerHTML = `<i class="bi bi-scissors"></i><span>${style.name}</span>`;
@@ -1242,7 +1213,7 @@
     }
 
     function updateExecuteBtnText() {
-      const s = HAIRSTYLES.find(x => x.id === currentStyleId) || HAIRSTYLES[0];
+      const s = liveHairstyles.find(x => x.id === currentStyleId) || liveHairstyles[0] || { name: 'PIXIE CUT' };
       if (activeMode === 'style') {
         executeBtn.className = 'btn-primary';
         executeBtn.innerHTML = `TRANSFORM TO ${s.name.toUpperCase()} WITH KAMI AI <i class="bi bi-stars"></i>`;
@@ -1263,7 +1234,7 @@
       });
     });
 
-    /* REFERENCE IMAGE */
+    /* Reference Image Handler */
     refCard.addEventListener('click', (e) => {
       if (e.target !== clearRefBtn && !clearRefBtn.contains(e.target)) refFileInput.click();
     });
@@ -1303,16 +1274,16 @@
     });
 
     /* ==========================================================================
-       KAMI AI SYNTHESIS & 30-IMAGE LIMIT STORAGE PIPELINE
+       STORAGE & FLUX 2 KLEIN EXECUTION PIPELINE
        ========================================================================== */
     async function uploadBlobToSupabaseStorage(blob, filename) {
       const path = `${currentUserPhone}/${Date.now()}_${filename}.webp`;
-      const { data, error } = await supabase.storage.from('kami-images').upload(path, blob, {
+      const { data, error } = await sb.storage.from('kami-images').upload(path, blob, {
         contentType: 'image/webp',
         upsert: true
       });
       if (error) throw new Error('KAMI Vault Upload: ' + error.message);
-      const { data: pubData } = supabase.storage.from('kami-images').getPublicUrl(path);
+      const { data: pubData } = sb.storage.from('kami-images').getPublicUrl(path);
       return pubData.publicUrl;
     }
 
@@ -1334,27 +1305,27 @@
         let finalPrompt;
 
         if (activeMode === 'style') {
-          const s = HAIRSTYLES.find(x => x.id === currentStyleId) || HAIRSTYLES[0];
-          finalPrompt = STYLE_TEMPLATE(s.desc);
+          const s = liveHairstyles.find(x => x.id === currentStyleId) || liveHairstyles[0];
+          const desc = s.desc_prompt || s.desc || s.name;
+          finalPrompt = systemPrompts.base_style.replace('{DESC}', desc);
           if (ref1024Blob) {
             progressStep.textContent = 'PROCESSING REFERENCE CUT WITH KAMI AI...';
             const refRemoteUrl = await uploadBlobToSupabaseStorage(ref1024Blob, 'reference');
             imageUrls.push(refRemoteUrl);
-            finalPrompt += REF_IMAGE_CLAUSE;
+            finalPrompt += systemPrompts.ref_clause;
           }
           progressStep.textContent = `CREATING IMAGE WITH KAMI AI (${s.name.toUpperCase()})...`;
         } else {
-          finalPrompt = COLOR_TEMPLATE(currentColor);
+          finalPrompt = systemPrompts.base_color.replace('{HEX}', currentColor);
           progressStep.textContent = `COLOURING HAIR WITH KAMI AI (${currentColor})...`;
         }
 
-        // Call backend tryon API
         const res = await fetch('/api/tryon', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             prompt: finalPrompt,
-            negative_prompt: NEGATIVE_PROMPT,
+            negative_prompt: systemPrompts.negative,
             image_urls: imageUrls
           })
         });
@@ -1364,12 +1335,10 @@
         const finalUrl = data.images?.[0]?.url || data.image?.url;
         if (!finalUrl) throw new Error('No output from Kami AI');
 
-        // Download result and compress to tiny WebP before storing to Supabase
         progressStep.textContent = 'SAVING TO KAMI AI VAULT...';
         const imgFetch = await fetch(finalUrl);
         const imgBlob = await imgFetch.blob();
         
-        // Convert returned image into high-res low-KB WebP
         const convertedWebpBlob = await new Promise(resolve => {
           const tempImg = new Image();
           tempImg.crossOrigin = 'anonymous';
@@ -1384,12 +1353,11 @@
 
         const vaultWebpUrl = await uploadBlobToSupabaseStorage(convertedWebpBlob, 'result');
 
-        // Record in Supabase database (auto-enforces 30 image limit via trigger)
         const currentStyleName = activeMode === 'style' 
-          ? (HAIRSTYLES.find(x => x.id === currentStyleId)?.name || 'Pixie Cut')
+          ? (liveHairstyles.find(x => x.id === currentStyleId)?.name || 'Pixie Cut')
           : `Colour ${currentColor}`;
 
-        await supabase.from('generations').insert({
+        await sb.from('generations').insert({
           user_phone: currentUserPhone,
           image_url: vaultWebpUrl,
           style_name: currentStyleName,
@@ -1409,9 +1377,7 @@
       }
     });
 
-    /* ==========================================================================
-       SLIDER COMPARISON
-       ========================================================================== */
+    /* Slider Comparison */
     function resetSlider() {
       imgRendered.style.clipPath = `polygon(50% 0, 100% 0, 100% 100%, 50% 100%)`;
       sliderDivider.style.left = `50%`;
@@ -1434,13 +1400,13 @@
     });
 
     /* ==========================================================================
-       USER VAULT & ROCK-SOLID LIGHTBOX (ZOOM + SWIPE)
+       USER VAULT & LIGHTBOX (ZOOM + SWIPE)
        ========================================================================== */
     async function loadUserVault() {
       galleryGrid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:30px; font-weight:800;">LOADING KAMI VAULT...</div>';
       galleryModal.classList.remove('hidden');
 
-      const { data, error } = await supabase
+      const { data, error } = await sb
         .from('generations')
         .select('*')
         .eq('user_phone', currentUserPhone)
@@ -1476,7 +1442,6 @@
     openGalleryFromStudioBtn.addEventListener('click', loadUserVault);
     closeGalleryBtn.addEventListener('click', () => galleryModal.classList.add('hidden'));
 
-    /* ZERO-ERROR LIGHTBOX IMPLEMENTATION */
     function openLightbox(index) {
       activeLightboxIndex = index;
       lightboxScale = 1;
@@ -1496,7 +1461,6 @@
 
     closeLightboxBtn.addEventListener('click', () => lightboxModal.classList.add('hidden'));
 
-    // Zoom Controls
     zoomInBtn.addEventListener('click', () => {
       lightboxScale = Math.min(lightboxScale + 0.5, 4.0);
       lightboxImg.style.transform = `scale(${lightboxScale})`;
@@ -1513,21 +1477,18 @@
       zoomResetBtn.textContent = '1x';
     });
 
-    // Touch Swipe Left/Right Navigation
     lightboxStage.addEventListener('touchstart', (e) => {
       if (e.touches.length === 1) lightboxTouchStartX = e.touches[0].clientX;
     }, { passive: true });
 
     lightboxStage.addEventListener('touchend', (e) => {
-      if (lightboxScale > 1.0) return; // Don't slide if zoomed in
+      if (lightboxScale > 1.0) return;
       const touchEndX = e.changedTouches[0].clientX;
       const diff = touchEndX - lightboxTouchStartX;
       if (diff > 50 && activeLightboxIndex > 0) {
-        // Swipe Right -> Prev
         activeLightboxIndex--;
         updateLightboxDisplay();
       } else if (diff < -50 && activeLightboxIndex < userGenerations.length - 1) {
-        // Swipe Left -> Next
         activeLightboxIndex++;
         updateLightboxDisplay();
       }
@@ -1538,12 +1499,12 @@
       if (!item) return;
       const a = document.createElement('a');
       a.href = item.image_url;
-      a.download = `KAMI_Creation_${activeLightboxIndex + 1}.webp`;
+      a.download = `KAMI_${activeLightboxIndex + 1}.webp`;
       a.click();
     });
 
     /* ==========================================================================
-       COLOR PICKER (GPU GRADIENT)
+       COLOR PICKER (GPU ACCELERATED GRADIENT)
        ========================================================================== */
     const colorSwatch = document.getElementById('colorSwatch');
     const hexInput = document.getElementById('hexInput');
@@ -1639,7 +1600,6 @@
       updateExecuteBtnText();
     });
 
-    // Preset Swatches
     const PRESETS = ['#0B0B0B','#4A2C17','#C99A4B','#E8DFC8','#B4551F','#5C1A2B','#E8467C','#6040FF','#1F6E6E'];
     PRESETS.forEach(hex => {
       const b = document.createElement('button');
@@ -1656,12 +1616,10 @@
       presetGrid.appendChild(b);
     });
 
-    /* ==========================================================================
-       INIT
-       ========================================================================== */
+    /* Initialization */
     window.addEventListener('DOMContentLoaded', () => {
       colorSwatch.style.background = currentColor;
-      renderStudioStyles();
+      loadDynamicPromptsAndStyles();
       checkAuthSession();
     });
   </script>
