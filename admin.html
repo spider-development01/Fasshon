@@ -4,13 +4,15 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
   <link rel="icon" href="data:," />
-  <title>KAMI AI — Master Supervisor Dashboard</title>
+  <title>KAMI AI — Master Supervisor Suite</title>
 
   <!-- Typography & Icons -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo+Black&family=Plus+Jakarta+Sans:wght@500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  
+  <!-- Supabase JS Library -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <style>
@@ -41,9 +43,14 @@
 
     body {
       background-color: var(--beige);
+      background-image: 
+        radial-gradient(rgba(26, 26, 26, 0.16) 1.5px, transparent 1.5px), 
+        radial-gradient(rgba(26, 26, 26, 0.16) 1.5px, var(--beige) 1.5px);
+      background-size: 22px 22px;
+      background-position: 0 0, 11px 11px;
       color: var(--black);
       font-family: var(--font-body);
-      padding: 24px 16px 60px;
+      padding: 20px 14px 60px;
     }
 
     .container { max-width: 1100px; margin: 0 auto; }
@@ -58,13 +65,38 @@
     }
     .brand {
       font-family: var(--font-display);
-      font-size: 2.4rem;
+      font-size: 2.2rem;
       background: var(--yellow);
       border: var(--border-thick);
       padding: 2px 14px;
       border-radius: 12px;
       box-shadow: var(--shadow-sm);
       transform: rotate(-2deg);
+    }
+
+    .nav-tabs {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      margin-bottom: 20px;
+      padding-bottom: 4px;
+    }
+    .nav-tab {
+      padding: 10px 18px;
+      background: var(--white);
+      border: var(--border-thick);
+      border-radius: var(--radius-pill);
+      font-family: var(--font-heading);
+      font-size: 0.8rem;
+      cursor: pointer;
+      box-shadow: var(--shadow-sm);
+      white-space: nowrap;
+    }
+    .nav-tab.active {
+      background: var(--black);
+      color: var(--white);
+      transform: translate(2px, 2px);
+      box-shadow: none;
     }
 
     .card {
@@ -86,6 +118,7 @@
       cursor: pointer;
       box-shadow: var(--shadow-sm);
       user-select: none;
+      transition: transform 0.1s ease;
     }
     button:active { transform: translate(3px, 3px); box-shadow: none; }
 
@@ -94,9 +127,11 @@
       padding: 12px 14px;
       border: var(--border-thick);
       border-radius: 10px;
-      font-family: var(--font-heading);
-      font-size: 0.95rem;
+      font-family: var(--font-body);
+      font-weight: 700;
+      font-size: 0.9rem;
       margin-bottom: 12px;
+      background: var(--white);
     }
 
     .grid-users {
@@ -116,7 +151,7 @@
 
     .master-gallery {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
       gap: 16px;
     }
     .media-card {
@@ -138,6 +173,17 @@
       font-size: 0.68rem;
       text-transform: uppercase;
     }
+
+    .style-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px;
+      border-bottom: 2px dashed #ddd;
+    }
+    .style-row:last-child { border-bottom: none; }
+
+    .hidden { display: none !important; }
   </style>
 </head>
 <body>
@@ -145,87 +191,157 @@
     <header>
       <div style="display:flex; align-items:center; gap:12px;">
         <div class="brand">KAMI</div>
-        <h1 style="font-family:var(--font-heading); font-size:1.4rem;">SUPERVISOR SUITE</h1>
+        <h1 style="font-family:var(--font-heading); font-size:1.3rem;">SUPERVISOR SUITE</h1>
       </div>
-      <a href="index.html" target="_blank" style="text-decoration:none;"><button style="background:var(--lime);">LAUNCH CLIENT STUDIO <i class="bi bi-box-arrow-up-right"></i></button></a>
+      <div class="badge" style="background:var(--lime);">SUPERVISOR ROOT</div>
     </header>
 
-    <!-- SECTION 1: ADD USER -->
-    <div class="card">
-      <h2 style="font-family:var(--font-heading); font-size:1.15rem; margin-bottom:14px;"><i class="bi bi-person-plus-fill"></i> ADD CLIENT USER</h2>
-      <div style="display:flex; flex-wrap:wrap; gap:12px;">
-        <input type="tel" id="newPhone" placeholder="Mobile Phone (e.g. +1234567890)" class="input-box" style="flex:2; min-width:220px; margin-bottom:0;" />
-        <input type="text" id="newName" placeholder="Client Name (Optional)" class="input-box" style="flex:2; min-width:200px; margin-bottom:0;" />
-        <button id="addUserBtn" style="background:var(--lime); flex:1; min-width:140px;">ADD CLIENT</button>
-      </div>
+    <!-- Admin Navigation Tabs -->
+    <div class="nav-tabs">
+      <button class="nav-tab active" data-target="tabUsers"><i class="bi bi-people-fill"></i> CLIENTS</button>
+      <button class="nav-tab" data-target="tabStyles"><i class="bi bi-scissors"></i> HAIRSTYLES &amp; PROMPTS</button>
+      <button class="nav-tab" data-target="tabPrompts"><i class="bi bi-cpu-fill"></i> SYSTEM PROMPTS</button>
+      <button class="nav-tab" data-target="tabVault"><i class="bi bi-images"></i> MASTER VAULT</button>
     </div>
 
-    <!-- SECTION 2: REGISTERED USERS LIST & USAGE (30 LIMIT TRACKER) -->
-    <div class="card">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
-        <h2 style="font-family:var(--font-heading); font-size:1.15rem;"><i class="bi bi-people-fill"></i> REGISTERED CLIENTS (<span id="userCount">0</span>)</h2>
-        <button id="refreshUsersBtn" style="padding:6px 14px; font-size:0.75rem;"><i class="bi bi-arrow-clockwise"></i> REFRESH</button>
-      </div>
-      <div class="grid-users" id="usersList">Loading users...</div>
-    </div>
-
-    <!-- SECTION 3: MASTER VAULT (ALL PHOTOS FROM ALL USERS) -->
-    <div class="card">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
-        <div>
-          <h2 style="font-family:var(--font-heading); font-size:1.15rem;"><i class="bi bi-images"></i> MASTER KAMI VAULT</h2>
-          <p style="font-size:0.75rem; color:#666; font-weight:700;">Every creation across all users (Ultra-compact WebP storage).</p>
+    <!-- TAB 1: USERS -->
+    <div id="tabUsers" class="tab-content">
+      <div class="card">
+        <h2 style="font-family:var(--font-heading); font-size:1.15rem; margin-bottom:12px;"><i class="bi bi-person-plus-fill"></i> ADD CLIENT USER</h2>
+        <div style="display:flex; flex-wrap:wrap; gap:12px;">
+          <input type="tel" id="newPhone" placeholder="Mobile Phone (+1234567890)" class="input-box" style="flex:2; min-width:200px; margin-bottom:0;" />
+          <input type="text" id="newName" placeholder="Client Name (Optional)" class="input-box" style="flex:2; min-width:180px; margin-bottom:0;" />
+          <button id="addUserBtn" style="background:var(--lime); flex:1; min-width:140px;">ADD CLIENT</button>
         </div>
-        <select id="userFilter" class="input-box" style="width:auto; margin-bottom:0; font-size:0.8rem; padding:8px 12px;">
-          <option value="ALL">Show All Clients</option>
-        </select>
       </div>
-      <div class="master-gallery" id="masterGallery">Loading vault...</div>
+
+      <div class="card">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+          <h2 style="font-family:var(--font-heading); font-size:1.15rem;"><i class="bi bi-people-fill"></i> REGISTERED CLIENTS (<span id="userCount">0</span>)</h2>
+          <button id="refreshUsersBtn" style="padding:6px 14px; font-size:0.75rem;"><i class="bi bi-arrow-clockwise"></i> REFRESH</button>
+        </div>
+        <div class="grid-users" id="usersList">Loading clients...</div>
+      </div>
+    </div>
+
+    <!-- TAB 2: HAIRSTYLES CRUD (PROMPT MANAGEMENT) -->
+    <div id="tabStyles" class="tab-content hidden">
+      <div class="card">
+        <h2 style="font-family:var(--font-heading); font-size:1.15rem; margin-bottom:12px;"><i class="bi bi-plus-circle-fill"></i> ADD NEW HAIRSTYLE</h2>
+        <div style="display:flex; flex-wrap:wrap; gap:10px;">
+          <input type="text" id="styleIdInput" placeholder="Style ID (e.g. pixie-cut)" class="input-box" style="flex:1; min-width:160px; margin-bottom:0;" />
+          <input type="text" id="styleNameInput" placeholder="Display Name (e.g. Pixie Cut)" class="input-box" style="flex:2; min-width:180px; margin-bottom:0;" />
+          <input type="text" id="styleCatInput" placeholder="Category (e.g. Bob & Short)" class="input-box" style="flex:1; min-width:160px; margin-bottom:0;" />
+        </div>
+        <textarea id="stylePromptInput" placeholder="Prompt detail description (e.g. a realistic short textured feminine pixie cut...)" class="input-box" rows="3" style="margin-top:10px; margin-bottom:10px;"></textarea>
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <button id="seedStylesBtn" style="background:var(--yellow); font-size:0.75rem;">SEED 50 DEFAULT STYLES</button>
+          <button id="saveStyleBtn" style="background:var(--lime);">SAVE HAIRSTYLE</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2 style="font-family:var(--font-heading); font-size:1.15rem; margin-bottom:12px;"><i class="bi bi-collection-fill"></i> ACTIVE HAIRSTYLES (<span id="stylesCount">0</span>)</h2>
+        <div id="stylesList" style="max-height: 480px; overflow-y:auto;">Loading styles...</div>
+      </div>
+    </div>
+
+    <!-- TAB 3: SYSTEM PROMPTS CONFIG -->
+    <div id="tabPrompts" class="tab-content hidden">
+      <div class="card">
+        <h2 style="font-family:var(--font-heading); font-size:1.15rem; margin-bottom:14px;"><i class="bi bi-cpu-fill"></i> MASTER AI TEMPLATES</h2>
+        <p style="font-size:0.75rem; color:#666; font-weight:700; margin-bottom:16px;">
+          Edits made here update live across all connected clients in <code>index.html</code>.
+        </p>
+
+        <label style="font-family:var(--font-heading); font-size:0.75rem;">BASE STYLE PROMPT ({DESC} will be replaced with hairstyle detail)</label>
+        <textarea id="cfgBaseStyle" class="input-box" rows="4"></textarea>
+
+        <label style="font-family:var(--font-heading); font-size:0.75rem;">COLOR EDIT PROMPT ({HEX} will be replaced with color)</label>
+        <textarea id="cfgBaseColor" class="input-box" rows="4"></textarea>
+
+        <label style="font-family:var(--font-heading); font-size:0.75rem;">REFERENCE IMAGE INSTRUCTION</label>
+        <textarea id="cfgRefClause" class="input-box" rows="2"></textarea>
+
+        <label style="font-family:var(--font-heading); font-size:0.75rem;">NEGATIVE PROMPT</label>
+        <textarea id="cfgNegative" class="input-box" rows="4"></textarea>
+
+        <button id="saveConfigBtn" style="background:var(--lime); width:100%; margin-top:8px;">SAVE MASTER PROMPTS</button>
+      </div>
+    </div>
+
+    <!-- TAB 4: MASTER VAULT -->
+    <div id="tabVault" class="tab-content hidden">
+      <div class="card">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:8px;">
+          <div>
+            <h2 style="font-family:var(--font-heading); font-size:1.15rem;"><i class="bi bi-images"></i> MASTER KAMI VAULT</h2>
+            <p style="font-size:0.75rem; color:#666; font-weight:700;">Every generation across all clients (WebP Storage).</p>
+          </div>
+          <select id="userFilter" class="input-box" style="width:auto; margin-bottom:0; font-size:0.8rem; padding:8px 12px;">
+            <option value="ALL">Show All Clients</option>
+          </select>
+        </div>
+        <div class="master-gallery" id="masterGallery">Loading vault...</div>
+      </div>
     </div>
   </div>
 
   <script>
     /* ==========================================================================
-       CONFIG: SUPABASE CREDENTIALS
+       SUPABASE CLIENT (Fixed Identifier Conflict by using 'sb')
        ========================================================================== */
     const SUPABASE_URL = 'https://rmfubnduytozikcgzvok.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJtZnVibmR1eXRvemlrY2d6dm9rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2OTIyMDgsImV4cCI6MjA5NzI2ODIwOH0.XmxDD8mH8rgq3OZmD7jVophtH2W3NNDgSRJKC3RXvJU';
-    const supabase = window.supabase?.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const sb = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
 
     let allUsers = [];
-    let allGenerations = [];
 
-    // Add Client User
+    // Tab Navigation
+    document.querySelectorAll('.nav-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
+        tab.classList.add('active');
+        document.getElementById(tab.dataset.target).classList.remove('hidden');
+
+        if (tab.dataset.target === 'tabStyles') loadStyles();
+        if (tab.dataset.target === 'tabPrompts') loadConfig();
+        if (tab.dataset.target === 'tabVault') loadMasterGallery();
+      });
+    });
+
+    /* ==========================================================================
+       USERS MANAGEMENT
+       ========================================================================== */
     document.getElementById('addUserBtn').addEventListener('click', async () => {
       const phone = document.getElementById('newPhone').value.trim();
       const name = document.getElementById('newName').value.trim() || 'Client';
 
       if (!phone) { alert('Please enter a mobile phone number.'); return; }
 
-      const { data, error } = await supabase.from('users').insert([{ phone, name }]);
+      const { error } = await sb.from('users').insert([{ phone, name }]);
       if (error) {
         alert('Could not add user: ' + error.message);
       } else {
-        alert('Client added! They can now log in on index.html with this number.');
+        alert('Client added successfully!');
         document.getElementById('newPhone').value = '';
         document.getElementById('newName').value = '';
         loadUsers();
       }
     });
 
-    // Load All Registered Users
     async function loadUsers() {
       const listEl = document.getElementById('usersList');
       const filterEl = document.getElementById('userFilter');
       listEl.innerHTML = 'Loading...';
 
-      const { data: users, error } = await supabase.from('users').select('*').order('created_at', { ascending: false });
+      const { data: users, error } = await sb.from('users').select('*').order('created_at', { ascending: false });
       if (error) { listEl.innerHTML = 'Error: ' + error.message; return; }
 
       allUsers = users || [];
       document.getElementById('userCount').textContent = allUsers.length;
 
-      // Populate filter dropdown
       filterEl.innerHTML = '<option value="ALL">Show All Clients</option>';
       allUsers.forEach(u => {
         const opt = document.createElement('option');
@@ -234,8 +350,7 @@
         filterEl.appendChild(opt);
       });
 
-      // Fetch generations count for each user
-      const { data: gens } = await supabase.from('generations').select('user_phone');
+      const { data: gens } = await sb.from('generations').select('user_phone');
       const countMap = {};
       gens?.forEach(g => { countMap[g.user_phone] = (countMap[g.user_phone] || 0) + 1; });
 
@@ -256,22 +371,178 @@
         `;
         listEl.appendChild(pill);
       });
-
-      loadMasterGallery();
     }
 
     async function deleteUser(id, phone) {
-      if (!confirm(`Delete client ${phone}? All their images will also be removed.`)) return;
-      await supabase.from('users').delete().eq('id', id);
+      if (!confirm(`Delete client ${phone}? All their stored images will be removed.`)) return;
+      await sb.from('users').delete().eq('id', id);
       loadUsers();
     }
 
-    // Load Master Gallery
+    /* ==========================================================================
+       HAIRSTYLES & PROMPT MANAGEMENT
+       ========================================================================== */
+    async function loadStyles() {
+      const listEl = document.getElementById('stylesList');
+      listEl.innerHTML = 'Loading styles...';
+
+      const { data: styles, error } = await sb.from('hairstyles').select('*').order('created_at', { ascending: true });
+      if (error) { listEl.innerHTML = 'Error: ' + error.message; return; }
+
+      document.getElementById('stylesCount').textContent = styles?.length || 0;
+      listEl.innerHTML = '';
+
+      if (!styles || styles.length === 0) {
+        listEl.innerHTML = '<div style="padding:14px; text-align:center; font-weight:700;">No hairstyles found. Click "SEED 50 DEFAULT STYLES" to load presets.</div>';
+        return;
+      }
+
+      styles.forEach(s => {
+        const row = document.createElement('div');
+        row.className = 'style-row';
+        row.innerHTML = `
+          <div style="flex:1; min-width:0; padding-right:12px;">
+            <div style="display:flex; align-items:center; gap:8px;">
+              <span class="badge" style="background:var(--pink); color:white;">${s.category}</span>
+              <strong style="font-family:var(--font-heading); font-size:0.9rem;">${s.name}</strong>
+              <small style="color:#777;">(${s.id})</small>
+            </div>
+            <p style="font-size:0.75rem; color:#444; margin-top:4px;">${s.desc_prompt}</p>
+          </div>
+          <button onclick="deleteStyle('${s.id}')" style="background:var(--red); color:white; padding:6px 10px; font-size:0.75rem;"><i class="bi bi-trash"></i></button>
+        `;
+        listEl.appendChild(row);
+      });
+    }
+
+    document.getElementById('saveStyleBtn').addEventListener('click', async () => {
+      const id = document.getElementById('styleIdInput').value.trim().toLowerCase().replace(/\s+/g, '-');
+      const name = document.getElementById('styleNameInput').value.trim();
+      const category = document.getElementById('styleCatInput').value.trim() || 'Modern Cuts';
+      const desc_prompt = document.getElementById('stylePromptInput').value.trim();
+
+      if (!id || !name || !desc_prompt) {
+        alert('Please fill out Style ID, Display Name, and Prompt description.');
+        return;
+      }
+
+      const { error } = await sb.from('hairstyles').upsert([{ id, name, category, desc_prompt }]);
+      if (error) {
+        alert('Error saving style: ' + error.message);
+      } else {
+        alert('Hairstyle saved successfully!');
+        document.getElementById('styleIdInput').value = '';
+        document.getElementById('styleNameInput').value = '';
+        document.getElementById('stylePromptInput').value = '';
+        loadStyles();
+      }
+    });
+
+    async function deleteStyle(id) {
+      if (!confirm(`Delete hairstyle "${id}"?`)) return;
+      await sb.from('hairstyles').delete().eq('id', id);
+      loadStyles();
+    }
+
+    // Seed 50 Default Styles
+    document.getElementById('seedStylesBtn').addEventListener('click', async () => {
+      if (!confirm('Seed database with 50 curated hairstyle presets?')) return;
+      const SEED_STYLES = [
+        { id:'pixie', category:'Bob & Short', name:'Pixie Cut', desc_prompt:'a realistic short textured feminine pixie cut with tapered sides and nape, slightly longer layered top, soft side-swept fringe and natural temple pieces' },
+        { id:'butterfly', category:'Modern Cuts', name:'Butterfly Cut', desc_prompt:'a realistic butterfly cut with long cascading layers, short curtain bangs and soft flipped ends' },
+        { id:'longlayered', category:'Modern Cuts', name:'Long Layered Cut', desc_prompt:'a realistic long layered cut with smooth graduated layers and natural movement at the ends' },
+        { id:'faceframing', category:'Modern Cuts', name:'Face-Framing Layers', desc_prompt:'a realistic cut with soft face-framing layers curving around cheekbones and jawline' },
+        { id:'feather', category:'Modern Cuts', name:'Feather Cut', desc_prompt:'a realistic feather cut with feather-light graduated layers tapering softly toward the ends' },
+        { id:'curtainbangs', category:'Modern Cuts', name:'Curtain Bangs', desc_prompt:'a realistic cut with long curtain bangs parted in the middle and swept outward' },
+        { id:'wolf', category:'Modern Cuts', name:'Wolf Cut', desc_prompt:'a realistic wolf cut with choppy crown layers, heavy volume and longer tapered ends' },
+        { id:'hush', category:'Modern Cuts', name:'Hush Cut', desc_prompt:'a realistic hush cut with soft airy layers, wispy ends and light face-framing pieces' },
+        { id:'shag', category:'Modern Cuts', name:'Shag Cut', desc_prompt:'a realistic shag cut with choppy razored layers, textured ends and a soft wispy fringe' },
+        { id:'ucut', category:'Modern Cuts', name:'U-Cut', desc_prompt:'a realistic U-cut with a smooth rounded U-shaped hemline and even blended length' },
+        { id:'vcut', category:'Modern Cuts', name:'V-Cut', desc_prompt:'a realistic V-cut with a deep V-shaped layered hemline tapering to a point at the back' },
+        { id:'bluntbob', category:'Bob & Short', name:'Blunt Bob', desc_prompt:'a realistic blunt bob cut straight across at jaw length with a crisp even hemline' },
+        { id:'layeredbob', category:'Bob & Short', name:'Layered Bob', desc_prompt:'a realistic layered bob with soft interior layers adding volume and movement' },
+        { id:'frenchbob', category:'Bob & Short', name:'French Bob', desc_prompt:'a realistic French bob, chin-length and textured with a short soft fringe' },
+        { id:'lob', category:'Bob & Short', name:'Long Bob / Lob', desc_prompt:'a realistic long bob (lob) falling past the collarbone with soft blended layers' },
+        { id:'sleekstraight', category:'Open & Styling', name:'Sleek Straight Hair', desc_prompt:'a realistic sleek straight style, pin-straight and glossy with smooth drape' },
+        { id:'glasshair', category:'Open & Styling', name:'Glass Hair', desc_prompt:'a realistic glass hair look, ultra-sleek mirror-shiny perfectly straight hair with a blunt cut' },
+        { id:'softwaves', category:'Open & Styling', name:'Soft Waves', desc_prompt:'a realistic soft wavy style with gentle romantic S-waves flowing through lengths' },
+        { id:'beachwaves', category:'Open & Styling', name:'Beach Waves', desc_prompt:'a realistic beach wave style with relaxed tousled salt-spray texture and undone ends' },
+        { id:'hollywoodwaves', category:'Open & Styling', name:'Hollywood Waves', desc_prompt:'a realistic Hollywood wave style with deep glossy uniform vintage waves cascading down' },
+        { id:'softcurls', category:'Open & Styling', name:'Soft Curls', desc_prompt:'a realistic soft curl style with loose bouncy well-defined curls' },
+        { id:'voluminouscurls', category:'Open & Styling', name:'Voluminous Curls', desc_prompt:'a realistic voluminous curly style with big bouncy well-defined curls full of body' },
+        { id:'blowout', category:'Open & Styling', name:'Voluminous Blowout', desc_prompt:'a realistic voluminous blowout with lifted roots and rounded bouncy ends' },
+        { id:'sidesweptwaves', category:'Open & Styling', name:'Side-Swept Waves', desc_prompt:'a realistic side-swept wavy style with all hair swept over one shoulder in soft waves' },
+        { id:'mermaidwaves', category:'Open & Styling', name:'Mermaid Waves', desc_prompt:'a realistic mermaid wave style with long flowing rippled waves falling past shoulders' },
+        { id:'highpony', category:'Ponytails', name:'High Ponytail', desc_prompt:'a realistic high ponytail secured at the crown with a long swinging tail' },
+        { id:'sleeklowpony', category:'Ponytails', name:'Sleek Low Ponytail', desc_prompt:'a realistic sleek low ponytail tied at the nape, smooth and glossy with centre part' },
+        { id:'messypony', category:'Ponytails', name:'Messy Ponytail', desc_prompt:'a realistic messy ponytail with textured volume and loose face-framing pieces' },
+        { id:'wavypony', category:'Ponytails', name:'Wavy Ponytail', desc_prompt:'a realistic wavy ponytail with soft waves through the tail and a smooth base' },
+        { id:'braidedpony', category:'Ponytails', name:'Braided Ponytail', desc_prompt:'a realistic braided ponytail with a sleek base leading into a long braided tail' },
+        { id:'messybun', category:'Buns & Juda', name:'Messy Bun', desc_prompt:'a realistic messy bun gathered high on the head with loose textured loops and soft flyaways' },
+        { id:'sleeklowbun', category:'Buns & Juda', name:'Sleek Low Bun', desc_prompt:'a realistic sleek low bun at the nape, smooth and polished with a centre part' },
+        { id:'highbun', category:'Buns & Juda', name:'High Bun', desc_prompt:'a realistic high bun top knot sitting neatly on the crown, rounded and smooth' },
+        { id:'classicjuda', category:'Buns & Juda', name:'Classic Juda', desc_prompt:'a realistic classic juda, a smooth rounded traditional bun resting at the back' },
+        { id:'gajrajuda', category:'Buns & Juda', name:'Gajra Juda', desc_prompt:'a realistic traditional juda bun encircled by a gajra of fresh white jasmine flowers' },
+        { id:'mograbun', category:'Buns & Juda', name:'Mogra Bun', desc_prompt:'a realistic mogra bun decorated with small white jasmine flowers pinned around it' },
+        { id:'braid3', category:'Braids', name:'Classic Three-Strand Braid', desc_prompt:'a realistic classic three-strand braid running neatly down the back' },
+        { id:'frenchbraid', category:'Braids', name:'French Braid', desc_prompt:'a realistic French braid starting at the crown and weaving neatly down the back' },
+        { id:'fishtail', category:'Braids', name:'Fishtail Braid', desc_prompt:'a realistic fishtail braid with fine herringbone-patterned interwoven strands' },
+        { id:'dutchbraid', category:'Braids', name:'Dutch Braid', desc_prompt:'a realistic Dutch braid sitting raised on top of the hair with clean 3D weave' },
+        { id:'crownbraid', category:'Braids', name:'Crown Braid', desc_prompt:'a realistic crown braid wrapped around the head like a halo' },
+        { id:'sidebraid', category:'Braids', name:'Side Braid', desc_prompt:'a realistic side braid draped over one shoulder with relaxed face-framing tendrils' },
+        { id:'halfupbraid', category:'Braids', name:'Half-Up Braid', desc_prompt:'a realistic half-up style with top section braided and pinned back with flowing hair beneath' },
+        { id:'punjabigutt', category:'Punjabi & Indian', name:'Punjabi Gutt / Choti', desc_prompt:'a realistic Punjabi gutt (choti), a single long thick plait with smooth centre-parted front' },
+        { id:'paranda', category:'Punjabi & Indian', name:'Punjabi Paranda Braid', desc_prompt:'a realistic Punjabi paranda braid with colourful tasselled paranda woven into the braid' },
+        { id:'gotachoti', category:'Punjabi & Indian', name:'Gota Choti', desc_prompt:'a realistic gota choti braid wrapped with gold gota patti ribbon along its length' },
+        { id:'bridalbraid', category:'Punjabi & Indian', name:'Punjabi Bridal Braid', desc_prompt:'a realistic Punjabi bridal braid, long and thick with traditional gold clips and baby pearls' },
+        { id:'gajrabraid', category:'Punjabi & Indian', name:'Floral / Gajra Braid', desc_prompt:'a realistic braid decorated with fresh white jasmine flowers wrapped along its length' },
+        { id:'halfuphalfdown', category:'Half-Up & Bridal', name:'Half-Up Half-Down', desc_prompt:'a realistic half-up half-down style with top pinned back and rest cascading in soft waves' },
+        { id:'bridalhalfup', category:'Half-Up & Bridal', name:'Bridal Half-Up Curls', desc_prompt:'a realistic bridal half-up style with twisted crown pinned for maang tikka and cascading curls' }
+      ];
+
+      for (const s of SEED_STYLES) {
+        await sb.from('hairstyles').upsert([s]);
+      }
+      alert('50 curated hairstyles successfully seeded into database!');
+      loadStyles();
+    });
+
+    /* ==========================================================================
+       MASTER CONFIGURATION (SYSTEM PROMPTS)
+       ========================================================================== */
+    async function loadConfig() {
+      const { data } = await sb.from('app_config').select('*');
+      const cfg = {};
+      data?.forEach(d => { cfg[d.key] = d.value; });
+
+      document.getElementById('cfgBaseStyle').value = cfg.base_style || "Edit only the hair. Change the existing hairstyle into {DESC}. Keep the original hair colour exactly as it is in the source photo. The hair must grow naturally from the scalp with visible roots, individual strands, flyaways and natural shadows. Do not change the face, expression, head angle, pose, skin, clothing, lighting, background or camera. Realistic photograph, not a wig or helmet.";
+      document.getElementById('cfgBaseColor').value = cfg.base_color || "Edit only the hair colour. Recolour the existing hair to a realistic salon dyed shade, exactly {HEX}. Keep the exact same hairstyle, cut, length, layers, texture, volume and silhouette as the source photo. Recolour every strand from root to tip, following the original lighting and highlights. Do not change the face, expression, head angle, pose, skin tone, clothing, lighting, background or camera.";
+      document.getElementById('cfgRefClause').value = cfg.ref_clause || " Use image 2 only for the hair shape, length, layering and fringe. Ignore the reference person, hair colour, pose, lighting and background.";
+      document.getElementById('cfgNegative').value = cfg.negative || "wig, hairpiece, hair cap, helmet hair, CGI hair, plastic hair, artificial overlay, bowl cut, buzz cut, shaved sides, undercut, excessive crown volume, perfectly symmetrical hair, fake hairline, cartoon, 2D, illustration, changed face, altered facial proportions, modified jawline, modified forehead, changed ears, different person, beautified face, altered background, changed lighting, changed pose, different head angle, turned face, profile view, unrealistic hair.";
+    }
+
+    document.getElementById('saveConfigBtn').addEventListener('click', async () => {
+      const updates = [
+        { key: 'base_style', value: document.getElementById('cfgBaseStyle').value.trim() },
+        { key: 'base_color', value: document.getElementById('cfgBaseColor').value.trim() },
+        { key: 'ref_clause', value: document.getElementById('cfgRefClause').value.trim() },
+        { key: 'negative', value: document.getElementById('cfgNegative').value.trim() }
+      ];
+
+      for (const u of updates) {
+        await sb.from('app_config').upsert([u]);
+      }
+      alert('Master prompts updated! Client devices will use these templates immediately.');
+    });
+
+    /* ==========================================================================
+       MASTER VAULT
+       ========================================================================== */
     async function loadMasterGallery() {
       const galleryEl = document.getElementById('masterGallery');
       const selectedFilter = document.getElementById('userFilter').value;
 
-      let query = supabase.from('generations').select('*').order('created_at', { ascending: false });
+      let query = sb.from('generations').select('*').order('created_at', { ascending: false });
       if (selectedFilter !== 'ALL') {
         query = query.eq('user_phone', selectedFilter);
       }
@@ -279,14 +550,13 @@
       const { data, error } = await query;
       if (error) { galleryEl.innerHTML = 'Error: ' + error.message; return; }
 
-      allGenerations = data || [];
-      if (allGenerations.length === 0) {
+      if (!data || data.length === 0) {
         galleryEl.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:20px; font-weight:800;">No images generated yet.</div>';
         return;
       }
 
       galleryEl.innerHTML = '';
-      allGenerations.forEach(item => {
+      data.forEach(item => {
         const card = document.createElement('div');
         card.className = 'media-card';
         card.innerHTML = `
@@ -307,15 +577,17 @@
     }
 
     async function deleteGeneration(id) {
-      if (!confirm('Delete this generated image?')) return;
-      await supabase.from('generations').delete().eq('id', id);
+      if (!confirm('Delete this generated image from database?')) return;
+      await sb.from('generations').delete().eq('id', id);
       loadMasterGallery();
     }
 
     document.getElementById('refreshUsersBtn').addEventListener('click', loadUsers);
     document.getElementById('userFilter').addEventListener('change', loadMasterGallery);
 
-    window.addEventListener('DOMContentLoaded', loadUsers);
+    window.addEventListener('DOMContentLoaded', () => {
+      loadUsers();
+    });
   </script>
 </body>
 </html>
