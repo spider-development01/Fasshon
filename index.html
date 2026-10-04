@@ -26,6 +26,7 @@
       --pink: #FF5E97;
       --red: #FF4742;
       --yellow: #FFE600;
+      --blue: #2563EB;
 
       --font-display: 'Anton', sans-serif;
       --font-heading: 'Archivo Black', sans-serif;
@@ -129,15 +130,15 @@
     .btn-primary.color-mode { background: var(--cyan); }
 
     .btn-icon {
-      width: 48px;
-      height: 48px;
+      width: 46px;
+      height: 46px;
       border-radius: 50%;
       background: var(--white);
       border: var(--border-thick);
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      font-size: 1.25rem;
+      font-size: 1.2rem;
       box-shadow: var(--shadow-sm);
       flex-shrink: 0;
     }
@@ -276,6 +277,7 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
+      flex-shrink: 0;
     }
     .studio-content {
       flex: 1;
@@ -382,7 +384,7 @@
     }
     .ref-thumb img { width: 100%; height: 100%; object-fit: cover; }
 
-    /* VIEW 4: PROCESSING OVERLAY */
+    /* VIEW 4: PROCESSING OVERLAY & LOADER FIX */
     .processing-overlay {
       position: absolute;
       inset: 0;
@@ -400,41 +402,104 @@
       text-align: center;
       z-index: 100;
     }
-    /* Accurate Centered Geometric Circular Spinner */
+    /* Fixed Circular Loader with zero asymmetric shadow */
     .brutal-spinner {
-      width: 72px;
-      height: 72px;
-      border: 8px solid var(--black);
-      border-top-color: var(--lime);
+      width: 76px;
+      height: 76px;
+      border: 8px solid rgba(26, 26, 26, 0.15);
+      border-top: 8px solid var(--black);
+      border-right: 8px solid var(--lime);
       border-radius: 50%;
       animation: spin 0.85s linear infinite;
       box-sizing: border-box;
-      box-shadow: var(--shadow-sm);
       margin: 0 auto;
     }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-    /* VIEW 5: SPLIT COMPARISON */
+    /* VIEW 5: COMPARISON SCREEN (IMAGE 4 REPLICA) */
+    #compareScreen {
+      background: #000;
+      color: #fff;
+    }
+    .compare-top-nav {
+      padding: 12px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(0,0,0,0.85);
+      z-index: 50;
+      gap: 8px;
+    }
+    .compare-controls-bar {
+      padding: 8px 16px 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(0,0,0,0.85);
+      z-index: 50;
+      gap: 10px;
+      border-bottom: 1px solid #222;
+    }
+    .segmented-control {
+      display: inline-flex;
+      background: #18181b;
+      border-radius: var(--radius-pill);
+      padding: 3px;
+      border: 1px solid #27272a;
+    }
+    .seg-btn {
+      padding: 6px 14px;
+      font-size: 0.72rem;
+      border-radius: var(--radius-pill);
+      color: #a1a1aa;
+      font-family: var(--font-body);
+      font-weight: 700;
+    }
+    .seg-btn.active {
+      background: var(--blue);
+      color: #ffffff;
+    }
+    .zoom-toolbar {
+      display: inline-flex;
+      align-items: center;
+      background: #18181b;
+      border-radius: var(--radius-pill);
+      padding: 2px 6px;
+      border: 1px solid #27272a;
+      gap: 4px;
+    }
+    .zoom-btn {
+      color: #fff;
+      font-size: 0.8rem;
+      padding: 4px 8px;
+    }
+
     .compare-viewport {
       flex: 1;
+      position: relative;
+      overflow: hidden;
       display: flex;
       align-items: center;
       justify-content: center;
-      background: var(--beige-surface);
-      padding: 16px;
-      overflow: hidden;
+      background: #09090b;
+      touch-action: none;
     }
     .compare-stage {
       position: relative;
       width: 100%;
-      max-width: 480px;
+      max-width: 500px;
       aspect-ratio: 1 / 1;
-      border: var(--border-thick);
-      border-radius: var(--radius-card);
-      box-shadow: var(--shadow-solid);
       overflow: hidden;
       background: #000;
+      border-radius: 14px;
       touch-action: none;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+    }
+    .stage-wrapper {
+      position: absolute;
+      inset: 0;
+      transform-origin: center center;
+      transition: transform 0.1s ease-out;
     }
     .stage-img {
       position: absolute;
@@ -445,7 +510,34 @@
       user-select: none;
       pointer-events: none;
     }
-    #imgRendered { clip-path: polygon(50% 0, 100% 0, 100% 100%, 50% 100%); }
+    #imgRendered {
+      clip-path: polygon(50% 0, 100% 0, 100% 100%, 50% 100%);
+    }
+
+    /* Floating Badges inside Stage (Image 4) */
+    .stage-badge {
+      position: absolute;
+      top: 14px;
+      z-index: 35;
+      padding: 4px 10px;
+      font-size: 0.65rem;
+      font-weight: 800;
+      border-radius: 6px;
+      letter-spacing: 0.5px;
+      font-family: var(--font-heading);
+      pointer-events: none;
+    }
+    .stage-badge-left {
+      left: 14px;
+      background: var(--blue);
+      color: #fff;
+    }
+    .stage-badge-right {
+      right: 14px;
+      background: rgba(26,26,26,0.85);
+      color: #e4e4e7;
+      border: 1px solid rgba(255,255,255,0.2);
+    }
 
     .slider-divider {
       position: absolute;
@@ -461,21 +553,29 @@
       z-index: 40;
       touch-action: none;
     }
-    .divider-line { position: absolute; top: 0; bottom: 0; width: 4px; background: var(--black); }
+    .divider-line {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 2.5px;
+      background: #ffffff;
+      box-shadow: 0 0 8px rgba(0,0,0,0.6);
+    }
     .divider-btn {
-      width: 42px;
-      height: 42px;
+      width: 32px;
+      height: 32px;
       border-radius: 50%;
-      background: var(--lime);
-      border: var(--border-thick);
+      background: #ffffff;
+      color: var(--blue);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 1.1rem;
-      box-shadow: var(--shadow-sm);
+      font-size: 0.85rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+      z-index: 45;
     }
 
-    /* VIEW 6: GALLERY & LIGHTBOX */
+    /* VIEW 6: VAULT & CARDS (IMAGE 3 FIX) */
     #galleryModal {
       position: fixed;
       inset: 0;
@@ -489,75 +589,50 @@
       display: flex;
       flex-direction: column;
     }
+    /* Fixed: align-content: start prevents tall stretched cards */
     .gallery-grid {
       flex: 1;
       overflow-y: auto;
-      padding: 18px;
+      padding: 16px;
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-      gap: 12px;
-      max-width: 900px;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 14px;
+      align-content: start;
+      max-width: 600px;
       margin: 0 auto;
       width: 100%;
+    }
+    @media (min-width: 640px) {
+      .gallery-grid { grid-template-columns: repeat(3, 1fr); }
     }
     .gallery-card {
       background: var(--white);
       border: var(--border-thick);
-      border-radius: 12px;
+      border-radius: 14px;
       overflow: hidden;
-      box-shadow: var(--shadow-xs);
-      cursor: pointer;
-    }
-    .gallery-card img { width: 100%; aspect-ratio: 1/1; object-fit: cover; display: block; }
-    .gallery-card-body { padding: 8px; font-size: 0.7rem; font-weight: 800; }
-
-    /* LIGHTBOX */
-    #lightboxModal {
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.95);
-      z-index: 300;
+      box-shadow: var(--shadow-sm);
       display: flex;
       flex-direction: column;
-      touch-action: none;
     }
-    .lightbox-toolbar {
-      padding: 16px 20px;
+    .gallery-card img {
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      object-fit: cover;
+      display: block;
+      cursor: pointer;
+    }
+    .gallery-card-body {
+      padding: 8px 10px 10px;
       display: flex;
-      justify-content: space-between;
-      align-items: center;
-      color: white;
-      z-index: 310;
-    }
-    .lightbox-stage {
-      flex: 1;
-      position: relative;
-      overflow: hidden;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    #lightboxImg {
-      max-width: 92vw;
-      max-height: 80vh;
-      object-fit: contain;
-      user-select: none;
-      transform-origin: center center;
-      transition: transform 0.15s ease-out;
-    }
-    .lightbox-bottom {
-      padding: 16px;
-      display: flex;
-      justify-content: center;
-      gap: 16px;
-      z-index: 310;
+      flex-direction: column;
+      gap: 4px;
     }
 
-    /* COLOR PICKER MODAL */
+    /* COLOR PICKER MODAL (IMAGE 1 FIX) */
     .modal-backdrop {
       position: fixed;
       inset: 0;
-      background: rgba(0,0,0,0.65);
+      background: rgba(0,0,0,0.7);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -569,7 +644,7 @@
       border: var(--border-thick);
       border-radius: var(--radius-card);
       padding: 20px;
-      max-width: 420px;
+      max-width: 400px;
       width: 100%;
       box-shadow: var(--shadow-solid);
       position: relative;
@@ -585,7 +660,9 @@
       margin-bottom: 12px;
       cursor: crosshair;
       touch-action: none;
+      background: #000;
     }
+    #svCanvas { display: block; width: 100%; height: 100%; }
     .hue-area {
       position: relative;
       width: 100%;
@@ -598,6 +675,7 @@
       cursor: ew-resize;
       touch-action: none;
     }
+    #hueCanvas { display: block; width: 100%; height: 100%; }
     .cursor {
       position: absolute;
       width: 18px;
@@ -770,26 +848,69 @@
     </div>
   </div>
 
-  <!-- VIEW 5: SPLIT COMPARISON -->
+  <!-- VIEW 5: COMPARISON SCREEN (IMAGE 4 DESIGN REPLICA) -->
   <section id="compareScreen" class="view-screen">
-    <header class="studio-header">
-      <button id="backToStudioBtn" class="btn-pill"><i class="bi bi-chevron-left"></i> EDIT</button>
-      <div id="resultBadge" class="badge" style="background:var(--pink); color:white;">KAMI RESULT</div>
-      <button id="downloadBtn" class="btn-pill" style="background:var(--cyan); color:white;">SAVE <i class="bi bi-download"></i></button>
-    </header>
-    <div class="compare-viewport">
+    <!-- Top Nav: Records, Record status, Trash, Export -->
+    <div class="compare-top-nav">
+      <button id="compareBackToVaultBtn" class="btn-pill" style="background:#18181b; color:#fff; border:1px solid #333; padding:6px 14px; font-size:0.75rem;">
+        <i class="bi bi-chevron-left"></i> Records
+      </button>
+
+      <div id="compareRecordBadge" style="display:flex; align-items:center; gap:6px; font-size:0.75rem; font-weight:700; background:#18181b; padding:6px 12px; border-radius:var(--radius-pill); border:1px solid #333; color:#10b981;">
+        <span style="width:7px; height:7px; border-radius:50%; background:#10b981; display:inline-block;"></span>
+        <span id="compareRecordName">Record</span>
+      </div>
+
+      <div style="display:flex; gap:6px;">
+        <button id="compareDeleteBtn" class="btn-icon" style="width:36px; height:36px; background:#18181b; color:#ef4444; border:1px solid #333; font-size:0.85rem;" title="Delete generation">
+          <i class="bi bi-trash"></i>
+        </button>
+        <button id="compareExportBtn" class="btn-pill" style="background:var(--blue); color:#fff; border:none; padding:6px 14px; font-size:0.75rem;">
+          <i class="bi bi-download"></i> Export
+        </button>
+      </div>
+    </div>
+
+    <!-- Controls Bar: Slide vs Pan & Zoom & Variate -->
+    <div class="compare-controls-bar">
+      <div class="segmented-control">
+        <button id="modeSlideBtn" class="seg-btn active"><i class="bi bi-arrows-expand-vertical" style="transform:rotate(90deg); display:inline-block;"></i> Slide</button>
+        <button id="modePanBtn" class="seg-btn"><i class="bi bi-hand-index"></i> Pan</button>
+      </div>
+
+      <button id="variationBtn" class="btn-pill" style="background:#18181b; color:#fff; border:1px solid #333; padding:5px 12px; font-size:0.72rem;">
+        <i class="bi bi-arrow-repeat text-yellow-400"></i> Variate
+      </button>
+
+      <div class="zoom-toolbar">
+        <button id="zoomMinusBtn" class="zoom-btn"><i class="bi bi-dash"></i></button>
+        <span id="zoomPercentText" style="font-size:0.7rem; font-weight:700; color:#e4e4e7; min-width:38px; text-align:center;">100%</span>
+        <button id="zoomPlusBtn" class="zoom-btn"><i class="bi bi-plus"></i></button>
+      </div>
+    </div>
+
+    <!-- Viewport Container -->
+    <div class="compare-viewport" id="compareViewport">
       <div id="compareStage" class="compare-stage">
-        <img id="imgSource" class="stage-img" alt="Before" />
-        <img id="imgRendered" class="stage-img" alt="After" />
+        <!-- Floating Badges inside Stage -->
+        <div class="stage-badge stage-badge-left">INPAINTED</div>
+        <div class="stage-badge stage-badge-right">ORIGINAL</div>
+
+        <div class="stage-wrapper" id="stageWrapper">
+          <img id="imgSource" class="stage-img" alt="Original" />
+          <img id="imgRendered" class="stage-img" alt="Inpainted" />
+        </div>
+
+        <!-- Slider Divider Line -->
         <div id="sliderDivider" class="slider-divider" role="slider">
           <div class="divider-line"></div>
-          <div class="divider-btn"><i class="bi bi-arrows-collapse"></i></div>
+          <div class="divider-btn"><i class="bi bi-chevron-expand"></i></div>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- VIEW 6: USER VAULT MODAL (MAX 30 PHOTOS) -->
+  <!-- VIEW 6: USER VAULT MODAL (FIXED GRID HEIGHT & ACTIONS) -->
   <div id="galleryModal" class="hidden">
     <header class="studio-header">
       <button id="closeGalleryBtn" class="btn-pill"><i class="bi bi-x-lg"></i> CLOSE</button>
@@ -799,34 +920,21 @@
     <div class="gallery-grid" id="galleryGrid"></div>
   </div>
 
-  <!-- VIEW 7: LIGHTBOX (ZOOM + SWIPE) -->
-  <div id="lightboxModal" class="hidden">
-    <div class="lightbox-toolbar">
-      <button id="closeLightboxBtn" class="btn-pill" style="padding:6px 14px; font-size:0.75rem;"><i class="bi bi-arrow-left"></i> BACK</button>
-      <span id="lightboxIndexText" style="font-family:var(--font-heading); font-size:0.85rem;">1 / 1</span>
-      <button id="downloadLightboxBtn" class="btn-pill" style="padding:6px 14px; font-size:0.75rem; background:var(--cyan); color:white;"><i class="bi bi-download"></i></button>
-    </div>
-
-    <div class="lightbox-stage" id="lightboxStage">
-      <img id="lightboxImg" alt="KAMI Creation" />
-    </div>
-
-    <div class="lightbox-bottom">
-      <button id="zoomOutBtn" class="btn-icon" style="width:40px; height:40px; font-size:1rem;"><i class="bi bi-zoom-out"></i></button>
-      <button id="zoomResetBtn" class="btn-pill" style="padding:6px 14px; font-size:0.75rem;">1x</button>
-      <button id="zoomInBtn" class="btn-icon" style="width:40px; height:40px; font-size:1rem;"><i class="bi bi-zoom-in"></i></button>
-    </div>
-  </div>
-
-  <!-- COLOR PICKER MODAL -->
+  <!-- COLOR PICKER MODAL (FIXED 100% CANVAS SIZING) -->
   <div id="colorPickerModal" class="modal-backdrop hidden">
     <div class="modal-card">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
         <h3 style="font-family:var(--font-heading); font-size:1.1rem;">COLOUR PICKER</h3>
         <button id="closeColorPickerBtn" class="btn-icon" style="width:34px; height:34px; font-size:0.9rem;"><i class="bi bi-x-lg"></i></button>
       </div>
-      <div class="sv-area" id="svArea"><canvas id="svCanvas" width="300" height="300"></canvas><div id="svCursor" class="cursor" style="left:50%; top:50%;"></div></div>
-      <div class="hue-area" id="hueArea"><canvas id="hueCanvas" width="300" height="28"></canvas><div id="hueCursor" class="cursor" style="left:50%; top:50%;"></div></div>
+      <div class="sv-area" id="svArea">
+        <canvas id="svCanvas"></canvas>
+        <div id="svCursor" class="cursor" style="left:50%; top:50%;"></div>
+      </div>
+      <div class="hue-area" id="hueArea">
+        <canvas id="hueCanvas"></canvas>
+        <div id="hueCursor" class="cursor" style="left:50%; top:50%;"></div>
+      </div>
       <div style="display:flex; gap:10px; align-items:center; margin-bottom:12px;">
         <div id="pickerPreview" style="width:48px; height:48px; border-radius:10px; border:var(--border-thick);"></div>
         <input type="text" id="pickerHex" style="flex:1; padding:10px; border:var(--border-thick); border-radius:10px; font-family:var(--font-heading);" value="#6040FF" />
@@ -837,13 +945,13 @@
 
   <script>
     /* ==========================================================================
-       SUPABASE CLIENT (Fixed Identifier Conflict by using 'sb')
+       SUPABASE CLIENT
        ========================================================================== */
-    const SUPABASE_URL = 'https://rmfubnduytozikcgzvok.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJtZnVibmR1eXRvemlrY2d6dm9rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2OTIyMDgsImV4cCI6MjA5NzI2ODIwOH0.XmxDD8mH8rgq3OZmD7jVophtH2W3NNDgSRJKC3RXvJU';
+    const SUPABASE_URL = 'https://YOUR_PROJECT.supabase.co';
+    const SUPABASE_ANON_KEY = 'YOUR_ANON_KEY';
     const sb = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
 
-    /* Fallback default prompt templates if app_config is empty */
+    /* System Prompts */
     let systemPrompts = {
       base_style: "Edit only the hair. Change the existing hairstyle into {DESC}. Keep the original hair colour exactly as it is in the source photo. The hair must grow naturally from the scalp with visible roots, individual strands, flyaways and natural shadows. Do not change the face, expression, head angle, pose, skin, clothing, lighting, background or camera. Realistic photograph, not a wig or helmet.",
       base_color: "Edit only the hair colour. Recolour the existing hair to a realistic salon dyed shade, exactly {HEX}. Keep the exact same hairstyle, cut, length, layers, texture, volume and silhouette as the source photo. Recolour every strand from root to tip, following the original lighting and highlights. Do not change the face, expression, head angle, pose, skin tone, clothing, lighting, background or camera.",
@@ -864,17 +972,25 @@
     let currentCategory = 'Bob & Short';
     let currentColor = '#6040FF';
     let activeMode = 'style';
+    let currentGenerationItem = null;
 
+    // Crop State
     let cropImgX = 0, cropImgY = 0, cropImgScale = 1;
     let isCroppingPointer = false;
     let cropStartX = 0, cropStartY = 0;
     const activePointers = new Map();
     let prevDiff = -1;
 
+    // Compare Screen State (Image 4)
+    let compareInteraction = 'slide'; // 'slide' or 'pan'
+    let compareZoomScale = 1.0;
+    let comparePanX = 0;
+    let comparePanY = 0;
+    let isPanningCompare = false;
+    let panStartX = 0, panStartY = 0;
+    let currentSliderPercent = 50;
+
     let userGenerations = [];
-    let activeLightboxIndex = 0;
-    let lightboxScale = 1;
-    let lightboxTouchStartX = 0;
 
     // DOM Elements
     const loginScreen = document.getElementById('loginScreen');
@@ -889,7 +1005,6 @@
     const processingScreen = document.getElementById('processingScreen');
     const compareScreen = document.getElementById('compareScreen');
     const galleryModal = document.getElementById('galleryModal');
-    const lightboxModal = document.getElementById('lightboxModal');
 
     const cameraFeed = document.getElementById('cameraFeed');
     const shutterBtn = document.getElementById('shutterBtn');
@@ -908,27 +1023,28 @@
     const timerText = document.getElementById('timerText');
     const progressStep = document.getElementById('progressStep');
 
+    // Compare Elements (Image 4)
     const imgSource = document.getElementById('imgSource');
     const imgRendered = document.getElementById('imgRendered');
     const sliderDivider = document.getElementById('sliderDivider');
     const compareStage = document.getElementById('compareStage');
-    const downloadBtn = document.getElementById('downloadBtn');
-    const backToStudioBtn = document.getElementById('backToStudioBtn');
+    const stageWrapper = document.getElementById('stageWrapper');
+    const compareBackToVaultBtn = document.getElementById('compareBackToVaultBtn');
+    const compareRecordName = document.getElementById('compareRecordName');
+    const compareDeleteBtn = document.getElementById('compareDeleteBtn');
+    const compareExportBtn = document.getElementById('compareExportBtn');
+    const modeSlideBtn = document.getElementById('modeSlideBtn');
+    const modePanBtn = document.getElementById('modePanBtn');
+    const variationBtn = document.getElementById('variationBtn');
+    const zoomMinusBtn = document.getElementById('zoomMinusBtn');
+    const zoomPlusBtn = document.getElementById('zoomPlusBtn');
+    const zoomPercentText = document.getElementById('zoomPercentText');
 
     const openGalleryBtn = document.getElementById('openGalleryBtn');
     const openGalleryFromStudioBtn = document.getElementById('openGalleryFromStudioBtn');
     const closeGalleryBtn = document.getElementById('closeGalleryBtn');
     const galleryGrid = document.getElementById('galleryGrid');
     const vaultCountBadge = document.getElementById('vaultCountBadge');
-
-    const closeLightboxBtn = document.getElementById('closeLightboxBtn');
-    const lightboxImg = document.getElementById('lightboxImg');
-    const lightboxStage = document.getElementById('lightboxStage');
-    const lightboxIndexText = document.getElementById('lightboxIndexText');
-    const downloadLightboxBtn = document.getElementById('downloadLightboxBtn');
-    const zoomInBtn = document.getElementById('zoomInBtn');
-    const zoomOutBtn = document.getElementById('zoomOutBtn');
-    const zoomResetBtn = document.getElementById('zoomResetBtn');
 
     const refCard = document.getElementById('refCard');
     const refFileInput = document.getElementById('refFileInput');
@@ -938,12 +1054,11 @@
     const clearRefBtn = document.getElementById('clearRefBtn');
 
     /* ==========================================================================
-       DYNAMIC SUPABASE PROMPT & STYLE FETCHER
+       DYNAMIC SUPABASE STYLES & PROMPTS
        ========================================================================== */
     async function loadDynamicPromptsAndStyles() {
       if (!sb) return;
       try {
-        // Fetch Master Prompts
         const { data: configData } = await sb.from('app_config').select('*');
         if (configData && configData.length > 0) {
           configData.forEach(item => {
@@ -953,7 +1068,6 @@
           });
         }
 
-        // Fetch Dynamic Hairstyles
         const { data: styleData } = await sb.from('hairstyles').select('*').order('created_at', { ascending: true });
         if (styleData && styleData.length > 0) {
           liveHairstyles = styleData;
@@ -963,7 +1077,6 @@
           }
           currentStyleId = liveHairstyles[0]?.id || 'pixie';
         } else {
-          // Default fallbacks if empty
           liveHairstyles = [
             { id:'pixie', cat:'Bob & Short', name:'Pixie Cut', desc_prompt:'a realistic short textured feminine pixie cut with tapered sides and nape, slightly longer layered top, soft side-swept fringe and natural temple pieces' },
             { id:'butterfly', cat:'Modern Cuts', name:'Butterfly Cut', desc_prompt:'a realistic butterfly cut with long cascading layers, short curtain bangs and soft flipped ends' },
@@ -974,12 +1087,12 @@
         }
         renderStudioStyles();
       } catch (err) {
-        console.warn('Could not load dynamic styles from Supabase, using defaults', err);
+        console.warn('Could not load dynamic styles, using fallback', err);
       }
     }
 
     /* ==========================================================================
-       AUTHENTICATION & SESSION
+       AUTH & SESSION
        ========================================================================== */
     function checkAuthSession() {
       if (currentUserPhone) {
@@ -1040,6 +1153,28 @@
     }
 
     /* ==========================================================================
+       DEVICE DOWNLOAD HELPER (NO NEW TABS)
+       ========================================================================== */
+    async function forceDownload(url, filename = 'KAMI_hair.webp') {
+      try {
+        showToast('DOWNLOADING...');
+        const res = await fetch(url);
+        const blob = await res.blob();
+        const blobUrl = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = blobUrl;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(blobUrl), 1500);
+        showToast('DOWNLOAD COMPLETE!');
+      } catch (e) {
+        window.open(url, '_blank');
+      }
+    }
+
+    /* ==========================================================================
        CAMERA & CAPTURE
        ========================================================================== */
     async function initCamera() {
@@ -1062,7 +1197,7 @@
     });
 
     /* ==========================================================================
-       1024x1024 MANUAL CROP ENGINE
+       1024x1024 MANUAL CROP
        ========================================================================== */
     function loadImageForCrop(sourceBlob) {
       const url = URL.createObjectURL(sourceBlob);
@@ -1180,7 +1315,7 @@
     retakeBtn.addEventListener('click', () => { navigate(cameraScreen); initCamera(); });
 
     /* ==========================================================================
-       STUDIO UI & SCISSORS CHIP RENDERING
+       STUDIO TABS & 50 STYLES
        ========================================================================== */
     function renderStudioStyles() {
       const catTabs = document.getElementById('catTabs');
@@ -1234,7 +1369,7 @@
       });
     });
 
-    /* Reference Image Handler */
+    /* Reference Cut */
     refCard.addEventListener('click', (e) => {
       if (e.target !== clearRefBtn && !clearRefBtn.contains(e.target)) refFileInput.click();
     });
@@ -1287,14 +1422,14 @@
       return pubData.publicUrl;
     }
 
-    executeBtn.addEventListener('click', async () => {
+    async function runTransformation(isVariation = false) {
       if (!base1024Blob) return;
       processingScreen.classList.remove('hidden');
       let sec = 0;
-      timerText.textContent = 'STYLING WITH KAMI AI... 0S';
+      timerText.textContent = isVariation ? 'GENERATING VARIATION... 0S' : 'STYLING WITH KAMI AI... 0S';
       const timer = setInterval(() => {
         sec++;
-        timerText.textContent = `STYLING WITH KAMI AI... ${sec}S`;
+        timerText.textContent = (isVariation ? 'GENERATING VARIATION... ' : 'STYLING WITH KAMI AI... ') + `${sec}S`;
       }, 1000);
 
       try {
@@ -1308,6 +1443,9 @@
           const s = liveHairstyles.find(x => x.id === currentStyleId) || liveHairstyles[0];
           const desc = s.desc_prompt || s.desc || s.name;
           finalPrompt = systemPrompts.base_style.replace('{DESC}', desc);
+          if (isVariation) {
+            finalPrompt += " High detail subtle natural variation with organic flyaways and authentic roots.";
+          }
           if (ref1024Blob) {
             progressStep.textContent = 'PROCESSING REFERENCE CUT WITH KAMI AI...';
             const refRemoteUrl = await uploadBlobToSupabaseStorage(ref1024Blob, 'reference');
@@ -1357,16 +1495,21 @@
           ? (liveHairstyles.find(x => x.id === currentStyleId)?.name || 'Pixie Cut')
           : `Colour ${currentColor}`;
 
-        await sb.from('generations').insert({
+        const { data: insertedRecord } = await sb.from('generations').insert({
           user_phone: currentUserPhone,
           image_url: vaultWebpUrl,
           style_name: currentStyleName,
           category: activeMode === 'style' ? currentCategory : 'Hair Colour'
-        });
+        }).select().single();
 
-        imgRendered.src = vaultWebpUrl;
-        resetSlider();
-        navigate(compareScreen);
+        currentGenerationItem = insertedRecord || {
+          id: null,
+          image_url: vaultWebpUrl,
+          style_name: currentStyleName,
+          category: activeMode === 'style' ? currentCategory : 'Hair Colour'
+        };
+
+        openCompareView(vaultWebpUrl, currentStyleName);
         showToast('SAVED TO KAMI VAULT');
 
       } catch (err) {
@@ -1375,35 +1518,134 @@
         clearInterval(timer);
         processingScreen.classList.add('hidden');
       }
+    }
+
+    executeBtn.addEventListener('click', () => runTransformation(false));
+
+    /* ==========================================================================
+       IMAGE 4 DESIGN REPLICA (COMPARISON, ZOOM, SLIDE & PAN)
+       ========================================================================== */
+    function openCompareView(renderedUrl, recordTitle) {
+      imgRendered.src = renderedUrl;
+      compareRecordName.textContent = recordTitle || 'Record';
+      
+      // Reset Compare Engine
+      compareInteraction = 'slide';
+      modeSlideBtn.classList.add('active');
+      modePanBtn.classList.remove('active');
+      setCompareZoom(1.0);
+      setSliderPercent(50);
+
+      navigate(compareScreen);
+    }
+
+    function setSliderPercent(pct) {
+      currentSliderPercent = Math.max(0, Math.min(100, pct));
+      imgRendered.style.clipPath = `polygon(${currentSliderPercent}% 0, 100% 0, 100% 100%, ${currentSliderPercent}% 100%)`;
+      sliderDivider.style.left = `${currentSliderPercent}%`;
+    }
+
+    function setCompareZoom(zoom) {
+      compareZoomScale = Math.max(1.0, Math.min(3.5, zoom));
+      if (compareZoomScale === 1.0) {
+        comparePanX = 0;
+        comparePanY = 0;
+      }
+      zoomPercentText.textContent = `${Math.round(compareZoomScale * 100)}%`;
+      updateStageTransform();
+    }
+
+    function updateStageTransform() {
+      stageWrapper.style.transform = `scale(${compareZoomScale}) translate(${comparePanX / compareZoomScale}px, ${comparePanY / compareZoomScale}px)`;
+    }
+
+    // Interaction Modes: Slide vs Pan
+    modeSlideBtn.addEventListener('click', () => {
+      compareInteraction = 'slide';
+      modeSlideBtn.classList.add('active');
+      modePanBtn.classList.remove('active');
     });
 
-    /* Slider Comparison */
-    function resetSlider() {
-      imgRendered.style.clipPath = `polygon(50% 0, 100% 0, 100% 100%, 50% 100%)`;
-      sliderDivider.style.left = `50%`;
+    modePanBtn.addEventListener('click', () => {
+      compareInteraction = 'pan';
+      modePanBtn.classList.add('active');
+      modeSlideBtn.classList.remove('active');
+      if (compareZoomScale === 1.0) setCompareZoom(1.5);
+    });
+
+    // Zoom Buttons
+    zoomPlusBtn.addEventListener('click', () => setCompareZoom(compareZoomScale + 0.5));
+    zoomMinusBtn.addEventListener('click', () => setCompareZoom(compareZoomScale - 0.5));
+
+    // Slider Divider Drag vs Pan Drag
+    compareStage.addEventListener('pointerdown', (e) => {
+      if (compareInteraction === 'slide') {
+        sliderDivider.setPointerCapture(e.pointerId);
+        moveSliderFromClientX(e.clientX);
+      } else {
+        isPanningCompare = true;
+        panStartX = e.clientX - comparePanX;
+        panStartY = e.clientY - comparePanY;
+        compareStage.setPointerCapture(e.pointerId);
+      }
+    });
+
+    compareStage.addEventListener('pointermove', (e) => {
+      if (compareInteraction === 'slide' && e.buttons === 1) {
+        moveSliderFromClientX(e.clientX);
+      } else if (compareInteraction === 'pan' && isPanningCompare) {
+        comparePanX = e.clientX - panStartX;
+        comparePanY = e.clientY - panStartY;
+        updateStageTransform();
+      }
+    });
+
+    function endComparePointer(e) {
+      isPanningCompare = false;
+      try { sliderDivider.releasePointerCapture(e.pointerId); } catch (_) {}
+      try { compareStage.releasePointerCapture(e.pointerId); } catch (_) {}
     }
-    function moveSlider(clientX) {
+    compareStage.addEventListener('pointerup', endComparePointer);
+    compareStage.addEventListener('pointercancel', endComparePointer);
+
+    function moveSliderFromClientX(clientX) {
       const rect = compareStage.getBoundingClientRect();
       const x = Math.max(0, Math.min(clientX - rect.left, rect.width));
-      const pct = (x / rect.width) * 100;
-      imgRendered.style.clipPath = `polygon(${pct}% 0, 100% 0, 100% 100%, ${pct}% 100%)`;
-      sliderDivider.style.left = `${pct}%`;
+      setSliderPercent((x / rect.width) * 100);
     }
-    sliderDivider.addEventListener('pointerdown', (e) => sliderDivider.setPointerCapture(e.pointerId));
-    sliderDivider.addEventListener('pointermove', (e) => { if (e.buttons === 1) moveSlider(e.clientX); });
-    backToStudioBtn.addEventListener('click', () => navigate(studioScreen));
-    downloadBtn.addEventListener('click', () => {
-      const a = document.createElement('a');
-      a.href = imgRendered.src;
-      a.download = `KAMI_${Date.now()}.webp`;
-      a.click();
+
+    // Compare Toolbar Buttons
+    compareBackToVaultBtn.addEventListener('click', () => {
+      loadUserVault();
+    });
+
+    compareExportBtn.addEventListener('click', () => {
+      if (imgRendered.src) {
+        forceDownload(imgRendered.src, `KAMI_${Date.now()}.webp`);
+      }
+    });
+
+    compareDeleteBtn.addEventListener('click', async () => {
+      if (!currentGenerationItem?.id) {
+        navigate(studioScreen);
+        return;
+      }
+      if (confirm('Delete this generated image permanently?')) {
+        await sb.from('generations').delete().eq('id', currentGenerationItem.id);
+        showToast('IMAGE DELETED');
+        navigate(studioScreen);
+      }
+    });
+
+    variationBtn.addEventListener('click', () => {
+      runTransformation(true);
     });
 
     /* ==========================================================================
-       USER VAULT & LIGHTBOX (ZOOM + SWIPE)
+       USER VAULT (FIXED GRID HEIGHT & ACTION BUTTONS)
        ========================================================================== */
     async function loadUserVault() {
-      galleryGrid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:30px; font-weight:800;">LOADING KAMI VAULT...</div>';
+      galleryGrid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:30px; font-weight:800;">LOADING VAULT...</div>';
       galleryModal.classList.remove('hidden');
 
       const { data, error } = await sb
@@ -1423,17 +1665,48 @@
       vaultCountBadge.textContent = `${data.length} / 30`;
       galleryGrid.innerHTML = '';
 
-      data.forEach((item, index) => {
+      data.forEach((item) => {
         const card = document.createElement('div');
         card.className = 'gallery-card';
         card.innerHTML = `
           <img src="${item.image_url}" loading="lazy" alt="${item.style_name}" />
           <div class="gallery-card-body">
-            <div style="font-family:var(--font-heading); text-overflow:ellipsis; overflow:hidden; white-space:nowrap;">${item.style_name}</div>
-            <div style="font-size:0.65rem; color:#666;">${new Date(item.created_at).toLocaleDateString()}</div>
+            <div style="font-family:var(--font-heading); font-size:0.75rem; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;">${item.style_name}</div>
+            <div style="font-size:0.62rem; color:#666;">${new Date(item.created_at).toLocaleDateString()}</div>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:4px;">
+              <button class="vault-open-btn btn-pill" style="padding:4px 8px; font-size:0.65rem; background:var(--blue); color:#fff; border:none;"><i class="bi bi-arrows-expand"></i> Slide</button>
+              <div style="display:flex; gap:4px;">
+                <button class="vault-dl-btn btn-icon" style="width:26px; height:26px; font-size:0.75rem;"><i class="bi bi-download"></i></button>
+                <button class="vault-del-btn btn-icon" style="width:26px; height:26px; font-size:0.75rem; color:#ef4444;"><i class="bi bi-trash"></i></button>
+              </div>
+            </div>
           </div>
         `;
-        card.addEventListener('click', () => openLightbox(index));
+
+        // Open in Compare view
+        card.querySelector('.vault-open-btn').addEventListener('click', (e) => {
+          e.stopPropagation();
+          currentGenerationItem = item;
+          galleryModal.classList.add('hidden');
+          openCompareView(item.image_url, item.style_name);
+        });
+
+        // Direct Download
+        card.querySelector('.vault-dl-btn').addEventListener('click', (e) => {
+          e.stopPropagation();
+          forceDownload(item.image_url, `KAMI_${item.style_name.replace(/\s+/g,'_')}.webp`);
+        });
+
+        // Direct Delete
+        card.querySelector('.vault-del-btn').addEventListener('click', async (e) => {
+          e.stopPropagation();
+          if (confirm(`Delete "${item.style_name}"?`)) {
+            await sb.from('generations').delete().eq('id', item.id);
+            showToast('DELETED');
+            loadUserVault();
+          }
+        });
+
         galleryGrid.appendChild(card);
       });
     }
@@ -1442,69 +1715,8 @@
     openGalleryFromStudioBtn.addEventListener('click', loadUserVault);
     closeGalleryBtn.addEventListener('click', () => galleryModal.classList.add('hidden'));
 
-    function openLightbox(index) {
-      activeLightboxIndex = index;
-      lightboxScale = 1;
-      updateLightboxDisplay();
-      lightboxModal.classList.remove('hidden');
-    }
-
-    function updateLightboxDisplay() {
-      const item = userGenerations[activeLightboxIndex];
-      if (!item) return;
-      lightboxImg.src = item.image_url;
-      lightboxScale = 1;
-      lightboxImg.style.transform = `scale(1)`;
-      lightboxIndexText.textContent = `${activeLightboxIndex + 1} / ${userGenerations.length}`;
-      zoomResetBtn.textContent = '1x';
-    }
-
-    closeLightboxBtn.addEventListener('click', () => lightboxModal.classList.add('hidden'));
-
-    zoomInBtn.addEventListener('click', () => {
-      lightboxScale = Math.min(lightboxScale + 0.5, 4.0);
-      lightboxImg.style.transform = `scale(${lightboxScale})`;
-      zoomResetBtn.textContent = `${lightboxScale.toFixed(1)}x`;
-    });
-    zoomOutBtn.addEventListener('click', () => {
-      lightboxScale = Math.max(lightboxScale - 0.5, 1.0);
-      lightboxImg.style.transform = `scale(${lightboxScale})`;
-      zoomResetBtn.textContent = `${lightboxScale.toFixed(1)}x`;
-    });
-    zoomResetBtn.addEventListener('click', () => {
-      lightboxScale = 1.0;
-      lightboxImg.style.transform = `scale(1)`;
-      zoomResetBtn.textContent = '1x';
-    });
-
-    lightboxStage.addEventListener('touchstart', (e) => {
-      if (e.touches.length === 1) lightboxTouchStartX = e.touches[0].clientX;
-    }, { passive: true });
-
-    lightboxStage.addEventListener('touchend', (e) => {
-      if (lightboxScale > 1.0) return;
-      const touchEndX = e.changedTouches[0].clientX;
-      const diff = touchEndX - lightboxTouchStartX;
-      if (diff > 50 && activeLightboxIndex > 0) {
-        activeLightboxIndex--;
-        updateLightboxDisplay();
-      } else if (diff < -50 && activeLightboxIndex < userGenerations.length - 1) {
-        activeLightboxIndex++;
-        updateLightboxDisplay();
-      }
-    });
-
-    downloadLightboxBtn.addEventListener('click', () => {
-      const item = userGenerations[activeLightboxIndex];
-      if (!item) return;
-      const a = document.createElement('a');
-      a.href = item.image_url;
-      a.download = `KAMI_${activeLightboxIndex + 1}.webp`;
-      a.click();
-    });
-
     /* ==========================================================================
-       COLOR PICKER (GPU ACCELERATED GRADIENT)
+       COLOR PICKER (100% RESPONSIVE CANVAS FIX)
        ========================================================================== */
     const colorSwatch = document.getElementById('colorSwatch');
     const hexInput = document.getElementById('hexInput');
@@ -1523,26 +1735,58 @@
 
     let curH = 265, curS = 0.75, curV = 1.0;
 
+    function resizeAndDrawColorPicker() {
+      const svRect = svArea.getBoundingClientRect();
+      const svSize = Math.round(svRect.width) || 300;
+      svCanvas.width = svSize;
+      svCanvas.height = svSize;
+
+      const hueRect = hueArea.getBoundingClientRect();
+      hueCanvas.width = Math.round(hueRect.width) || 300;
+      hueCanvas.height = Math.round(hueRect.height) || 28;
+
+      drawHue();
+      drawSV();
+      updatePicker();
+    }
+
     function drawSV() {
       const ctx = svCanvas.getContext('2d');
-      const w = 300, h = 300;
+      const w = svCanvas.width;
+      const h = svCanvas.height;
+      ctx.clearRect(0, 0, w, h);
+
+      // Base Hue Fill
       ctx.fillStyle = `hsl(${curH}, 100%, 50%)`;
       ctx.fillRect(0, 0, w, h);
 
+      // White Horizontal Gradient (Saturation)
       const wGrad = ctx.createLinearGradient(0, 0, w, 0);
-      wGrad.addColorStop(0, '#fff'); wGrad.addColorStop(1, 'transparent');
-      ctx.fillStyle = wGrad; ctx.fillRect(0, 0, w, h);
+      wGrad.addColorStop(0, '#ffffff');
+      wGrad.addColorStop(1, 'rgba(255, 255, 255, 0)');
+      ctx.fillStyle = wGrad;
+      ctx.fillRect(0, 0, w, h);
 
+      // Black Vertical Gradient (Value/Brightness)
       const bGrad = ctx.createLinearGradient(0, 0, 0, h);
-      bGrad.addColorStop(0, 'transparent'); bGrad.addColorStop(1, '#000');
-      ctx.fillStyle = bGrad; ctx.fillRect(0, 0, w, h);
+      bGrad.addColorStop(0, 'rgba(0, 0, 0, 0)');
+      bGrad.addColorStop(1, '#000000');
+      ctx.fillStyle = bGrad;
+      ctx.fillRect(0, 0, w, h);
     }
 
     function drawHue() {
       const ctx = hueCanvas.getContext('2d');
-      const grad = ctx.createLinearGradient(0, 0, 300, 0);
-      for (let i = 0; i <= 6; i++) grad.addColorStop(i / 6, `hsl(${i * 60}, 100%, 50%)`);
-      ctx.fillStyle = grad; ctx.fillRect(0, 0, 300, 28);
+      const w = hueCanvas.width;
+      const h = hueCanvas.height;
+      ctx.clearRect(0, 0, w, h);
+
+      const grad = ctx.createLinearGradient(0, 0, w, 0);
+      for (let i = 0; i <= 6; i++) {
+        grad.addColorStop(i / 6, `hsl(${i * 60}, 100%, 50%)`);
+      }
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, w, h);
     }
 
     function updatePicker() {
@@ -1566,6 +1810,7 @@
       }
       return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
     }
+
     function rgbToHex(r, g, b) {
       return '#' + [r, g, b].map(x => Math.max(0, Math.min(255, x)).toString(16).padStart(2, '0')).join('').toUpperCase();
     }
@@ -1584,14 +1829,16 @@
     function handleHue(e) {
       const r = hueArea.getBoundingClientRect();
       curH = Math.max(0, Math.min(360, ((e.clientX - r.left) / r.width) * 360));
-      drawSV(); updatePicker();
+      drawSV();
+      updatePicker();
     }
 
     colorSwatch.addEventListener('click', () => {
-      drawHue(); drawSV(); updatePicker();
       colorPickerModal.classList.remove('hidden');
+      requestAnimationFrame(() => resizeAndDrawColorPicker());
     });
     closeColorPickerBtn.addEventListener('click', () => colorPickerModal.classList.add('hidden'));
+
     applyColorBtn.addEventListener('click', () => {
       currentColor = pickerHex.value;
       colorSwatch.style.background = currentColor;
@@ -1616,7 +1863,9 @@
       presetGrid.appendChild(b);
     });
 
-    /* Initialization */
+    /* ==========================================================================
+       INITIALIZE
+       ========================================================================== */
     window.addEventListener('DOMContentLoaded', () => {
       colorSwatch.style.background = currentColor;
       loadDynamicPromptsAndStyles();
