@@ -1,89 +1,71 @@
 // functions/api/tryon.js
+// Proxy for fal.ai Flux 2 Klein 4B Edit — keeps FAL_KEY server-side.
 
 export async function onRequestPost(context) {
+  const { request, env } = context;
+  const FAL_KEY = env.FAL_KEY;
+
+  if (!FAL_KEY) {
+    return json({ error: 'FAL_KEY is not configured in Cloudflare Pages environment variables.' }, 500);
+  }
+
+  let body;
   try {
-    const { request, env } = context;
+    body = await request.json();
+  } catch {
+    return json({ error: 'Invalid JSON body.' }, 400);
+  }
 
-    // 1. Validate GEMINI_API_KEY
-    let apiKey = env.GEMINI_API_KEY;
-    if (!apiKey || apiKey === "undefined") {
-      return new Response(
-        JSON.stringify({ 
-          error: "Cloudflare Pages has not loaded GEMINI_API_KEY. Add it to Settings -> Variables and secrets (Production) and redeploy." 
-        }),
-        { status: 500, headers: { "Content-Type": "application/json" } }
-      );
-    }
+  const { prompt, negative_prompt, image_urls } = body || {};
 
-    // Clean key of quotes or spaces
-    apiKey = apiKey.trim().replace(/^["']|["']$/g, "");
+  if (!prompt || typeof prompt !== 'string') {
+    return json({ error: 'Missing "prompt".' }, 400);
+  }
+  if (!Array.isArray(image_urls) || image_urls.length === 0) {
+    return json({ error: 'Missing "image_urls" array.' }, 400);
+  }
 
-    const { prompt, image, refImage, model = "gemini-3.1-flash-image" } = await request.json();
-
-    if (!image) {
-      return new Response(
-        JSON.stringify({ error: "Missing client photo." }),
-        { status: 400, headers: { "Content-Type": "application/json" } }
-      );
-    }
-
-    // 2. Assemble Gemini Request with IMAGE-FIRST ordering
-    const parts = [
-      // Primary Client Image (Always First for identity conditioning)
-      {
-        inline_data: {
-          mime_type: "image/jpeg",
-          data: image,
-        },
-      }
-    ];
-
-    // Optional Custom Hairstyle Reference (From Pinterest / Camera roll)
-    if (refImage) {
-      parts.push({
-        inline_data: {
-          mime_type: "image/jpeg",
-          data: refImage,
-        },
-      });
-    }
-
-    // Text Prompt appended after the images
-    parts.push({
-      text: prompt,
-    });
-
-    // 3. Dispatch to Gemini
-    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
-
-    const geminiRes = await fetch(geminiUrl, {
-      method: "POST",
+  try {
+    const falRes = await fetch('https://fal.run/fal-ai/flux-2/klein/4b/edit', {
+      method: 'POST',
       headers: {
-        "Content-Type": "application/json",
+        'Authorization': `Key ${FAL_KEY}`,
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        contents: [
-          {
-            parts: parts,
-          },
-        ],
-        generationConfig: {
-          responseModalities: ["IMAGE"],
-        },
+        prompt,
+        negative_prompt: negative_prompt || '',
+        image_urls,
       }),
     });
 
-    const data = await geminiRes.json();
+    const data = await falRes.json().catch(() => ({}));
 
-    return new Response(JSON.stringify(data), {
-      status: geminiRes.status,
-      headers: { "Content-Type": "application/json" },
-    });
+    if (!falRes.ok) {
+      const msg =
+        data?.detail?.[0]?.msg ||
+        data?.message ||
+        data?.error ||
+        `Model error (${falRes.status})`;
+      return json({ error: msg }, falRes.status);
+    }
 
+    return json(data, 200);
   } catch (err) {
-    return new Response(
-      JSON.stringify({ error: err.message || "Internal server error" }),
-      { status: 500, headers: { "Content-Type": "application/json" } }
-    );
+    return json({ error: 'Upstream request failed: ' + (err?.message || 'unknown') }, 502);
   }
+}
+
+export async function onRequestGet() {
+  return json({ error: 'Use POST.' }, 405);
+}
+
+function json(obj, status = 200) {
+  return new Response(JSON.stringify(obj), {
+    status,
+    headers: {
+      'Content-Type': 'application/json',
+      'Cache-Control': 'no-store',
+    },
+  });
 }
