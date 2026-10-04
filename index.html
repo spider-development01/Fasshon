@@ -174,7 +174,7 @@
       text-align: center;
     }
 
-    /* VIEW 1: CAMERA WITH UPI-STYLE VIEWFINDER */
+    /* VIEW 1: CAMERA WITH SCANNER VIEWFINDER */
     .camera-wrapper { position: absolute; inset: 0; background: var(--black); overflow: hidden; }
     #cameraFeed { width: 100%; height: 100%; object-fit: cover; }
     #cameraFeed.mirrored { transform: scaleX(-1); }
@@ -201,7 +201,7 @@
       transform: rotate(-2deg);
     }
 
-    /* Unique User Status Bar */
+    /* Client Session Badge */
     .user-session-bar {
       display: inline-flex;
       align-items: center;
@@ -211,7 +211,7 @@
       box-shadow: var(--shadow-sm);
       overflow: hidden;
     }
-    .user-session-phone {
+    .user-session-name {
       padding: 6px 12px;
       font-family: var(--font-heading);
       font-size: 0.75rem;
@@ -230,7 +230,7 @@
       cursor: pointer;
     }
 
-    /* UPI / QR Scanner Overlay */
+    /* UPI/QR-Style Scanner Overlay */
     .scanner-overlay {
       position: absolute;
       inset: 0;
@@ -476,7 +476,7 @@
     }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-    /* VIEW 5: COMPARISON SCREEN (100% KAMI NEO-BRUTALIST THEME) */
+    /* VIEW 5: COMPARISON SCREEN */
     .compare-top-nav {
       padding: 14px 18px;
       background: var(--beige);
@@ -560,7 +560,7 @@
       position: absolute;
       inset: 0;
       transform-origin: center center;
-      transition: transform 0.1s ease-out;
+      transition: transform 0.05s linear;
     }
     .stage-img {
       position: absolute;
@@ -636,11 +636,11 @@
       z-index: 45;
     }
 
-    /* VIEW 6: VAULT SCREEN */
+    /* VIEW 6: VAULT SCREEN (BUTTONS PERMANENTLY FIXED & VISIBLE) */
     .gallery-grid {
       flex: 1;
       overflow-y: auto;
-      padding: 16px;
+      padding: 16px 16px 40px;
       display: grid;
       grid-template-columns: repeat(2, 1fr);
       gap: 14px;
@@ -674,13 +674,49 @@
       display: block;
     }
     .gallery-card-body {
-      padding: 10px;
+      padding: 10px 10px 12px;
       display: flex;
       flex-direction: column;
-      gap: 4px;
+      gap: 6px;
+      background: var(--white);
+    }
+    .gallery-card-title {
+      font-family: var(--font-heading);
+      font-size: 0.76rem;
+      color: var(--black);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .gallery-card-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .gallery-card-date {
+      font-size: 0.65rem;
+      font-weight: 700;
+      color: #666;
+    }
+    .gallery-action-btn {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background: var(--white);
+      border: var(--border-thin);
+      box-shadow: var(--shadow-xs);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.78rem;
+      cursor: pointer;
+    }
+    .gallery-action-btn:active {
+      transform: translate(1px, 1px);
+      box-shadow: none;
     }
 
-    /* CUSTOM NEO-BRUTALIST MODAL (NO BROWSER ALERTS) */
+    /* CUSTOM NEO-BRUTALIST MODAL */
     .brutal-modal-backdrop {
       position: fixed;
       inset: 0;
@@ -788,7 +824,7 @@
 
   <div id="toast" class="toast">TOAST</div>
 
-  <!-- CUSTOM NEO-BRUTALIST POPUP (REPLACES ALERTS/CONFIRMS) -->
+  <!-- CUSTOM NEO-BRUTALIST POPUP -->
   <div id="brutalModal" class="brutal-modal-backdrop hidden">
     <div class="brutal-modal-card">
       <div id="modalBadge" class="badge" style="background:var(--yellow); margin-bottom:8px;">KAMI NOTICE</div>
@@ -816,14 +852,14 @@
     </div>
   </section>
 
-  <!-- VIEW 1: CAMERA WITH UPI-STYLE SQUARE VIEWFINDER -->
+  <!-- VIEW 1: CAMERA WITH SCANNER VIEWFINDER -->
   <section id="cameraScreen" class="view-screen">
     <div class="top-dock">
       <div class="brand-logo">KAMI</div>
       <div style="display:flex; align-items:center; gap:8px;">
-        <!-- Unique Logout Pill -->
+        <!-- User Session Bar Displaying Name -->
         <div class="user-session-bar">
-          <span class="user-session-phone" id="userSessionPhone">CLIENT</span>
+          <span class="user-session-name" id="userSessionName">CLIENT</span>
           <button id="logoutBtn" class="logout-btn-unique"><i class="bi bi-power"></i> EXIT</button>
         </div>
         <button id="uploadPhotoBtn" class="btn-icon" aria-label="Upload"><i class="bi bi-image"></i></button>
@@ -834,7 +870,7 @@
     <div class="camera-wrapper">
       <video id="cameraFeed" class="mirrored" autoplay playsinline muted></video>
 
-      <!-- UPI QR-Style Square Scanner Frame -->
+      <!-- Viewfinder Overlay -->
       <div class="scanner-overlay">
         <div class="scanner-frame" id="scannerFrame">
           <div class="corner corner-tl"></div>
@@ -881,7 +917,8 @@
   <section id="studioScreen" class="view-screen">
     <header class="studio-header">
       <button id="retakeBtn" class="btn-pill"><i class="bi bi-arrow-left"></i> RETAKE</button>
-      <div class="badge" id="clientPhoneBadge" style="background:var(--lime);">CLIENT</div>
+      <!-- Display Client Name instead of Phone Number -->
+      <div class="badge" id="clientNameBadge" style="background:var(--lime);">CLIENT</div>
       <button id="openGalleryFromStudioBtn" class="btn-pill" style="background:var(--cyan); color:white;"><i class="bi bi-collection"></i> VAULT</button>
     </header>
 
@@ -928,7 +965,7 @@
             <div class="swatch-lg" id="colorSwatch" style="width:58px; height:58px; border-radius:12px; border:var(--border-thick); cursor:pointer;"></div>
             <div style="flex:1;">
               <div class="badge" style="background:var(--yellow); margin-bottom:4px;">RECOLOUR ONLY</div>
-              <input type="text" id="hexInput" style="width:100%; padding:10px; border:var(--border-thick); border-radius:10px; font-weight:800; font-family:var(--font-heading);" value="#6040FF" />
+              <input type="text" id="hexInput" style="width:100%; padding:10px; border:var(--border-thick); border-radius:10px; font-weight:800; font-family:var(--font-heading);" value="#EC500E" />
             </div>
           </div>
           <div id="presetGrid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(38px, 1fr)); gap:6px; margin-top:12px;"></div>
@@ -952,12 +989,12 @@
     </div>
   </div>
 
-  <!-- VIEW 5: COMPARISON SCREEN (CONTEXT-AWARE NAVIGATION) -->
+  <!-- VIEW 5: COMPARISON SCREEN (WITH PROPER STUDIO NAVIGATION & CLAMPED PAN) -->
   <section id="compareScreen" class="view-screen">
-    <!-- Top Nav: Single clean back button that adapts to origin -->
+    <!-- Top Nav: Always provides direct access to STUDIO -->
     <div class="compare-top-nav">
-      <button id="compareBackBtn" class="btn-pill" style="background:var(--white);">
-        <i class="bi bi-arrow-left"></i> <span id="compareBackTxt">STUDIO</span>
+      <button id="compareBackToStudioBtn" class="btn-pill" style="background:var(--white);">
+        <i class="bi bi-arrow-left"></i> STUDIO
       </button>
 
       <div id="compareRecordBadge" class="badge" style="background:var(--pink); color:var(--white); font-size:0.75rem;">
@@ -965,6 +1002,7 @@
       </div>
 
       <div style="display:flex; gap:8px;">
+        <button id="compareVaultBtn" class="btn-pill" style="background:var(--cyan); color:var(--white);"><i class="bi bi-collection"></i> VAULT</button>
         <button id="compareDeleteBtn" class="btn-icon" style="background:var(--red); color:var(--white);" title="Delete"><i class="bi bi-trash"></i></button>
         <button id="compareExportBtn" class="btn-pill" style="background:var(--lime); color:var(--black);"><i class="bi bi-download"></i> SAVE</button>
       </div>
@@ -1031,7 +1069,7 @@
       </div>
       <div style="display:flex; gap:10px; align-items:center; margin-bottom:12px;">
         <div id="pickerPreview" style="width:48px; height:48px; border-radius:10px; border:var(--border-thick);"></div>
-        <input type="text" id="pickerHex" style="flex:1; padding:10px; border:var(--border-thick); border-radius:10px; font-family:var(--font-heading);" value="#6040FF" />
+        <input type="text" id="pickerHex" style="flex:1; padding:10px; border:var(--border-thick); border-radius:10px; font-family:var(--font-heading);" value="#EC500E" />
       </div>
       <button id="applyColorBtn" class="btn-primary color-mode" style="padding:12px;">APPLY COLOUR</button>
     </div>
@@ -1058,16 +1096,16 @@
 
     /* App State */
     let currentUserPhone = localStorage.getItem('kami_user_phone') || null;
+    let currentUserName = localStorage.getItem('kami_user_name') || 'CLIENT';
     let cameraStream = null;
     let cameraFacingMode = 'user';
     let base1024Blob = null;
     let ref1024Blob = null;
     let currentStyleId = 'pixie';
     let currentCategory = 'Bob & Short';
-    let currentColor = '#6040FF';
-    let activeMode = 'style';
+    let currentColor = '#EC500E';
+    let activeMode = 'color';
     let currentGenerationItem = null;
-    let compareNavOrigin = 'studio'; // 'studio' or 'vault'
 
     // Crop State
     let cropImgX = 0, cropImgY = 0, cropImgScale = 1;
@@ -1092,8 +1130,8 @@
     const loginPhoneInput = document.getElementById('loginPhoneInput');
     const loginBtn = document.getElementById('loginBtn');
     const logoutBtn = document.getElementById('logoutBtn');
-    const userSessionPhone = document.getElementById('userSessionPhone');
-    const clientPhoneBadge = document.getElementById('clientPhoneBadge');
+    const userSessionName = document.getElementById('userSessionName');
+    const clientNameBadge = document.getElementById('clientNameBadge');
 
     const cameraScreen = document.getElementById('cameraScreen');
     const cropScreen = document.getElementById('cropScreen');
@@ -1126,8 +1164,8 @@
     const sliderDivider = document.getElementById('sliderDivider');
     const compareStage = document.getElementById('compareStage');
     const stageWrapper = document.getElementById('stageWrapper');
-    const compareBackBtn = document.getElementById('compareBackBtn');
-    const compareBackTxt = document.getElementById('compareBackTxt');
+    const compareBackToStudioBtn = document.getElementById('compareBackToStudioBtn');
+    const compareVaultBtn = document.getElementById('compareVaultBtn');
     const compareRecordName = document.getElementById('compareRecordName');
     const compareDeleteBtn = document.getElementById('compareDeleteBtn');
     const compareExportBtn = document.getElementById('compareExportBtn');
@@ -1159,7 +1197,7 @@
     const modalConfirmBtn = document.getElementById('modalConfirmBtn');
 
     /* ==========================================================================
-       CUSTOM NEO-BRUTALIST DIALOG (REPLACES ALERTS/CONFIRMS)
+       CUSTOM NEO-BRUTALIST DIALOG
        ========================================================================== */
     function showBrutalDialog({ title = 'KAMI NOTICE', message = '', badge = 'NOTICE', type = 'alert', confirmText = 'OK', cancelText = 'CANCEL' }) {
       return new Promise((resolve) => {
@@ -1229,14 +1267,28 @@
     }
 
     /* ==========================================================================
-       AUTH & SESSION
+       AUTH & CLIENT NAME DISPLAY
        ========================================================================== */
+    function updateClientNameUI() {
+      const name = (currentUserName || 'CLIENT').toUpperCase();
+      userSessionName.textContent = name;
+      clientNameBadge.textContent = name;
+    }
+
     function checkAuthSession() {
       if (currentUserPhone) {
-        userSessionPhone.textContent = currentUserPhone;
-        clientPhoneBadge.textContent = currentUserPhone;
+        updateClientNameUI();
         navigate(cameraScreen);
         initCamera();
+
+        // Refresh client name in background
+        sb.from('users').select('name').eq('phone', currentUserPhone).single().then(({ data }) => {
+          if (data?.name) {
+            currentUserName = data.name;
+            localStorage.setItem('kami_user_name', data.name);
+            updateClientNameUI();
+          }
+        });
       } else {
         navigate(loginScreen);
       }
@@ -1261,9 +1313,11 @@
         }
 
         currentUserPhone = phone;
+        currentUserName = data.name || 'CLIENT';
         localStorage.setItem('kami_user_phone', phone);
-        userSessionPhone.textContent = phone;
-        clientPhoneBadge.textContent = phone;
+        localStorage.setItem('kami_user_name', currentUserName);
+        updateClientNameUI();
+
         showToast('WELCOME TO KAMI AI');
         navigate(cameraScreen);
         initCamera();
@@ -1286,6 +1340,7 @@
       });
       if (confirmed) {
         localStorage.removeItem('kami_user_phone');
+        localStorage.removeItem('kami_user_name');
         currentUserPhone = null;
         if (cameraStream) cameraStream.getTracks().forEach(t => t.stop());
         navigate(loginScreen);
@@ -1324,7 +1379,7 @@
     }
 
     /* ==========================================================================
-       CAMERA & UPI SCANNER CAPTURE (NO CROPPING STEP NEEDED FOR CAMERA)
+       CAMERA & SCANNER CAPTURE
        ========================================================================== */
     async function initCamera() {
       if (cameraStream) {
@@ -1348,7 +1403,7 @@
       initCamera();
     });
 
-    // Directly extracts what's inside the scanner frame into 1024x1024 WebP
+    // Viewfinder direct capture
     function captureFromScanner() {
       const vw = cameraFeed.videoWidth;
       const vh = cameraFeed.videoHeight;
@@ -1357,7 +1412,6 @@
       const vRect = cameraFeed.getBoundingClientRect();
       const fRect = scannerFrame.getBoundingClientRect();
 
-      // Calculate object-fit: cover scaling
       const scale = Math.max(vRect.width / vw, vRect.height / vh);
       const dispW = vw * scale;
       const dispH = vh * scale;
@@ -1390,13 +1444,12 @@
         const url = URL.createObjectURL(blob);
         client1024Preview.src = url;
         imgSource.src = url;
-        navigate(studioScreen); // Instantly opens Studio with the 1:1 image!
+        navigate(studioScreen);
       }, 'image/webp', 0.85);
     }
 
     shutterBtn.addEventListener('click', captureFromScanner);
 
-    // Gallery Upload Fallback with manual crop
     uploadPhotoBtn.addEventListener('click', () => clientFileInput.click());
     clientFileInput.addEventListener('change', (e) => {
       if (e.target.files?.[0]) loadImageForCrop(e.target.files[0]);
@@ -1405,7 +1458,7 @@
     retakeBtn.addEventListener('click', () => { navigate(cameraScreen); initCamera(); });
 
     /* ==========================================================================
-       MANUAL CROP ENGINE (USED WHEN USER PICKS FROM GALLERY)
+       MANUAL CROP ENGINE (FOR GALLERY UPLOADS)
        ========================================================================== */
     function loadImageForCrop(sourceBlob) {
       const url = URL.createObjectURL(sourceBlob);
@@ -1505,7 +1558,7 @@
     });
 
     /* ==========================================================================
-       STUDIO UI & PRESERVED STATE
+       STUDIO UI
        ========================================================================== */
     function renderStudioStyles() {
       const catTabs = document.getElementById('catTabs');
@@ -1713,7 +1766,7 @@
           category: activeMode === 'style' ? currentCategory : 'Hair Colour'
         };
 
-        openCompareView(vaultWebpUrl, currentStyleName, baseRemoteUrl, 'studio');
+        openCompareView(vaultWebpUrl, currentStyleName, baseRemoteUrl);
         showToast('SAVED TO KAMI VAULT');
 
       } catch (err) {
@@ -1725,18 +1778,13 @@
     });
 
     /* ==========================================================================
-       COMPARISON SCREEN (SLIDER HIDDEN IN PAN MODE)
+       COMPARISON SCREEN (BOUNDED PAN - NEVER VOID / INFINITE DRAGGING)
        ========================================================================== */
-    function openCompareView(renderedUrl, recordTitle, sourceUrl, origin = 'studio') {
+    function openCompareView(renderedUrl, recordTitle, sourceUrl) {
       imgRendered.src = renderedUrl;
       imgSource.src = sourceUrl || client1024Preview.src || renderedUrl;
       compareRecordName.textContent = recordTitle || 'STYLE';
-      compareNavOrigin = origin;
-
-      // Update back button label to match origin
-      compareBackTxt.textContent = origin === 'vault' ? 'VAULT' : 'STUDIO';
       
-      // Default to Slide Mode with divider visible
       compareInteraction = 'slide';
       modeSlideBtn.classList.add('active');
       modePanBtn.classList.remove('active');
@@ -1763,23 +1811,37 @@
       updateStageTransform();
     }
 
+    // CLAMPED PAN: Prevents image from being moved outside the container boundary!
     function updateStageTransform() {
-      stageWrapper.style.transform = `scale(${compareZoomScale}) translate(${comparePanX / compareZoomScale}px, ${comparePanY / compareZoomScale}px)`;
+      const stageW = compareStage.clientWidth || 400;
+      const stageH = compareStage.clientHeight || 400;
+
+      if (compareZoomScale <= 1.0) {
+        comparePanX = 0;
+        comparePanY = 0;
+      } else {
+        const maxPanX = (stageW * (compareZoomScale - 1)) / 2;
+        const maxPanY = (stageH * (compareZoomScale - 1)) / 2;
+        comparePanX = Math.max(-maxPanX, Math.min(maxPanX, comparePanX));
+        comparePanY = Math.max(-maxPanY, Math.min(maxPanY, comparePanY));
+      }
+
+      stageWrapper.style.transform = `translate(${comparePanX}px, ${comparePanY}px) scale(${compareZoomScale})`;
     }
 
-    // Toggle: Slide vs Pan (Pan hides the divider line)
+    // Toggle: Slide vs Pan
     modeSlideBtn.addEventListener('click', () => {
       compareInteraction = 'slide';
       modeSlideBtn.classList.add('active');
       modePanBtn.classList.remove('active');
-      sliderDivider.style.display = 'flex'; // Restore divider
+      sliderDivider.style.display = 'flex';
     });
 
     modePanBtn.addEventListener('click', () => {
       compareInteraction = 'pan';
       modePanBtn.classList.add('active');
       modeSlideBtn.classList.remove('active');
-      sliderDivider.style.display = 'none'; // Completely hide slider bar in Pan mode!
+      sliderDivider.style.display = 'none'; // Hide divider completely in Pan mode
       if (compareZoomScale === 1.0) setCompareZoom(1.5);
     });
 
@@ -1824,13 +1886,13 @@
       setSliderPercent((x / rect.width) * 100);
     }
 
-    // Contextual Back Button: Returns to exactly where you came from
-    compareBackBtn.addEventListener('click', () => {
-      if (compareNavOrigin === 'vault') {
-        loadUserVault();
-      } else {
-        navigate(studioScreen);
-      }
+    // Always returns directly to STUDIO
+    compareBackToStudioBtn.addEventListener('click', () => {
+      navigate(studioScreen);
+    });
+
+    compareVaultBtn.addEventListener('click', () => {
+      loadUserVault();
     });
 
     compareExportBtn.addEventListener('click', () => {
@@ -1855,16 +1917,12 @@
       if (confirmed) {
         await sb.from('generations').delete().eq('id', currentGenerationItem.id);
         showToast('IMAGE DELETED');
-        if (compareNavOrigin === 'vault') {
-          loadUserVault();
-        } else {
-          navigate(studioScreen);
-        }
+        navigate(studioScreen);
       }
     });
 
     /* ==========================================================================
-       USER VAULT (WHOLE CARD IS CLICKABLE)
+       USER VAULT (WHOLE CARD IS CLICKABLE & BUTTONS FULLY VISIBLE)
        ========================================================================== */
     async function loadUserVault() {
       galleryGrid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:30px; font-weight:800;">LOADING VAULT...</div>';
@@ -1891,23 +1949,23 @@
         const card = document.createElement('div');
         card.className = 'gallery-card';
         card.innerHTML = `
-          <img src="${item.image_url}" loading="lazy" alt="${item.style_name}" />
+          <img src="${item.image_url}" loading="lazy" alt="${item.style_name}" class="gallery-card-thumb" />
           <div class="gallery-card-body">
-            <div style="font-family:var(--font-heading); font-size:0.75rem; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;">${item.style_name}</div>
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:2px;">
-              <span style="font-size:0.62rem; color:#666;">${new Date(item.created_at).toLocaleDateString()}</span>
-              <div style="display:flex; gap:6px;">
-                <button class="vault-dl-btn btn-icon" style="width:28px; height:28px; font-size:0.75rem;"><i class="bi bi-download"></i></button>
-                <button class="vault-del-btn btn-icon" style="width:28px; height:28px; font-size:0.75rem; color:var(--red);"><i class="bi bi-trash"></i></button>
+            <div class="gallery-card-title">${item.style_name}</div>
+            <div class="gallery-card-meta">
+              <span class="gallery-card-date">${new Date(item.created_at).toLocaleDateString()}</span>
+              <div class="gallery-card-actions">
+                <button class="gallery-action-btn vault-dl-btn" title="Download"><i class="bi bi-download"></i></button>
+                <button class="gallery-action-btn vault-del-btn" style="color:var(--red);" title="Delete"><i class="bi bi-trash"></i></button>
               </div>
             </div>
           </div>
         `;
 
-        // Clicking the whole card opens comparison immediately
+        // Whole Card Click: Opens Compare Screen
         card.addEventListener('click', () => {
           currentGenerationItem = item;
-          openCompareView(item.image_url, item.style_name, item.source_image_url || null, 'vault');
+          openCompareView(item.image_url, item.style_name, item.source_image_url || null);
         });
 
         // Download Action
@@ -1940,7 +1998,6 @@
 
     openGalleryBtn.addEventListener('click', loadUserVault);
     openGalleryFromStudioBtn.addEventListener('click', loadUserVault);
-    // Vault Back Button cleanly returns to Studio with state preserved
     closeGalleryBtn.addEventListener('click', () => {
       navigate(studioScreen);
     });
@@ -1963,7 +2020,7 @@
     const pickerHex = document.getElementById('pickerHex');
     const applyColorBtn = document.getElementById('applyColorBtn');
 
-    let curH = 265, curS = 0.75, curV = 1.0;
+    let curH = 18, curS = 0.88, curV = 0.92;
 
     function resizeAndDrawColorPicker() {
       const svRect = svArea.getBoundingClientRect();
@@ -2074,7 +2131,7 @@
       updateExecuteBtnText();
     });
 
-    const PRESETS = ['#0B0B0B','#4A2C17','#C99A4B','#E8DFC8','#B4551F','#5C1A2B','#E8467C','#6040FF','#1F6E6E'];
+    const PRESETS = ['#0B0B0B','#4A2C17','#C99A4B','#E8DFC8','#EC500E','#5C1A2B','#E8467C','#6040FF','#1F6E6E'];
     PRESETS.forEach(hex => {
       const b = document.createElement('button');
       b.style.background = hex;
