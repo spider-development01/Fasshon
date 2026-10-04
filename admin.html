@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <link rel="icon" href="data:," />
+  <title>KAMI AI — Master Supervisor Dashboard</title>
+
+  <!-- Typography & Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo+Black&family=Plus+Jakarta+Sans:wght@500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    :root {
+      --beige: #F4F4F0;
+      --beige-surface: #EAEAE4;
+      --black: #1A1A1A;
+      --white: #FFFFFF;
+      --lime: #D4FF00;
+      --cyan: #1597D0;
+      --pink: #FF5E97;
+      --red: #FF4742;
+      --yellow: #FFE600;
+
+      --font-display: 'Anton', sans-serif;
+      --font-heading: 'Archivo Black', sans-serif;
+      --font-body: 'Plus Jakarta Sans', sans-serif;
+
+      --border-thick: 3px solid var(--black);
+      --border-thin: 2px solid var(--black);
+      --shadow-solid: 6px 6px 0px var(--black);
+      --shadow-sm: 4px 4px 0px var(--black);
+      --radius-card: 16px;
+      --radius-pill: 999px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background-color: var(--beige);
+      color: var(--black);
+      font-family: var(--font-body);
+      padding: 24px 16px 60px;
+    }
+
+    .container { max-width: 1100px; margin: 0 auto; }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: var(--border-thick);
+    }
+    .brand {
+      font-family: var(--font-display);
+      font-size: 2.4rem;
+      background: var(--yellow);
+      border: var(--border-thick);
+      padding: 2px 14px;
+      border-radius: 12px;
+      box-shadow: var(--shadow-sm);
+      transform: rotate(-2deg);
+    }
+
+    .card {
+      background: var(--white);
+      border: var(--border-thick);
+      border-radius: var(--radius-card);
+      padding: 20px;
+      box-shadow: var(--shadow-solid);
+      margin-bottom: 24px;
+    }
+
+    button {
+      background: var(--white);
+      border: var(--border-thick);
+      border-radius: var(--radius-pill);
+      padding: 10px 18px;
+      font-family: var(--font-heading);
+      font-size: 0.85rem;
+      cursor: pointer;
+      box-shadow: var(--shadow-sm);
+      user-select: none;
+    }
+    button:active { transform: translate(3px, 3px); box-shadow: none; }
+
+    .input-box {
+      width: 100%;
+      padding: 12px 14px;
+      border: var(--border-thick);
+      border-radius: 10px;
+      font-family: var(--font-heading);
+      font-size: 0.95rem;
+      margin-bottom: 12px;
+    }
+
+    .grid-users {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 14px;
+    }
+    .user-pill {
+      background: var(--beige-surface);
+      border: var(--border-thick);
+      border-radius: 12px;
+      padding: 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .master-gallery {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 16px;
+    }
+    .media-card {
+      background: var(--white);
+      border: var(--border-thick);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+    }
+    .media-card img { width: 100%; aspect-ratio: 1/1; object-fit: cover; display: block; }
+    .media-card-body { padding: 10px; }
+
+    .badge {
+      display: inline-block;
+      padding: 4px 8px;
+      border: var(--border-thin);
+      border-radius: 6px;
+      font-family: var(--font-heading);
+      font-size: 0.68rem;
+      text-transform: uppercase;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div style="display:flex; align-items:center; gap:12px;">
+        <div class="brand">KAMI</div>
+        <h1 style="font-family:var(--font-heading); font-size:1.4rem;">SUPERVISOR SUITE</h1>
+      </div>
+      <a href="index.html" target="_blank" style="text-decoration:none;"><button style="background:var(--lime);">LAUNCH CLIENT STUDIO <i class="bi bi-box-arrow-up-right"></i></button></a>
+    </header>
+
+    <!-- SECTION 1: ADD USER -->
+    <div class="card">
+      <h2 style="font-family:var(--font-heading); font-size:1.15rem; margin-bottom:14px;"><i class="bi bi-person-plus-fill"></i> ADD CLIENT USER</h2>
+      <div style="display:flex; flex-wrap:wrap; gap:12px;">
+        <input type="tel" id="newPhone" placeholder="Mobile Phone (e.g. +1234567890)" class="input-box" style="flex:2; min-width:220px; margin-bottom:0;" />
+        <input type="text" id="newName" placeholder="Client Name (Optional)" class="input-box" style="flex:2; min-width:200px; margin-bottom:0;" />
+        <button id="addUserBtn" style="background:var(--lime); flex:1; min-width:140px;">ADD CLIENT</button>
+      </div>
+    </div>
+
+    <!-- SECTION 2: REGISTERED USERS LIST & USAGE (30 LIMIT TRACKER) -->
+    <div class="card">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+        <h2 style="font-family:var(--font-heading); font-size:1.15rem;"><i class="bi bi-people-fill"></i> REGISTERED CLIENTS (<span id="userCount">0</span>)</h2>
+        <button id="refreshUsersBtn" style="padding:6px 14px; font-size:0.75rem;"><i class="bi bi-arrow-clockwise"></i> REFRESH</button>
+      </div>
+      <div class="grid-users" id="usersList">Loading users...</div>
+    </div>
+
+    <!-- SECTION 3: MASTER VAULT (ALL PHOTOS FROM ALL USERS) -->
+    <div class="card">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+        <div>
+          <h2 style="font-family:var(--font-heading); font-size:1.15rem;"><i class="bi bi-images"></i> MASTER KAMI VAULT</h2>
+          <p style="font-size:0.75rem; color:#666; font-weight:700;">Every creation across all users (Ultra-compact WebP storage).</p>
+        </div>
+        <select id="userFilter" class="input-box" style="width:auto; margin-bottom:0; font-size:0.8rem; padding:8px 12px;">
+          <option value="ALL">Show All Clients</option>
+        </select>
+      </div>
+      <div class="master-gallery" id="masterGallery">Loading vault...</div>
+    </div>
+  </div>
+
+  <script>
+    /* ==========================================================================
+       CONFIG: SUPABASE CREDENTIALS
+       ========================================================================== */
+    const SUPABASE_URL = 'https://YOUR_PROJECT.supabase.co';
+    const SUPABASE_ANON_KEY = 'YOUR_ANON_KEY';
+    const supabase = window.supabase?.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    let allUsers = [];
+    let allGenerations = [];
+
+    // Add Client User
+    document.getElementById('addUserBtn').addEventListener('click', async () => {
+      const phone = document.getElementById('newPhone').value.trim();
+      const name = document.getElementById('newName').value.trim() || 'Client';
+
+      if (!phone) { alert('Please enter a mobile phone number.'); return; }
+
+      const { data, error } = await supabase.from('users').insert([{ phone, name }]);
+      if (error) {
+        alert('Could not add user: ' + error.message);
+      } else {
+        alert('Client added! They can now log in on index.html with this number.');
+        document.getElementById('newPhone').value = '';
+        document.getElementById('newName').value = '';
+        loadUsers();
+      }
+    });
+
+    // Load All Registered Users
+    async function loadUsers() {
+      const listEl = document.getElementById('usersList');
+      const filterEl = document.getElementById('userFilter');
+      listEl.innerHTML = 'Loading...';
+
+      const { data: users, error } = await supabase.from('users').select('*').order('created_at', { ascending: false });
+      if (error) { listEl.innerHTML = 'Error: ' + error.message; return; }
+
+      allUsers = users || [];
+      document.getElementById('userCount').textContent = allUsers.length;
+
+      // Populate filter dropdown
+      filterEl.innerHTML = '<option value="ALL">Show All Clients</option>';
+      allUsers.forEach(u => {
+        const opt = document.createElement('option');
+        opt.value = u.phone;
+        opt.textContent = `${u.name} (${u.phone})`;
+        filterEl.appendChild(opt);
+      });
+
+      // Fetch generations count for each user
+      const { data: gens } = await supabase.from('generations').select('user_phone');
+      const countMap = {};
+      gens?.forEach(g => { countMap[g.user_phone] = (countMap[g.user_phone] || 0) + 1; });
+
+      listEl.innerHTML = '';
+      allUsers.forEach(u => {
+        const count = countMap[u.phone] || 0;
+        const pill = document.createElement('div');
+        pill.className = 'user-pill';
+        pill.innerHTML = `
+          <div>
+            <div style="font-family:var(--font-heading); font-size:0.95rem;">${u.name}</div>
+            <div style="font-size:0.75rem; color:#555; font-weight:700;">${u.phone}</div>
+            <div class="badge" style="background:${count >= 30 ? 'var(--red); color:white;' : 'var(--lime);'} margin-top:4px;">
+              ${count} / 30 IMAGES
+            </div>
+          </div>
+          <button onclick="deleteUser('${u.id}', '${u.phone}')" style="background:var(--red); color:white; padding:6px 10px; font-size:0.75rem;"><i class="bi bi-trash"></i></button>
+        `;
+        listEl.appendChild(pill);
+      });
+
+      loadMasterGallery();
+    }
+
+    async function deleteUser(id, phone) {
+      if (!confirm(`Delete client ${phone}? All their images will also be removed.`)) return;
+      await supabase.from('users').delete().eq('id', id);
+      loadUsers();
+    }
+
+    // Load Master Gallery
+    async function loadMasterGallery() {
+      const galleryEl = document.getElementById('masterGallery');
+      const selectedFilter = document.getElementById('userFilter').value;
+
+      let query = supabase.from('generations').select('*').order('created_at', { ascending: false });
+      if (selectedFilter !== 'ALL') {
+        query = query.eq('user_phone', selectedFilter);
+      }
+
+      const { data, error } = await query;
+      if (error) { galleryEl.innerHTML = 'Error: ' + error.message; return; }
+
+      allGenerations = data || [];
+      if (allGenerations.length === 0) {
+        galleryEl.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:20px; font-weight:800;">No images generated yet.</div>';
+        return;
+      }
+
+      galleryEl.innerHTML = '';
+      allGenerations.forEach(item => {
+        const card = document.createElement('div');
+        card.className = 'media-card';
+        card.innerHTML = `
+          <a href="${item.image_url}" target="_blank"><img src="${item.image_url}" loading="lazy" /></a>
+          <div class="media-card-body">
+            <div class="badge" style="background:var(--pink); color:white; margin-bottom:4px;">${item.category}</div>
+            <div style="font-family:var(--font-heading); font-size:0.85rem;">${item.style_name}</div>
+            <div style="font-size:0.7rem; color:#444; font-weight:700; margin-top:4px;">Client: ${item.user_phone}</div>
+            <div style="font-size:0.65rem; color:#888;">${new Date(item.created_at).toLocaleString()}</div>
+            <div style="margin-top:8px; display:flex; justify-content:space-between; align-items:center;">
+              <a href="${item.image_url}" download target="_blank" style="text-decoration:none;"><button style="padding:4px 8px; font-size:0.7rem; background:var(--cyan); color:white;">SAVE</button></a>
+              <button onclick="deleteGeneration('${item.id}')" style="padding:4px 8px; font-size:0.7rem; background:var(--red); color:white;"><i class="bi bi-trash"></i></button>
+            </div>
+          </div>
+        `;
+        galleryEl.appendChild(card);
+      });
+    }
+
+    async function deleteGeneration(id) {
+      if (!confirm('Delete this generated image?')) return;
+      await supabase.from('generations').delete().eq('id', id);
+      loadMasterGallery();
+    }
+
+    document.getElementById('refreshUsersBtn').addEventListener('click', loadUsers);
+    document.getElementById('userFilter').addEventListener('change', loadMasterGallery);
+
+    window.addEventListener('DOMContentLoaded', loadUsers);
+  </script>
+</body>
+</html>
