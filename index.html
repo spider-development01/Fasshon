@@ -26,7 +26,6 @@
       --pink: #FF5E97;
       --red: #FF4742;
       --yellow: #FFE600;
-      --blue: #2563EB;
 
       --font-display: 'Anton', sans-serif;
       --font-heading: 'Archivo Black', sans-serif;
@@ -74,7 +73,7 @@
       opacity: 0;
       pointer-events: none;
       visibility: hidden;
-      transition: opacity 0.25s ease, visibility 0.25s ease;
+      transition: opacity 0.2s ease, visibility 0.2s ease;
       z-index: 10;
     }
     .view-screen.active {
@@ -101,8 +100,8 @@
       color: var(--black);
       border: var(--border-thick);
       border-radius: var(--radius-pill);
-      padding: 10px 18px;
-      font-size: 0.85rem;
+      padding: 9px 18px;
+      font-size: 0.82rem;
       font-weight: 900;
       box-shadow: var(--shadow-sm);
       display: inline-flex;
@@ -271,7 +270,7 @@
 
     /* VIEW 3: STUDIO */
     .studio-header {
-      padding: 16px 20px;
+      padding: 14px 20px;
       background: var(--beige);
       border-bottom: var(--border-thick);
       display: flex;
@@ -384,7 +383,7 @@
     }
     .ref-thumb img { width: 100%; height: 100%; object-fit: cover; }
 
-    /* VIEW 4: PROCESSING OVERLAY */
+    /* VIEW 4: PROCESSING OVERLAY & CLEAN LOADER */
     .processing-overlay {
       position: absolute;
       inset: 0;
@@ -402,7 +401,6 @@
       text-align: center;
       z-index: 100;
     }
-    /* Fixed Circular Loader */
     .brutal-spinner {
       width: 76px;
       height: 76px;
@@ -416,62 +414,62 @@
     }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-    /* VIEW 5: COMPARISON SCREEN */
-    #compareScreen {
-      background: #000;
-      color: #fff;
-    }
+    /* VIEW 5: COMPARISON SCREEN (100% NEO-BRUTALIST KAMI THEME) */
     .compare-top-nav {
-      padding: 12px 16px;
+      padding: 14px 18px;
+      background: var(--beige);
+      border-bottom: var(--border-thick);
       display: flex;
       justify-content: space-between;
       align-items: center;
-      background: rgba(0,0,0,0.9);
+      gap: 10px;
       z-index: 50;
-      gap: 8px;
+      flex-shrink: 0;
     }
     .compare-controls-bar {
-      padding: 8px 16px 12px;
+      padding: 10px 18px;
+      background: var(--beige-surface);
+      border-bottom: var(--border-thin);
       display: flex;
       justify-content: space-between;
       align-items: center;
-      background: rgba(0,0,0,0.9);
-      z-index: 50;
       gap: 10px;
-      border-bottom: 1px solid #222;
+      z-index: 50;
+      flex-shrink: 0;
     }
     .segmented-control {
       display: inline-flex;
-      background: #18181b;
+      background: var(--white);
       border-radius: var(--radius-pill);
       padding: 3px;
-      border: 1px solid #27272a;
+      border: var(--border-thick);
+      box-shadow: var(--shadow-xs);
     }
     .seg-btn {
       padding: 6px 16px;
       font-size: 0.75rem;
       border-radius: var(--radius-pill);
-      color: #a1a1aa;
-      font-family: var(--font-body);
-      font-weight: 700;
+      color: var(--black);
+      font-family: var(--font-heading);
     }
     .seg-btn.active {
-      background: var(--blue);
-      color: #ffffff;
+      background: var(--black);
+      color: var(--lime);
     }
     .zoom-toolbar {
       display: inline-flex;
       align-items: center;
-      background: #18181b;
+      background: var(--white);
       border-radius: var(--radius-pill);
-      padding: 2px 8px;
-      border: 1px solid #27272a;
+      padding: 3px 8px;
+      border: var(--border-thick);
+      box-shadow: var(--shadow-xs);
       gap: 6px;
     }
     .zoom-btn {
-      color: #fff;
+      color: var(--black);
       font-size: 0.85rem;
-      padding: 4px 8px;
+      padding: 2px 6px;
     }
 
     .compare-viewport {
@@ -481,19 +479,20 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      background: #09090b;
+      padding: 16px;
       touch-action: none;
     }
     .compare-stage {
       position: relative;
       width: 100%;
-      max-width: 500px;
+      max-width: 460px;
       aspect-ratio: 1 / 1;
       overflow: hidden;
       background: #000;
-      border-radius: 14px;
+      border: var(--border-thick);
+      border-radius: var(--radius-card);
+      box-shadow: var(--shadow-solid);
       touch-action: none;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.8);
     }
     .stage-wrapper {
       position: absolute;
@@ -524,18 +523,19 @@
       border-radius: 6px;
       letter-spacing: 0.5px;
       font-family: var(--font-heading);
+      border: var(--border-thin);
+      box-shadow: var(--shadow-xs);
       pointer-events: none;
     }
     .stage-badge-left {
       left: 14px;
-      background: var(--blue);
-      color: #fff;
+      background: var(--lime);
+      color: var(--black);
     }
     .stage-badge-right {
       right: 14px;
-      background: rgba(26,26,26,0.85);
-      color: #e4e4e7;
-      border: 1px solid rgba(255,255,255,0.2);
+      background: var(--white);
+      color: var(--black);
     }
 
     .slider-divider {
@@ -556,38 +556,25 @@
       position: absolute;
       top: 0;
       bottom: 0;
-      width: 2.5px;
-      background: #ffffff;
-      box-shadow: 0 0 8px rgba(0,0,0,0.6);
+      width: 3px;
+      background: var(--black);
     }
     .divider-btn {
-      width: 34px;
-      height: 34px;
+      width: 36px;
+      height: 36px;
       border-radius: 50%;
-      background: #ffffff;
-      color: var(--blue);
+      background: var(--yellow);
+      color: var(--black);
+      border: var(--border-thick);
+      box-shadow: var(--shadow-xs);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 0.9rem;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+      font-size: 0.95rem;
       z-index: 45;
     }
 
-    /* VIEW 6: VAULT & CARDS (WHOLE CARD CLICKABLE) */
-    #galleryModal {
-      position: fixed;
-      inset: 0;
-      background-color: var(--beige);
-      background-image: 
-        radial-gradient(rgba(26, 26, 26, 0.16) 1.5px, transparent 1.5px), 
-        radial-gradient(rgba(26, 26, 26, 0.16) 1.5px, var(--beige) 1.5px);
-      background-size: 22px 22px;
-      background-position: 0 0, 11px 11px;
-      z-index: 200;
-      display: flex;
-      flex-direction: column;
-    }
+    /* VIEW 6: VAULT SCREEN (WHOLE CARD IS CLICKABLE) */
     .gallery-grid {
       flex: 1;
       overflow-y: auto;
@@ -851,44 +838,36 @@
     </div>
   </div>
 
-  <!-- VIEW 5: COMPARISON SCREEN (CLEAN, NO VARIATION BUTTON) -->
+  <!-- VIEW 5: COMPARISON SCREEN (PEAK NEO-BRUTALIST KAMI THEME) -->
   <section id="compareScreen" class="view-screen">
-    <!-- Top Nav: Records, Record status, Trash, Export -->
+    <!-- Top Nav: Clean Neo-Brutalist Layout -->
     <div class="compare-top-nav">
-      <button id="compareBackToVaultBtn" class="btn-pill" style="background:#18181b; color:#fff; border:1px solid #333; padding:6px 14px; font-size:0.75rem;">
-        <i class="bi bi-chevron-left"></i> Records
-      </button>
-
-      <div id="compareRecordBadge" style="display:flex; align-items:center; gap:6px; font-size:0.75rem; font-weight:700; background:#18181b; padding:6px 12px; border-radius:var(--radius-pill); border:1px solid #333; color:#10b981;">
-        <span style="width:7px; height:7px; border-radius:50%; background:#10b981; display:inline-block;"></span>
-        <span id="compareRecordName">Record</span>
+      <button id="compareBackToStudioBtn" class="btn-pill" style="background:var(--white);"><i class="bi bi-arrow-left"></i> STUDIO</button>
+      <div id="compareRecordBadge" class="badge" style="background:var(--pink); color:var(--white); font-size:0.75rem;">
+        <i class="bi bi-scissors" style="margin-right:4px;"></i> <span id="compareRecordName">STYLE</span>
       </div>
-
-      <div style="display:flex; gap:6px;">
-        <button id="compareDeleteBtn" class="btn-icon" style="width:36px; height:36px; background:#18181b; color:#ef4444; border:1px solid #333; font-size:0.85rem;" title="Delete generation">
-          <i class="bi bi-trash"></i>
-        </button>
-        <button id="compareExportBtn" class="btn-pill" style="background:var(--blue); color:#fff; border:none; padding:6px 14px; font-size:0.75rem;">
-          <i class="bi bi-download"></i> Export
-        </button>
+      <div style="display:flex; gap:8px;">
+        <button id="compareBackToVaultBtn" class="btn-pill" style="background:var(--cyan); color:var(--white);"><i class="bi bi-collection"></i> VAULT</button>
+        <button id="compareDeleteBtn" class="btn-icon" style="background:var(--red); color:var(--white);" title="Delete"><i class="bi bi-trash"></i></button>
+        <button id="compareExportBtn" class="btn-pill" style="background:var(--lime); color:var(--black);"><i class="bi bi-download"></i> SAVE</button>
       </div>
     </div>
 
-    <!-- Controls Bar: Slide vs Pan & Zoom (No Variation Button) -->
+    <!-- Controls Sub-Bar -->
     <div class="compare-controls-bar">
       <div class="segmented-control">
-        <button id="modeSlideBtn" class="seg-btn active"><i class="bi bi-arrows-expand-vertical" style="transform:rotate(90deg); display:inline-block;"></i> Slide</button>
-        <button id="modePanBtn" class="seg-btn"><i class="bi bi-hand-index"></i> Pan</button>
+        <button id="modeSlideBtn" class="seg-btn active"><i class="bi bi-arrows-expand-vertical" style="transform:rotate(90deg); display:inline-block;"></i> SLIDE</button>
+        <button id="modePanBtn" class="seg-btn"><i class="bi bi-hand-index"></i> PAN</button>
       </div>
 
       <div class="zoom-toolbar">
-        <button id="zoomMinusBtn" class="zoom-btn"><i class="bi bi-dash"></i></button>
-        <span id="zoomPercentText" style="font-size:0.7rem; font-weight:700; color:#e4e4e7; min-width:38px; text-align:center;">100%</span>
-        <button id="zoomPlusBtn" class="zoom-btn"><i class="bi bi-plus"></i></button>
+        <button id="zoomMinusBtn" class="zoom-btn"><i class="bi bi-dash-lg"></i></button>
+        <span id="zoomPercentText" style="font-size:0.72rem; font-weight:800; font-family:var(--font-heading); min-width:44px; text-align:center;">100%</span>
+        <button id="zoomPlusBtn" class="zoom-btn"><i class="bi bi-plus-lg"></i></button>
       </div>
     </div>
 
-    <!-- Viewport Container -->
+    <!-- Viewport Stage -->
     <div class="compare-viewport" id="compareViewport">
       <div id="compareStage" class="compare-stage">
         <div class="stage-badge stage-badge-left">INPAINTED</div>
@@ -899,26 +878,25 @@
           <img id="imgRendered" class="stage-img" alt="Inpainted" />
         </div>
 
-        <!-- Slider Divider Line -->
         <div id="sliderDivider" class="slider-divider" role="slider">
           <div class="divider-line"></div>
-          <div class="divider-btn"><i class="bi bi-chevron-expand"></i></div>
+          <div class="divider-btn"><i class="bi bi-arrows-expand" style="transform:rotate(45deg);"></i></div>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- VIEW 6: VAULT MODAL (WHOLE CARD IS CLICKABLE) -->
-  <div id="galleryModal" class="hidden">
+  <!-- VIEW 6: VAULT SCREEN (WHOLE CARD IS CLICKABLE) -->
+  <section id="galleryScreen" class="view-screen">
     <header class="studio-header">
-      <button id="closeGalleryBtn" class="btn-pill"><i class="bi bi-x-lg"></i> CLOSE</button>
-      <h2 style="font-size:1rem;">MY KAMI VAULT</h2>
+      <button id="closeGalleryBtn" class="btn-pill"><i class="bi bi-arrow-left"></i> BACK</button>
+      <h2 style="font-size:1.05rem;">MY KAMI VAULT</h2>
       <div id="vaultCountBadge" class="badge" style="background:var(--lime);">0 / 30</div>
     </header>
     <div class="gallery-grid" id="galleryGrid"></div>
-  </div>
+  </section>
 
-  <!-- COLOR PICKER MODAL (100% RESPONSIVE CANVAS FIX) -->
+  <!-- COLOR PICKER MODAL -->
   <div id="colorPickerModal" class="modal-backdrop hidden">
     <div class="modal-card">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
@@ -1002,7 +980,7 @@
     const studioScreen = document.getElementById('studioScreen');
     const processingScreen = document.getElementById('processingScreen');
     const compareScreen = document.getElementById('compareScreen');
-    const galleryModal = document.getElementById('galleryModal');
+    const galleryScreen = document.getElementById('galleryScreen');
 
     const cameraFeed = document.getElementById('cameraFeed');
     const shutterBtn = document.getElementById('shutterBtn');
@@ -1027,6 +1005,7 @@
     const sliderDivider = document.getElementById('sliderDivider');
     const compareStage = document.getElementById('compareStage');
     const stageWrapper = document.getElementById('stageWrapper');
+    const compareBackToStudioBtn = document.getElementById('compareBackToStudioBtn');
     const compareBackToVaultBtn = document.getElementById('compareBackToVaultBtn');
     const compareRecordName = document.getElementById('compareRecordName');
     const compareDeleteBtn = document.getElementById('compareDeleteBtn');
@@ -1138,7 +1117,7 @@
     });
 
     function navigate(screen) {
-      [loginScreen, cameraScreen, cropScreen, studioScreen, compareScreen].forEach(s => s.classList.remove('active'));
+      [loginScreen, cameraScreen, cropScreen, studioScreen, compareScreen, galleryScreen].forEach(s => s.classList.remove('active'));
       screen.classList.add('active');
     }
 
@@ -1175,7 +1154,10 @@
        CAMERA & CAPTURE
        ========================================================================== */
     async function initCamera() {
-      if (cameraStream) cameraStream.getTracks().forEach(t => t.stop());
+      if (cameraStream) {
+        cameraStream.getTracks().forEach(t => t.stop());
+        cameraStream = null;
+      }
       try {
         cameraStream = await navigator.mediaDevices.getUserMedia({
           video: { facingMode: cameraFacingMode, width: { ideal: 1920 }, height: { ideal: 1080 } },
@@ -1184,7 +1166,7 @@
         cameraFeed.srcObject = cameraStream;
         cameraFeed.className = cameraFacingMode === 'user' ? 'mirrored' : '';
       } catch (err) {
-        console.warn('Camera inactive', err);
+        console.warn('Camera inactive or not found on device:', err.name);
       }
     }
 
@@ -1489,14 +1471,30 @@
           ? (liveHairstyles.find(x => x.id === currentStyleId)?.name || 'Pixie Cut')
           : `Colour ${currentColor}`;
 
-        // Save record with source_image_url so comparison works from Vault anytime
-        const { data: insertedRecord } = await sb.from('generations').insert({
-          user_phone: currentUserPhone,
-          image_url: vaultWebpUrl,
-          source_image_url: baseRemoteUrl,
-          style_name: currentStyleName,
-          category: activeMode === 'style' ? currentCategory : 'Hair Colour'
-        }).select().single();
+        // Robust DB Insert (Prevents 400 Bad Request by inserting standard fields)
+        let insertedRecord = null;
+        try {
+          const { data: rec, error: insertErr } = await sb.from('generations').insert({
+            user_phone: currentUserPhone,
+            image_url: vaultWebpUrl,
+            source_image_url: baseRemoteUrl,
+            style_name: currentStyleName,
+            category: activeMode === 'style' ? currentCategory : 'Hair Colour'
+          }).select().single();
+
+          if (!insertErr && rec) {
+            insertedRecord = rec;
+          } else {
+            // Fallback if source_image_url column is not present in user's table
+            const { data: recFallback } = await sb.from('generations').insert({
+              user_phone: currentUserPhone,
+              image_url: vaultWebpUrl,
+              style_name: currentStyleName,
+              category: activeMode === 'style' ? currentCategory : 'Hair Colour'
+            }).select().single();
+            insertedRecord = recFallback;
+          }
+        } catch (_) {}
 
         currentGenerationItem = insertedRecord || {
           id: null,
@@ -1518,14 +1516,13 @@
     });
 
     /* ==========================================================================
-       COMPARISON SCREEN (SLIDE & PAN, NO VARIATION BUTTON)
+       COMPARISON SCREEN (SLIDE & PAN, 100% KAMI NEO-BRUTALIST THEME)
        ========================================================================== */
     function openCompareView(renderedUrl, recordTitle, sourceUrl) {
       imgRendered.src = renderedUrl;
       imgSource.src = sourceUrl || client1024Preview.src || renderedUrl;
-      compareRecordName.textContent = recordTitle || 'Record';
+      compareRecordName.textContent = recordTitle || 'STYLE';
       
-      // Reset Compare Engine
       compareInteraction = 'slide';
       modeSlideBtn.classList.add('active');
       modePanBtn.classList.remove('active');
@@ -1610,9 +1607,13 @@
       setSliderPercent((x / rect.width) * 100);
     }
 
-    // Comparison Toolbar Navigation
+    // Deterministic Compare Navigation Buttons
+    compareBackToStudioBtn.addEventListener('click', () => {
+      navigate(studioScreen);
+    });
+
     compareBackToVaultBtn.addEventListener('click', () => {
-      loadUserVault(); // Directly brings back to Records/Vault
+      loadUserVault();
     });
 
     compareExportBtn.addEventListener('click', () => {
@@ -1623,13 +1624,13 @@
 
     compareDeleteBtn.addEventListener('click', async () => {
       if (!currentGenerationItem?.id) {
-        loadUserVault();
+        navigate(studioScreen);
         return;
       }
       if (confirm('Delete this generated image permanently?')) {
         await sb.from('generations').delete().eq('id', currentGenerationItem.id);
         showToast('IMAGE DELETED');
-        loadUserVault();
+        navigate(studioScreen);
       }
     });
 
@@ -1638,7 +1639,7 @@
        ========================================================================== */
     async function loadUserVault() {
       galleryGrid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:30px; font-weight:800;">LOADING VAULT...</div>';
-      galleryModal.classList.remove('hidden');
+      navigate(galleryScreen);
 
       const { data, error } = await sb
         .from('generations')
@@ -1668,16 +1669,15 @@
               <span style="font-size:0.62rem; color:#666;">${new Date(item.created_at).toLocaleDateString()}</span>
               <div style="display:flex; gap:6px;">
                 <button class="vault-dl-btn btn-icon" style="width:28px; height:28px; font-size:0.75rem;"><i class="bi bi-download"></i></button>
-                <button class="vault-del-btn btn-icon" style="width:28px; height:28px; font-size:0.75rem; color:#ef4444;"><i class="bi bi-trash"></i></button>
+                <button class="vault-del-btn btn-icon" style="width:28px; height:28px; font-size:0.75rem; color:var(--red);"><i class="bi bi-trash"></i></button>
               </div>
             </div>
           </div>
         `;
 
-        // WHOLE CARD CLICKABLE: Opens comparison view
+        // Whole Card Click: Opens Compare Screen
         card.addEventListener('click', () => {
           currentGenerationItem = item;
-          galleryModal.classList.add('hidden');
           openCompareView(item.image_url, item.style_name, item.source_image_url || null);
         });
 
@@ -1703,9 +1703,7 @@
 
     openGalleryBtn.addEventListener('click', loadUserVault);
     openGalleryFromStudioBtn.addEventListener('click', loadUserVault);
-    // CLOSE button smoothly returns to Studio screen
     closeGalleryBtn.addEventListener('click', () => {
-      galleryModal.classList.add('hidden');
       navigate(studioScreen);
     });
 
@@ -1750,18 +1748,15 @@
       const h = svCanvas.height;
       ctx.clearRect(0, 0, w, h);
 
-      // 1. Base Hue
       ctx.fillStyle = `hsl(${curH}, 100%, 50%)`;
       ctx.fillRect(0, 0, w, h);
 
-      // 2. White Horizontal Gradient (Saturation)
       const wGrad = ctx.createLinearGradient(0, 0, w, 0);
       wGrad.addColorStop(0, '#ffffff');
       wGrad.addColorStop(1, 'rgba(255, 255, 255, 0)');
       ctx.fillStyle = wGrad;
       ctx.fillRect(0, 0, w, h);
 
-      // 3. Black Vertical Gradient (Value)
       const bGrad = ctx.createLinearGradient(0, 0, 0, h);
       bGrad.addColorStop(0, 'rgba(0, 0, 0, 0)');
       bGrad.addColorStop(1, '#000000');
