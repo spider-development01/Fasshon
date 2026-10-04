@@ -1,6 +1,3 @@
-// functions/api/upload.js
-// Proxy for fal.ai storage initiate — returns a signed upload_url + file_url.
-
 export async function onRequestPost(context) {
   const { request, env } = context;
   const FAL_KEY = env.FAL_KEY;
@@ -32,11 +29,7 @@ export async function onRequestPost(context) {
     const data = await initRes.json().catch(() => ({}));
 
     if (!initRes.ok) {
-      const msg =
-        data?.detail?.[0]?.msg ||
-        data?.message ||
-        data?.error ||
-        `Upload initiate failed (${initRes.status})`;
+      const msg = data?.detail?.[0]?.msg || data?.message || data?.error || `Upload initiate failed (${initRes.status})`;
       return json({ error: msg }, initRes.status);
     }
 
@@ -53,9 +46,6 @@ export async function onRequestPost(context) {
 function json(obj, status = 200) {
   return new Response(JSON.stringify(obj), {
     status,
-    headers: {
-      'Content-Type': 'application/json',
-      'Cache-Control': 'no-store',
-    },
+    headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' },
   });
 }
