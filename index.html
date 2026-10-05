@@ -41,7 +41,6 @@
       --radius-pill: 999px;
       --bounce: cubic-bezier(0.175, 0.885, 0.32, 1.275);
 
-      /* Structured z-index hierarchy */
       --z-base: 10;
       --z-active-screen: 20;
       --z-dock: 50;
@@ -193,7 +192,7 @@
     .action-btn-call { background: var(--yellow); color: var(--black); }
     .action-btn-wa { background: var(--whatsapp); color: var(--white); }
 
-    /* CUSTOM NEO-BRUTALIST ACCESSIBLE MODAL */
+    /* CUSTOM NEO-BRUTALIST MODAL */
     .custom-modal-backdrop {
       position: fixed; inset: 0;
       background: rgba(26, 26, 26, 0.88);
@@ -228,7 +227,7 @@
       max-width: 420px; width: 100%; text-align: center;
     }
 
-    /* FULLSCREEN WYSIWYG CAMERA (NO SQUARE FRAMES) */
+    /* FULLSCREEN WYSIWYG CAMERA */
     .camera-wrapper {
       position: absolute; inset: 0; background: #000; overflow: hidden;
     }
@@ -432,7 +431,7 @@
     }
     .ref-thumb img { width: 100%; height: 100%; object-fit: cover; }
 
-    /* SLIDERS (CROSS-BROWSER) */
+    /* SLIDERS */
     .slider-stack { position: relative; display: flex; flex-direction: column; gap: 10px; }
     .slider-block {
       display: flex; flex-direction: column; gap: 6px;
@@ -627,7 +626,7 @@
     <div id="loadingTimer" class="timer-badge hidden">0S ELAPSED</div>
   </div>
 
-  <!-- CUSTOM NEO-BRUTALIST MODAL DIALOG (ACCESSIBLE, NO NATIVE ALERTS) -->
+  <!-- CUSTOM NEO-BRUTALIST MODAL DIALOG -->
   <div id="kamiCustomModal" class="custom-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="customModalTitle" aria-describedby="customModalMessage">
     <div class="custom-modal-card">
       <div style="display:inline-block; margin-bottom:4px;">
@@ -691,7 +690,7 @@
     </div>
   </section>
 
-  <!-- VIEW 1: FULLSCREEN WYSIWYG CAMERA (NO SQUARE OVERLAYS) -->
+  <!-- VIEW 1: FULLSCREEN WYSIWYG CAMERA -->
   <section id="cameraScreen" class="view-screen">
     <div class="top-dock">
       <div class="brand-logo">KAMI</div>
@@ -725,7 +724,6 @@
     </header>
 
     <main class="studio-content">
-      <!-- Image Canvas Viewport -->
       <div class="studio-preview-card">
         <div class="preview-box">
           <canvas id="hairCanvas"></canvas>
@@ -733,7 +731,6 @@
         </div>
       </div>
 
-      <!-- Feature Mode Selector -->
       <div class="mode-switch-bar">
         <button id="tabModeColor" class="mode-tab-btn active"><i class="bi bi-palette-fill"></i> HAIR COLOUR</button>
         <button id="tabModeStyle" class="mode-tab-btn"><i class="bi bi-scissors"></i> AI HAIRSTYLE</button>
@@ -802,7 +799,6 @@
         <div class="scroll-filter-row" id="catFilterRow"></div>
         <div class="hairstyles-grid" id="hairstylesGrid"></div>
 
-        <!-- Reference Cut Image Uploader -->
         <div class="ref-uploader" id="refCard">
           <div class="ref-thumb">
             <i class="bi bi-pin-angle" id="refIcon"></i>
@@ -843,7 +839,6 @@
 
     <div class="compare-viewport">
       <div class="compare-stage" id="compareStage">
-        <!-- IN-STAGE SKELETON LOADER (ZERO GHOSTING) -->
         <div id="compareSkeleton" class="compare-skeleton-overlay">
           <div class="badge shimmer-active" style="padding:10px 18px; font-size:0.8rem; background:var(--white); box-shadow:var(--shadow-sm);">
             <i class="bi bi-hourglass-split"></i> LOADING LOOK...
@@ -879,9 +874,6 @@
   </section>
 
   <script type="module">
-    /* ==========================================================================
-       FAIL-SAFE STORAGE HELPERS (FOR LOCKED-DOWN SAFARI / PRIVATE MODE)
-       ========================================================================== */
     function safeStorageGet(key) {
       try { return localStorage.getItem(key); } catch (_) { return null; }
     }
@@ -892,9 +884,6 @@
       try { localStorage.removeItem(key); } catch (_) {}
     }
 
-    /* ==========================================================================
-       SUPABASE INITIALIZATION (VERSION PINNED & CHECKED)
-       ========================================================================== */
     const SUPABASE_URL = 'https://rmfubnduytozikcgzvok.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJtZnVibmR1eXRvemlrY2d6dm9rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2OTIyMDgsImV4cCI6MjA5NzI2ODIwOH0.XmxDD8mH8rgq3OZmD7jVophtH2W3NNDgSRJKC3RXvJU';
     const STORAGE_BUCKET = 'kami-images';
@@ -908,9 +897,6 @@
       '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
     }[c]));
 
-    /* ==========================================================================
-       DYNAMIC HEIC LOADER (SAVES NETWORK BANDWIDTH)
-       ========================================================================== */
     async function getHeicConverter() {
       if (window.heic2any) return window.heic2any;
       return new Promise((resolve, reject) => {
@@ -922,9 +908,6 @@
       });
     }
 
-    /* ==========================================================================
-       LOCAL ON-DEVICE WEBP PIPELINE
-       ========================================================================== */
     const WEBP_QUALITY       = 0.82;
     const WEBP_QUALITY_HIGH  = 0.90;
     const MAX_UPLOAD_DIM     = 1600;
@@ -1040,9 +1023,6 @@
       setTimeout(() => URL.revokeObjectURL(url), 3000);
     }
 
-    /* ==========================================================================
-       APPLICATION STATE
-       ========================================================================== */
     let currentUserPhone = safeStorageGet('kami_user_phone');
     let currentUserName  = safeStorageGet('kami_user_name');
     let userHairstyleLimit = 5;
@@ -1069,22 +1049,16 @@
     let toastTimer = null;
     let compareLoadToken = 0;
 
-    // Declared top-level compare state
     let currentCompareMode = 'slide';
 
-    // Default natural hair
     let currentColorApplied = false;
     let currentShadeName = "Natural";
     let targetH = 26, targetS = 38, currentLift = 0;
     let selectedFamily = "all";
     let slidersUnlocked = false;
 
-    // Optional reference cut
     let refBlob = null;
 
-    /* ==========================================================================
-       CUSTOM NEO-BRUTALIST ACCESSIBLE DIALOG
-       ========================================================================== */
     function showBrutalModal({
       title = "NOTICE",
       message = "",
@@ -1155,9 +1129,6 @@
       });
     }
 
-    /* ==========================================================================
-       SALON SHADE CATALOG
-       ========================================================================== */
     const SHADE_CATALOG = [
       { name: "Jet Black",         family: "browns", h: 30,  s: 4,  l: 8 },
       { name: "Blue Black",        family: "browns", h: 220, s: 18, l: 12 },
@@ -1216,9 +1187,6 @@
       { name: "Silver Grey",       family: "fashion", h: 220, s: 8,  l: 74 }
     ];
 
-    /* ==========================================================================
-       AI HAIRSTYLE CATALOG
-       ========================================================================== */
     const DEFAULT_HAIRSTYLES = [
       { id:'pixie', category:'Bob & Short', name:'Pixie Cut', desc_prompt:'a realistic short textured feminine pixie cut with tapered sides and nape, slightly longer layered top' },
       { id:'bluntbob', category:'Bob & Short', name:'Blunt Bob', desc_prompt:'a realistic blunt bob cut straight across at jaw length with a crisp even hemline' },
@@ -1239,9 +1207,6 @@
     let selectedHairstyle = DEFAULT_HAIRSTYLES[0];
     let selectedHairstyleCat = 'Bob & Short';
 
-    /* ==========================================================================
-       INDEXEDDB LOCAL VAULT
-       ========================================================================== */
     const DB_NAME = 'kami_vault_db';
     const DB_VERSION = 1;
     const STORE_NAME = 'saved_looks';
@@ -1311,9 +1276,6 @@
       } catch (_) {}
     }
 
-    /* ==========================================================================
-       SUPABASE STORAGE HELPERS
-       ========================================================================== */
     function publicUrlFor(path) {
       return sb.storage.from(STORAGE_BUCKET).getPublicUrl(path).data.publicUrl;
     }
@@ -1333,9 +1295,6 @@
       try { await sb.storage.from(STORAGE_BUCKET).remove(paths); } catch (_) {}
     }
 
-    /* ==========================================================================
-       UI CONTROLLERS & SERVER-SIDE ENTITLEMENTS
-       ========================================================================== */
     const screens = {
       login: $('loginScreen'),
       camera: $('cameraScreen'),
@@ -1373,11 +1332,11 @@
       $('clientStudioBadge').textContent = label;
     }
 
-    /* SERVER-VERIFIED TRIAL STATUS (PREVENTS DOM DEVTOOLS BYPASS) */
+    /* FAIL-SAFE USER STATUS RETRIEVAL (NEVER 400s) */
     async function verifyUserTrialStatus(phone) {
       if (!sb || !phone) return true;
       try {
-        const { data, error } = await sb.from('users').select('trial_expired, hairstyle_limit, hairstyle_credits_used').eq('phone', phone).maybeSingle();
+        const { data, error } = await sb.from('users').select('*').eq('phone', phone).maybeSingle();
         if (error || !data) return true;
 
         if (data.trial_expired === true) {
@@ -1387,7 +1346,18 @@
         }
 
         userHairstyleLimit = typeof data.hairstyle_limit === 'number' ? data.hairstyle_limit : 5;
-        usedHairstyleCount = typeof data.hairstyle_credits_used === 'number' ? data.hairstyle_credits_used : 0;
+        
+        if (typeof data.hairstyle_credits_used === 'number') {
+          usedHairstyleCount = data.hairstyle_credits_used;
+        } else {
+          // Fallback: count from generations table directly
+          const { count } = await sb
+            .from('generations')
+            .select('id', { count: 'exact', head: true })
+            .eq('user_phone', phone)
+            .neq('category', 'Hair Colour');
+          usedHairstyleCount = typeof count === 'number' ? count : 0;
+        }
         
         $('trialLockOverlay').classList.remove('active');
         updateQuotaDisplay();
@@ -1415,7 +1385,6 @@
       }
     }
 
-    /* LOGIN FORM (ENTER KEY & ACCESSIBILITY READY) */
     $('loginForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const raw = $('loginPhoneInput').value.trim().replace(/[^\d+]/g, '');
@@ -1489,9 +1458,6 @@
     $('logoutBtn').addEventListener('click', logoutClient);
     $('lockLogoutBtn').addEventListener('click', logoutClient);
 
-    /* ==========================================================================
-       MEDIAPIPE LOCAL AI HAIR SEGMENTER
-       ========================================================================== */
     async function initModel() {
       try {
         const { ImageSegmenter, FilesetResolver } = await import("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/vision_bundle.mjs");
@@ -1523,9 +1489,6 @@
     }
     initModel();
 
-    /* ==========================================================================
-       TRUE WYSIWYG CAMERA (COVERS VIEWPORT MATCHING SENSOR AREA)
-       ========================================================================== */
     const cameraFeed = $('cameraFeed');
 
     async function startCamera() {
@@ -1558,10 +1521,6 @@
       startCamera();
     });
 
-    /**
-     * Exact WYSIWYG viewfinder crop math:
-     * Calculates the exact object-fit: cover portion seen on screen.
-     */
     function captureCamera() {
       const vw = cameraFeed.videoWidth;
       const vh = cameraFeed.videoHeight;
@@ -1642,9 +1601,6 @@
       }
     }
 
-    /* ==========================================================================
-       STUDIO ENGINE: HAIR COLOUR
-       ========================================================================== */
     const hairCanvas = $('hairCanvas');
     const hairCtx = hairCanvas.getContext('2d', { willReadFrequently: true });
     const stylePreviewImg = $('stylePreviewImg');
@@ -1826,9 +1782,6 @@
       startCamera();
     });
 
-    /* ==========================================================================
-       SWATCHES & SLIDERS
-       ========================================================================== */
     function renderSwatches() {
       const grid = $('swatchGrid');
       grid.innerHTML = '';
@@ -1931,9 +1884,6 @@
       renderSwatches();
     });
 
-    /* ==========================================================================
-       STUDIO MODE TOGGLE
-       ========================================================================== */
     $('tabModeColor').addEventListener('click', () => {
       activeStudioMode = 'color';
       $('tabModeColor').classList.add('active');
@@ -1952,9 +1902,6 @@
       $('panelColor').classList.add('hidden');
     });
 
-    /* ==========================================================================
-       HAIRSTYLE TAB
-       ========================================================================== */
     async function loadHairstylesCatalog() {
       if (sb) {
         try {
@@ -2040,9 +1987,7 @@
       $('refSubtext').textContent = 'Tap to upload fringe/length reference';
     });
 
-    /* ==========================================================================
-       AI HAIRSTYLE GENERATION (SERVER-SECURED VIA POSTGRES RPC)
-       ========================================================================== */
+    /* AI HAIRSTYLE GENERATION (RPC CONSUMPTION WITH RESILIENT FALLBACK) */
     $('executeStyleBtn').addEventListener('click', async () => {
       if (!sb) {
         showBrutalModal({
@@ -2058,48 +2003,53 @@
 
       showLoading("CHECKING QUOTA...", false);
 
-      // ATOMIC SERVER-SIDE VALIDATION: consume_hairstyle_credit RPC
+      let allowedToProceed = false;
+
       try {
+        // Attempt atomic server-side RPC validation
         const { data: quotaRes, error: rpcErr } = await sb.rpc('consume_hairstyle_credit', {
           p_phone: currentUserPhone
         });
 
-        if (rpcErr || !quotaRes) {
-          throw new Error(rpcErr?.message || 'Quota validation rejected');
-        }
-
-        if (!quotaRes.allowed) {
-          hideLoading();
-          if (quotaRes.reason === 'trial_expired') {
-            $('trialLockOverlay').classList.add('active');
-            return;
+        if (rpcErr) {
+          console.warn("RPC note, applying fallback verification:", rpcErr.message);
+          // Resilient fallback: read from users table directly
+          const { data: uData } = await sb.from('users').select('*').eq('phone', currentUserPhone).maybeSingle();
+          if (uData) {
+            if (uData.trial_expired === true) {
+              hideLoading();
+              $('trialLockOverlay').classList.add('active');
+              return;
+            }
+            const lim = uData.hairstyle_limit || 5;
+            const used = uData.hairstyle_credits_used || 0;
+            if (used >= lim) {
+              hideLoading();
+              triggerQuotaExceededModal(used, lim);
+              return;
+            }
           }
-          if (quotaRes.reason === 'quota_exceeded') {
-            usedHairstyleCount = quotaRes.used || userHairstyleLimit;
-            updateQuotaDisplay();
-            showBrutalModal({
-              badge: "QUOTA LIMIT",
-              badgeBg: "var(--red)",
-              badgeColor: "var(--white)",
-              title: `LIMIT REACHED (${usedHairstyleCount}/${quotaRes.limit})`,
-              message: `You have consumed all ${quotaRes.limit} hairstyle simulations. Contact salon desk for an allowance top-up.`,
-              extraHtml: `
-                <a href="https://wa.me/916239287740?text=Hi%20KAMI%2C%20please%20top%20up%20my%20AI%20hairstyle%20generations." target="_blank" rel="noopener noreferrer" class="action-btn-wa" style="width:100%; text-decoration:none; padding:12px; font-size:0.84rem;">
-                  <i class="bi bi-whatsapp"></i> MESSAGE DESK ON WHATSAPP
-                </a>
-              `,
-              confirmText: "GOT IT",
-              confirmBg: "var(--yellow)"
-            });
-            return;
+          allowedToProceed = true;
+        } else if (quotaRes) {
+          if (!quotaRes.allowed) {
+            hideLoading();
+            if (quotaRes.reason === 'trial_expired') {
+              $('trialLockOverlay').classList.add('active');
+              return;
+            }
+            if (quotaRes.reason === 'quota_exceeded') {
+              usedHairstyleCount = quotaRes.used || userHairstyleLimit;
+              updateQuotaDisplay();
+              triggerQuotaExceededModal(usedHairstyleCount, quotaRes.limit);
+              return;
+            }
+            throw new Error('Action blocked: ' + quotaRes.reason);
           }
-          throw new Error('Action blocked: ' + quotaRes.reason);
+          usedHairstyleCount = quotaRes.used;
+          userHairstyleLimit = quotaRes.limit;
+          updateQuotaDisplay();
+          allowedToProceed = true;
         }
-
-        // Credit consumed atomically on server!
-        usedHairstyleCount = quotaRes.used;
-        userHairstyleLimit = quotaRes.limit;
-        updateQuotaDisplay();
       } catch (authErr) {
         hideLoading();
         showBrutalModal({
@@ -2113,7 +2063,11 @@
         return;
       }
 
-      // Proportional full-resolution upload preserving aspect ratio
+      if (!allowedToProceed) {
+        hideLoading();
+        return;
+      }
+
       const sourceToUpload = originalWebpBlob || await compressToWebP(hairCanvas, { maxDim: 1440, quality: WEBP_QUALITY_HIGH });
 
       showLoading("STYLING WITH KAMI AI...", true);
@@ -2217,9 +2171,23 @@
       }
     });
 
-    /* ==========================================================================
-       GHOST-FREE COMPARE ENGINE (CONCURRENT PRE-DECODING)
-       ========================================================================== */
+    function triggerQuotaExceededModal(used, lim) {
+      showBrutalModal({
+        badge: "QUOTA LIMIT",
+        badgeBg: "var(--red)",
+        badgeColor: "var(--white)",
+        title: `LIMIT REACHED (${used}/${lim})`,
+        message: `You have consumed all ${lim} hairstyle simulations. Contact salon desk for an allowance top-up.`,
+        extraHtml: `
+          <a href="https://wa.me/916239287740?text=Hi%20KAMI%2C%20please%20top%20up%20my%20AI%20hairstyle%20generations." target="_blank" rel="noopener noreferrer" class="action-btn-wa" style="width:100%; text-decoration:none; padding:12px; font-size:0.84rem;">
+            <i class="bi bi-whatsapp"></i> MESSAGE DESK ON WHATSAPP
+          </a>
+        `,
+        confirmText: "GOT IT",
+        confirmBg: "var(--yellow)"
+      });
+    }
+
     function preloadImageSafe(url) {
       return new Promise((resolve, reject) => {
         const img = new Image();
@@ -2238,7 +2206,6 @@
       const imgSource = $('imgSource');
       const imgRendered = $('imgRendered');
 
-      // Instantly blank out old look to destroy ghosting
       skeleton.classList.add('active');
       imgSource.style.opacity = '0';
       imgRendered.style.opacity = '0';
@@ -2250,13 +2217,11 @@
       setCompareMode('slide');
 
       try {
-        // Concurrently decode both images in memory
         const [loadedSource, loadedRendered] = await Promise.all([
           preloadImageSafe(sourceSrc),
           preloadImageSafe(renderedSrc)
         ]);
 
-        // Race guard for rapid clicking
         if (currentToken !== compareLoadToken) return;
 
         const nw = loadedSource.naturalWidth || loadedRendered.naturalWidth;
@@ -2268,7 +2233,6 @@
         imgSource.src = sourceSrc;
         imgRendered.src = renderedSrc;
 
-        // Reveal smoothly with zero flicker
         imgSource.style.opacity = '1';
         imgRendered.style.opacity = '1';
         skeleton.classList.remove('active');
@@ -2339,7 +2303,6 @@
     compareStage.addEventListener('pointerup', endDividerDrag);
     compareStage.addEventListener('pointercancel', endDividerDrag);
 
-    // KEYBOARD OPERABLE DIVIDER (ACCESSIBLE SLIDER)
     $('sliderDivider').addEventListener('keydown', e => {
       if (currentCompareMode !== 'slide') return;
       const current = parseFloat($('sliderDivider').getAttribute('aria-valuenow')) || 50;
@@ -2381,9 +2344,6 @@
     $('modeBefore').addEventListener('click', () => setCompareMode('before'));
     $('modeAfter').addEventListener('click', () => setCompareMode('after'));
 
-    /* ==========================================================================
-       DEDUPLICATED VAULT SAVING & CLOUD SYNC
-       ========================================================================== */
     async function saveLookToVault(notify = false) {
       if (!currentUserPhone || isSavingVault || !currentColorApplied) return;
 
@@ -2543,9 +2503,6 @@
       if (!openedFromVault && activeStudioMode === 'color') await saveLookToVault(true);
     });
 
-    /* ==========================================================================
-       VAULT GALLERY WITH SKELETON PLACEHOLDERS
-       ========================================================================== */
     function renderVaultSkeletons() {
       const grid = $('galleryGrid');
       grid.innerHTML = Array(4).fill(0).map(() => `
@@ -2691,9 +2648,6 @@
       if (!cameraStream) startCamera();
     });
 
-    /* ==========================================================================
-       STARTUP
-       ========================================================================== */
     window.addEventListener('DOMContentLoaded', () => {
       loadHairstylesCatalog();
       checkAuthSession();
