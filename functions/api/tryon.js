@@ -23,7 +23,7 @@ export async function onRequestPost(context) {
   }
 
   try {
-    const falRes = await fetch('https://fal.run/blackforestlabs/flux-3/edit-image', {
+    const falRes = await fetch('https://fal.run/google/nano-banana-lite/edit', {
       method: 'POST',
       headers: {
         'Authorization': `Key ${FAL_KEY}`,
