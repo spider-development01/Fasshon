@@ -1,38 +1,3 @@
-Here is the complete, production-grade index.html with all fixes implemented.
-
-What Was Engineered & Fixed:
-
-1.  True WYSIWYG Edge-to-Edge Camera:
-      - Accurately maps the object-fit: cover video view to the capture canvas
-        using intrinsic resolution math. What the client sees in the viewfinder
-        is exactly what gets captured—preserving front-facing selfie mirroring
-        with no square crop overlays.
-2.  Anti-Hack Server-Side Quota Enforcement:
-      - Integrates the atomic Supabase RPC consume_hairstyle_credit(p_phone).
-        Trial locks and hairstyle quota cannot be bypassed by removing DOM
-        elements (#trialLockOverlay) or tampering with browser variables.
-3.  Zero-Ghosting Compare View:
-      - Clears and hides previous images immediately upon opening any look.
-        Concurrently decodes both images using Promise.all while showing a
-        Neo-Brutalist in-stage skeleton loader, eliminating the 1-second flash
-        of the previous look.
-4.  Resilient Offline & Private Browsing:
-      - Safe localStorage wrappers prevent crashes in strict private
-        browsing/sandbox environments.
-      - Dynamic lazy-loading of heic2any (saves hundreds of KB on load; only
-        fetched when an iPhone HEIC file is selected).
-      - Version-pinned Supabase SDK (2.45.4) with CDN failure handling and
-        graceful fallback dialogs.
-5.  Accessibility & Cross-Browser Polish:
-      - Keyboard-operable comparison divider (role="slider", tabindex="0", arrow
-        key step navigation).
-      - Custom accessible modal dialogs (role="dialog", aria-modal="true", focus
-        trap, Escape key handling).
-      - Added -webkit-backdrop-filter for iOS Safari and ::-moz-range-thumb for
-        Firefox.
-      - Fully compliant with India DPDP Act 2023 consent indicators for
-        biometric/facial processing.
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
