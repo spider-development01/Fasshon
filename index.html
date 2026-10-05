@@ -627,7 +627,7 @@
       </div>
       <h3 id="customModalTitle" style="font-family:var(--font-heading); font-size:1.2rem; text-transform:uppercase; margin-bottom:4px; line-height:1.2;">TITLE</h3>
       <p id="customModalMessage" style="font-size:0.85rem; font-weight:700; color:#444; line-height:1.45;"></p>
-      
+
       <div id="customModalExtra" class="hidden"></div>
 
       <div style="display:flex; justify-content:center; gap:10px; margin-top:6px; flex-wrap:wrap;">
@@ -898,22 +898,144 @@
        ========================================================================== */
     const SUPABASE_URL = 'https://rmfubnduytozikcgzvok.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJtZnVibmR1eXRvemlrY2d6dm9rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2OTIyMDgsImV4cCI6MjA5NzI2ODIwOH0.XmxDD8mH8rgq3OZmD7jVophtH2W3NNDgSRJKC3RXvJU';
+    const STORAGE_BUCKET = 'kami-images';
     const sb = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
 
     const $ = id => document.getElementById(id);
     const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
+    /* ==========================================================================
+       LOCAL WEBP COMPRESSION PIPELINE
+       - Zero server round-trips, all encoding happens on-device.
+       - High quality WebP (0.82 general / 0.90 originals) keeps visible fidelity
+         while cutting storage by ~70-90% vs PNG.
+       ========================================================================== */
+    const WEBP_QUALITY       = 0.82;  // vault renders, shares, AI uploads
+    const WEBP_QUALITY_HIGH  = 0.90;  // originals used for compare / re-editing
+    const MAX_UPLOAD_DIM     = 1600;  // longest edge for anything sent to Supabase
+    const DEDUPE_WINDOW_MS   = 180000; // 3-minute proximity window for vault dedupe
+
+    const WEBP_SUPPORTED = (() => {
+      try {
+        const c = document.createElement('canvas');
+        c.width = c.height = 1;
+        return c.toDataURL('image/webp').startsWith('data:image/webp');
+      } catch (_) { return false; }
+    })();
+
+    const ENCODE_TYPE = WEBP_SUPPORTED ? 'image/webp' : 'image/jpeg';
+    const ENCODE_EXT  = WEBP_SUPPORTED ? 'webp' : 'jpg';
+
+    function encodeCanvas(canvas, quality = WEBP_QUALITY) {
+      return new Promise(resolve => {
+        if (canvas.toBlob) {
+          canvas.toBlob(blob => {
+            if (blob) return resolve(blob);
+            resolve(dataURLToBlob(canvas.toDataURL(ENCODE_TYPE, quality)));
+          }, ENCODE_TYPE, quality);
+        } else {
+          resolve(dataURLToBlob(canvas.toDataURL(ENCODE_TYPE, quality)));
+        }
+      });
+    }
+
+    function canvasToDataURL(canvas, quality = WEBP_QUALITY) {
+      return canvas.toDataURL(ENCODE_TYPE, quality);
+    }
+
+    function dataURLToBlob(dataURL) {
+      const [head, body] = dataURL.split(',');
+      const mime = (head.match(/:(.*?);/) || [, 'image/webp'])[1];
+      const bin = atob(body);
+      const arr = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+      return new Blob([arr], { type: mime });
+    }
+
+    function loadDrawable(source) {
+      if (source instanceof HTMLImageElement || source instanceof HTMLCanvasElement || source instanceof HTMLVideoElement) {
+        return Promise.resolve(source);
+      }
+      if (window.ImageBitmap && source instanceof ImageBitmap) return Promise.resolve(source);
+
+      if (source instanceof Blob) {
+        if (window.createImageBitmap) {
+          return createImageBitmap(source).catch(() => blobToImage(source));
+        }
+        return blobToImage(source);
+      }
+
+      // string (data URL or http URL)
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        if (typeof source === 'string' && !source.startsWith('data:')) img.crossOrigin = 'anonymous';
+        img.onload = () => resolve(img);
+        img.onerror = () => reject(new Error('Image load failed'));
+        img.src = source;
+      });
+    }
+
+    function blobToImage(blob) {
+      return new Promise((resolve, reject) => {
+        const url = URL.createObjectURL(blob);
+        const img = new Image();
+        img.onload = () => { URL.revokeObjectURL(url); resolve(img); };
+        img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Image decode failed')); };
+        img.src = url;
+      });
+    }
+
+    /**
+     * Downscales + encodes any image source to a compact WebP blob.
+     * Never upscales. Uses high-quality smoothing.
+     */
+    async function compressToWebP(source, { maxDim = MAX_UPLOAD_DIM, quality = WEBP_QUALITY } = {}) {
+      const drawable = await loadDrawable(source);
+      const natW = drawable.naturalWidth || drawable.videoWidth || drawable.width;
+      const natH = drawable.naturalHeight || drawable.videoHeight || drawable.height;
+      if (!natW || !natH) throw new Error('Invalid image source');
+
+      const scale = Math.min(1, maxDim / Math.max(natW, natH));
+      const w = Math.max(1, Math.round(natW * scale));
+      const h = Math.max(1, Math.round(natH * scale));
+
+      const c = document.createElement('canvas');
+      c.width = w; c.height = h;
+      const ctx = c.getContext('2d');
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+      ctx.drawImage(drawable, 0, 0, w, h);
+
+      if (window.ImageBitmap && drawable instanceof ImageBitmap) {
+        try { drawable.close(); } catch (_) {}
+      }
+      return encodeCanvas(c, quality);
+    }
+
+    function downloadBlob(blob, filename) {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 3000);
+    }
+
+    /* ==========================================================================
+       STATE
+       ========================================================================== */
     let currentUserPhone = localStorage.getItem('kami_user_phone') || null;
     let currentUserName  = localStorage.getItem('kami_user_name')  || null;
     let userHairstyleLimit = 5;
     let usedHairstyleCount = 0;
 
     let activeStudioMode = 'color'; // 'color' | 'style'
-    let originalBlob = null;
     let originalImageData = null;
-    let originalDataURL = null;
+    let originalWebpBlob = null;     // compressed original for uploads / vault
+    let originalDataURL = null;      // compressed original data URL for compare / crop
     let croppedSquareBlob = null;
-    let croppedSquareDataURL = null;
     let hairConfidenceMask = null;
     let canvasW = 0, canvasH = 0;
 
@@ -925,12 +1047,11 @@
     let cachedShareBlob = null;
     let lastSavedHash = null;
     let isSavingVault = false;
-    let currentCompareMode = 'slide';
     let isDividerDragging = false;
     let renderScheduled = false;
     let openedFromVault = false;
 
-    // By default, no color is applied to hair
+    // By default, no colour is applied to hair
     let currentColorApplied = false;
     let currentShadeName = "Natural";
     let targetH = 26, targetS = 38, currentLift = 0;
@@ -1104,6 +1225,7 @@
     const DB_NAME = 'kami_vault_db';
     const DB_VERSION = 1;
     const STORE_NAME = 'saved_looks';
+    const LOCAL_VAULT_LIMIT = 10;
 
     function openVaultDB() {
       return new Promise((resolve, reject) => {
@@ -1117,21 +1239,38 @@
       });
     }
 
+    function dbGetAll(db) {
+      return new Promise(resolve => {
+        const tx = db.transaction(STORE_NAME, 'readonly');
+        const req = tx.objectStore(STORE_NAME).getAll();
+        req.onsuccess = () => resolve(req.result || []);
+        req.onerror = () => resolve([]);
+      });
+    }
+
     async function getLocalLooks(phone) {
       try {
         const db = await openVaultDB();
-        return new Promise(resolve => {
-          const tx = db.transaction(STORE_NAME, 'readonly');
-          const req = tx.objectStore(STORE_NAME).getAll();
-          req.onsuccess = () => {
-            const all = req.result || [];
-            const filtered = phone ? all.filter(item => item.user_phone === phone) : all;
-            filtered.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-            resolve(filtered.slice(0, 10));
-          };
-          req.onerror = () => resolve([]);
-        });
+        const all = await dbGetAll(db);
+        const filtered = phone ? all.filter(item => item.user_phone === phone) : all;
+        filtered.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+        return filtered.slice(0, LOCAL_VAULT_LIMIT);
       } catch (_) { return []; }
+    }
+
+    async function pruneLocalLooks(phone) {
+      try {
+        const db = await openVaultDB();
+        const all = await dbGetAll(db);
+        const mine = all
+          .filter(i => i.user_phone === phone)
+          .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+        const stale = mine.slice(LOCAL_VAULT_LIMIT);
+        if (!stale.length) return;
+        const tx = db.transaction(STORE_NAME, 'readwrite');
+        const store = tx.objectStore(STORE_NAME);
+        stale.forEach(s => store.delete(s.id));
+      } catch (_) {}
     }
 
     async function saveLocalLook(item) {
@@ -1139,6 +1278,8 @@
         const db = await openVaultDB();
         const tx = db.transaction(STORE_NAME, 'readwrite');
         tx.objectStore(STORE_NAME).put(item);
+        await new Promise(res => { tx.oncomplete = res; tx.onerror = res; tx.onabort = res; });
+        await pruneLocalLooks(item.user_phone);
       } catch (e) { console.warn('IndexedDB notice:', e); }
     }
 
@@ -1148,6 +1289,28 @@
         const tx = db.transaction(STORE_NAME, 'readwrite');
         tx.objectStore(STORE_NAME).delete(id);
       } catch (_) {}
+    }
+
+    /* ==========================================================================
+       SUPABASE STORAGE HELPERS
+       ========================================================================== */
+    function publicUrlFor(path) {
+      return sb.storage.from(STORAGE_BUCKET).getPublicUrl(path).data.publicUrl;
+    }
+
+    function storagePathFromPublicUrl(url) {
+      if (!url || typeof url !== 'string' || url.startsWith('data:')) return null;
+      const marker = `/object/public/${STORAGE_BUCKET}/`;
+      const i = url.indexOf(marker);
+      if (i === -1) return null;
+      return decodeURIComponent(url.slice(i + marker.length).split('?')[0]);
+    }
+
+    async function removeStorageObjects(urls) {
+      if (!sb) return;
+      const paths = urls.map(storagePathFromPublicUrl).filter(Boolean);
+      if (!paths.length) return;
+      try { await sb.storage.from(STORAGE_BUCKET).remove(paths); } catch (_) {}
     }
 
     /* ==========================================================================
@@ -1171,7 +1334,8 @@
       const t = $('toast');
       t.textContent = msg;
       t.classList.add('show');
-      setTimeout(() => t.classList.remove('show'), 2400);
+      clearTimeout(showToast._timer);
+      showToast._timer = setTimeout(() => t.classList.remove('show'), 2400);
     }
 
     function showLoading(msg = "ANALYSING HAIR...", showTimer = false) {
@@ -1199,7 +1363,6 @@
         if (data && data.trial_expired !== undefined) {
           isExpired = data.trial_expired === true;
         } else {
-          // Check app_config fallback
           const { data: cfg } = await sb.from('app_config').select('value').eq('key', `trial_expired_${phone}`).maybeSingle();
           if (cfg && cfg.value === 'true') isExpired = true;
         }
@@ -1220,7 +1383,7 @@
         $('trialLockOverlay').classList.remove('active');
         await updateHairstyleQuota();
         return true;
-      } catch (err) {
+      } catch (_) {
         return true;
       }
     }
@@ -1265,7 +1428,7 @@
 
       try {
         if (sb) {
-          let { data } = await sb.from('users').select('*').eq('phone', raw).maybeSingle();
+          const { data } = await sb.from('users').select('*').eq('phone', raw).maybeSingle();
           if (!data) {
             showToast('NUMBER NOT REGISTERED — CONTACT DESK');
             return;
@@ -1293,7 +1456,7 @@
         await updateHairstyleQuota();
         activateScreen(screens.camera);
         startCamera();
-      } catch (err) {
+      } catch (_) {
         showToast('LOGIN FAILED — RETRY');
       } finally {
         btn.disabled = false;
@@ -1350,10 +1513,11 @@
 
         $('aiStatusBadge').innerHTML = '<i class="bi bi-view-finder" style="margin-right:4px;"></i> ALIGN FACE IN FRAME';
         if (pendingImage) {
-          processStudioImage(pendingImage);
+          const queued = pendingImage;
           pendingImage = null;
+          processStudioImage(queued).catch(() => hideLoading());
         }
-      } catch (err) {
+      } catch (_) {
         $('aiStatusBadge').innerHTML = '<i class="bi bi-exclamation-triangle"></i> AI INITIALISING...';
       }
     }
@@ -1385,7 +1549,7 @@
       if (cameraStream) {
         cameraFeed.srcObject = cameraStream;
         cameraFeed.className = cameraFacing === 'user' ? 'mirrored' : '';
-        try { await cameraFeed.play(); } catch(_) {}
+        try { await cameraFeed.play(); } catch (_) {}
       }
     }
 
@@ -1394,6 +1558,11 @@
       startCamera();
     });
 
+    /**
+     * WYSIWYG capture: crops exactly what the scanner frame shows.
+     * For the mirrored selfie preview the source region is drawn through a
+     * horizontal flip so the saved photo matches what the user saw.
+     */
     function captureCamera() {
       const vw = cameraFeed.videoWidth;
       const vh = cameraFeed.videoHeight;
@@ -1427,7 +1596,7 @@
       if (cameraFacing === 'user') {
         ctx.translate(cvs.width, 0);
         ctx.scale(-1, 1);
-        ctx.drawImage(cameraFeed, vw - (sx + sWidth), sy, sWidth, sHeight, 0, 0, cvs.width, cvs.height);
+        ctx.drawImage(cameraFeed, sx, sy, sWidth, sHeight, 0, 0, cvs.width, cvs.height);
       } else {
         ctx.drawImage(cameraFeed, sx, sy, sWidth, sHeight, 0, 0, cvs.width, cvs.height);
       }
@@ -1437,8 +1606,12 @@
     $('shutterBtn').addEventListener('click', async () => {
       const cvs = captureCamera();
       if (!cvs) { $('clientFileInput').click(); return; }
-      originalBlob = await new Promise(r => cvs.toBlob(r, 'image/jpeg', 0.95));
-      processStudioImage(cvs);
+      try {
+        await processStudioImage(cvs);
+      } catch (_) {
+        hideLoading();
+        showToast('COULD NOT PROCESS PHOTO');
+      }
     });
 
     $('uploadPhotoBtn').addEventListener('click', () => {
@@ -1452,25 +1625,27 @@
 
       const isHeic = file.type === 'image/heic' || file.type === 'image/heif' || /\.(heic|heif)$/i.test(file.name);
       if (isHeic && window.heic2any) {
-        showToast("CONVERTING IPHONE PHOTO...");
+        showLoading("CONVERTING IPHONE PHOTO...");
         try {
           const converted = await window.heic2any({ blob: file, toType: "image/jpeg", quality: 0.92 });
-          loadBlobIntoStudio(Array.isArray(converted) ? converted[0] : converted);
-          return;
-        } catch (_) { showToast("HEIC NOT SUPPORTED — PLEASE USE JPG/PNG"); return; }
+          await loadBlobIntoStudio(Array.isArray(converted) ? converted[0] : converted);
+        } catch (_) {
+          hideLoading();
+          showToast("HEIC NOT SUPPORTED — PLEASE USE JPG/PNG");
+        }
+        return;
       }
-      loadBlobIntoStudio(file);
+      await loadBlobIntoStudio(file);
     });
 
-    function loadBlobIntoStudio(blob) {
-      originalBlob = blob;
-      const reader = new FileReader();
-      reader.onload = ev => {
-        const img = new Image();
-        img.onload = () => processStudioImage(img);
-        img.src = ev.target.result;
-      };
-      reader.readAsDataURL(blob);
+    async function loadBlobIntoStudio(blob) {
+      try {
+        const img = await loadDrawable(blob);
+        await processStudioImage(img);
+      } catch (_) {
+        hideLoading();
+        showToast('COULD NOT READ THAT IMAGE');
+      }
     }
 
     /* ==========================================================================
@@ -1480,12 +1655,13 @@
     const hairCtx = hairCanvas.getContext('2d', { willReadFrequently: true });
     const stylePreviewImg = $('stylePreviewImg');
 
-    function processStudioImage(source) {
+    async function processStudioImage(source) {
       if (!source) return;
 
       const maxDim = 1280;
       let w = source.naturalWidth || source.videoWidth || source.width;
       let h = source.naturalHeight || source.videoHeight || source.height;
+      if (!w || !h) throw new Error('Invalid image');
 
       if (w > maxDim || h > maxDim) {
         if (w > h) { h = Math.round((h * maxDim) / w); w = maxDim; }
@@ -1499,7 +1675,10 @@
       hairCtx.clearRect(0, 0, w, h);
       hairCtx.drawImage(source, 0, 0, w, h);
       originalImageData = hairCtx.getImageData(0, 0, w, h);
-      originalDataURL = hairCanvas.toDataURL('image/png');
+
+      // Local WebP compression — happens once, on-device, before anything else.
+      originalDataURL = canvasToDataURL(hairCanvas, WEBP_QUALITY_HIGH);
+      originalWebpBlob = await encodeCanvas(hairCanvas, WEBP_QUALITY_HIGH);
 
       // KEEP UNTOUCHED ORIGINAL NATURAL HAIR BY DEFAULT
       currentColorApplied = false;
@@ -1507,7 +1686,6 @@
       $('currentShadeBadge').textContent = 'NATURAL';
 
       croppedSquareBlob = null;
-      croppedSquareDataURL = null;
       stylePreviewImg.classList.add('hidden');
       hairCanvas.classList.remove('hidden');
 
@@ -1553,9 +1731,10 @@
             }
           }
         }
-        // DO NOT AUTO-APPLY ANY COLOUR: Preserve the original hair as clicked!
+        // No colour is auto-applied — the natural photo stays untouched until
+        // the stylist explicitly taps a shade or unlocks the sliders.
       } catch (e) {
-        console.error("Segmentation notice:", e);
+        console.warn("Segmentation notice:", e);
       } finally {
         hideLoading();
       }
@@ -1564,9 +1743,7 @@
     function resetToOriginalHair() {
       currentColorApplied = false;
       currentShadeName = "Natural";
-      if (originalImageData) {
-        hairCtx.putImageData(originalImageData, 0, 0);
-      }
+      if (originalImageData) hairCtx.putImageData(originalImageData, 0, 0);
       $('currentShadeBadge').textContent = 'NATURAL';
       renderSwatches();
       showToast("NATURAL HAIR RESTORED");
@@ -1583,7 +1760,7 @@
         switch (max) {
           case r: h = (g - b) / d + (g < b ? 6 : 0); break;
           case g: h = (b - r) / d + 2; break;
-          case b: h = (r - g) / d + 4; break;
+          default: h = (r - g) / d + 4; break;
         }
         h /= 6;
       }
@@ -1593,18 +1770,19 @@
     function hslToRgb(h, s, l) {
       if (s === 0) { const v = Math.round(l * 255); return [v, v, v]; }
       const hue2rgb = (p, q, t) => {
-        if (t < 0) t += 1; if (t > 1) t -= 1;
-        if (t < 1/6) return p + (q - p) * 6 * t;
-        if (t < 1/2) return q;
-        if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+        if (t < 0) t += 1;
+        if (t > 1) t -= 1;
+        if (t < 1 / 6) return p + (q - p) * 6 * t;
+        if (t < 1 / 2) return q;
+        if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
         return p;
       };
       const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
       const p = 2 * l - q;
       return [
-        Math.round(hue2rgb(p, q, h + 1/3) * 255),
+        Math.round(hue2rgb(p, q, h + 1 / 3) * 255),
         Math.round(hue2rgb(p, q, h) * 255),
-        Math.round(hue2rgb(p, q, h - 1/3) * 255)
+        Math.round(hue2rgb(p, q, h - 1 / 3) * 255)
       ];
     }
 
@@ -1634,7 +1812,7 @@
         const origR = src[idx], origG = src[idx + 1], origB = src[idx + 2], origA = src[idx + 3];
 
         if (confidence > 0.05) {
-          const [, , origL] = rgbToHsl(origR, origG, origB);
+          const origL = rgbToHsl(origR, origG, origB)[2];
           const adjustedL = Math.max(0, Math.min(1, origL + currentLift * (1 - origL * 0.4)));
           const [newR, newG, newB] = hslToRgb(targetHNorm, targetSNorm, adjustedL);
           const factor = confidence * 0.85;
@@ -1712,7 +1890,9 @@
     function setSlidersLocked(locked) {
       slidersUnlocked = !locked;
       $('sliderStack').classList.toggle('sliders-locked', locked);
-      $('sliderLockBtn').innerHTML = locked ? '<i class="bi bi-lock-fill"></i> FINE TUNE' : '<i class="bi bi-unlock-fill"></i> LOCK';
+      $('sliderLockBtn').innerHTML = locked
+        ? '<i class="bi bi-lock-fill"></i> FINE TUNE'
+        : '<i class="bi bi-unlock-fill"></i> LOCK';
       showToast(locked ? 'SLIDERS LOCKED 🔒' : 'SLIDERS UNLOCKED 🎚️');
     }
 
@@ -1722,7 +1902,7 @@
     $('hueSlider').addEventListener('input', e => {
       if (!slidersUnlocked) return;
       currentColorApplied = true;
-      targetH = parseInt(e.target.value);
+      targetH = parseInt(e.target.value, 10);
       currentShadeName = 'Custom';
       $('hueVal').textContent = `${targetH}°`;
       $('currentShadeBadge').textContent = 'CUSTOM';
@@ -1733,7 +1913,7 @@
     $('satSlider').addEventListener('input', e => {
       if (!slidersUnlocked) return;
       currentColorApplied = true;
-      targetS = parseInt(e.target.value);
+      targetS = parseInt(e.target.value, 10);
       currentShadeName = 'Custom';
       $('satVal').textContent = `${targetS}%`;
       $('currentShadeBadge').textContent = 'CUSTOM';
@@ -1787,7 +1967,14 @@
       if (sb) {
         try {
           const { data } = await sb.from('hairstyles').select('*').order('created_at', { ascending: true });
-          if (data && data.length) liveHairstyles = data;
+          if (data && data.length) {
+            liveHairstyles = data.map(h => ({
+              id: h.id,
+              category: h.category || 'Modern Cuts',
+              name: h.name,
+              desc_prompt: h.desc_prompt || h.name
+            }));
+          }
         } catch (_) {}
       }
       renderHairstyleCategories();
@@ -1836,7 +2023,9 @@
       const img = $('cropImage');
       img.onload = () => {
         const stageW = $('cropStage').clientWidth || 360;
-        cropImgScale = Math.max(stageW / (img.naturalWidth || 800), stageW / (img.naturalHeight || 800));
+        const natW = img.naturalWidth || 800;
+        const natH = img.naturalHeight || 800;
+        cropImgScale = Math.max(stageW / natW, stageW / natH);
         cropImgX = 0; cropImgY = 0;
         updateCropTransform();
         activateScreen(screens.crop);
@@ -1860,7 +2049,9 @@
     });
 
     cropStage.addEventListener('pointermove', e => {
+      if (!activePointers.has(e.pointerId)) return;
       activePointers.set(e.pointerId, e);
+
       if (activePointers.size === 2) {
         const pts = Array.from(activePointers.values());
         const curDiff = Math.hypot(pts[0].clientX - pts[1].clientX, pts[0].clientY - pts[1].clientY);
@@ -1871,6 +2062,7 @@
         prevDiff = curDiff;
         return;
       }
+
       if (isCroppingPointer && activePointers.size === 1) {
         cropImgX = e.clientX - cropStartX;
         cropImgY = e.clientY - cropStartY;
@@ -1891,8 +2083,9 @@
 
     $('cropCancelBtn').addEventListener('click', () => activateScreen(screens.studio));
 
-    $('cropConfirmBtn').addEventListener('click', () => {
+    $('cropConfirmBtn').addEventListener('click', async () => {
       const stageW = cropStage.clientWidth || 360;
+      const img = $('cropImage');
       const cvs = document.createElement('canvas');
       cvs.width = 1024; cvs.height = 1024;
       const ctx = cvs.getContext('2d');
@@ -1902,29 +2095,30 @@
       const scaleFactor = 1024 / stageW;
       const cx = 512 + (cropImgX * scaleFactor);
       const cy = 512 + (cropImgY * scaleFactor);
-      const dw = ($('cropImage').naturalWidth || 800) * cropImgScale * scaleFactor;
-      const dh = ($('cropImage').naturalHeight || 800) * cropImgScale * scaleFactor;
+      const dw = (img.naturalWidth || 800) * cropImgScale * scaleFactor;
+      const dh = (img.naturalHeight || 800) * cropImgScale * scaleFactor;
 
-      ctx.drawImage($('cropImage'), cx - dw / 2, cy - dh / 2, dw, dh);
-      cvs.toBlob(blob => {
-        croppedSquareBlob = blob;
-        croppedSquareDataURL = cvs.toDataURL('image/png');
-        showToast('1:1 CROPPED FOR HAIRSTYLE');
-        activateScreen(screens.studio);
-      }, 'image/png');
+      ctx.drawImage(img, cx - dw / 2, cy - dh / 2, dw, dh);
+      croppedSquareBlob = await encodeCanvas(cvs, WEBP_QUALITY_HIGH);
+      showToast('1:1 CROPPED FOR HAIRSTYLE');
+      activateScreen(screens.studio);
     });
 
     // Reference attachment handler
     $('refCard').addEventListener('click', e => {
-      if (e.target === $('clearRefBtn')) return;
+      if (e.target.closest('#clearRefBtn')) return;
       $('refFileInput').click();
     });
 
-    $('refFileInput').addEventListener('change', e => {
+    $('refFileInput').addEventListener('change', async (e) => {
       const file = e.target.files?.[0];
       if (!file) return;
-      refBlob = file;
-      const url = URL.createObjectURL(file);
+      try {
+        refBlob = await compressToWebP(file, { maxDim: 1024, quality: WEBP_QUALITY });
+      } catch (_) {
+        refBlob = file;
+      }
+      const url = URL.createObjectURL(refBlob);
       $('refImg').src = url;
       $('refImg').classList.remove('hidden');
       $('refIcon').classList.add('hidden');
@@ -1946,6 +2140,18 @@
        AI HAIRSTYLE GENERATION (CUSTOM MODAL ON LIMIT)
        ========================================================================== */
     $('executeStyleBtn').addEventListener('click', async () => {
+      if (!sb) {
+        showBrutalModal({
+          badge: "OFFLINE",
+          badgeBg: "var(--red)",
+          badgeColor: "var(--white)",
+          title: "AI UNAVAILABLE",
+          message: "Could not reach the KAMI cloud. Please check your connection and reload.",
+          confirmText: "OK"
+        });
+        return;
+      }
+
       const active = await verifyUserTrialStatus(currentUserPhone);
       if (!active) return;
 
@@ -1969,19 +2175,21 @@
         return;
       }
 
-      // If user hasn't explicitly cropped to 1:1, auto-crop centered square
+      // If the stylist hasn't cropped to 1:1, auto-crop a centred square.
       let sourceToUpload = croppedSquareBlob;
       if (!sourceToUpload) {
         const minDim = Math.min(canvasW, canvasH);
         const autoCvs = document.createElement('canvas');
         autoCvs.width = 1024; autoCvs.height = 1024;
         const autoCtx = autoCvs.getContext('2d');
+        autoCtx.imageSmoothingEnabled = true;
+        autoCtx.imageSmoothingQuality = 'high';
         autoCtx.drawImage(
           hairCanvas,
           (canvasW - minDim) / 2, (canvasH - minDim) / 2, minDim, minDim,
           0, 0, 1024, 1024
         );
-        sourceToUpload = await new Promise(r => autoCvs.toBlob(r, 'image/png'));
+        sourceToUpload = await encodeCanvas(autoCvs, WEBP_QUALITY_HIGH);
       }
 
       showLoading("STYLING WITH KAMI AI...", true);
@@ -1994,23 +2202,32 @@
       try {
         const safePhone = String(currentUserPhone).replace(/[^\d+]/g, '');
         const timeKey = Date.now();
-        const sourcePath = `${safePhone}/${timeKey}_source.png`;
+        const ext = sourceToUpload.type === 'image/webp' ? 'webp' : 'jpg';
+        const sourcePath = `${safePhone}/${timeKey}_source.${ext}`;
 
-        await sb.storage.from('kami-images').upload(sourcePath, sourceToUpload, { contentType: 'image/png', upsert: true });
-        const sourcePublicUrl = sb.storage.from('kami-images').getPublicUrl(sourcePath).data.publicUrl;
+        const upSource = await sb.storage.from(STORAGE_BUCKET).upload(sourcePath, sourceToUpload, {
+          contentType: sourceToUpload.type || 'image/webp',
+          upsert: true
+        });
+        if (upSource.error) throw new Error('Upload failed');
+        const sourcePublicUrl = publicUrlFor(sourcePath);
 
         const imageUrls = [sourcePublicUrl];
 
         // Reference cut if attached
         if (refBlob) {
-          const refPath = `${safePhone}/${timeKey}_ref.png`;
-          await sb.storage.from('kami-images').upload(refPath, refBlob, { contentType: 'image/png', upsert: true });
-          imageUrls.push(sb.storage.from('kami-images').getPublicUrl(refPath).data.publicUrl);
+          const refExt = refBlob.type === 'image/webp' ? 'webp' : 'jpg';
+          const refPath = `${safePhone}/${timeKey}_ref.${refExt}`;
+          const upRef = await sb.storage.from(STORAGE_BUCKET).upload(refPath, refBlob, {
+            contentType: refBlob.type || 'image/webp',
+            upsert: true
+          });
+          if (!upRef.error) imageUrls.push(publicUrlFor(refPath));
         }
 
         const promptDesc = selectedHairstyle.desc_prompt || selectedHairstyle.name;
         let finalPrompt = `Edit only the hair. Change the existing hairstyle into ${promptDesc}. Keep the original hair colour exactly as it is in the source photo. The hair must grow naturally from the scalp with visible roots, individual strands and natural shadows. Do not change the face, expression, skin, clothing, lighting, background or camera.`;
-        if (refBlob) finalPrompt += " Use image 2 only for the hair shape, length, and fringe.";
+        if (imageUrls.length > 1) finalPrompt += " Use image 2 only for the hair shape, length, and fringe.";
 
         const res = await fetch('/api/tryon', {
           method: 'POST',
@@ -2028,12 +2245,21 @@
         const finalUrl = data.images?.[0]?.url || data.images?.[0] || data.image?.url || data.image || data.output || data.url;
         if (!finalUrl) throw new Error('AI returned an invalid image structure');
 
-        // Store rendered image to Supabase
-        const imgFetch = await fetch(finalUrl, { mode: 'cors' });
-        const renderedBlob = await imgFetch.blob();
-        const renderedPath = `${safePhone}/${timeKey}_rendered.png`;
-        await sb.storage.from('kami-images').upload(renderedPath, renderedBlob, { contentType: 'image/png', upsert: true });
-        const renderedPublicUrl = sb.storage.from('kami-images').getPublicUrl(renderedPath).data.publicUrl;
+        // Compress the AI result locally to WebP before storing it.
+        let renderedBlob;
+        try {
+          renderedBlob = await compressToWebP(finalUrl, { maxDim: 1600, quality: WEBP_QUALITY });
+        } catch (_) {
+          const imgFetch = await fetch(finalUrl, { mode: 'cors' });
+          renderedBlob = await imgFetch.blob();
+        }
+        const renderedExt = renderedBlob.type === 'image/webp' ? 'webp' : 'png';
+        const renderedPath = `${safePhone}/${timeKey}_rendered.${renderedExt}`;
+        await sb.storage.from(STORAGE_BUCKET).upload(renderedPath, renderedBlob, {
+          contentType: renderedBlob.type || 'image/webp',
+          upsert: true
+        });
+        const renderedPublicUrl = publicUrlFor(renderedPath);
 
         // Commit generation record to Supabase
         const { data: insertedRec } = await sb.from('generations').insert({
@@ -2044,7 +2270,7 @@
           category: selectedHairstyle.category
         }).select().single();
 
-        // Save into local IndexedDB with Supabase ID to prevent duplicate listings
+        // Cache locally with the Supabase ID so the vault never double-lists
         await saveLocalLook({
           id: insertedRec?.id ? String(insertedRec.id) : `look_${timeKey}`,
           user_phone: currentUserPhone,
@@ -2078,12 +2304,13 @@
     function openCompareWithImages(sourceSrc, renderedSrc, title) {
       $('imgSource').src = sourceSrc;
       $('imgRendered').src = renderedSrc;
-      $('badgeAfter').textContent = title.toUpperCase();
+      $('badgeAfter').textContent = (title || 'NEW LOOK').toUpperCase();
       $('compareStage').style.aspectRatio = '1 / 1';
       setSlider(50);
       setCompareMode('slide');
+      openedFromVault = false;
       activateScreen(screens.compare);
-      buildCollageBlob(Date.now()).then(b => { cachedShareBlob = b; });
+      buildCollageBlob().then(b => { cachedShareBlob = b; }).catch(() => { cachedShareBlob = null; });
     }
 
     $('viewCompareBtn').addEventListener('click', async () => {
@@ -2102,7 +2329,7 @@
       }
 
       $('imgSource').src = originalDataURL;
-      $('imgRendered').src = hairCanvas.toDataURL('image/png');
+      $('imgRendered').src = canvasToDataURL(hairCanvas, WEBP_QUALITY_HIGH);
       if (canvasW && canvasH) $('compareStage').style.aspectRatio = `${canvasW} / ${canvasH}`;
 
       $('badgeAfter').textContent = currentShadeName.toUpperCase();
@@ -2111,7 +2338,7 @@
       openedFromVault = false;
       activateScreen(screens.compare);
 
-      buildCollageBlob(Date.now()).then(b => { cachedShareBlob = b; });
+      buildCollageBlob().then(b => { cachedShareBlob = b; }).catch(() => { cachedShareBlob = null; });
       saveLookToVault(false);
     });
 
@@ -2128,14 +2355,16 @@
 
     function moveDivider(clientX) {
       const rect = $('compareStage').getBoundingClientRect();
+      if (!rect.width) return;
       const x = Math.max(0, Math.min(clientX - rect.left, rect.width));
       setSlider((x / rect.width) * 100);
     }
 
     const compareStage = $('compareStage');
     compareStage.addEventListener('pointerdown', e => {
+      if (currentCompareMode !== 'slide') return;
       isDividerDragging = true;
-      compareStage.setPointerCapture(e.pointerId);
+      try { compareStage.setPointerCapture(e.pointerId); } catch (_) {}
       moveDivider(e.clientX);
     });
     compareStage.addEventListener('pointermove', e => {
@@ -2144,7 +2373,7 @@
     const endDividerDrag = e => {
       if (isDividerDragging) {
         isDividerDragging = false;
-        try { compareStage.releasePointerCapture(e.pointerId); } catch(_) {}
+        try { compareStage.releasePointerCapture(e.pointerId); } catch (_) {}
       }
     };
     compareStage.addEventListener('pointerup', endDividerDrag);
@@ -2179,15 +2408,13 @@
     $('modeAfter').addEventListener('click', () => setCompareMode('after'));
 
     /* ==========================================================================
-       DEDUPLICATED VAULT SAVING & CLOUD SYNC
+       DEDUPLICATED VAULT SAVING & CLOUD SYNC (WebP EVERYWHERE)
        ========================================================================== */
     async function saveLookToVault(notify = false) {
       if (!currentUserPhone || isSavingVault || !currentColorApplied) return;
 
-      const renderedDataURL = hairCanvas.toDataURL('image/png');
-      const timeBucket = Math.floor(Date.now() / 120000);
+      const timeBucket = Math.floor(Date.now() / DEDUPE_WINDOW_MS);
       const hash = `${currentUserPhone}_${currentShadeName}_${targetH}_${timeBucket}`;
-
       if (lastSavedHash === hash) {
         if (notify) showToast("LOOK ALREADY SAVED 💾");
         return;
@@ -2195,97 +2422,116 @@
 
       isSavingVault = true;
       lastSavedHash = hash;
-      const timestamp = Date.now();
-      const localKey = `look_${timestamp}`;
 
-      const localItem = {
-        id: localKey,
-        user_phone: currentUserPhone,
-        image_url: renderedDataURL,
-        source_image_url: originalDataURL,
-        style_name: currentShadeName,
-        category: 'Hair Colour',
-        created_at: new Date().toISOString()
-      };
+      try {
+        const timestamp = Date.now();
+        const localKey = `look_${timestamp}`;
 
-      await saveLocalLook(localItem);
-      if (notify) showToast("SAVED TO MY LOOKS 💾");
+        const renderedBlob = await encodeCanvas(hairCanvas, WEBP_QUALITY);
+        const renderedDataURL = canvasToDataURL(hairCanvas, WEBP_QUALITY);
 
-      if (sb) {
-        try {
-          const renderedBlob = await new Promise(r => hairCanvas.toBlob(r, 'image/png'));
-          const safePhone = String(currentUserPhone).replace(/[^\d+]/g, '');
-          const sourcePath = `${safePhone}/${timestamp}_source.png`;
-          const renderedPath = `${safePhone}/${timestamp}_rendered.png`;
+        const localItem = {
+          id: localKey,
+          user_phone: currentUserPhone,
+          image_url: renderedDataURL,
+          source_image_url: originalDataURL,
+          style_name: currentShadeName,
+          category: 'Hair Colour',
+          created_at: new Date().toISOString()
+        };
+        await saveLocalLook(localItem);
+        if (notify) showToast("SAVED TO MY LOOKS 💾");
 
-          await sb.storage.from('kami-images').upload(sourcePath, originalBlob, { contentType: 'image/png', upsert: true });
-          await sb.storage.from('kami-images').upload(renderedPath, renderedBlob, { contentType: 'image/png', upsert: true });
+        if (!sb) return;
 
-          const sourceUrl = sb.storage.from('kami-images').getPublicUrl(sourcePath).data.publicUrl;
-          const renderedUrl = sb.storage.from('kami-images').getPublicUrl(renderedPath).data.publicUrl;
+        const safePhone = String(currentUserPhone).replace(/[^\d+]/g, '');
+        const sourcePath = `${safePhone}/${timestamp}_source.webp`;
+        const renderedPath = `${safePhone}/${timestamp}_rendered.webp`;
 
-          // Prune older rows beyond 10
-          const { data: userItems } = await sb.from('generations').select('id').eq('user_phone', currentUserPhone).order('created_at', { ascending: false });
-          if (userItems && userItems.length >= 10) {
-            const oldIds = userItems.slice(9).map(u => u.id);
-            await sb.from('generations').delete().in('id', oldIds);
+        const sourceBlob = originalWebpBlob || originalBlobFromDataURL(originalDataURL);
+        if (sourceBlob) {
+          await sb.storage.from(STORAGE_BUCKET).upload(sourcePath, sourceBlob, { contentType: sourceBlob.type || 'image/webp', upsert: true });
+        }
+        await sb.storage.from(STORAGE_BUCKET).upload(renderedPath, renderedBlob, { contentType: renderedBlob.type || 'image/webp', upsert: true });
+
+        const sourceUrl = sourceBlob ? publicUrlFor(sourcePath) : originalDataURL;
+        const renderedUrl = publicUrlFor(renderedPath);
+
+        // Prune older rows (and their storage objects) beyond the vault cap
+        const { data: userItems } = await sb
+          .from('generations')
+          .select('id, image_url, source_image_url')
+          .eq('user_phone', currentUserPhone)
+          .order('created_at', { ascending: false });
+
+        if (userItems && userItems.length >= LOCAL_VAULT_LIMIT) {
+          const stale = userItems.slice(LOCAL_VAULT_LIMIT - 1);
+          const staleIds = stale.map(u => u.id);
+          if (staleIds.length) {
+            await sb.from('generations').delete().in('id', staleIds);
+            await removeStorageObjects(stale.flatMap(u => [u.image_url, u.source_image_url]));
           }
+        }
 
-          const { data: insertedRows } = await sb.from('generations').insert({
-            user_phone: currentUserPhone,
+        const { data: insertedRows } = await sb.from('generations').insert({
+          user_phone: currentUserPhone,
+          image_url: renderedUrl,
+          source_image_url: sourceUrl,
+          style_name: currentShadeName,
+          category: 'Hair Colour'
+        }).select();
+
+        // Re-key the local entry to the Supabase ID to prevent duplicates
+        if (insertedRows && insertedRows[0]) {
+          await deleteLocalLook(localKey);
+          await saveLocalLook({
+            ...localItem,
+            id: String(insertedRows[0].id),
             image_url: renderedUrl,
-            source_image_url: sourceUrl,
-            style_name: currentShadeName,
-            category: 'Hair Colour'
-          }).select();
-
-          // Sync local item to match Supabase ID and Storage URL (prevents duplicate entries)
-          if (insertedRows && insertedRows[0]) {
-            await deleteLocalLook(localKey);
-            await saveLocalLook({
-              ...localItem,
-              id: String(insertedRows[0].id),
-              image_url: renderedUrl,
-              source_image_url: sourceUrl
-            });
-          }
-        } catch (_) {}
+            source_image_url: sourceUrl
+          });
+        }
+      } catch (_) {
+        // local copy already persisted — cloud sync will retry on next save
+      } finally {
+        isSavingVault = false;
       }
-      isSavingVault = false;
     }
 
-    async function buildCollageBlob(timestamp) {
+    function originalBlobFromDataURL(dataURL) {
+      if (!dataURL) return null;
+      try { return dataURLToBlob(dataURL); } catch (_) { return null; }
+    }
+
+    async function buildCollageBlob() {
       const beforeSrc = $('imgSource').src;
       const afterSrc = $('imgRendered').src;
-      const [img1, img2] = await Promise.all([loadImage(beforeSrc), loadImage(afterSrc)]);
+      const [img1, img2] = await Promise.all([loadDrawable(beforeSrc), loadDrawable(afterSrc)]);
 
-      const w = img1.naturalWidth || 800;
-      const h = img1.naturalHeight || 1000;
+      const w = img1.naturalWidth || img1.width || 800;
+      const h = img1.naturalHeight || img1.height || 1000;
+
       const cvs = document.createElement('canvas');
       cvs.width = w * 2; cvs.height = h;
       const c = cvs.getContext('2d');
+      c.imageSmoothingEnabled = true;
+      c.imageSmoothingQuality = 'high';
 
       c.drawImage(img1, 0, 0, w, h);
       c.drawImage(img2, w, 0, w, h);
       c.lineWidth = 6; c.strokeStyle = '#1A1A1A';
       c.beginPath(); c.moveTo(w, 0); c.lineTo(w, h); c.stroke();
 
-      return new Promise(r => cvs.toBlob(r, 'image/png'));
-    }
-
-    function loadImage(src) {
-      return new Promise((resolve, reject) => {
-        const i = new Image();
-        if (!src.startsWith('data:')) i.crossOrigin = 'anonymous';
-        i.onload = () => resolve(i);
-        i.onerror = reject;
-        i.src = src;
-      });
+      return encodeCanvas(cvs, WEBP_QUALITY);
     }
 
     $('shareBtn').addEventListener('click', async () => {
-      const blob = cachedShareBlob || await buildCollageBlob(Date.now());
-      const file = new File([blob], `KAMI_look_${Date.now()}.png`, { type: 'image/png' });
+      let blob = cachedShareBlob;
+      if (!blob) {
+        try { blob = await buildCollageBlob(); } catch (_) { showToast('COULD NOT BUILD SHARE IMAGE'); return; }
+      }
+      const ext = blob.type === 'image/webp' ? 'webp' : 'png';
+      const file = new File([blob], `KAMI_look_${Date.now()}.${ext}`, { type: blob.type || 'image/webp' });
 
       if (navigator.canShare && navigator.canShare({ files: [file] })) {
         try {
@@ -2294,19 +2540,22 @@
         } catch (_) {}
       }
 
-      const blobUrl = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = blobUrl; a.download = `KAMI_look_${Date.now()}.png`;
-      a.click();
-      setTimeout(() => URL.revokeObjectURL(blobUrl), 2000);
+      downloadBlob(blob, file.name);
       showToast('SAVED — ATTACH IN WHATSAPP');
     });
 
     $('saveLocalBtn').addEventListener('click', async () => {
-      const a = document.createElement('a');
-      a.href = $('imgRendered').src;
-      a.download = `KAMI_${Date.now()}.png`;
-      a.click();
+      const src = $('imgRendered').src;
+      try {
+        const blob = await compressToWebP(src, { maxDim: 1600, quality: WEBP_QUALITY_HIGH });
+        const ext = blob.type === 'image/webp' ? 'webp' : 'jpg';
+        downloadBlob(blob, `KAMI_${Date.now()}.${ext}`);
+      } catch (_) {
+        const a = document.createElement('a');
+        a.href = src;
+        a.download = `KAMI_${Date.now()}.webp`;
+        a.click();
+      }
       if (!openedFromVault && activeStudioMode === 'color') await saveLookToVault(true);
     });
 
@@ -2321,48 +2570,54 @@
       let cloudItems = [];
       if (sb && currentUserPhone) {
         try {
-          const { data } = await sb.from('generations').select('*').eq('user_phone', currentUserPhone).order('created_at', { ascending: false }).limit(10);
+          const { data } = await sb
+            .from('generations')
+            .select('*')
+            .eq('user_phone', currentUserPhone)
+            .order('created_at', { ascending: false })
+            .limit(LOCAL_VAULT_LIMIT);
           if (data) cloudItems = data;
         } catch (_) {}
       }
 
       const localItems = await getLocalLooks(currentUserPhone);
 
-      // PROXIMITY & URL DEDUPLICATION (PREVENTS DUPLICATE CARDS IN VAULT)
+      // PROXIMITY + URL DEDUPLICATION (PREVENTS DUPLICATE CARDS IN VAULT)
       const combined = [];
       const seenIds = new Set();
       const seenUrls = new Set();
       const seenTimeBuckets = new Set();
 
-      // Cloud items are authoritative
-      for (const item of (cloudItems || [])) {
-        const timeBucket = `${item.style_name}_${Math.floor(new Date(item.created_at).getTime() / 180000)}`;
-        if (!seenIds.has(String(item.id)) && !seenUrls.has(item.image_url) && !seenTimeBuckets.has(timeBucket)) {
-          seenIds.add(String(item.id));
-          seenUrls.add(item.image_url);
-          seenTimeBuckets.add(timeBucket);
-          combined.push(item);
-        }
+      const bucketOf = item =>
+        `${item.style_name || 'look'}_${Math.floor(new Date(item.created_at).getTime() / DEDUPE_WINDOW_MS)}`;
+
+      // Cloud rows are authoritative
+      for (const item of cloudItems) {
+        const bucket = bucketOf(item);
+        if (seenIds.has(String(item.id)) || seenUrls.has(item.image_url) || seenTimeBuckets.has(bucket)) continue;
+        seenIds.add(String(item.id));
+        seenUrls.add(item.image_url);
+        seenTimeBuckets.add(bucket);
+        combined.push(item);
       }
 
-      // Add local items only if truly unique unsynced looks
+      // Local-only entries that never made it to the cloud
       for (const item of localItems) {
-        const timeBucket = `${item.style_name}_${Math.floor(new Date(item.created_at).getTime() / 180000)}`;
-        if (!seenIds.has(String(item.id)) && !seenUrls.has(item.image_url) && !seenTimeBuckets.has(timeBucket)) {
-          seenIds.add(String(item.id));
-          seenUrls.add(item.image_url);
-          seenTimeBuckets.add(timeBucket);
-          combined.push(item);
-        } else {
-          // Clean cached duplicate from IndexedDB
+        const bucket = bucketOf(item);
+        if (seenIds.has(String(item.id)) || seenUrls.has(item.image_url) || seenTimeBuckets.has(bucket)) {
           await deleteLocalLook(item.id);
+          continue;
         }
+        seenIds.add(String(item.id));
+        seenUrls.add(item.image_url);
+        seenTimeBuckets.add(bucket);
+        combined.push(item);
       }
 
       combined.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-      const finalItems = combined.slice(0, 10);
+      const finalItems = combined.slice(0, LOCAL_VAULT_LIMIT);
 
-      $('vaultCountBadge').textContent = `${finalItems.length} / 10`;
+      $('vaultCountBadge').textContent = `${finalItems.length} / ${LOCAL_VAULT_LIMIT}`;
 
       if (finalItems.length === 0) {
         grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:30px; font-weight:800;">NO LOOKS SAVED YET</div>';
@@ -2374,7 +2629,7 @@
         const card = document.createElement('div');
         card.className = 'gallery-card';
         card.innerHTML = `
-          <img src="${esc(item.image_url)}" loading="lazy" alt="${esc(item.style_name)}" />
+          <img src="${esc(item.image_url)}" loading="lazy" alt="${esc(item.style_name || 'Look')}" />
           <div class="gallery-card-body">
             <div class="gallery-card-name">${esc(item.style_name || 'Hair Style')}</div>
             <div style="display:flex; justify-content:space-between; align-items:center;">
@@ -2389,7 +2644,7 @@
           openCompareWithImages(item.source_image_url || item.image_url, item.image_url, item.style_name || 'Look');
         });
 
-        // GUARANTEED PERMANENT DELETION (LOCAL + SUPABASE CLOUD)
+        // GUARANTEED PERMANENT DELETION (LOCAL + SUPABASE ROW + SUPABASE STORAGE)
         card.querySelector('.vault-del').addEventListener('click', async (e) => {
           e.stopPropagation();
 
@@ -2406,24 +2661,29 @@
           });
           if (!confirmed) return;
 
-          // 1. Delete from local IndexedDB
+          // 1. Local IndexedDB — by id and by proximity match
           await deleteLocalLook(item.id);
           const allLoc = await getLocalLooks(currentUserPhone);
           for (const l of allLoc) {
-            if (l.style_name === item.style_name && Math.abs(new Date(l.created_at) - new Date(item.created_at)) < 180000) {
+            if (l.style_name === item.style_name &&
+                Math.abs(new Date(l.created_at) - new Date(item.created_at)) < DEDUPE_WINDOW_MS) {
               await deleteLocalLook(l.id);
             }
           }
 
-          // 2. Guaranteed deletion from Supabase table
+          // 2. Supabase row + storage objects
           if (sb && currentUserPhone) {
             try {
               if (item.id && !String(item.id).startsWith('look_')) {
                 await sb.from('generations').delete().eq('id', item.id);
               }
-              if (item.image_url && !item.image_url.startsWith('data:')) {
-                await sb.from('generations').delete().match({ user_phone: currentUserPhone, image_url: item.image_url });
+              if (item.image_url && !String(item.image_url).startsWith('data:')) {
+                await sb.from('generations').delete().match({
+                  user_phone: currentUserPhone,
+                  image_url: item.image_url
+                });
               }
+              await removeStorageObjects([item.image_url, item.source_image_url]);
             } catch (_) {}
           }
 
@@ -2445,7 +2705,6 @@
        STARTUP
        ========================================================================== */
     window.addEventListener('DOMContentLoaded', () => {
-      resetToOriginalHair();
       loadHairstylesCatalog();
       checkAuthSession();
     });
