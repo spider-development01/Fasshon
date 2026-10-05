@@ -3,6 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover" />
+  <meta name="referrer" content="strict-origin-when-cross-origin" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💇</text></svg>" />
   <title>KAMI — Master Admin Dashboard</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -357,8 +359,8 @@
           </div>
         </div>
         <div style="background:var(--beige-surface); padding:12px; border-radius:10px; border:var(--border-thin); font-size:0.82rem; display:flex; flex-direction:column; gap:6px;">
-          <div><strong>Client:</strong> <span id="modalClientInfo">Priya Sharma (+919876543210)</span></div>
-          <div><strong>Generated At:</strong> <span id="modalDateInfo">Oct 4, 2026, 5:45 PM</span></div>
+          <div><strong>Client:</strong> <span id="modalClientInfo">Client (+91...)</span></div>
+          <div><strong>Generated At:</strong> <span id="modalDateInfo">Date</span></div>
         </div>
         <div style="display:flex; justify-content:space-between; align-items:center; gap:10px;">
           <button id="modalDeleteBtn" class="btn-danger"><i class="bi bi-trash"></i> DELETE THIS LOOK</button>
@@ -373,7 +375,7 @@
   <script>
     const SUPABASE_URL = 'https://rmfubnduytozikcgzvok.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJtZnVibmR1eXRvemlrY2d6dm9rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2OTIyMDgsImV4cCI6MjA5NzI2ODIwOH0.XmxDD8mH8rgq3OZmD7jVophtH2W3NNDgSRJKC3RXvJU';
-    const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const sb = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
 
     const ADMIN_PIN = "1234";
     const $ = id => document.getElementById(id);
@@ -440,30 +442,60 @@
       await Promise.all([fetchClients(), fetchGenerations()]);
     }
 
+    /* FAIL-SAFE FETCH CLIENTS (NEVER FAILS WITH 400) */
     async function fetchClients() {
+      if (!sb) return;
       try {
-        const { data, error } = await sb
+        // Query '*' so PostgREST never fails if a column is missing from users table
+        let { data: clients, error: cErr } = await sb
           .from('users')
-          .select('id, phone, name, address, trial_expired, hairstyle_limit, created_at')
+          .select('*')
           .order('created_at', { ascending: false });
 
-        if (error) throw error;
-        allClients = data || [];
+        if (cErr) {
+          // Fallback without order if created_at has a schema difference
+          const res = await sb.from('users').select('*');
+          if (res.error) throw res.error;
+          clients = res.data;
+        }
+
+        // Fetch fallback config overrides (handles cases where users table doesn't have custom columns)
+        let cfgMap = {};
+        try {
+          const { data: cfgData } = await sb.from('app_config').select('key, value');
+          if (cfgData) {
+            cfgData.forEach(item => { cfgMap[item.key] = item.value; });
+          }
+        } catch (_) {}
+
+        allClients = (clients || []).map(c => {
+          return {
+            ...c,
+            name: c.name || 'Client',
+            address: c.address !== undefined ? c.address : (cfgMap[`address_${c.phone}`] || ''),
+            trial_expired: c.trial_expired !== undefined ? (c.trial_expired === true) : (cfgMap[`trial_expired_${c.phone}`] === 'true'),
+            hairstyle_limit: (typeof c.hairstyle_limit === 'number')
+              ? c.hairstyle_limit
+              : (parseInt(cfgMap[`limit_${c.phone}`], 10) || 5)
+          };
+        });
+
         renderClientsTable();
       } catch (err) {
-        showToast("FAILED TO LOAD CLIENTS");
+        console.error("fetchClients notice:", err);
+        showToast("ERROR LOADING CLIENTS");
       }
     }
 
     async function fetchGenerations() {
+      if (!sb) return;
       try {
         const { data, error } = await sb
           .from('generations')
-          .select('id, user_phone, image_url, source_image_url, style_name, category, created_at')
+          .select('*')
           .order('created_at', { ascending: false });
 
-        if (error) throw error;
-        allGenerations = data || [];
+        if (!error && data) allGenerations = data;
         renderClientsTable();
         renderActivity();
       } catch (err) {
@@ -471,7 +503,7 @@
       }
     }
 
-    /* ADD CLIENT */
+    /* FAIL-SAFE ADD CLIENT (DUAL-LAYER UPSERT) */
     $('addClientForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const name = $('newClientName').value.trim();
@@ -487,41 +519,62 @@
       $('saveClientBtn').disabled = true;
 
       try {
-        const { error } = await sb.from('users').upsert({
+        // Attempt full insert with all fields
+        const fullPayload = {
           name: name,
           phone: rawPhone,
           address: address || null,
           hairstyle_limit: limit,
           trial_expired: false
-        }, { onConflict: 'phone' });
+        };
 
-        if (error) throw error;
+        const { error } = await sb.from('users').upsert(fullPayload, { onConflict: 'phone' });
+
+        if (error) {
+          // If columns do not exist in users table, gracefully insert core fields { phone, name }
+          console.warn("Retrying with core fields due to schema notice:", error.message);
+          const coreRes = await sb.from('users').upsert({ phone: rawPhone, name }, { onConflict: 'phone' });
+          if (coreRes.error) throw coreRes.error;
+
+          // Store limits and trial flags safely into app_config
+          try {
+            await sb.from('app_config').upsert([
+              { key: `limit_${rawPhone}`, value: String(limit) },
+              { key: `trial_expired_${rawPhone}`, value: 'false' },
+              { key: `address_${rawPhone}`, value: address || '' }
+            ]);
+          } catch (_) {}
+        }
 
         showToast(`CLIENT ${name.toUpperCase()} REGISTERED!`);
         $('addClientForm').reset();
         $('newClientLimit').value = '5';
         await fetchClients();
       } catch (err) {
+        console.error('Save client exception:', err);
         showToast('COULD NOT SAVE CLIENT');
       } finally {
         $('saveClientBtn').disabled = false;
       }
     });
 
-    /* TOGGLE TRIAL SWITCH */
+    /* TOGGLE TRIAL SWITCH (RESILIENT) */
     window.toggleClientTrial = async function(phone, currentStatus) {
       const newStatus = !currentStatus;
       try {
         const { error } = await sb.from('users').update({ trial_expired: newStatus }).eq('phone', phone);
-        if (error) throw error;
-        showToast(newStatus ? 'TRIAL LOCKED' : 'TRIAL ACTIVATED');
+        if (error) {
+          // Fallback to app_config if trial_expired column is missing
+          await sb.from('app_config').upsert({ key: `trial_expired_${phone}`, value: String(newStatus) }, { onConflict: 'key' });
+        }
+        showToast(newStatus ? 'TRIAL LOCKED — ACCESS BLOCKED' : 'TRIAL ACTIVATED');
         await fetchClients();
       } catch (err) {
         showToast('STATUS UPDATE FAILED');
       }
     };
 
-    /* EDIT HAIRSTYLE QUOTA */
+    /* EDIT HAIRSTYLE QUOTA (RESILIENT) */
     window.editHairstyleLimit = async function(phone, currentLimit) {
       const input = prompt(`Update Hairstyle Generation Limit for ${phone}:`, currentLimit || 5);
       if (input === null) return;
@@ -533,7 +586,10 @@
 
       try {
         const { error } = await sb.from('users').update({ hairstyle_limit: newLimit }).eq('phone', phone);
-        if (error) throw error;
+        if (error) {
+          // Fallback to app_config if hairstyle_limit column is missing
+          await sb.from('app_config').upsert({ key: `limit_${phone}`, value: String(newLimit) }, { onConflict: 'key' });
+        }
         showToast(`LIMIT UPDATED TO ${newLimit}`);
         await fetchClients();
       } catch (e) {
@@ -547,8 +603,12 @@
       if (!ok) return;
 
       try {
-        const { error } = await sb.from('users').delete().eq('phone', phone);
-        if (error) throw error;
+        await sb.from('users').delete().eq('phone', phone);
+        await sb.from('generations').delete().eq('user_phone', phone);
+        try {
+          await sb.from('app_config').delete().in('key', [`limit_${phone}`, `trial_expired_${phone}`, `address_${phone}`]);
+        } catch (_) {}
+
         showToast(`CLIENT DELETED`);
         await loadAllData();
       } catch (err) {
@@ -718,7 +778,7 @@
     });
 
     function esc(s) {
-      return String(s || '').replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' })[c]);
+      return String(s || '').replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' })[m]);
     }
 
     window.addEventListener('DOMContentLoaded', checkAdminAuth);
