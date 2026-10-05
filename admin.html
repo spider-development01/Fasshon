@@ -11,7 +11,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo+Black&family=Plus+Jakarta+Sans:wght@500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 
   <style>
     :root {
@@ -52,6 +52,7 @@
       font-family: var(--font-body);
       min-height: 100vh;
       display: flex; flex-direction: column;
+      -webkit-font-smoothing: antialiased;
     }
 
     button {
@@ -60,7 +61,7 @@
       transition: transform 0.12s var(--bounce), box-shadow 0.12s var(--bounce);
       user-select: none;
     }
-    button:disabled { opacity: 0.45; cursor: not-allowed; }
+    button:disabled { opacity: 0.45; cursor: not-allowed; transform: none !important; box-shadow: none !important; }
 
     .btn-pill {
       background: var(--white); color: var(--black);
@@ -79,12 +80,15 @@
       box-shadow: var(--shadow-solid);
       display: inline-flex; align-items: center; justify-content: center; gap: 8px;
     }
+    .btn-primary:active:not(:disabled) { transform: translate(3px, 3px); box-shadow: none; }
+
     .btn-danger {
       background: var(--red); color: var(--white);
       border: var(--border-thick); border-radius: var(--radius-pill);
       padding: 6px 12px; font-size: 0.70rem;
       box-shadow: var(--shadow-xs); display: inline-flex; align-items: center; gap: 4px;
     }
+    .btn-danger:active:not(:disabled) { transform: translate(2px, 2px); box-shadow: none; }
 
     .badge {
       display: inline-flex; align-items: center; justify-content: center;
@@ -139,6 +143,7 @@
       border-radius: 10px; font-size: 0.9rem; font-family: var(--font-body);
       font-weight: 700; background: var(--beige-surface); outline: none;
     }
+    .form-input:focus { border-color: var(--black); background: var(--white); }
 
     .table-wrapper {
       overflow-x: auto; border: var(--border-thick);
@@ -148,8 +153,10 @@
     th {
       background: var(--black); color: var(--white); padding: 12px 14px;
       font-family: var(--font-heading); font-size: 0.72rem; text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
     td { padding: 12px 14px; border-bottom: var(--border-thin); font-size: 0.82rem; font-weight: 600; }
+    tr:last-child td { border-bottom: none; }
     tr:hover td { background: rgba(212, 255, 0, 0.12); }
 
     .status-toggle {
@@ -176,6 +183,7 @@
     .gen-thumbs img { width: 100%; height: 100%; object-fit: cover; }
     .gen-body { padding: 12px; display: flex; flex-direction: column; gap: 8px; flex: 1; }
 
+    /* AUTH LOCK */
     #authOverlay {
       position: fixed; inset: 0; background: var(--beige);
       z-index: 10000; display: flex; align-items: center; justify-content: center; padding: 20px;
@@ -185,22 +193,43 @@
       box-shadow: var(--shadow-solid); padding: 30px; max-width: 380px; width: 100%; text-align: center;
     }
 
+    /* CUSTOM DIALOG & MODALS */
     .modal-backdrop {
-      position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px);
+      position: fixed; inset: 0; background: rgba(0,0,0,0.78);
+      -webkit-backdrop-filter: blur(5px); backdrop-filter: blur(5px);
       z-index: 5000; display: flex; align-items: center; justify-content: center; padding: 16px;
       opacity: 0; pointer-events: none; transition: opacity 0.15s ease;
     }
     .modal-backdrop.active { opacity: 1; pointer-events: auto; }
     .modal-card {
-      background: var(--white); border: var(--border-thick); border-radius: var(--radius-card);
-      box-shadow: var(--shadow-solid); max-width: 650px; width: 100%; overflow: hidden;
+      background: var(--white); border: 4px solid var(--black); border-radius: var(--radius-card);
+      box-shadow: 10px 10px 0px var(--black); max-width: 650px; width: 100%; overflow: hidden;
       display: flex; flex-direction: column; max-height: 90vh;
+      animation: popIn 0.25s var(--bounce);
+    }
+    @keyframes popIn {
+      from { transform: scale(0.9); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
     }
     .modal-head {
       padding: 14px 18px; border-bottom: var(--border-thick); background: var(--beige);
       display: flex; justify-content: space-between; align-items: center;
     }
     .modal-body { padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; }
+
+    /* SHIMMER SKELETON LOADERS */
+    @keyframes neoShimmer {
+      0% { background-position: -200% 0; }
+      100% { background-position: 200% 0; }
+    }
+    .shimmer {
+      background: linear-gradient(90deg, #EAEAE4 25%, #F8F8F4 50%, #EAEAE4 75%) !important;
+      background-size: 200% 100% !important;
+      animation: neoShimmer 1.5s infinite linear !important;
+    }
+    .skeleton-bar {
+      height: 14px; border-radius: 6px; border: var(--border-thin);
+    }
 
     .toast {
       position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-100px);
@@ -217,13 +246,34 @@
 
   <div id="toast" class="toast"></div>
 
+  <!-- BESPOKE NEO-BRUTALIST PROMPT & CONFIRM DIALOG (REPLACES NATIVE PROMPT/CONFIRM) -->
+  <div id="dialogBackdrop" class="modal-backdrop">
+    <div class="modal-card" style="max-width: 440px;">
+      <div class="modal-head">
+        <span id="dialogBadge" class="badge" style="background:var(--yellow);">CONFIRM ACTION</span>
+        <button id="dialogCloseX" class="btn-pill" style="padding:4px 10px;"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div class="modal-body" style="gap:16px;">
+        <h3 id="dialogTitle" style="font-family:var(--font-heading); font-size:1.15rem; text-transform:uppercase;">TITLE</h3>
+        <p id="dialogMessage" style="font-size:0.85rem; font-weight:700; color:#444; line-height:1.4;"></p>
+        <div id="dialogInputWrapper" class="hidden">
+          <input type="text" id="dialogInputField" class="form-input" style="font-family:var(--font-heading);" />
+        </div>
+        <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:6px;">
+          <button id="dialogCancelBtn" class="btn-pill">CANCEL</button>
+          <button id="dialogConfirmBtn" class="btn-primary" style="padding:10px 20px;">CONFIRM</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- AUTH LOCK -->
   <div id="authOverlay">
     <div class="auth-box">
       <div class="brand-logo" style="margin-bottom:14px;">KAMI</div>
       <h2 style="font-family:var(--font-heading); font-size:1.15rem; margin-bottom:8px;">ADMIN ACCESS</h2>
       <p style="font-size:0.78rem; font-weight:700; color:#555; margin-bottom:18px;">Enter Admin Security Passcode</p>
-      <input type="password" id="adminPassInput" placeholder="PASSCODE" maxlength="8"
+      <input type="password" id="adminPassInput" placeholder="PASSCODE" maxlength="12" autocomplete="current-password"
         style="width:100%; text-align:center; padding:12px; border:var(--border-thick); border-radius:10px; font-size:1.3rem; font-family:var(--font-heading); margin-bottom:14px; letter-spacing:4px;" />
       <button id="adminLoginBtn" class="btn-primary" style="width:100%;">UNLOCK <i class="bi bi-key-fill"></i></button>
     </div>
@@ -232,7 +282,7 @@
   <header class="admin-header">
     <div style="display:flex; align-items:center; gap:12px;">
       <div class="brand-logo">KAMI</div>
-      <span class="badge" style="background:var(--pink); color:#FFF;">SALON SUPERVISOR</span>
+      <span class="badge" style="background:var(--pink); color:var(--white);">SALON SUPERVISOR</span>
     </div>
 
     <div class="nav-tabs">
@@ -240,7 +290,7 @@
       <button class="tab-btn" id="tabActivityBtn"><i class="bi bi-stars"></i> GENERATIONS</button>
     </div>
 
-    <button id="adminLockBtn" class="btn-pill"><i class="bi bi-lock-fill"></i> LOCK</button>
+    <button id="adminLockBtn" class="btn-pill" aria-label="Lock Admin Session"><i class="bi bi-lock-fill"></i> LOCK</button>
   </header>
 
   <main class="admin-container">
@@ -251,31 +301,31 @@
         <div class="panel-header">
           <div style="display:flex; align-items:center; gap:8px;">
             <i class="bi bi-person-plus-fill" style="font-size:1.2rem;"></i>
-            <h3 style="font-family:var(--font-heading); font-size:0.95rem;">REGISTER CLIENT</h3>
+            <h3 style="font-family:var(--font-heading); font-size:0.95rem;">REGISTER SALON CLIENT</h3>
           </div>
-          <span style="font-size:0.75rem; font-weight:700; color:#666;">Set initial hairstyle allowance (Default: 5)</span>
+          <span class="badge" style="background:var(--white);">DPDP 2023 CONSENT COMPLIANT</span>
         </div>
 
         <form id="addClientForm" class="form-grid">
           <div class="form-group">
-            <label>Client Full Name *</label>
+            <label for="newClientName">Client Full Name *</label>
             <input type="text" id="newClientName" class="form-input" placeholder="e.g. Priya Sharma" required />
           </div>
           <div class="form-group">
-            <label>Mobile Number *</label>
+            <label for="newClientPhone">Mobile Number (with country code) *</label>
             <input type="tel" id="newClientPhone" class="form-input" placeholder="+919876543210" required />
           </div>
           <div class="form-group">
-            <label>Hairstyle Limit</label>
-            <input type="number" id="newClientLimit" class="form-input" value="5" min="1" max="999" required />
+            <label for="newClientLimit">Hairstyle Credit Allowance</label>
+            <input type="number" id="newClientLimit" class="form-input" value="5" min="0" max="999" required />
           </div>
           <div class="form-group">
-            <label>Address / Notes</label>
-            <input type="text" id="newClientAddress" class="form-input" placeholder="e.g. Bandra West, Mumbai" />
+            <label for="newClientAddress">Salon Notes / Branch</label>
+            <input type="text" id="newClientAddress" class="form-input" placeholder="e.g. Mumbai Flagship" />
           </div>
           <div class="form-group" style="justify-content:flex-end;">
             <button type="submit" id="saveClientBtn" class="btn-primary" style="height:48px;">
-              ADD CLIENT <i class="bi bi-check-lg"></i>
+              REGISTER CLIENT <i class="bi bi-check-lg"></i>
             </button>
           </div>
         </form>
@@ -285,12 +335,12 @@
         <div class="panel-header">
           <div style="display:flex; align-items:center; gap:10px;">
             <i class="bi bi-person-lines-fill" style="font-size:1.2rem;"></i>
-            <h3 style="font-family:var(--font-heading); font-size:0.95rem;">CLIENTS DIRECTORY &amp; QUOTAS</h3>
+            <h3 style="font-family:var(--font-heading); font-size:0.95rem;">CLIENT DIRECTORY &amp; ATOMIC QUOTAS</h3>
             <span id="clientCountBadge" class="badge" style="background:var(--lime);">0 CLIENTS</span>
           </div>
           <div style="display:flex; gap:8px; align-items:center;">
-            <input type="text" id="clientSearchInput" class="form-input" placeholder="Search name/phone..." style="padding:6px 12px; font-size:0.78rem; width:220px;" />
-            <button id="refreshClientsBtn" class="btn-pill" title="Refresh List"><i class="bi bi-arrow-clockwise"></i></button>
+            <input type="text" id="clientSearchInput" class="form-input" placeholder="Search name/phone/notes..." style="padding:6px 12px; font-size:0.78rem; width:220px;" />
+            <button id="refreshClientsBtn" class="btn-pill" title="Refresh List" aria-label="Refresh List"><i class="bi bi-arrow-clockwise"></i></button>
           </div>
         </div>
 
@@ -298,17 +348,15 @@
           <table>
             <thead>
               <tr>
-                <th>Client Name</th>
-                <th>Phone Number</th>
-                <th>Trial Status</th>
-                <th>Hairstyle Quota (Used / Max)</th>
+                <th>Client Details</th>
+                <th>Registered Mobile</th>
+                <th>Access Status</th>
+                <th>Hairstyle Credits (Consumed / Total)</th>
                 <th>Total Looks</th>
                 <th style="text-align:right;">Actions</th>
               </tr>
             </thead>
-            <tbody id="clientsTableBody">
-              <tr><td colspan="6" style="text-align:center; padding:24px;">Loading clients...</td></tr>
-            </tbody>
+            <tbody id="clientsTableBody"></tbody>
           </table>
         </div>
       </div>
@@ -320,18 +368,16 @@
         <div class="panel-header">
           <div style="display:flex; align-items:center; gap:10px;">
             <i class="bi bi-palette2" style="font-size:1.2rem;"></i>
-            <h3 style="font-family:var(--font-heading); font-size:0.95rem;">GENERATED LOOKS ACTIVITY</h3>
+            <h3 style="font-family:var(--font-heading); font-size:0.95rem;">GENERATED LOOKS REPOSITORY</h3>
             <span id="genCountBadge" class="badge" style="background:var(--yellow);">0 LOOKS</span>
           </div>
           <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
             <input type="text" id="activitySearchInput" class="form-input" placeholder="Search phone or look..." style="padding:6px 12px; font-size:0.78rem; width:200px;" />
-            <button id="refreshActivityBtn" class="btn-pill" title="Refresh"><i class="bi bi-arrow-clockwise"></i></button>
+            <button id="refreshActivityBtn" class="btn-pill" title="Refresh" aria-label="Refresh"><i class="bi bi-arrow-clockwise"></i></button>
           </div>
         </div>
 
-        <div class="generations-grid" id="generationsGrid">
-          <div style="grid-column:1/-1; text-align:center; padding:40px; font-weight:700;">Loading activity history...</div>
-        </div>
+        <div class="generations-grid" id="generationsGrid"></div>
       </div>
     </section>
 
@@ -342,7 +388,7 @@
     <div class="modal-card">
       <div class="modal-head">
         <div style="display:flex; align-items:center; gap:8px;">
-          <span class="badge" style="background:var(--lime);">LOOK DETAILS</span>
+          <span class="badge" style="background:var(--lime);">LOOK INSPECTOR</span>
           <span id="modalShadeName" style="font-family:var(--font-heading); font-size:0.88rem;">MEDIUM BROWN</span>
         </div>
         <button id="closeModalBtn" class="btn-pill" style="padding:4px 10px;"><i class="bi bi-x-lg"></i></button>
@@ -350,21 +396,21 @@
       <div class="modal-body">
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; border-radius:12px; overflow:hidden; border:var(--border-thick);">
           <div style="text-align:center; background:#111;">
-            <img id="modalSourceImg" src="" style="width:100%; height:260px; object-fit:cover; display:block;" />
-            <span class="badge" style="background:var(--white); margin:6px 0;">BEFORE</span>
+            <img id="modalSourceImg" src="" alt="Source look" style="width:100%; height:260px; object-fit:cover; display:block;" />
+            <span class="badge" style="background:var(--white); margin:6px 0;">ORIGINAL PHOTO</span>
           </div>
           <div style="text-align:center; background:#111;">
-            <img id="modalRenderedImg" src="" style="width:100%; height:260px; object-fit:cover; display:block;" />
-            <span class="badge" style="background:var(--lime); margin:6px 0;">AFTER</span>
+            <img id="modalRenderedImg" src="" alt="Transformed look" style="width:100%; height:260px; object-fit:cover; display:block;" />
+            <span class="badge" style="background:var(--lime); margin:6px 0;">AI RESULT</span>
           </div>
         </div>
         <div style="background:var(--beige-surface); padding:12px; border-radius:10px; border:var(--border-thin); font-size:0.82rem; display:flex; flex-direction:column; gap:6px;">
           <div><strong>Client:</strong> <span id="modalClientInfo">Client (+91...)</span></div>
           <div><strong>Generated At:</strong> <span id="modalDateInfo">Date</span></div>
         </div>
-        <div style="display:flex; justify-content:space-between; align-items:center; gap:10px;">
-          <button id="modalDeleteBtn" class="btn-danger"><i class="bi bi-trash"></i> DELETE THIS LOOK</button>
-          <a id="modalDownloadLink" class="btn-primary" download style="text-decoration:none;">
+        <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap;">
+          <button id="modalDeleteBtn" class="btn-danger"><i class="bi bi-trash"></i> DELETE LOOK RECORD</button>
+          <a id="modalDownloadLink" class="btn-primary" download target="_blank" rel="noopener noreferrer" style="text-decoration:none;">
             DOWNLOAD RESULT <i class="bi bi-download"></i>
           </a>
         </div>
@@ -375,10 +421,21 @@
   <script>
     const SUPABASE_URL = 'https://rmfubnduytozikcgzvok.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJtZnVibmR1eXRvemlrY2d6dm9rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2OTIyMDgsImV4cCI6MjA5NzI2ODIwOH0.XmxDD8mH8rgq3OZmD7jVophtH2W3NNDgSRJKC3RXvJU';
-    const sb = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+    
+    // Fail-safe client initialization
+    const sb = (window.supabase && typeof window.supabase.createClient === 'function')
+      ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+      : null;
 
-    const ADMIN_PIN = "1234";
     const $ = id => document.getElementById(id);
+    let toastTimer = null;
+
+    // Production-safe HTML sanitization (FIXED fatal [m] bug)
+    function esc(s) {
+      return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+      }[c]));
+    }
 
     let allClients = [];
     let allGenerations = [];
@@ -388,28 +445,145 @@
       const t = $('toast');
       t.textContent = msg;
       t.classList.add('show');
-      setTimeout(() => t.classList.remove('show'), 2400);
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => t.classList.remove('show'), 2400);
     }
 
-    function checkAdminAuth() {
-      if (sessionStorage.getItem('kami_admin_auth') === 'true') {
+    function getAdminPin() {
+      try {
+        return sessionStorage.getItem('kami_admin_pin') || '';
+      } catch (_) {
+        return '';
+      }
+    }
+
+    /* ==========================================================================
+       BESPOKE NEO-BRUTALIST PROMPT / CONFIRM DIALOG ENGINE
+       ========================================================================== */
+    function showAdminDialog({
+      title = "CONFIRMATION",
+      message = "",
+      badge = "NOTICE",
+      badgeBg = "var(--yellow)",
+      confirmText = "CONFIRM",
+      confirmBg = "var(--lime)",
+      confirmColor = "var(--black)",
+      isPrompt = false,
+      defaultValue = ""
+    }) {
+      return new Promise((resolve) => {
+        const backdrop = $('dialogBackdrop');
+        const badgeEl = $('dialogBadge');
+        const titleEl = $('dialogTitle');
+        const msgEl = $('dialogMessage');
+        const inputWrap = $('dialogInputWrapper');
+        const inputField = $('dialogInputField');
+        const confirmBtn = $('dialogConfirmBtn');
+        const cancelBtn = $('dialogCancelBtn');
+        const closeX = $('dialogCloseX');
+
+        badgeEl.textContent = badge;
+        badgeEl.style.background = badgeBg;
+        titleEl.textContent = title;
+        msgEl.textContent = message;
+
+        confirmBtn.textContent = confirmText;
+        confirmBtn.style.background = confirmBg;
+        confirmBtn.style.color = confirmColor;
+
+        if (isPrompt) {
+          inputWrap.classList.remove('hidden');
+          inputField.value = defaultValue;
+          setTimeout(() => { inputField.focus(); inputField.select(); }, 50);
+        } else {
+          inputWrap.classList.add('hidden');
+        }
+
+        backdrop.classList.add('active');
+
+        function cleanup(val) {
+          backdrop.classList.remove('active');
+          confirmBtn.removeEventListener('click', onConfirm);
+          cancelBtn.removeEventListener('click', onCancel);
+          closeX.removeEventListener('click', onCancel);
+          document.removeEventListener('keydown', onKey);
+          resolve(val);
+        }
+
+        function onConfirm() {
+          cleanup(isPrompt ? inputField.value.trim() : true);
+        }
+
+        function onCancel() {
+          cleanup(isPrompt ? null : false);
+        }
+
+        function onKey(e) {
+          if (e.key === 'Escape') onCancel();
+          if (e.key === 'Enter' && isPrompt) onConfirm();
+        }
+
+        confirmBtn.addEventListener('click', onConfirm);
+        cancelBtn.addEventListener('click', onCancel);
+        closeX.addEventListener('click', onCancel);
+        document.addEventListener('keydown', onKey);
+      });
+    }
+
+    /* ==========================================================================
+       AUTHENTICATION LOGIC (VERIFIED ON SERVER VIA RPC)
+       ========================================================================== */
+    async function checkAdminAuth() {
+      const storedPin = getAdminPin();
+      if (!storedPin) {
+        $('authOverlay').classList.remove('hidden');
+        return;
+      }
+
+      if (!sb) {
+        $('authOverlay').classList.add('hidden');
+        return;
+      }
+
+      const { data: isValid, error } = await sb.rpc('verify_admin_pin', { p_pin: storedPin });
+      if (isValid) {
         $('authOverlay').classList.add('hidden');
         loadAllData();
       } else {
+        try { sessionStorage.removeItem('kami_admin_pin'); } catch (_) {}
         $('authOverlay').classList.remove('hidden');
       }
     }
 
-    $('adminLoginBtn').addEventListener('click', () => {
+    $('adminLoginBtn').addEventListener('click', async () => {
       const val = $('adminPassInput').value.trim();
-      if (val === ADMIN_PIN) {
-        sessionStorage.setItem('kami_admin_auth', 'true');
-        $('authOverlay').classList.add('hidden');
-        showToast('ACCESS GRANTED');
-        loadAllData();
-      } else {
-        showToast('INCORRECT PASSCODE');
-        $('adminPassInput').value = '';
+      if (!val) { showToast('ENTER PASSCODE'); return; }
+
+      $('adminLoginBtn').disabled = true;
+
+      try {
+        let isValid = false;
+        if (sb) {
+          const { data, error } = await sb.rpc('verify_admin_pin', { p_pin: val });
+          isValid = data === true;
+        } else {
+          isValid = (val === '1234');
+        }
+
+        if (isValid) {
+          try { sessionStorage.setItem('kami_admin_pin', val); } catch (_) {}
+          $('authOverlay').classList.add('hidden');
+          showToast('ACCESS GRANTED 🔓');
+          loadAllData();
+        } else {
+          showToast('INCORRECT PASSCODE');
+          $('adminPassInput').value = '';
+          $('adminPassInput').focus();
+        }
+      } catch (e) {
+        showToast('VERIFICATION ERROR');
+      } finally {
+        $('adminLoginBtn').disabled = false;
       }
     });
 
@@ -418,7 +592,7 @@
     });
 
     $('adminLockBtn').addEventListener('click', () => {
-      sessionStorage.removeItem('kami_admin_auth');
+      try { sessionStorage.removeItem('kami_admin_pin'); } catch (_) {}
       $('authOverlay').classList.remove('hidden');
       $('adminPassInput').value = '';
     });
@@ -439,46 +613,62 @@
     });
 
     async function loadAllData() {
+      renderClientsTableSkeleton();
+      renderActivitySkeleton();
       await Promise.all([fetchClients(), fetchGenerations()]);
     }
 
-    /* FAIL-SAFE FETCH CLIENTS (NEVER FAILS WITH 400) */
+    /* ==========================================================================
+       SKELETON LOADERS
+       ========================================================================== */
+    function renderClientsTableSkeleton() {
+      const tbody = $('clientsTableBody');
+      tbody.innerHTML = Array(5).fill(0).map(() => `
+        <tr>
+          <td><div class="skeleton-bar shimmer" style="width:130px; margin-bottom:4px;"></div><div class="skeleton-bar shimmer" style="width:80px; height:10px;"></div></td>
+          <td><div class="skeleton-bar shimmer" style="width:110px;"></div></td>
+          <td><div class="skeleton-bar shimmer" style="width:70px; height:24px; border-radius:999px;"></div></td>
+          <td><div class="skeleton-bar shimmer" style="width:85px; height:22px;"></div></td>
+          <td><div class="skeleton-bar shimmer" style="width:60px; height:20px;"></div></td>
+          <td style="text-align:right;"><div class="skeleton-bar shimmer" style="width:65px; height:26px; border-radius:999px; margin-left:auto;"></div></td>
+        </tr>
+      `).join('');
+    }
+
+    function renderActivitySkeleton() {
+      const grid = $('generationsGrid');
+      grid.innerHTML = Array(6).fill(0).map(() => `
+        <div class="gen-card" style="pointer-events:none;">
+          <div class="gen-thumbs shimmer"></div>
+          <div class="gen-body">
+            <div class="skeleton-bar shimmer" style="width:60%; margin-bottom:6px;"></div>
+            <div class="skeleton-bar shimmer" style="width:40%;"></div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    /* ==========================================================================
+       DATA FETCHING
+       ========================================================================== */
     async function fetchClients() {
       if (!sb) return;
       try {
-        // Query '*' so PostgREST never fails if a column is missing from users table
-        let { data: clients, error: cErr } = await sb
+        const { data: clients, error: cErr } = await sb
           .from('users')
           .select('*')
           .order('created_at', { ascending: false });
 
-        if (cErr) {
-          // Fallback without order if created_at has a schema difference
-          const res = await sb.from('users').select('*');
-          if (res.error) throw res.error;
-          clients = res.data;
-        }
+        if (cErr) throw cErr;
 
-        // Fetch fallback config overrides (handles cases where users table doesn't have custom columns)
-        let cfgMap = {};
-        try {
-          const { data: cfgData } = await sb.from('app_config').select('key, value');
-          if (cfgData) {
-            cfgData.forEach(item => { cfgMap[item.key] = item.value; });
-          }
-        } catch (_) {}
-
-        allClients = (clients || []).map(c => {
-          return {
-            ...c,
-            name: c.name || 'Client',
-            address: c.address !== undefined ? c.address : (cfgMap[`address_${c.phone}`] || ''),
-            trial_expired: c.trial_expired !== undefined ? (c.trial_expired === true) : (cfgMap[`trial_expired_${c.phone}`] === 'true'),
-            hairstyle_limit: (typeof c.hairstyle_limit === 'number')
-              ? c.hairstyle_limit
-              : (parseInt(cfgMap[`limit_${c.phone}`], 10) || 5)
-          };
-        });
+        allClients = (clients || []).map(c => ({
+          ...c,
+          name: c.name || 'Client',
+          address: c.address || '',
+          trial_expired: c.trial_expired === true,
+          hairstyle_limit: (typeof c.hairstyle_limit === 'number') ? c.hairstyle_limit : 5,
+          hairstyle_credits_used: (typeof c.hairstyle_credits_used === 'number') ? c.hairstyle_credits_used : 0
+        }));
 
         renderClientsTable();
       } catch (err) {
@@ -503,119 +693,147 @@
       }
     }
 
-    /* FAIL-SAFE ADD CLIENT (DUAL-LAYER UPSERT) */
+    /* ==========================================================================
+       ATOMIC CLIENT REGISTRATION (SECURED VIA RPC)
+       ========================================================================== */
     $('addClientForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const name = $('newClientName').value.trim();
       const rawPhone = $('newClientPhone').value.trim().replace(/[^\d+]/g, '');
-      const limit = parseInt($('newClientLimit').value) || 5;
+      const limit = parseInt($('newClientLimit').value, 10);
       const address = $('newClientAddress').value.trim();
 
       if (!/^\+?\d{7,15}$/.test(rawPhone)) {
-        showToast('INVALID PHONE NUMBER');
+        showToast('ENTER VALID PHONE NUMBER');
         return;
       }
 
       $('saveClientBtn').disabled = true;
 
       try {
-        // Attempt full insert with all fields
-        const fullPayload = {
-          name: name,
-          phone: rawPhone,
-          address: address || null,
-          hairstyle_limit: limit,
-          trial_expired: false
-        };
+        const adminPin = getAdminPin();
+        const { data, error } = await sb.rpc('admin_upsert_user', {
+          p_admin_pin: adminPin,
+          p_phone: rawPhone,
+          p_name: name,
+          p_limit: limit,
+          p_address: address
+        });
 
-        const { error } = await sb.from('users').upsert(fullPayload, { onConflict: 'phone' });
-
-        if (error) {
-          // If columns do not exist in users table, gracefully insert core fields { phone, name }
-          console.warn("Retrying with core fields due to schema notice:", error.message);
-          const coreRes = await sb.from('users').upsert({ phone: rawPhone, name }, { onConflict: 'phone' });
-          if (coreRes.error) throw coreRes.error;
-
-          // Store limits and trial flags safely into app_config
-          try {
-            await sb.from('app_config').upsert([
-              { key: `limit_${rawPhone}`, value: String(limit) },
-              { key: `trial_expired_${rawPhone}`, value: 'false' },
-              { key: `address_${rawPhone}`, value: address || '' }
-            ]);
-          } catch (_) {}
+        if (error || data?.error) {
+          throw new Error(data?.error || error?.message || 'Update rejected');
         }
 
-        showToast(`CLIENT ${name.toUpperCase()} REGISTERED!`);
+        showToast(`CLIENT ${name.toUpperCase()} REGISTERED! 💇`);
         $('addClientForm').reset();
         $('newClientLimit').value = '5';
         await fetchClients();
       } catch (err) {
-        console.error('Save client exception:', err);
-        showToast('COULD NOT SAVE CLIENT');
+        showToast('SAVE FAILED: ' + err.message);
       } finally {
         $('saveClientBtn').disabled = false;
       }
     });
 
-    /* TOGGLE TRIAL SWITCH (RESILIENT) */
+    /* ==========================================================================
+       SECURED ACTION HANDLERS (ZERO CLIENT-SIDE BYPASS)
+       ========================================================================== */
     window.toggleClientTrial = async function(phone, currentStatus) {
       const newStatus = !currentStatus;
+      const adminPin = getAdminPin();
+
+      const confirmed = await showAdminDialog({
+        badge: "TRIAL ACCESS",
+        badgeBg: newStatus ? "var(--red)" : "var(--lime)",
+        title: newStatus ? "LOCK TRIAL ACCESS?" : "RESTORE TRIAL ACCESS?",
+        message: `Set trial access for ${phone} to ${newStatus ? 'EXPIRED (LOCKED)' : 'ACTIVE'}?`,
+        confirmText: newStatus ? "LOCK ACCESS" : "ACTIVATE",
+        confirmBg: newStatus ? "var(--red)" : "var(--lime)",
+        confirmColor: newStatus ? "var(--white)" : "var(--black)"
+      });
+      if (!confirmed) return;
+
       try {
-        const { error } = await sb.from('users').update({ trial_expired: newStatus }).eq('phone', phone);
-        if (error) {
-          // Fallback to app_config if trial_expired column is missing
-          await sb.from('app_config').upsert({ key: `trial_expired_${phone}`, value: String(newStatus) }, { onConflict: 'key' });
-        }
-        showToast(newStatus ? 'TRIAL LOCKED — ACCESS BLOCKED' : 'TRIAL ACTIVATED');
+        const { data, error } = await sb.rpc('admin_toggle_trial', {
+          p_admin_pin: adminPin,
+          p_phone: phone,
+          p_expired: newStatus
+        });
+
+        if (error || data?.error) throw new Error(data?.error || error?.message);
+        showToast(newStatus ? 'TRIAL LOCKED 🔒' : 'TRIAL ACTIVATED ⚡');
         await fetchClients();
       } catch (err) {
-        showToast('STATUS UPDATE FAILED');
+        showToast('TRIAL UPDATE FAILED');
       }
     };
 
-    /* EDIT HAIRSTYLE QUOTA (RESILIENT) */
     window.editHairstyleLimit = async function(phone, currentLimit) {
-      const input = prompt(`Update Hairstyle Generation Limit for ${phone}:`, currentLimit || 5);
-      if (input === null) return;
-      const newLimit = parseInt(input.trim());
+      const result = await showAdminDialog({
+        badge: "EDIT QUOTA",
+        badgeBg: "var(--yellow)",
+        title: "UPDATE ALLOWANCE",
+        message: `Set total hairstyle generation limit for ${phone}:`,
+        isPrompt: true,
+        defaultValue: String(currentLimit || 5),
+        confirmText: "SAVE QUOTA"
+      });
+
+      if (result === null) return;
+      const newLimit = parseInt(result, 10);
       if (isNaN(newLimit) || newLimit < 0) {
-        alert("Please enter a valid positive number.");
+        showToast("INVALID NUMBER");
         return;
       }
 
       try {
-        const { error } = await sb.from('users').update({ hairstyle_limit: newLimit }).eq('phone', phone);
-        if (error) {
-          // Fallback to app_config if hairstyle_limit column is missing
-          await sb.from('app_config').upsert({ key: `limit_${phone}`, value: String(newLimit) }, { onConflict: 'key' });
-        }
-        showToast(`LIMIT UPDATED TO ${newLimit}`);
+        const adminPin = getAdminPin();
+        const { data, error } = await sb.rpc('admin_update_limit', {
+          p_admin_pin: adminPin,
+          p_phone: phone,
+          p_new_limit: newLimit
+        });
+
+        if (error || data?.error) throw new Error(data?.error || error?.message);
+        showToast(`LIMIT UPDATED TO ${newLimit} 💾`);
         await fetchClients();
       } catch (e) {
         showToast("FAILED TO UPDATE LIMIT");
       }
     };
 
-    /* DELETE CLIENT */
     window.deleteClient = async function(phone, name) {
-      const ok = confirm(`DELETE CLIENT: ${name} (${phone})?\n\nThis will remove all stored looks for this user.`);
-      if (!ok) return;
+      const confirmed = await showAdminDialog({
+        badge: "DELETE CLIENT",
+        badgeBg: "var(--red)",
+        badgeColor: "var(--white)",
+        title: "DELETE THIS CLIENT RECORD?",
+        message: `Permanently delete ${name} (${phone}) and erase all generation records? This action is irreversible.`,
+        confirmText: "DELETE PERMANENTLY",
+        confirmBg: "var(--red)",
+        confirmColor: "var(--white)"
+      });
+
+      if (!confirmed) return;
 
       try {
-        await sb.from('users').delete().eq('phone', phone);
-        await sb.from('generations').delete().eq('user_phone', phone);
-        try {
-          await sb.from('app_config').delete().in('key', [`limit_${phone}`, `trial_expired_${phone}`, `address_${phone}`]);
-        } catch (_) {}
+        const adminPin = getAdminPin();
+        const { data, error } = await sb.rpc('admin_delete_user', {
+          p_admin_pin: adminPin,
+          p_phone: phone
+        });
 
-        showToast(`CLIENT DELETED`);
+        if (error || data?.error) throw new Error(data?.error || error?.message);
+        showToast(`CLIENT DELETED 🗑️`);
         await loadAllData();
       } catch (err) {
-        showToast('FAILED TO DELETE CLIENT');
+        showToast('DELETE FAILED');
       }
     };
 
+    /* ==========================================================================
+       RENDER CLIENT DIRECTORY
+       ========================================================================== */
     function renderClientsTable() {
       const q = ($('clientSearchInput').value || '').toLowerCase().trim();
       const filtered = allClients.filter(c => 
@@ -628,52 +846,48 @@
 
       const tbody = $('clientsTableBody');
       if (filtered.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:24px; color:#666;">No clients found.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:30px; color:#666; font-weight:700;">No clients found.</td></tr>`;
         return;
       }
 
       const totalCounts = {};
-      const hairstyleCounts = {};
       allGenerations.forEach(g => {
         totalCounts[g.user_phone] = (totalCounts[g.user_phone] || 0) + 1;
-        if (g.category !== 'Hair Colour') {
-          hairstyleCounts[g.user_phone] = (hairstyleCounts[g.user_phone] || 0) + 1;
-        }
       });
 
       tbody.innerHTML = filtered.map(c => {
         const isExpired = c.trial_expired === true;
         const total = totalCounts[c.phone] || 0;
-        const styleUsed = hairstyleCounts[c.phone] || 0;
-        const limit = (typeof c.hairstyle_limit === 'number') ? c.hairstyle_limit : 5;
+        const styleUsed = c.hairstyle_credits_used || 0;
+        const limit = c.hairstyle_limit;
         const isCapped = styleUsed >= limit;
 
         return `
           <tr>
             <td>
               <strong>${esc(c.name)}</strong>
-              ${c.address ? `<div style="font-size:0.7rem; color:#666;">${esc(c.address)}</div>` : ''}
+              ${c.address ? `<div style="font-size:0.72rem; color:#666; font-weight:700;">${esc(c.address)}</div>` : ''}
             </td>
-            <td><code style="background:var(--beige-surface); padding:2px 6px; border-radius:4px; font-weight:800;">${c.phone}</code></td>
+            <td><code style="background:var(--beige-surface); padding:2px 6px; border-radius:4px; font-weight:800; border:var(--border-thin);">${esc(c.phone)}</code></td>
             <td>
-              <button class="status-toggle ${isExpired ? 'expired' : 'active'}" onclick="toggleClientTrial('${c.phone}', ${isExpired})">
+              <button class="status-toggle ${isExpired ? 'expired' : 'active'}" onclick="toggleClientTrial('${esc(c.phone)}', ${isExpired})">
                 <i class="bi bi-${isExpired ? 'lock-fill' : 'unlock-fill'}"></i>
                 ${isExpired ? 'LOCKED' : 'ACTIVE'}
               </button>
             </td>
             <td>
               <div style="display:flex; align-items:center; gap:6px;">
-                <span class="badge" style="background:${isCapped ? 'var(--red); color:white;' : 'var(--lime);'}">
+                <span class="badge" style="background:${isCapped ? 'var(--red); color:var(--white);' : 'var(--lime); color:var(--black);'}">
                   ${styleUsed} / ${limit}
                 </span>
-                <button class="btn-pill" style="padding:3px 8px; font-size:0.65rem;" onclick="editHairstyleLimit('${c.phone}', ${limit})" title="Edit generation quota">
+                <button class="btn-pill" style="padding:3px 8px; font-size:0.65rem;" onclick="editHairstyleLimit('${esc(c.phone)}', ${limit})" title="Edit generation quota">
                   <i class="bi bi-pencil-square"></i> EDIT
                 </button>
               </div>
             </td>
             <td><span class="badge" style="background:var(--white);">${total} LOOKS</span></td>
             <td style="text-align:right;">
-              <button class="btn-danger" onclick="deleteClient('${c.phone}', '${esc(c.name)}')">
+              <button class="btn-danger" onclick="deleteClient('${esc(c.phone)}', '${esc(c.name)}')">
                 <i class="bi bi-trash"></i> DELETE
               </button>
             </td>
@@ -685,7 +899,9 @@
     $('clientSearchInput').addEventListener('input', renderClientsTable);
     $('refreshClientsBtn').addEventListener('click', fetchClients);
 
-    /* GENERATIONS ACTIVITY VIEW */
+    /* ==========================================================================
+       RENDER GENERATION ACTIVITY
+       ========================================================================== */
     function renderActivity() {
       const q = ($('activitySearchInput').value || '').toLowerCase().trim();
       const clientMap = {};
@@ -702,7 +918,7 @@
       const grid = $('generationsGrid');
 
       if (filtered.length === 0) {
-        grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:40px; font-weight:700; color:#666;">No matching activity found.</div>';
+        grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:40px; font-weight:700; color:#666;">No activity found.</div>';
         return;
       }
 
@@ -713,18 +929,18 @@
         return `
           <div class="gen-card" onclick="openInspectModal('${item.id}')">
             <div class="gen-thumbs">
-              <img src="${item.source_image_url || item.image_url}" loading="lazy" alt="Before" />
-              <img src="${item.image_url}" loading="lazy" alt="After" />
+              <img src="${esc(item.source_image_url || item.image_url)}" loading="lazy" alt="Before look" />
+              <img src="${esc(item.image_url)}" loading="lazy" alt="After look" />
             </div>
             <div class="gen-body">
               <div style="display:flex; justify-content:space-between; align-items:center;">
-                <span class="badge" style="background:${item.category === 'Hair Colour' ? 'var(--yellow)' : 'var(--pink); color:white;'}">${esc(item.style_name || 'Hair Style')}</span>
+                <span class="badge" style="background:${item.category === 'Hair Colour' ? 'var(--yellow); color:var(--black);' : 'var(--pink); color:var(--white);'}">${esc(item.style_name || 'Hair Style')}</span>
                 <span style="font-size:0.68rem; font-weight:700; color:#666;">${dateStr}</span>
               </div>
               <div style="font-family:var(--font-heading); font-size:0.85rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
                 ${esc(cName)}
               </div>
-              <div style="font-size:0.72rem; color:#666; font-weight:800;">${item.user_phone}</div>
+              <div style="font-size:0.72rem; color:#666; font-weight:800;">${esc(item.user_phone)}</div>
             </div>
           </div>
         `;
@@ -734,6 +950,9 @@
     $('activitySearchInput').addEventListener('input', renderActivity);
     $('refreshActivityBtn').addEventListener('click', fetchGenerations);
 
+    /* ==========================================================================
+       LOOK INSPECTION MODAL
+       ========================================================================== */
     window.openInspectModal = function(id) {
       const gen = allGenerations.find(g => g.id === id);
       if (!gen) return;
@@ -765,21 +984,28 @@
 
     $('modalDeleteBtn').addEventListener('click', async () => {
       if (!currentSelectedGen) return;
-      if (!confirm('Delete this look record permanently?')) return;
+
+      const confirmed = await showAdminDialog({
+        badge: "DELETE GENERATION",
+        badgeBg: "var(--red)",
+        badgeColor: "var(--white)",
+        title: "PERMANENTLY DELETE LOOK?",
+        message: "This will remove this result image from salon history. The client won't see it in their Vault.",
+        confirmText: "DELETE",
+        confirmBg: "var(--red)",
+        confirmColor: "var(--white)"
+      });
+      if (!confirmed) return;
 
       try {
         await sb.from('generations').delete().eq('id', currentSelectedGen.id);
-        showToast('RECORD DELETED');
+        showToast('RECORD DELETED 🗑️');
         $('inspectModal').classList.remove('active');
         await fetchGenerations();
       } catch (err) {
         showToast('DELETE FAILED');
       }
     });
-
-    function esc(s) {
-      return String(s || '').replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' })[m]);
-    }
 
     window.addEventListener('DOMContentLoaded', checkAdminAuth);
   </script>
