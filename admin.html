@@ -2,17 +2,13 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
-  <link rel="icon" href="data:," />
-  <title>KAMI AI — Master Supervisor Suite</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover" />
+  <title>KAMI — Master Admin Dashboard</title>
 
-  <!-- Typography & Icons -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo+Black&family=Plus+Jakarta+Sans:wght@500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-  
-  <!-- Supabase JS Library -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <style>
@@ -33,561 +29,699 @@
 
       --border-thick: 3px solid var(--black);
       --border-thin: 2px solid var(--black);
-      --shadow-solid: 6px 6px 0px var(--black);
-      --shadow-sm: 4px 4px 0px var(--black);
+      --shadow-solid: 5px 5px 0px var(--black);
+      --shadow-sm: 3px 3px 0px var(--black);
+      --shadow-xs: 2px 2px 0px var(--black);
       --radius-card: 16px;
       --radius-pill: 999px;
+      --bounce: cubic-bezier(0.175, 0.885, 0.32, 1.275);
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
       background-color: var(--beige);
-      background-image: 
-        radial-gradient(rgba(26, 26, 26, 0.16) 1.5px, transparent 1.5px), 
+      background-image:
+        radial-gradient(rgba(26, 26, 26, 0.16) 1.5px, transparent 1.5px),
         radial-gradient(rgba(26, 26, 26, 0.16) 1.5px, var(--beige) 1.5px);
       background-size: 22px 22px;
       background-position: 0 0, 11px 11px;
       color: var(--black);
       font-family: var(--font-body);
-      padding: 20px 14px 60px;
-    }
-
-    .container { max-width: 1100px; margin: 0 auto; }
-
-    header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 24px;
-      padding-bottom: 16px;
-      border-bottom: var(--border-thick);
-    }
-    .brand {
-      font-family: var(--font-display);
-      font-size: 2.2rem;
-      background: var(--yellow);
-      border: var(--border-thick);
-      padding: 2px 14px;
-      border-radius: 12px;
-      box-shadow: var(--shadow-sm);
-      transform: rotate(-2deg);
-    }
-
-    .nav-tabs {
-      display: flex;
-      gap: 8px;
-      overflow-x: auto;
-      margin-bottom: 20px;
-      padding-bottom: 4px;
-    }
-    .nav-tab {
-      padding: 10px 18px;
-      background: var(--white);
-      border: var(--border-thick);
-      border-radius: var(--radius-pill);
-      font-family: var(--font-heading);
-      font-size: 0.8rem;
-      cursor: pointer;
-      box-shadow: var(--shadow-sm);
-      white-space: nowrap;
-    }
-    .nav-tab.active {
-      background: var(--black);
-      color: var(--white);
-      transform: translate(2px, 2px);
-      box-shadow: none;
-    }
-
-    .card {
-      background: var(--white);
-      border: var(--border-thick);
-      border-radius: var(--radius-card);
-      padding: 20px;
-      box-shadow: var(--shadow-solid);
-      margin-bottom: 24px;
+      min-height: 100vh;
+      display: flex; flex-direction: column;
     }
 
     button {
-      background: var(--white);
-      border: var(--border-thick);
-      border-radius: var(--radius-pill);
-      padding: 10px 18px;
-      font-family: var(--font-heading);
-      font-size: 0.85rem;
-      cursor: pointer;
-      box-shadow: var(--shadow-sm);
+      background: none; border: none; color: inherit; cursor: pointer;
+      font-family: var(--font-heading); text-transform: uppercase;
+      transition: transform 0.12s var(--bounce), box-shadow 0.12s var(--bounce);
       user-select: none;
-      transition: transform 0.1s ease;
     }
-    button:active { transform: translate(3px, 3px); box-shadow: none; }
+    button:disabled { opacity: 0.45; cursor: not-allowed; }
 
-    .input-box {
-      width: 100%;
-      padding: 12px 14px;
-      border: var(--border-thick);
-      border-radius: 10px;
-      font-family: var(--font-body);
-      font-weight: 700;
-      font-size: 0.9rem;
-      margin-bottom: 12px;
-      background: var(--white);
-    }
-
-    .grid-users {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-      gap: 14px;
-    }
-    .user-pill {
-      background: var(--beige-surface);
-      border: var(--border-thick);
-      border-radius: 12px;
-      padding: 14px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .master-gallery {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-      gap: 16px;
-    }
-    .media-card {
-      background: var(--white);
-      border: var(--border-thick);
-      border-radius: 12px;
-      overflow: hidden;
+    .btn-pill {
+      background: var(--white); color: var(--black);
+      border: var(--border-thick); border-radius: var(--radius-pill);
+      padding: 8px 16px; font-size: 0.76rem; font-weight: 900;
       box-shadow: var(--shadow-sm);
+      display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+      white-space: nowrap;
     }
-    .media-card img { width: 100%; aspect-ratio: 1/1; object-fit: cover; display: block; }
-    .media-card-body { padding: 10px; }
+    .btn-pill:active:not(:disabled) { transform: translate(2px, 2px); box-shadow: none; }
+
+    .btn-primary {
+      background: var(--lime); color: var(--black);
+      border: var(--border-thick); border-radius: var(--radius-pill);
+      padding: 12px 20px; font-size: 0.88rem;
+      box-shadow: var(--shadow-solid);
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    .btn-danger {
+      background: var(--red); color: var(--white);
+      border: var(--border-thick); border-radius: var(--radius-pill);
+      padding: 6px 12px; font-size: 0.70rem;
+      box-shadow: var(--shadow-xs); display: inline-flex; align-items: center; gap: 4px;
+    }
 
     .badge {
-      display: inline-block;
-      padding: 4px 8px;
-      border: var(--border-thin);
-      border-radius: 6px;
-      font-family: var(--font-heading);
-      font-size: 0.68rem;
-      text-transform: uppercase;
+      display: inline-flex; align-items: center; justify-content: center;
+      padding: 4px 8px; font-family: var(--font-heading); font-size: 0.65rem;
+      text-transform: uppercase; border: var(--border-thin); box-shadow: var(--shadow-xs);
+      border-radius: 6px; white-space: nowrap;
     }
 
-    .style-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 12px;
-      border-bottom: 2px dashed #ddd;
+    .brand-logo {
+      font-family: var(--font-display); font-size: 1.6rem;
+      background: var(--yellow); border: var(--border-thick);
+      padding: 2px 14px; border-radius: 12px;
+      box-shadow: var(--shadow-sm); letter-spacing: 2px;
+      transform: rotate(-2deg); display: inline-block;
     }
-    .style-row:last-child { border-bottom: none; }
 
+    .admin-header {
+      background: var(--beige); border-bottom: var(--border-thick);
+      padding: 14px 20px; display: flex; justify-content: space-between; align-items: center;
+      flex-wrap: wrap; gap: 14px; position: sticky; top: 0; z-index: 100;
+    }
+    .nav-tabs {
+      display: inline-flex; background: var(--white); border: var(--border-thick);
+      border-radius: var(--radius-pill); padding: 4px; box-shadow: var(--shadow-sm); gap: 4px;
+    }
+    .tab-btn {
+      padding: 8px 16px; border-radius: var(--radius-pill); font-size: 0.75rem;
+      font-family: var(--font-heading); display: inline-flex; align-items: center; gap: 6px;
+    }
+    .tab-btn.active { background: var(--black); color: var(--lime); }
+
+    .admin-container {
+      max-width: 1100px; width: 100%; margin: 0 auto;
+      padding: 24px 16px 60px; display: flex; flex-direction: column; gap: 24px;
+    }
+
+    .panel-card {
+      background: var(--white); border: var(--border-thick);
+      border-radius: var(--radius-card); padding: 20px; box-shadow: var(--shadow-solid);
+      display: flex; flex-direction: column; gap: 18px;
+    }
+    .panel-header {
+      display: flex; justify-content: space-between; align-items: center;
+      border-bottom: var(--border-thin); padding-bottom: 12px; flex-wrap: wrap; gap: 10px;
+    }
+
+    .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; }
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+    .form-group label { font-size: 0.74rem; font-family: var(--font-heading); text-transform: uppercase; }
+    .form-input {
+      width: 100%; padding: 12px 14px; border: var(--border-thick);
+      border-radius: 10px; font-size: 0.9rem; font-family: var(--font-body);
+      font-weight: 700; background: var(--beige-surface); outline: none;
+    }
+
+    .table-wrapper {
+      overflow-x: auto; border: var(--border-thick);
+      border-radius: 12px; background: var(--white); box-shadow: var(--shadow-sm);
+    }
+    table { width: 100%; border-collapse: collapse; text-align: left; }
+    th {
+      background: var(--black); color: var(--white); padding: 12px 14px;
+      font-family: var(--font-heading); font-size: 0.72rem; text-transform: uppercase;
+    }
+    td { padding: 12px 14px; border-bottom: var(--border-thin); font-size: 0.82rem; font-weight: 600; }
+    tr:hover td { background: rgba(212, 255, 0, 0.12); }
+
+    .status-toggle {
+      border: var(--border-thin); border-radius: var(--radius-pill);
+      padding: 6px 12px; font-size: 0.68rem; font-family: var(--font-heading);
+      cursor: pointer; display: inline-flex; align-items: center; gap: 4px;
+    }
+    .status-toggle.active { background: var(--lime); color: var(--black); }
+    .status-toggle.expired { background: var(--red); color: var(--white); }
+
+    .generations-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px;
+    }
+    .gen-card {
+      background: var(--white); border: var(--border-thick); border-radius: 14px;
+      overflow: hidden; box-shadow: var(--shadow-sm); display: flex; flex-direction: column;
+      cursor: pointer; transition: transform 0.12s var(--bounce);
+    }
+    .gen-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-solid); }
+    .gen-thumbs {
+      display: grid; grid-template-columns: 1fr 1fr; border-bottom: var(--border-thick);
+      aspect-ratio: 16 / 10; background: #000;
+    }
+    .gen-thumbs img { width: 100%; height: 100%; object-fit: cover; }
+    .gen-body { padding: 12px; display: flex; flex-direction: column; gap: 8px; flex: 1; }
+
+    #authOverlay {
+      position: fixed; inset: 0; background: var(--beige);
+      z-index: 10000; display: flex; align-items: center; justify-content: center; padding: 20px;
+    }
+    .auth-box {
+      background: var(--white); border: var(--border-thick); border-radius: var(--radius-card);
+      box-shadow: var(--shadow-solid); padding: 30px; max-width: 380px; width: 100%; text-align: center;
+    }
+
+    .modal-backdrop {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px);
+      z-index: 5000; display: flex; align-items: center; justify-content: center; padding: 16px;
+      opacity: 0; pointer-events: none; transition: opacity 0.15s ease;
+    }
+    .modal-backdrop.active { opacity: 1; pointer-events: auto; }
+    .modal-card {
+      background: var(--white); border: var(--border-thick); border-radius: var(--radius-card);
+      box-shadow: var(--shadow-solid); max-width: 650px; width: 100%; overflow: hidden;
+      display: flex; flex-direction: column; max-height: 90vh;
+    }
+    .modal-head {
+      padding: 14px 18px; border-bottom: var(--border-thick); background: var(--beige);
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .modal-body { padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; }
+
+    .toast {
+      position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-100px);
+      background: var(--black); color: var(--white); border: var(--border-thick);
+      border-radius: var(--radius-pill); padding: 10px 22px; font-family: var(--font-heading);
+      font-size: 0.8rem; box-shadow: var(--shadow-sm); z-index: 99999; opacity: 0;
+      transition: all 0.25s var(--bounce); pointer-events: none;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
     .hidden { display: none !important; }
   </style>
 </head>
 <body>
-  <div class="container">
-    <header>
-      <div style="display:flex; align-items:center; gap:12px;">
-        <div class="brand">KAMI</div>
-        <h1 style="font-family:var(--font-heading); font-size:1.3rem;">SUPERVISOR SUITE</h1>
-      </div>
-      <div class="badge" style="background:var(--lime);">SUPERVISOR ROOT</div>
-    </header>
 
-    <!-- Admin Navigation Tabs -->
+  <div id="toast" class="toast"></div>
+
+  <!-- AUTH LOCK -->
+  <div id="authOverlay">
+    <div class="auth-box">
+      <div class="brand-logo" style="margin-bottom:14px;">KAMI</div>
+      <h2 style="font-family:var(--font-heading); font-size:1.15rem; margin-bottom:8px;">ADMIN ACCESS</h2>
+      <p style="font-size:0.78rem; font-weight:700; color:#555; margin-bottom:18px;">Enter Admin Security Passcode</p>
+      <input type="password" id="adminPassInput" placeholder="PASSCODE" maxlength="8"
+        style="width:100%; text-align:center; padding:12px; border:var(--border-thick); border-radius:10px; font-size:1.3rem; font-family:var(--font-heading); margin-bottom:14px; letter-spacing:4px;" />
+      <button id="adminLoginBtn" class="btn-primary" style="width:100%;">UNLOCK <i class="bi bi-key-fill"></i></button>
+    </div>
+  </div>
+
+  <header class="admin-header">
+    <div style="display:flex; align-items:center; gap:12px;">
+      <div class="brand-logo">KAMI</div>
+      <span class="badge" style="background:var(--pink); color:#FFF;">SALON SUPERVISOR</span>
+    </div>
+
     <div class="nav-tabs">
-      <button class="nav-tab active" data-target="tabUsers"><i class="bi bi-people-fill"></i> CLIENTS</button>
-      <button class="nav-tab" data-target="tabStyles"><i class="bi bi-scissors"></i> HAIRSTYLES &amp; PROMPTS</button>
-      <button class="nav-tab" data-target="tabPrompts"><i class="bi bi-cpu-fill"></i> SYSTEM PROMPTS</button>
-      <button class="nav-tab" data-target="tabVault"><i class="bi bi-images"></i> MASTER VAULT</button>
+      <button class="tab-btn active" id="tabClientsBtn"><i class="bi bi-people-fill"></i> CLIENTS</button>
+      <button class="tab-btn" id="tabActivityBtn"><i class="bi bi-stars"></i> GENERATIONS</button>
     </div>
 
-    <!-- TAB 1: USERS -->
-    <div id="tabUsers" class="tab-content">
-      <div class="card">
-        <h2 style="font-family:var(--font-heading); font-size:1.15rem; margin-bottom:12px;"><i class="bi bi-person-plus-fill"></i> ADD CLIENT USER</h2>
-        <div style="display:flex; flex-wrap:wrap; gap:12px;">
-          <input type="tel" id="newPhone" placeholder="Mobile Phone (+1234567890)" class="input-box" style="flex:2; min-width:200px; margin-bottom:0;" />
-          <input type="text" id="newName" placeholder="Client Name (Optional)" class="input-box" style="flex:2; min-width:180px; margin-bottom:0;" />
-          <button id="addUserBtn" style="background:var(--lime); flex:1; min-width:140px;">ADD CLIENT</button>
-        </div>
-      </div>
+    <button id="adminLockBtn" class="btn-pill"><i class="bi bi-lock-fill"></i> LOCK</button>
+  </header>
 
-      <div class="card">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
-          <h2 style="font-family:var(--font-heading); font-size:1.15rem;"><i class="bi bi-people-fill"></i> REGISTERED CLIENTS (<span id="userCount">0</span>)</h2>
-          <button id="refreshUsersBtn" style="padding:6px 14px; font-size:0.75rem;"><i class="bi bi-arrow-clockwise"></i> REFRESH</button>
-        </div>
-        <div class="grid-users" id="usersList">Loading clients...</div>
-      </div>
-    </div>
+  <main class="admin-container">
 
-    <!-- TAB 2: HAIRSTYLES CRUD (PROMPT MANAGEMENT) -->
-    <div id="tabStyles" class="tab-content hidden">
-      <div class="card">
-        <h2 style="font-family:var(--font-heading); font-size:1.15rem; margin-bottom:12px;"><i class="bi bi-plus-circle-fill"></i> ADD NEW HAIRSTYLE</h2>
-        <div style="display:flex; flex-wrap:wrap; gap:10px;">
-          <input type="text" id="styleIdInput" placeholder="Style ID (e.g. pixie-cut)" class="input-box" style="flex:1; min-width:160px; margin-bottom:0;" />
-          <input type="text" id="styleNameInput" placeholder="Display Name (e.g. Pixie Cut)" class="input-box" style="flex:2; min-width:180px; margin-bottom:0;" />
-          <input type="text" id="styleCatInput" placeholder="Category (e.g. Bob & Short)" class="input-box" style="flex:1; min-width:160px; margin-bottom:0;" />
-        </div>
-        <textarea id="stylePromptInput" placeholder="Prompt detail description (e.g. a realistic short textured feminine pixie cut...)" class="input-box" rows="3" style="margin-top:10px; margin-bottom:10px;"></textarea>
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-          <button id="seedStylesBtn" style="background:var(--yellow); font-size:0.75rem;">SEED 50 DEFAULT STYLES</button>
-          <button id="saveStyleBtn" style="background:var(--lime);">SAVE HAIRSTYLE</button>
-        </div>
-      </div>
-
-      <div class="card">
-        <h2 style="font-family:var(--font-heading); font-size:1.15rem; margin-bottom:12px;"><i class="bi bi-collection-fill"></i> ACTIVE HAIRSTYLES (<span id="stylesCount">0</span>)</h2>
-        <div id="stylesList" style="max-height: 480px; overflow-y:auto;">Loading styles...</div>
-      </div>
-    </div>
-
-    <!-- TAB 3: SYSTEM PROMPTS CONFIG -->
-    <div id="tabPrompts" class="tab-content hidden">
-      <div class="card">
-        <h2 style="font-family:var(--font-heading); font-size:1.15rem; margin-bottom:14px;"><i class="bi bi-cpu-fill"></i> MASTER AI TEMPLATES</h2>
-        <p style="font-size:0.75rem; color:#666; font-weight:700; margin-bottom:16px;">
-          Edits made here update live across all connected clients in <code>index.html</code>.
-        </p>
-
-        <label style="font-family:var(--font-heading); font-size:0.75rem;">BASE STYLE PROMPT ({DESC} will be replaced with hairstyle detail)</label>
-        <textarea id="cfgBaseStyle" class="input-box" rows="4"></textarea>
-
-        <label style="font-family:var(--font-heading); font-size:0.75rem;">COLOR EDIT PROMPT ({HEX} will be replaced with color)</label>
-        <textarea id="cfgBaseColor" class="input-box" rows="4"></textarea>
-
-        <label style="font-family:var(--font-heading); font-size:0.75rem;">REFERENCE IMAGE INSTRUCTION</label>
-        <textarea id="cfgRefClause" class="input-box" rows="2"></textarea>
-
-        <label style="font-family:var(--font-heading); font-size:0.75rem;">NEGATIVE PROMPT</label>
-        <textarea id="cfgNegative" class="input-box" rows="4"></textarea>
-
-        <button id="saveConfigBtn" style="background:var(--lime); width:100%; margin-top:8px;">SAVE MASTER PROMPTS</button>
-      </div>
-    </div>
-
-    <!-- TAB 4: MASTER VAULT -->
-    <div id="tabVault" class="tab-content hidden">
-      <div class="card">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:8px;">
-          <div>
-            <h2 style="font-family:var(--font-heading); font-size:1.15rem;"><i class="bi bi-images"></i> MASTER KAMI VAULT</h2>
-            <p style="font-size:0.75rem; color:#666; font-weight:700;">Every generation across all clients (WebP Storage).</p>
+    <!-- VIEW 1: CLIENT MANAGEMENT -->
+    <section id="clientsView">
+      <div class="panel-card">
+        <div class="panel-header">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <i class="bi bi-person-plus-fill" style="font-size:1.2rem;"></i>
+            <h3 style="font-family:var(--font-heading); font-size:0.95rem;">REGISTER CLIENT</h3>
           </div>
-          <select id="userFilter" class="input-box" style="width:auto; margin-bottom:0; font-size:0.8rem; padding:8px 12px;">
-            <option value="ALL">Show All Clients</option>
-          </select>
+          <span style="font-size:0.75rem; font-weight:700; color:#666;">Set initial hairstyle allowance (Default: 5)</span>
         </div>
-        <div class="master-gallery" id="masterGallery">Loading vault...</div>
+
+        <form id="addClientForm" class="form-grid">
+          <div class="form-group">
+            <label>Client Full Name *</label>
+            <input type="text" id="newClientName" class="form-input" placeholder="e.g. Priya Sharma" required />
+          </div>
+          <div class="form-group">
+            <label>Mobile Number *</label>
+            <input type="tel" id="newClientPhone" class="form-input" placeholder="+919876543210" required />
+          </div>
+          <div class="form-group">
+            <label>Hairstyle Limit</label>
+            <input type="number" id="newClientLimit" class="form-input" value="5" min="1" max="999" required />
+          </div>
+          <div class="form-group">
+            <label>Address / Notes</label>
+            <input type="text" id="newClientAddress" class="form-input" placeholder="e.g. Bandra West, Mumbai" />
+          </div>
+          <div class="form-group" style="justify-content:flex-end;">
+            <button type="submit" id="saveClientBtn" class="btn-primary" style="height:48px;">
+              ADD CLIENT <i class="bi bi-check-lg"></i>
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <div class="panel-card">
+        <div class="panel-header">
+          <div style="display:flex; align-items:center; gap:10px;">
+            <i class="bi bi-person-lines-fill" style="font-size:1.2rem;"></i>
+            <h3 style="font-family:var(--font-heading); font-size:0.95rem;">CLIENTS DIRECTORY &amp; QUOTAS</h3>
+            <span id="clientCountBadge" class="badge" style="background:var(--lime);">0 CLIENTS</span>
+          </div>
+          <div style="display:flex; gap:8px; align-items:center;">
+            <input type="text" id="clientSearchInput" class="form-input" placeholder="Search name/phone..." style="padding:6px 12px; font-size:0.78rem; width:220px;" />
+            <button id="refreshClientsBtn" class="btn-pill" title="Refresh List"><i class="bi bi-arrow-clockwise"></i></button>
+          </div>
+        </div>
+
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Client Name</th>
+                <th>Phone Number</th>
+                <th>Trial Status</th>
+                <th>Hairstyle Quota (Used / Max)</th>
+                <th>Total Looks</th>
+                <th style="text-align:right;">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="clientsTableBody">
+              <tr><td colspan="6" style="text-align:center; padding:24px;">Loading clients...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW 2: GENERATION ACTIVITY -->
+    <section id="activityView" class="hidden">
+      <div class="panel-card">
+        <div class="panel-header">
+          <div style="display:flex; align-items:center; gap:10px;">
+            <i class="bi bi-palette2" style="font-size:1.2rem;"></i>
+            <h3 style="font-family:var(--font-heading); font-size:0.95rem;">GENERATED LOOKS ACTIVITY</h3>
+            <span id="genCountBadge" class="badge" style="background:var(--yellow);">0 LOOKS</span>
+          </div>
+          <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+            <input type="text" id="activitySearchInput" class="form-input" placeholder="Search phone or look..." style="padding:6px 12px; font-size:0.78rem; width:200px;" />
+            <button id="refreshActivityBtn" class="btn-pill" title="Refresh"><i class="bi bi-arrow-clockwise"></i></button>
+          </div>
+        </div>
+
+        <div class="generations-grid" id="generationsGrid">
+          <div style="grid-column:1/-1; text-align:center; padding:40px; font-weight:700;">Loading activity history...</div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- INSPECT MODAL -->
+  <div id="inspectModal" class="modal-backdrop">
+    <div class="modal-card">
+      <div class="modal-head">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span class="badge" style="background:var(--lime);">LOOK DETAILS</span>
+          <span id="modalShadeName" style="font-family:var(--font-heading); font-size:0.88rem;">MEDIUM BROWN</span>
+        </div>
+        <button id="closeModalBtn" class="btn-pill" style="padding:4px 10px;"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div class="modal-body">
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; border-radius:12px; overflow:hidden; border:var(--border-thick);">
+          <div style="text-align:center; background:#111;">
+            <img id="modalSourceImg" src="" style="width:100%; height:260px; object-fit:cover; display:block;" />
+            <span class="badge" style="background:var(--white); margin:6px 0;">BEFORE</span>
+          </div>
+          <div style="text-align:center; background:#111;">
+            <img id="modalRenderedImg" src="" style="width:100%; height:260px; object-fit:cover; display:block;" />
+            <span class="badge" style="background:var(--lime); margin:6px 0;">AFTER</span>
+          </div>
+        </div>
+        <div style="background:var(--beige-surface); padding:12px; border-radius:10px; border:var(--border-thin); font-size:0.82rem; display:flex; flex-direction:column; gap:6px;">
+          <div><strong>Client:</strong> <span id="modalClientInfo">Priya Sharma (+919876543210)</span></div>
+          <div><strong>Generated At:</strong> <span id="modalDateInfo">Oct 4, 2026, 5:45 PM</span></div>
+        </div>
+        <div style="display:flex; justify-content:space-between; align-items:center; gap:10px;">
+          <button id="modalDeleteBtn" class="btn-danger"><i class="bi bi-trash"></i> DELETE THIS LOOK</button>
+          <a id="modalDownloadLink" class="btn-primary" download style="text-decoration:none;">
+            DOWNLOAD RESULT <i class="bi bi-download"></i>
+          </a>
+        </div>
       </div>
     </div>
   </div>
 
   <script>
-    /* ==========================================================================
-       SUPABASE CLIENT (Fixed Identifier Conflict by using 'sb')
-       ========================================================================== */
     const SUPABASE_URL = 'https://rmfubnduytozikcgzvok.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJtZnVibmR1eXRvemlrY2d6dm9rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2OTIyMDgsImV4cCI6MjA5NzI2ODIwOH0.XmxDD8mH8rgq3OZmD7jVophtH2W3NNDgSRJKC3RXvJU';
-    const sb = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+    const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    let allUsers = [];
+    const ADMIN_PIN = "1234";
+    const $ = id => document.getElementById(id);
 
-    // Tab Navigation
-    document.querySelectorAll('.nav-tab').forEach(tab => {
-      tab.addEventListener('click', () => {
-        document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-        document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
-        tab.classList.add('active');
-        document.getElementById(tab.dataset.target).classList.remove('hidden');
+    let allClients = [];
+    let allGenerations = [];
+    let currentSelectedGen = null;
 
-        if (tab.dataset.target === 'tabStyles') loadStyles();
-        if (tab.dataset.target === 'tabPrompts') loadConfig();
-        if (tab.dataset.target === 'tabVault') loadMasterGallery();
-      });
-    });
+    function showToast(msg) {
+      const t = $('toast');
+      t.textContent = msg;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 2400);
+    }
 
-    /* ==========================================================================
-       USERS MANAGEMENT
-       ========================================================================== */
-    document.getElementById('addUserBtn').addEventListener('click', async () => {
-      const phone = document.getElementById('newPhone').value.trim();
-      const name = document.getElementById('newName').value.trim() || 'Client';
-
-      if (!phone) { alert('Please enter a mobile phone number.'); return; }
-
-      const { error } = await sb.from('users').insert([{ phone, name }]);
-      if (error) {
-        alert('Could not add user: ' + error.message);
+    function checkAdminAuth() {
+      if (sessionStorage.getItem('kami_admin_auth') === 'true') {
+        $('authOverlay').classList.add('hidden');
+        loadAllData();
       } else {
-        alert('Client added successfully!');
-        document.getElementById('newPhone').value = '';
-        document.getElementById('newName').value = '';
-        loadUsers();
+        $('authOverlay').classList.remove('hidden');
       }
-    });
-
-    async function loadUsers() {
-      const listEl = document.getElementById('usersList');
-      const filterEl = document.getElementById('userFilter');
-      listEl.innerHTML = 'Loading...';
-
-      const { data: users, error } = await sb.from('users').select('*').order('created_at', { ascending: false });
-      if (error) { listEl.innerHTML = 'Error: ' + error.message; return; }
-
-      allUsers = users || [];
-      document.getElementById('userCount').textContent = allUsers.length;
-
-      filterEl.innerHTML = '<option value="ALL">Show All Clients</option>';
-      allUsers.forEach(u => {
-        const opt = document.createElement('option');
-        opt.value = u.phone;
-        opt.textContent = `${u.name} (${u.phone})`;
-        filterEl.appendChild(opt);
-      });
-
-      const { data: gens } = await sb.from('generations').select('user_phone');
-      const countMap = {};
-      gens?.forEach(g => { countMap[g.user_phone] = (countMap[g.user_phone] || 0) + 1; });
-
-      listEl.innerHTML = '';
-      allUsers.forEach(u => {
-        const count = countMap[u.phone] || 0;
-        const pill = document.createElement('div');
-        pill.className = 'user-pill';
-        pill.innerHTML = `
-          <div>
-            <div style="font-family:var(--font-heading); font-size:0.95rem;">${u.name}</div>
-            <div style="font-size:0.75rem; color:#555; font-weight:700;">${u.phone}</div>
-            <div class="badge" style="background:${count >= 30 ? 'var(--red); color:white;' : 'var(--lime);'} margin-top:4px;">
-              ${count} / 30 IMAGES
-            </div>
-          </div>
-          <button onclick="deleteUser('${u.id}', '${u.phone}')" style="background:var(--red); color:white; padding:6px 10px; font-size:0.75rem;"><i class="bi bi-trash"></i></button>
-        `;
-        listEl.appendChild(pill);
-      });
     }
 
-    async function deleteUser(id, phone) {
-      if (!confirm(`Delete client ${phone}? All their stored images will be removed.`)) return;
-      await sb.from('users').delete().eq('id', id);
-      loadUsers();
-    }
-
-    /* ==========================================================================
-       HAIRSTYLES & PROMPT MANAGEMENT
-       ========================================================================== */
-    async function loadStyles() {
-      const listEl = document.getElementById('stylesList');
-      listEl.innerHTML = 'Loading styles...';
-
-      const { data: styles, error } = await sb.from('hairstyles').select('*').order('created_at', { ascending: true });
-      if (error) { listEl.innerHTML = 'Error: ' + error.message; return; }
-
-      document.getElementById('stylesCount').textContent = styles?.length || 0;
-      listEl.innerHTML = '';
-
-      if (!styles || styles.length === 0) {
-        listEl.innerHTML = '<div style="padding:14px; text-align:center; font-weight:700;">No hairstyles found. Click "SEED 50 DEFAULT STYLES" to load presets.</div>';
-        return;
-      }
-
-      styles.forEach(s => {
-        const row = document.createElement('div');
-        row.className = 'style-row';
-        row.innerHTML = `
-          <div style="flex:1; min-width:0; padding-right:12px;">
-            <div style="display:flex; align-items:center; gap:8px;">
-              <span class="badge" style="background:var(--pink); color:white;">${s.category}</span>
-              <strong style="font-family:var(--font-heading); font-size:0.9rem;">${s.name}</strong>
-              <small style="color:#777;">(${s.id})</small>
-            </div>
-            <p style="font-size:0.75rem; color:#444; margin-top:4px;">${s.desc_prompt}</p>
-          </div>
-          <button onclick="deleteStyle('${s.id}')" style="background:var(--red); color:white; padding:6px 10px; font-size:0.75rem;"><i class="bi bi-trash"></i></button>
-        `;
-        listEl.appendChild(row);
-      });
-    }
-
-    document.getElementById('saveStyleBtn').addEventListener('click', async () => {
-      const id = document.getElementById('styleIdInput').value.trim().toLowerCase().replace(/\s+/g, '-');
-      const name = document.getElementById('styleNameInput').value.trim();
-      const category = document.getElementById('styleCatInput').value.trim() || 'Modern Cuts';
-      const desc_prompt = document.getElementById('stylePromptInput').value.trim();
-
-      if (!id || !name || !desc_prompt) {
-        alert('Please fill out Style ID, Display Name, and Prompt description.');
-        return;
-      }
-
-      const { error } = await sb.from('hairstyles').upsert([{ id, name, category, desc_prompt }]);
-      if (error) {
-        alert('Error saving style: ' + error.message);
+    $('adminLoginBtn').addEventListener('click', () => {
+      const val = $('adminPassInput').value.trim();
+      if (val === ADMIN_PIN) {
+        sessionStorage.setItem('kami_admin_auth', 'true');
+        $('authOverlay').classList.add('hidden');
+        showToast('ACCESS GRANTED');
+        loadAllData();
       } else {
-        alert('Hairstyle saved successfully!');
-        document.getElementById('styleIdInput').value = '';
-        document.getElementById('styleNameInput').value = '';
-        document.getElementById('stylePromptInput').value = '';
-        loadStyles();
+        showToast('INCORRECT PASSCODE');
+        $('adminPassInput').value = '';
       }
     });
 
-    async function deleteStyle(id) {
-      if (!confirm(`Delete hairstyle "${id}"?`)) return;
-      await sb.from('hairstyles').delete().eq('id', id);
-      loadStyles();
+    $('adminPassInput').addEventListener('keydown', e => {
+      if (e.key === 'Enter') $('adminLoginBtn').click();
+    });
+
+    $('adminLockBtn').addEventListener('click', () => {
+      sessionStorage.removeItem('kami_admin_auth');
+      $('authOverlay').classList.remove('hidden');
+      $('adminPassInput').value = '';
+    });
+
+    $('tabClientsBtn').addEventListener('click', () => {
+      $('tabClientsBtn').classList.add('active');
+      $('tabActivityBtn').classList.remove('active');
+      $('clientsView').classList.remove('hidden');
+      $('activityView').classList.add('hidden');
+    });
+
+    $('tabActivityBtn').addEventListener('click', () => {
+      $('tabActivityBtn').classList.add('active');
+      $('tabClientsBtn').classList.remove('active');
+      $('activityView').classList.remove('hidden');
+      $('clientsView').classList.add('hidden');
+      renderActivity();
+    });
+
+    async function loadAllData() {
+      await Promise.all([fetchClients(), fetchGenerations()]);
     }
 
-    // Seed 50 Default Styles
-    document.getElementById('seedStylesBtn').addEventListener('click', async () => {
-      if (!confirm('Seed database with 50 curated hairstyle presets?')) return;
-      const SEED_STYLES = [
-        { id:'pixie', category:'Bob & Short', name:'Pixie Cut', desc_prompt:'a realistic short textured feminine pixie cut with tapered sides and nape, slightly longer layered top, soft side-swept fringe and natural temple pieces' },
-        { id:'butterfly', category:'Modern Cuts', name:'Butterfly Cut', desc_prompt:'a realistic butterfly cut with long cascading layers, short curtain bangs and soft flipped ends' },
-        { id:'longlayered', category:'Modern Cuts', name:'Long Layered Cut', desc_prompt:'a realistic long layered cut with smooth graduated layers and natural movement at the ends' },
-        { id:'faceframing', category:'Modern Cuts', name:'Face-Framing Layers', desc_prompt:'a realistic cut with soft face-framing layers curving around cheekbones and jawline' },
-        { id:'feather', category:'Modern Cuts', name:'Feather Cut', desc_prompt:'a realistic feather cut with feather-light graduated layers tapering softly toward the ends' },
-        { id:'curtainbangs', category:'Modern Cuts', name:'Curtain Bangs', desc_prompt:'a realistic cut with long curtain bangs parted in the middle and swept outward' },
-        { id:'wolf', category:'Modern Cuts', name:'Wolf Cut', desc_prompt:'a realistic wolf cut with choppy crown layers, heavy volume and longer tapered ends' },
-        { id:'hush', category:'Modern Cuts', name:'Hush Cut', desc_prompt:'a realistic hush cut with soft airy layers, wispy ends and light face-framing pieces' },
-        { id:'shag', category:'Modern Cuts', name:'Shag Cut', desc_prompt:'a realistic shag cut with choppy razored layers, textured ends and a soft wispy fringe' },
-        { id:'ucut', category:'Modern Cuts', name:'U-Cut', desc_prompt:'a realistic U-cut with a smooth rounded U-shaped hemline and even blended length' },
-        { id:'vcut', category:'Modern Cuts', name:'V-Cut', desc_prompt:'a realistic V-cut with a deep V-shaped layered hemline tapering to a point at the back' },
-        { id:'bluntbob', category:'Bob & Short', name:'Blunt Bob', desc_prompt:'a realistic blunt bob cut straight across at jaw length with a crisp even hemline' },
-        { id:'layeredbob', category:'Bob & Short', name:'Layered Bob', desc_prompt:'a realistic layered bob with soft interior layers adding volume and movement' },
-        { id:'frenchbob', category:'Bob & Short', name:'French Bob', desc_prompt:'a realistic French bob, chin-length and textured with a short soft fringe' },
-        { id:'lob', category:'Bob & Short', name:'Long Bob / Lob', desc_prompt:'a realistic long bob (lob) falling past the collarbone with soft blended layers' },
-        { id:'sleekstraight', category:'Open & Styling', name:'Sleek Straight Hair', desc_prompt:'a realistic sleek straight style, pin-straight and glossy with smooth drape' },
-        { id:'glasshair', category:'Open & Styling', name:'Glass Hair', desc_prompt:'a realistic glass hair look, ultra-sleek mirror-shiny perfectly straight hair with a blunt cut' },
-        { id:'softwaves', category:'Open & Styling', name:'Soft Waves', desc_prompt:'a realistic soft wavy style with gentle romantic S-waves flowing through lengths' },
-        { id:'beachwaves', category:'Open & Styling', name:'Beach Waves', desc_prompt:'a realistic beach wave style with relaxed tousled salt-spray texture and undone ends' },
-        { id:'hollywoodwaves', category:'Open & Styling', name:'Hollywood Waves', desc_prompt:'a realistic Hollywood wave style with deep glossy uniform vintage waves cascading down' },
-        { id:'softcurls', category:'Open & Styling', name:'Soft Curls', desc_prompt:'a realistic soft curl style with loose bouncy well-defined curls' },
-        { id:'voluminouscurls', category:'Open & Styling', name:'Voluminous Curls', desc_prompt:'a realistic voluminous curly style with big bouncy well-defined curls full of body' },
-        { id:'blowout', category:'Open & Styling', name:'Voluminous Blowout', desc_prompt:'a realistic voluminous blowout with lifted roots and rounded bouncy ends' },
-        { id:'sidesweptwaves', category:'Open & Styling', name:'Side-Swept Waves', desc_prompt:'a realistic side-swept wavy style with all hair swept over one shoulder in soft waves' },
-        { id:'mermaidwaves', category:'Open & Styling', name:'Mermaid Waves', desc_prompt:'a realistic mermaid wave style with long flowing rippled waves falling past shoulders' },
-        { id:'highpony', category:'Ponytails', name:'High Ponytail', desc_prompt:'a realistic high ponytail secured at the crown with a long swinging tail' },
-        { id:'sleeklowpony', category:'Ponytails', name:'Sleek Low Ponytail', desc_prompt:'a realistic sleek low ponytail tied at the nape, smooth and glossy with centre part' },
-        { id:'messypony', category:'Ponytails', name:'Messy Ponytail', desc_prompt:'a realistic messy ponytail with textured volume and loose face-framing pieces' },
-        { id:'wavypony', category:'Ponytails', name:'Wavy Ponytail', desc_prompt:'a realistic wavy ponytail with soft waves through the tail and a smooth base' },
-        { id:'braidedpony', category:'Ponytails', name:'Braided Ponytail', desc_prompt:'a realistic braided ponytail with a sleek base leading into a long braided tail' },
-        { id:'messybun', category:'Buns & Juda', name:'Messy Bun', desc_prompt:'a realistic messy bun gathered high on the head with loose textured loops and soft flyaways' },
-        { id:'sleeklowbun', category:'Buns & Juda', name:'Sleek Low Bun', desc_prompt:'a realistic sleek low bun at the nape, smooth and polished with a centre part' },
-        { id:'highbun', category:'Buns & Juda', name:'High Bun', desc_prompt:'a realistic high bun top knot sitting neatly on the crown, rounded and smooth' },
-        { id:'classicjuda', category:'Buns & Juda', name:'Classic Juda', desc_prompt:'a realistic classic juda, a smooth rounded traditional bun resting at the back' },
-        { id:'gajrajuda', category:'Buns & Juda', name:'Gajra Juda', desc_prompt:'a realistic traditional juda bun encircled by a gajra of fresh white jasmine flowers' },
-        { id:'mograbun', category:'Buns & Juda', name:'Mogra Bun', desc_prompt:'a realistic mogra bun decorated with small white jasmine flowers pinned around it' },
-        { id:'braid3', category:'Braids', name:'Classic Three-Strand Braid', desc_prompt:'a realistic classic three-strand braid running neatly down the back' },
-        { id:'frenchbraid', category:'Braids', name:'French Braid', desc_prompt:'a realistic French braid starting at the crown and weaving neatly down the back' },
-        { id:'fishtail', category:'Braids', name:'Fishtail Braid', desc_prompt:'a realistic fishtail braid with fine herringbone-patterned interwoven strands' },
-        { id:'dutchbraid', category:'Braids', name:'Dutch Braid', desc_prompt:'a realistic Dutch braid sitting raised on top of the hair with clean 3D weave' },
-        { id:'crownbraid', category:'Braids', name:'Crown Braid', desc_prompt:'a realistic crown braid wrapped around the head like a halo' },
-        { id:'sidebraid', category:'Braids', name:'Side Braid', desc_prompt:'a realistic side braid draped over one shoulder with relaxed face-framing tendrils' },
-        { id:'halfupbraid', category:'Braids', name:'Half-Up Braid', desc_prompt:'a realistic half-up style with top section braided and pinned back with flowing hair beneath' },
-        { id:'punjabigutt', category:'Punjabi & Indian', name:'Punjabi Gutt / Choti', desc_prompt:'a realistic Punjabi gutt (choti), a single long thick plait with smooth centre-parted front' },
-        { id:'paranda', category:'Punjabi & Indian', name:'Punjabi Paranda Braid', desc_prompt:'a realistic Punjabi paranda braid with colourful tasselled paranda woven into the braid' },
-        { id:'gotachoti', category:'Punjabi & Indian', name:'Gota Choti', desc_prompt:'a realistic gota choti braid wrapped with gold gota patti ribbon along its length' },
-        { id:'bridalbraid', category:'Punjabi & Indian', name:'Punjabi Bridal Braid', desc_prompt:'a realistic Punjabi bridal braid, long and thick with traditional gold clips and baby pearls' },
-        { id:'gajrabraid', category:'Punjabi & Indian', name:'Floral / Gajra Braid', desc_prompt:'a realistic braid decorated with fresh white jasmine flowers wrapped along its length' },
-        { id:'halfuphalfdown', category:'Half-Up & Bridal', name:'Half-Up Half-Down', desc_prompt:'a realistic half-up half-down style with top pinned back and rest cascading in soft waves' },
-        { id:'bridalhalfup', category:'Half-Up & Bridal', name:'Bridal Half-Up Curls', desc_prompt:'a realistic bridal half-up style with twisted crown pinned for maang tikka and cascading curls' }
-      ];
+    async function fetchClients() {
+      try {
+        const { data, error } = await sb
+          .from('users')
+          .select('id, phone, name, address, trial_expired, hairstyle_limit, created_at')
+          .order('created_at', { ascending: false });
 
-      for (const s of SEED_STYLES) {
-        await sb.from('hairstyles').upsert([s]);
+        if (error) throw error;
+        allClients = data || [];
+        renderClientsTable();
+      } catch (err) {
+        showToast("FAILED TO LOAD CLIENTS");
       }
-      alert('50 curated hairstyles successfully seeded into database!');
-      loadStyles();
-    });
-
-    /* ==========================================================================
-       MASTER CONFIGURATION (SYSTEM PROMPTS)
-       ========================================================================== */
-    async function loadConfig() {
-      const { data } = await sb.from('app_config').select('*');
-      const cfg = {};
-      data?.forEach(d => { cfg[d.key] = d.value; });
-
-      document.getElementById('cfgBaseStyle').value = cfg.base_style || "Edit only the hair. Change the existing hairstyle into {DESC}. Keep the original hair colour exactly as it is in the source photo. The hair must grow naturally from the scalp with visible roots, individual strands, flyaways and natural shadows. Do not change the face, expression, head angle, pose, skin, clothing, lighting, background or camera. Realistic photograph, not a wig or helmet.";
-      document.getElementById('cfgBaseColor').value = cfg.base_color || "Edit only the hair colour. Recolour the existing hair to a realistic salon dyed shade, exactly {HEX}. Keep the exact same hairstyle, cut, length, layers, texture, volume and silhouette as the source photo. Recolour every strand from root to tip, following the original lighting and highlights. Do not change the face, expression, head angle, pose, skin tone, clothing, lighting, background or camera.";
-      document.getElementById('cfgRefClause').value = cfg.ref_clause || " Use image 2 only for the hair shape, length, layering and fringe. Ignore the reference person, hair colour, pose, lighting and background.";
-      document.getElementById('cfgNegative').value = cfg.negative || "wig, hairpiece, hair cap, helmet hair, CGI hair, plastic hair, artificial overlay, bowl cut, buzz cut, shaved sides, undercut, excessive crown volume, perfectly symmetrical hair, fake hairline, cartoon, 2D, illustration, changed face, altered facial proportions, modified jawline, modified forehead, changed ears, different person, beautified face, altered background, changed lighting, changed pose, different head angle, turned face, profile view, unrealistic hair.";
     }
 
-    document.getElementById('saveConfigBtn').addEventListener('click', async () => {
-      const updates = [
-        { key: 'base_style', value: document.getElementById('cfgBaseStyle').value.trim() },
-        { key: 'base_color', value: document.getElementById('cfgBaseColor').value.trim() },
-        { key: 'ref_clause', value: document.getElementById('cfgRefClause').value.trim() },
-        { key: 'negative', value: document.getElementById('cfgNegative').value.trim() }
-      ];
+    async function fetchGenerations() {
+      try {
+        const { data, error } = await sb
+          .from('generations')
+          .select('id, user_phone, image_url, source_image_url, style_name, category, created_at')
+          .order('created_at', { ascending: false });
 
-      for (const u of updates) {
-        await sb.from('app_config').upsert([u]);
+        if (error) throw error;
+        allGenerations = data || [];
+        renderClientsTable();
+        renderActivity();
+      } catch (err) {
+        console.error("Fetch generations error:", err);
       }
-      alert('Master prompts updated! Client devices will use these templates immediately.');
-    });
+    }
 
-    /* ==========================================================================
-       MASTER VAULT
-       ========================================================================== */
-    async function loadMasterGallery() {
-      const galleryEl = document.getElementById('masterGallery');
-      const selectedFilter = document.getElementById('userFilter').value;
+    /* ADD CLIENT */
+    $('addClientForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const name = $('newClientName').value.trim();
+      const rawPhone = $('newClientPhone').value.trim().replace(/[^\d+]/g, '');
+      const limit = parseInt($('newClientLimit').value) || 5;
+      const address = $('newClientAddress').value.trim();
 
-      let query = sb.from('generations').select('*').order('created_at', { ascending: false });
-      if (selectedFilter !== 'ALL') {
-        query = query.eq('user_phone', selectedFilter);
-      }
-
-      const { data, error } = await query;
-      if (error) { galleryEl.innerHTML = 'Error: ' + error.message; return; }
-
-      if (!data || data.length === 0) {
-        galleryEl.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:20px; font-weight:800;">No images generated yet.</div>';
+      if (!/^\+?\d{7,15}$/.test(rawPhone)) {
+        showToast('INVALID PHONE NUMBER');
         return;
       }
 
-      galleryEl.innerHTML = '';
-      data.forEach(item => {
-        const card = document.createElement('div');
-        card.className = 'media-card';
-        card.innerHTML = `
-          <a href="${item.image_url}" target="_blank"><img src="${item.image_url}" loading="lazy" /></a>
-          <div class="media-card-body">
-            <div class="badge" style="background:var(--pink); color:white; margin-bottom:4px;">${item.category}</div>
-            <div style="font-family:var(--font-heading); font-size:0.85rem;">${item.style_name}</div>
-            <div style="font-size:0.7rem; color:#444; font-weight:700; margin-top:4px;">Client: ${item.user_phone}</div>
-            <div style="font-size:0.65rem; color:#888;">${new Date(item.created_at).toLocaleString()}</div>
-            <div style="margin-top:8px; display:flex; justify-content:space-between; align-items:center;">
-              <a href="${item.image_url}" download target="_blank" style="text-decoration:none;"><button style="padding:4px 8px; font-size:0.7rem; background:var(--cyan); color:white;">SAVE</button></a>
-              <button onclick="deleteGeneration('${item.id}')" style="padding:4px 8px; font-size:0.7rem; background:var(--red); color:white;"><i class="bi bi-trash"></i></button>
+      $('saveClientBtn').disabled = true;
+
+      try {
+        const { error } = await sb.from('users').upsert({
+          name: name,
+          phone: rawPhone,
+          address: address || null,
+          hairstyle_limit: limit,
+          trial_expired: false
+        }, { onConflict: 'phone' });
+
+        if (error) throw error;
+
+        showToast(`CLIENT ${name.toUpperCase()} REGISTERED!`);
+        $('addClientForm').reset();
+        $('newClientLimit').value = '5';
+        await fetchClients();
+      } catch (err) {
+        showToast('COULD NOT SAVE CLIENT');
+      } finally {
+        $('saveClientBtn').disabled = false;
+      }
+    });
+
+    /* TOGGLE TRIAL SWITCH */
+    window.toggleClientTrial = async function(phone, currentStatus) {
+      const newStatus = !currentStatus;
+      try {
+        const { error } = await sb.from('users').update({ trial_expired: newStatus }).eq('phone', phone);
+        if (error) throw error;
+        showToast(newStatus ? 'TRIAL LOCKED' : 'TRIAL ACTIVATED');
+        await fetchClients();
+      } catch (err) {
+        showToast('STATUS UPDATE FAILED');
+      }
+    };
+
+    /* EDIT HAIRSTYLE QUOTA */
+    window.editHairstyleLimit = async function(phone, currentLimit) {
+      const input = prompt(`Update Hairstyle Generation Limit for ${phone}:`, currentLimit || 5);
+      if (input === null) return;
+      const newLimit = parseInt(input.trim());
+      if (isNaN(newLimit) || newLimit < 0) {
+        alert("Please enter a valid positive number.");
+        return;
+      }
+
+      try {
+        const { error } = await sb.from('users').update({ hairstyle_limit: newLimit }).eq('phone', phone);
+        if (error) throw error;
+        showToast(`LIMIT UPDATED TO ${newLimit}`);
+        await fetchClients();
+      } catch (e) {
+        showToast("FAILED TO UPDATE LIMIT");
+      }
+    };
+
+    /* DELETE CLIENT */
+    window.deleteClient = async function(phone, name) {
+      const ok = confirm(`DELETE CLIENT: ${name} (${phone})?\n\nThis will remove all stored looks for this user.`);
+      if (!ok) return;
+
+      try {
+        const { error } = await sb.from('users').delete().eq('phone', phone);
+        if (error) throw error;
+        showToast(`CLIENT DELETED`);
+        await loadAllData();
+      } catch (err) {
+        showToast('FAILED TO DELETE CLIENT');
+      }
+    };
+
+    function renderClientsTable() {
+      const q = ($('clientSearchInput').value || '').toLowerCase().trim();
+      const filtered = allClients.filter(c => 
+        (c.name || '').toLowerCase().includes(q) ||
+        (c.phone || '').toLowerCase().includes(q) ||
+        (c.address || '').toLowerCase().includes(q)
+      );
+
+      $('clientCountBadge').textContent = `${allClients.length} REGISTERED`;
+
+      const tbody = $('clientsTableBody');
+      if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:24px; color:#666;">No clients found.</td></tr>`;
+        return;
+      }
+
+      const totalCounts = {};
+      const hairstyleCounts = {};
+      allGenerations.forEach(g => {
+        totalCounts[g.user_phone] = (totalCounts[g.user_phone] || 0) + 1;
+        if (g.category !== 'Hair Colour') {
+          hairstyleCounts[g.user_phone] = (hairstyleCounts[g.user_phone] || 0) + 1;
+        }
+      });
+
+      tbody.innerHTML = filtered.map(c => {
+        const isExpired = c.trial_expired === true;
+        const total = totalCounts[c.phone] || 0;
+        const styleUsed = hairstyleCounts[c.phone] || 0;
+        const limit = (typeof c.hairstyle_limit === 'number') ? c.hairstyle_limit : 5;
+        const isCapped = styleUsed >= limit;
+
+        return `
+          <tr>
+            <td>
+              <strong>${esc(c.name)}</strong>
+              ${c.address ? `<div style="font-size:0.7rem; color:#666;">${esc(c.address)}</div>` : ''}
+            </td>
+            <td><code style="background:var(--beige-surface); padding:2px 6px; border-radius:4px; font-weight:800;">${c.phone}</code></td>
+            <td>
+              <button class="status-toggle ${isExpired ? 'expired' : 'active'}" onclick="toggleClientTrial('${c.phone}', ${isExpired})">
+                <i class="bi bi-${isExpired ? 'lock-fill' : 'unlock-fill'}"></i>
+                ${isExpired ? 'LOCKED' : 'ACTIVE'}
+              </button>
+            </td>
+            <td>
+              <div style="display:flex; align-items:center; gap:6px;">
+                <span class="badge" style="background:${isCapped ? 'var(--red); color:white;' : 'var(--lime);'}">
+                  ${styleUsed} / ${limit}
+                </span>
+                <button class="btn-pill" style="padding:3px 8px; font-size:0.65rem;" onclick="editHairstyleLimit('${c.phone}', ${limit})" title="Edit generation quota">
+                  <i class="bi bi-pencil-square"></i> EDIT
+                </button>
+              </div>
+            </td>
+            <td><span class="badge" style="background:var(--white);">${total} LOOKS</span></td>
+            <td style="text-align:right;">
+              <button class="btn-danger" onclick="deleteClient('${c.phone}', '${esc(c.name)}')">
+                <i class="bi bi-trash"></i> DELETE
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    $('clientSearchInput').addEventListener('input', renderClientsTable);
+    $('refreshClientsBtn').addEventListener('click', fetchClients);
+
+    /* GENERATIONS ACTIVITY VIEW */
+    function renderActivity() {
+      const q = ($('activitySearchInput').value || '').toLowerCase().trim();
+      const clientMap = {};
+      allClients.forEach(c => { clientMap[c.phone] = c.name; });
+
+      const filtered = allGenerations.filter(g => {
+        const cName = (clientMap[g.user_phone] || '').toLowerCase();
+        return (g.user_phone || '').toLowerCase().includes(q) ||
+               (g.style_name || '').toLowerCase().includes(q) ||
+               cName.includes(q);
+      });
+
+      $('genCountBadge').textContent = `${filtered.length} LOOKS`;
+      const grid = $('generationsGrid');
+
+      if (filtered.length === 0) {
+        grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:40px; font-weight:700; color:#666;">No matching activity found.</div>';
+        return;
+      }
+
+      grid.innerHTML = filtered.map(item => {
+        const cName = clientMap[item.user_phone] || 'Client';
+        const dateStr = new Date(item.created_at).toLocaleString([], { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' });
+
+        return `
+          <div class="gen-card" onclick="openInspectModal('${item.id}')">
+            <div class="gen-thumbs">
+              <img src="${item.source_image_url || item.image_url}" loading="lazy" alt="Before" />
+              <img src="${item.image_url}" loading="lazy" alt="After" />
+            </div>
+            <div class="gen-body">
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span class="badge" style="background:${item.category === 'Hair Colour' ? 'var(--yellow)' : 'var(--pink); color:white;'}">${esc(item.style_name || 'Hair Style')}</span>
+                <span style="font-size:0.68rem; font-weight:700; color:#666;">${dateStr}</span>
+              </div>
+              <div style="font-family:var(--font-heading); font-size:0.85rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+                ${esc(cName)}
+              </div>
+              <div style="font-size:0.72rem; color:#666; font-weight:800;">${item.user_phone}</div>
             </div>
           </div>
         `;
-        galleryEl.appendChild(card);
-      });
+      }).join('');
     }
 
-    async function deleteGeneration(id) {
-      if (!confirm('Delete this generated image from database?')) return;
-      await sb.from('generations').delete().eq('id', id);
-      loadMasterGallery();
-    }
+    $('activitySearchInput').addEventListener('input', renderActivity);
+    $('refreshActivityBtn').addEventListener('click', fetchGenerations);
 
-    document.getElementById('refreshUsersBtn').addEventListener('click', loadUsers);
-    document.getElementById('userFilter').addEventListener('change', loadMasterGallery);
+    window.openInspectModal = function(id) {
+      const gen = allGenerations.find(g => g.id === id);
+      if (!gen) return;
+      currentSelectedGen = gen;
 
-    window.addEventListener('DOMContentLoaded', () => {
-      loadUsers();
+      const client = allClients.find(c => c.phone === gen.user_phone);
+      const cName = client ? client.name : 'Client';
+
+      $('modalShadeName').textContent = (gen.style_name || 'LOOK').toUpperCase();
+      $('modalSourceImg').src = gen.source_image_url || gen.image_url;
+      $('modalRenderedImg').src = gen.image_url;
+      $('modalClientInfo').textContent = `${cName} (${gen.user_phone})`;
+      $('modalDateInfo').textContent = new Date(gen.created_at).toLocaleString();
+
+      $('modalDownloadLink').href = gen.image_url;
+      $('modalDownloadLink').download = `KAMI_${(gen.style_name || 'Look').replace(/\s+/g,'_')}.png`;
+
+      $('inspectModal').classList.add('active');
+    };
+
+    $('closeModalBtn').addEventListener('click', () => {
+      $('inspectModal').classList.remove('active');
+      currentSelectedGen = null;
     });
+
+    $('inspectModal').addEventListener('click', e => {
+      if (e.target === $('inspectModal')) $('closeModalBtn').click();
+    });
+
+    $('modalDeleteBtn').addEventListener('click', async () => {
+      if (!currentSelectedGen) return;
+      if (!confirm('Delete this look record permanently?')) return;
+
+      try {
+        await sb.from('generations').delete().eq('id', currentSelectedGen.id);
+        showToast('RECORD DELETED');
+        $('inspectModal').classList.remove('active');
+        await fetchGenerations();
+      } catch (err) {
+        showToast('DELETE FAILED');
+      }
+    });
+
+    function esc(s) {
+      return String(s || '').replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' })[c]);
+    }
+
+    window.addEventListener('DOMContentLoaded', checkAdminAuth);
   </script>
 </body>
 </html>
