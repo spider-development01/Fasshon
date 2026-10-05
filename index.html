@@ -216,9 +216,13 @@
       max-width: 420px; width: 100%; text-align: center;
     }
 
-    /* CAMERA */
-    .camera-wrapper { position: absolute; inset: 0; background: #111; overflow: hidden; }
-    #cameraFeed { width: 100%; height: 100%; object-fit: cover; }
+    /* CAMERA (FULLSCREEN EDGE-TO-EDGE) */
+    .camera-wrapper {
+      position: absolute; inset: 0; background: #000; overflow: hidden;
+    }
+    #cameraFeed {
+      width: 100%; height: 100%; object-fit: cover; display: block;
+    }
     #cameraFeed.mirrored { transform: scaleX(-1); }
 
     .top-dock {
@@ -249,71 +253,26 @@
       display: flex; align-items: center; gap: 4px; cursor: pointer;
     }
 
-    .scanner-overlay {
-      position: absolute; inset: 0;
-      display: flex; flex-direction: column;
-      align-items: center; justify-content: center;
-      pointer-events: none; z-index: 20;
-    }
-    .scanner-frame {
-      position: relative;
-      width: min(85vw, 360px); aspect-ratio: 3 / 4;
-      box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.65);
-      border-radius: 24px;
-      border: 3px solid rgba(255, 255, 255, 0.4);
-    }
-    .scanner-frame .corner {
-      position: absolute; width: 26px; height: 26px;
-      border-color: var(--lime); border-style: solid; border-width: 0;
-    }
-    .corner-tl { top: -4px; left: -4px; border-top-width: 6px; border-left-width: 6px; border-top-left-radius: 20px; }
-    .corner-tr { top: -4px; right: -4px; border-top-width: 6px; border-right-width: 6px; border-top-right-radius: 20px; }
-    .corner-bl { bottom: -4px; left: -4px; border-bottom-width: 6px; border-left-width: 6px; border-bottom-left-radius: 20px; }
-    .corner-br { bottom: -4px; right: -4px; border-bottom-width: 6px; border-right-width: 6px; border-bottom-right-radius: 20px; }
-
     .bottom-dock {
       position: absolute;
-      bottom: max(20px, env(safe-area-inset-bottom));
+      bottom: max(22px, env(safe-area-inset-bottom));
       left: 50%; transform: translateX(-50%);
       background: var(--beige);
       border: var(--border-thick); border-radius: var(--radius-pill);
       padding: 10px 22px;
       display: flex; align-items: center;
-      gap: clamp(14px, 4vw, 24px);
+      gap: clamp(16px, 5vw, 28px);
       box-shadow: var(--shadow-solid); z-index: 50;
     }
     .shutter-btn {
-      width: clamp(62px, 17vw, 76px);
-      height: clamp(62px, 17vw, 76px);
+      width: clamp(66px, 18vw, 80px);
+      height: clamp(66px, 18vw, 80px);
       border-radius: 50%; background: var(--red);
       border: var(--border-thick);
       outline: 4px solid var(--white);
-      box-shadow: 0 4px 14px rgba(0,0,0,0.35);
+      box-shadow: 0 4px 14px rgba(0,0,0,0.4);
       flex-shrink: 0;
     }
-
-    /* CROP SCREEN */
-    .crop-viewport {
-      flex: 1; display: flex; align-items: center; justify-content: center;
-      background: var(--beige-surface); padding: 16px; overflow: hidden;
-    }
-    .crop-stage {
-      position: relative; width: 100%; max-width: 440px; aspect-ratio: 1 / 1;
-      border: var(--border-thick); border-radius: var(--radius-card);
-      box-shadow: var(--shadow-solid); overflow: hidden; background: #D9D9D3;
-      touch-action: none; cursor: grab;
-    }
-    .crop-stage:active { cursor: grabbing; }
-    .crop-img {
-      position: absolute; top: 50%; left: 50%;
-      transform-origin: center center; user-select: none; pointer-events: none;
-    }
-    .crop-grid {
-      position: absolute; inset: 0; pointer-events: none;
-      display: grid; grid-template-columns: 1fr 1fr 1fr; grid-template-rows: 1fr 1fr 1fr;
-      border: 2px solid rgba(255,255,255,0.45);
-    }
-    .crop-grid div { border: 1px solid rgba(255,255,255,0.25); }
 
     /* STUDIO */
     .studio-header {
@@ -334,7 +293,7 @@
       border-radius: var(--radius-card); padding: 10px;
       box-shadow: var(--shadow-solid);
       display: flex; justify-content: center; align-items: center;
-      height: clamp(280px, 42vh, 480px);
+      height: clamp(280px, 44vh, 480px);
       flex-shrink: 0; overflow: hidden; position: relative;
     }
     .preview-box {
@@ -525,12 +484,16 @@
       padding: 16px; touch-action: none;
     }
     .compare-stage {
-      position: relative; max-width: 90vw; max-height: 72vh; overflow: hidden;
+      position: relative; max-width: 92vw; max-height: 72vh; overflow: hidden;
       border: var(--border-thick); border-radius: var(--radius-card); box-shadow: var(--shadow-solid);
       display: flex; align-items: center; justify-content: center; touch-action: none;
+      background: var(--beige-surface);
     }
     .stage-wrapper { position: relative; width: 100%; height: 100%; display: block; }
-    .stage-img { display: block; width: 100%; height: 100%; object-fit: contain; user-select: none; pointer-events: none; }
+    .stage-img {
+      display: block; width: 100%; height: 100%; object-fit: contain; user-select: none; pointer-events: none;
+      transition: opacity 0.15s ease;
+    }
     #imgRendered {
       position: absolute; inset: 0;
       clip-path: polygon(50% 0, 100% 0, 100% 100%, 50% 100%);
@@ -563,7 +526,37 @@
       display: inline-flex; align-items: center; gap: 8px;
     }
 
-    /* VAULT */
+    /* SKELETON LOADERS */
+    @keyframes neoShimmer {
+      0% { background-position: -200% 0; }
+      100% { background-position: 200% 0; }
+    }
+    .shimmer-active {
+      background: linear-gradient(90deg, #E2E2DC 25%, #F4F4F0 50%, #E2E2DC 75%) !important;
+      background-size: 200% 100% !important;
+      animation: neoShimmer 1.4s infinite linear !important;
+    }
+
+    .compare-skeleton-overlay {
+      position: absolute; inset: 0; z-index: 80;
+      background: var(--beige-surface);
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px;
+      pointer-events: none; opacity: 0; transition: opacity 0.12s ease;
+    }
+    .compare-skeleton-overlay.active { opacity: 1; pointer-events: auto; }
+
+    /* VAULT SKELETON CARD */
+    .skeleton-card {
+      pointer-events: none; user-select: none;
+    }
+    .skeleton-thumb {
+      width: 100%; aspect-ratio: 1 / 1; border-radius: 10px; border: var(--border-thick);
+    }
+    .skeleton-line {
+      border-radius: 6px; border: var(--border-thin);
+    }
+
+    /* VAULT GALLERY */
     .gallery-grid {
       flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 14px;
       display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; align-content: start;
@@ -575,7 +568,7 @@
       display: flex; flex-direction: column; cursor: pointer; transition: transform 0.15s var(--bounce);
     }
     .gallery-card:active { transform: translate(2px, 2px); box-shadow: none; }
-    .gallery-card img { width: 100%; aspect-ratio: 1 / 1; object-fit: cover; display: block; border-radius: 10px; }
+    .gallery-card img { width: 100%; aspect-ratio: 1 / 1; object-fit: cover; display: block; border-radius: 10px; border-bottom: var(--border-thin); }
     .gallery-card-body { padding: 10px; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
     .gallery-card-name { font-family: var(--font-heading); font-size: clamp(0.68rem, 2.4vw, 0.78rem); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
@@ -589,7 +582,7 @@
     .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
     .loading-overlay {
-      position: absolute; inset: 0; background: rgba(26, 26, 26, 0.75); backdrop-filter: blur(5px);
+      position: absolute; inset: 0; background: rgba(26, 26, 26, 0.78); backdrop-filter: blur(5px);
       display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; z-index: 200;
       opacity: 0; pointer-events: none; transition: opacity 0.15s ease; text-align: center; padding: 20px;
     }
@@ -676,7 +669,7 @@
     </div>
   </section>
 
-  <!-- VIEW 1: CAMERA -->
+  <!-- VIEW 1: FULLSCREEN CAMERA (NO SQUARE CROP GUIDES) -->
   <section id="cameraScreen" class="view-screen">
     <div class="top-dock">
       <div class="brand-logo">KAMI</div>
@@ -690,19 +683,8 @@
       </div>
     </div>
 
-    <div class="camera-wrapper">
+    <div class="camera-wrapper" id="cameraWrapper">
       <video id="cameraFeed" class="mirrored" autoplay playsinline muted></video>
-      <div class="scanner-overlay">
-        <div class="scanner-frame" id="scannerFrame">
-          <div class="corner corner-tl"></div>
-          <div class="corner corner-tr"></div>
-          <div class="corner corner-bl"></div>
-          <div class="corner corner-br"></div>
-        </div>
-        <div id="aiStatusBadge" class="badge" style="background:var(--lime); margin-top:14px;">
-          <i class="bi bi-view-finder" style="margin-right:4px;"></i> ALIGN FACE IN FRAME
-        </div>
-      </div>
     </div>
 
     <div class="bottom-dock">
@@ -712,29 +694,7 @@
     </div>
   </section>
 
-  <!-- VIEW 2: CROP SCREEN (HAIRSTYLE MODE ONLY) -->
-  <section id="cropScreen" class="view-screen">
-    <header class="studio-header">
-      <button id="cropCancelBtn" class="btn-pill"><i class="bi bi-x-lg"></i> CANCEL</button>
-      <h2 style="font-size:0.95rem; font-family:var(--font-heading);">CROP 1:1 SQUARE</h2>
-      <button id="cropConfirmBtn" class="btn-pill" style="background:var(--lime);"><i class="bi bi-check2"></i> DONE</button>
-    </header>
-    <div class="crop-viewport">
-      <div class="crop-stage" id="cropStage">
-        <img id="cropImage" class="crop-img" alt="Crop" />
-        <div class="crop-grid">
-          <div></div><div></div><div></div>
-          <div></div><div></div><div></div>
-          <div></div><div></div><div></div>
-        </div>
-      </div>
-    </div>
-    <div style="padding:12px; text-align:center; font-size:0.74rem; font-weight:800; color:#555;">
-      DRAG TO PAN • PINCH / SCROLL TO ZOOM
-    </div>
-  </section>
-
-  <!-- VIEW 3: STUDIO -->
+  <!-- VIEW 2: STUDIO -->
   <section id="studioScreen" class="view-screen">
     <header class="studio-header">
       <button id="retakeBtn" class="btn-pill"><i class="bi bi-arrow-left"></i> CAMERA</button>
@@ -814,7 +774,6 @@
           </div>
           <div style="display:flex; align-items:center; gap:6px;">
             <div id="styleQuotaBadge" class="badge" style="background:var(--pink); color:white;">0 / 5 USED</div>
-            <button id="openCropBtn" class="btn-pill" style="font-size:0.65rem; padding:6px 10px;"><i class="bi bi-crop"></i> CROP 1:1</button>
           </div>
         </div>
 
@@ -844,7 +803,7 @@
     </main>
   </section>
 
-  <!-- VIEW 4: COMPARE SCREEN -->
+  <!-- VIEW 3: COMPARE SCREEN -->
   <section id="compareScreen" class="view-screen">
     <div class="compare-top-nav">
       <button id="compareBackBtn" class="btn-pill"><i class="bi bi-arrow-left"></i> BACK</button>
@@ -862,6 +821,13 @@
 
     <div class="compare-viewport">
       <div class="compare-stage" id="compareStage">
+        <!-- IN-STAGE SKELETON LOADER PREVENTS GHOSTING -->
+        <div id="compareSkeleton" class="compare-skeleton-overlay">
+          <div class="badge shimmer-active" style="padding:10px 18px; font-size:0.8rem; background:var(--white); box-shadow:var(--shadow-sm);">
+            <i class="bi bi-hourglass-split"></i> LOADING LOOK...
+          </div>
+        </div>
+
         <div class="stage-badge stage-badge-left" id="badgeBefore">ORIGINAL</div>
         <div class="stage-badge stage-badge-right" id="badgeAfter">NEW LOOK</div>
         <div class="stage-wrapper">
@@ -880,7 +846,7 @@
     </button>
   </section>
 
-  <!-- VIEW 5: VAULT SCREEN -->
+  <!-- VIEW 4: VAULT SCREEN -->
   <section id="galleryScreen" class="view-screen">
     <header class="studio-header">
       <button id="closeGalleryBtn" class="btn-pill"><i class="bi bi-arrow-left"></i> BACK</button>
@@ -894,7 +860,7 @@
     import { ImageSegmenter, FilesetResolver } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/vision_bundle.mjs";
 
     /* ==========================================================================
-       SUPABASE & STATE INITIALIZATION
+       SUPABASE & CORE CONFIG
        ========================================================================== */
     const SUPABASE_URL = 'https://rmfubnduytozikcgzvok.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJtZnVibmR1eXRvemlrY2d6dm9rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2OTIyMDgsImV4cCI6MjA5NzI2ODIwOH0.XmxDD8mH8rgq3OZmD7jVophtH2W3NNDgSRJKC3RXvJU';
@@ -905,7 +871,7 @@
     const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
     /* ==========================================================================
-       LOCAL WEBP COMPRESSION PIPELINE
+       ON-DEVICE WEBP PIPELINE
        ========================================================================== */
     const WEBP_QUALITY       = 0.82;
     const WEBP_QUALITY_HIGH  = 0.90;
@@ -1030,11 +996,10 @@
     let userHairstyleLimit = 5;
     let usedHairstyleCount = 0;
 
-    let activeStudioMode = 'color'; // 'color' | 'style'
+    let activeStudioMode = 'color';
     let originalImageData = null;
     let originalWebpBlob = null;
     let originalDataURL = null;
-    let croppedSquareBlob = null;
     let hairConfidenceMask = null;
     let canvasW = 0, canvasH = 0;
 
@@ -1050,25 +1015,19 @@
     let renderScheduled = false;
     let openedFromVault = false;
     let toastTimer = null;
+    let compareLoadToken = 0;
 
     // Compare View Mode variable explicitly declared
-    let currentCompareMode = 'slide'; // 'slide' | 'before' | 'after'
+    let currentCompareMode = 'slide';
 
-    // Default: hair is untouched natural
+    // Default natural hair
     let currentColorApplied = false;
     let currentShadeName = "Natural";
     let targetH = 26, targetS = 38, currentLift = 0;
     let selectedFamily = "all";
     let slidersUnlocked = false;
 
-    // Crop interaction
-    let cropImgX = 0, cropImgY = 0, cropImgScale = 1;
-    let isCroppingPointer = false;
-    let cropStartX = 0, cropStartY = 0;
-    const activePointers = new Map();
-    let prevDiff = -1;
-
-    // Reference attachment
+    // Optional reference cut
     let refBlob = null;
 
     /* ==========================================================================
@@ -1139,7 +1098,7 @@
     }
 
     /* ==========================================================================
-       SALON COLOUR SHADES
+       SHADE CATALOG
        ========================================================================== */
     const SHADE_CATALOG = [
       { name: "Jet Black",         family: "browns", h: 30,  s: 4,  l: 8 },
@@ -1322,7 +1281,6 @@
     const screens = {
       login: $('loginScreen'),
       camera: $('cameraScreen'),
-      crop: $('cropScreen'),
       studio: $('studioScreen'),
       compare: $('compareScreen'),
       gallery: $('galleryScreen')
@@ -1514,20 +1472,19 @@
           });
         }
 
-        $('aiStatusBadge').innerHTML = '<i class="bi bi-view-finder" style="margin-right:4px;"></i> ALIGN FACE IN FRAME';
         if (pendingImage) {
           const queued = pendingImage;
           pendingImage = null;
           processStudioImage(queued).catch(() => hideLoading());
         }
-      } catch (_) {
-        $('aiStatusBadge').innerHTML = '<i class="bi bi-exclamation-triangle"></i> AI INITIALISING...';
+      } catch (err) {
+        console.warn("AI Model initialisation notice:", err);
       }
     }
     initModel();
 
     /* ==========================================================================
-       CAMERA & WYSIWYG CAPTURE
+       FULLSCREEN CAMERA & WYSIWYG CAPTURE
        ========================================================================== */
     const cameraFeed = $('cameraFeed');
 
@@ -1561,30 +1518,29 @@
       startCamera();
     });
 
+    /**
+     * Captures the full WYSIWYG camera image matching viewport framing.
+     */
     function captureCamera() {
       const vw = cameraFeed.videoWidth;
       const vh = cameraFeed.videoHeight;
       if (!vw || !vh) return null;
 
-      const scannerEl = $('scannerFrame');
-      const videoRect = cameraFeed.getBoundingClientRect();
-      const frameRect = scannerEl ? scannerEl.getBoundingClientRect() : videoRect;
+      const rect = cameraFeed.getBoundingClientRect();
+      const containerW = rect.width || window.innerWidth;
+      const containerH = rect.height || window.innerHeight;
 
-      const scale = Math.max(videoRect.width / vw, videoRect.height / vh);
-      const renderedW = vw * scale;
-      const renderedH = vh * scale;
-      const offsetX = (videoRect.width - renderedW) / 2;
-      const offsetY = (videoRect.height - renderedH) / 2;
+      const videoRatio = vw / vh;
+      const containerRatio = containerW / containerH;
 
-      let sx = ((frameRect.left - videoRect.left) - offsetX) / scale;
-      let sy = ((frameRect.top - videoRect.top) - offsetY) / scale;
-      let sWidth = frameRect.width / scale;
-      let sHeight = frameRect.height / scale;
-
-      sx = Math.max(0, Math.min(vw - 1, sx));
-      sy = Math.max(0, Math.min(vh - 1, sy));
-      sWidth = Math.max(1, Math.min(sWidth, vw - sx));
-      sHeight = Math.max(1, Math.min(sHeight, vh - sy));
+      let sx = 0, sy = 0, sWidth = vw, sHeight = vh;
+      if (containerRatio > videoRatio) {
+        sHeight = vw / containerRatio;
+        sy = (vh - sHeight) / 2;
+      } else {
+        sWidth = vh * containerRatio;
+        sx = (vw - sWidth) / 2;
+      }
 
       const cvs = document.createElement('canvas');
       cvs.width = Math.round(sWidth);
@@ -1594,10 +1550,8 @@
       if (cameraFacing === 'user') {
         ctx.translate(cvs.width, 0);
         ctx.scale(-1, 1);
-        ctx.drawImage(cameraFeed, sx, sy, sWidth, sHeight, 0, 0, cvs.width, cvs.height);
-      } else {
-        ctx.drawImage(cameraFeed, sx, sy, sWidth, sHeight, 0, 0, cvs.width, cvs.height);
       }
+      ctx.drawImage(cameraFeed, sx, sy, sWidth, sHeight, 0, 0, cvs.width, cvs.height);
       return cvs;
     }
 
@@ -1656,10 +1610,10 @@
     async function processStudioImage(source) {
       if (!source) return;
 
-      const maxDim = 1280;
+      const maxDim = 1440;
       let w = source.naturalWidth || source.videoWidth || source.width;
       let h = source.naturalHeight || source.videoHeight || source.height;
-      if (!w || !h) throw new Error('Invalid image');
+      if (!w || !h) throw new Error('Invalid image dimensions');
 
       if (w > maxDim || h > maxDim) {
         if (w > h) { h = Math.round((h * maxDim) / w); w = maxDim; }
@@ -1681,7 +1635,6 @@
       currentShadeName = "Natural";
       $('currentShadeBadge').textContent = 'NATURAL';
 
-      croppedSquareBlob = null;
       stylePreviewImg.classList.add('hidden');
       hairCanvas.classList.remove('hidden');
 
@@ -2014,92 +1967,6 @@
       });
     }
 
-    $('openCropBtn').addEventListener('click', () => {
-      if (!originalDataURL) return;
-      const img = $('cropImage');
-      img.onload = () => {
-        const stageW = $('cropStage').clientWidth || 360;
-        const natW = img.naturalWidth || 800;
-        const natH = img.naturalHeight || 800;
-        cropImgScale = Math.max(stageW / natW, stageW / natH);
-        cropImgX = 0; cropImgY = 0;
-        updateCropTransform();
-        activateScreen(screens.crop);
-      };
-      img.src = originalDataURL;
-    });
-
-    function updateCropTransform() {
-      $('cropImage').style.transform = `translate(-50%, -50%) translate(${cropImgX}px, ${cropImgY}px) scale(${cropImgScale})`;
-    }
-
-    const cropStage = $('cropStage');
-    cropStage.addEventListener('pointerdown', e => {
-      activePointers.set(e.pointerId, e);
-      if (activePointers.size === 1) {
-        isCroppingPointer = true;
-        cropStartX = e.clientX - cropImgX;
-        cropStartY = e.clientY - cropImgY;
-        try { cropStage.setPointerCapture(e.pointerId); } catch (_) {}
-      }
-    });
-
-    cropStage.addEventListener('pointermove', e => {
-      if (!activePointers.has(e.pointerId)) return;
-      activePointers.set(e.pointerId, e);
-
-      if (activePointers.size === 2) {
-        const pts = Array.from(activePointers.values());
-        const curDiff = Math.hypot(pts[0].clientX - pts[1].clientX, pts[0].clientY - pts[1].clientY);
-        if (prevDiff > 0) {
-          cropImgScale = Math.max(0.4, Math.min(5.0, cropImgScale * (curDiff / prevDiff)));
-          updateCropTransform();
-        }
-        prevDiff = curDiff;
-        return;
-      }
-
-      if (isCroppingPointer && activePointers.size === 1) {
-        cropImgX = e.clientX - cropStartX;
-        cropImgY = e.clientY - cropStartY;
-        updateCropTransform();
-      }
-    });
-
-    function handleCropPointerUp(e) {
-      activePointers.delete(e.pointerId);
-      if (activePointers.size < 2) prevDiff = -1;
-      if (activePointers.size === 0) {
-        isCroppingPointer = false;
-        try { cropStage.releasePointerCapture(e.pointerId); } catch (_) {}
-      }
-    }
-    cropStage.addEventListener('pointerup', handleCropPointerUp);
-    cropStage.addEventListener('pointercancel', handleCropPointerUp);
-
-    $('cropCancelBtn').addEventListener('click', () => activateScreen(screens.studio));
-
-    $('cropConfirmBtn').addEventListener('click', async () => {
-      const stageW = cropStage.clientWidth || 360;
-      const img = $('cropImage');
-      const cvs = document.createElement('canvas');
-      cvs.width = 1024; cvs.height = 1024;
-      const ctx = cvs.getContext('2d');
-      ctx.fillStyle = '#EAEAE4';
-      ctx.fillRect(0, 0, 1024, 1024);
-
-      const scaleFactor = 1024 / stageW;
-      const cx = 512 + (cropImgX * scaleFactor);
-      const cy = 512 + (cropImgY * scaleFactor);
-      const dw = (img.naturalWidth || 800) * cropImgScale * scaleFactor;
-      const dh = (img.naturalHeight || 800) * cropImgScale * scaleFactor;
-
-      ctx.drawImage(img, cx - dw / 2, cy - dh / 2, dw, dh);
-      croppedSquareBlob = await encodeCanvas(cvs, WEBP_QUALITY_HIGH);
-      showToast('1:1 CROPPED FOR HAIRSTYLE');
-      activateScreen(screens.studio);
-    });
-
     $('refCard').addEventListener('click', e => {
       if (e.target.closest('#clearRefBtn')) return;
       $('refFileInput').click();
@@ -2132,7 +1999,7 @@
     });
 
     /* ==========================================================================
-       AI HAIRSTYLE GENERATION
+       AI HAIRSTYLE GENERATION (PROPORTIONAL, UNCROPPED)
        ========================================================================== */
     $('executeStyleBtn').addEventListener('click', async () => {
       if (!sb) {
@@ -2169,21 +2036,8 @@
         return;
       }
 
-      let sourceToUpload = croppedSquareBlob;
-      if (!sourceToUpload) {
-        const minDim = Math.min(canvasW, canvasH);
-        const autoCvs = document.createElement('canvas');
-        autoCvs.width = 1024; autoCvs.height = 1024;
-        const autoCtx = autoCvs.getContext('2d');
-        autoCtx.imageSmoothingEnabled = true;
-        autoCtx.imageSmoothingQuality = 'high';
-        autoCtx.drawImage(
-          hairCanvas,
-          (canvasW - minDim) / 2, (canvasH - minDim) / 2, minDim, minDim,
-          0, 0, 1024, 1024
-        );
-        sourceToUpload = await encodeCanvas(autoCvs, WEBP_QUALITY_HIGH);
-      }
+      // Proportional full photo upload (no forced 1024x1024 square crop)
+      const sourceToUpload = originalWebpBlob || await compressToWebP(hairCanvas, { maxDim: 1440, quality: WEBP_QUALITY_HIGH });
 
       showLoading("STYLING WITH KAMI AI...", true);
       let sec = 0;
@@ -2202,7 +2056,7 @@
           contentType: sourceToUpload.type || 'image/webp',
           upsert: true
         });
-        if (upSource.error) throw new Error('Upload failed');
+        if (upSource.error) throw new Error('Photo upload failed');
         const sourcePublicUrl = publicUrlFor(sourcePath);
 
         const imageUrls = [sourcePublicUrl];
@@ -2288,27 +2142,68 @@
     });
 
     /* ==========================================================================
-       COMPARE VIEW ENGINE
+       GHOST-FREE COMPARE ENGINE WITH SKELETON PRELOADING
        ========================================================================== */
-    function openCompareWithImages(sourceSrc, renderedSrc, title, fromVault = false) {
+    function preloadImage(url) {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        if (typeof url === 'string' && !url.startsWith('data:')) img.crossOrigin = 'anonymous';
+        img.onload = () => resolve(img);
+        img.onerror = () => reject(new Error('Preload failed'));
+        img.src = url;
+      });
+    }
+
+    async function openCompareWithImages(sourceSrc, renderedSrc, title, fromVault = false) {
       openedFromVault = !!fromVault;
-      $('imgSource').src = sourceSrc;
-      $('imgRendered').src = renderedSrc;
+      const currentToken = ++compareLoadToken;
+
+      const skeleton = $('compareSkeleton');
+      const imgSource = $('imgSource');
+      const imgRendered = $('imgRendered');
+
+      // Instantly clear and hide previous images to eradicate ghosting
+      skeleton.classList.add('active');
+      imgSource.style.opacity = '0';
+      imgRendered.style.opacity = '0';
+      imgSource.removeAttribute('src');
+      imgRendered.removeAttribute('src');
+
       $('badgeAfter').textContent = (title || 'NEW LOOK').toUpperCase();
-
-      const tempImg = new Image();
-      tempImg.onload = () => {
-        if (tempImg.naturalWidth && tempImg.naturalHeight) {
-          $('compareStage').style.aspectRatio = `${tempImg.naturalWidth} / ${tempImg.naturalHeight}`;
-        }
-      };
-      tempImg.src = sourceSrc;
-
-      setSlider(50);
-      setCompareMode('slide');
       activateScreen(screens.compare);
-      cachedShareBlob = null;
-      buildCollageBlob().then(b => { cachedShareBlob = b; }).catch(() => { cachedShareBlob = null; });
+      setCompareMode('slide');
+
+      try {
+        // Concurrently decode both images in memory
+        const [loadedSource, loadedRendered] = await Promise.all([
+          preloadImage(sourceSrc),
+          preloadImage(renderedSrc)
+        ]);
+
+        // Guard against race conditions if user rapidly taps multiple looks
+        if (currentToken !== compareLoadToken) return;
+
+        const nw = loadedSource.naturalWidth || loadedRendered.naturalWidth;
+        const nh = loadedSource.naturalHeight || loadedRendered.naturalHeight;
+        if (nw && nh) {
+          $('compareStage').style.aspectRatio = `${nw} / ${nh}`;
+        }
+
+        imgSource.src = sourceSrc;
+        imgRendered.src = renderedSrc;
+
+        // Smooth reveal with zero flicker
+        imgSource.style.opacity = '1';
+        imgRendered.style.opacity = '1';
+        skeleton.classList.remove('active');
+
+        setSlider(50);
+        cachedShareBlob = null;
+        buildCollageBlob().then(b => { cachedShareBlob = b; }).catch(() => { cachedShareBlob = null; });
+      } catch (err) {
+        skeleton.classList.remove('active');
+        showToast("ERROR LOADING LOOK IMAGES");
+      }
     }
 
     $('viewCompareBtn').addEventListener('click', async () => {
@@ -2326,18 +2221,7 @@
         return;
       }
 
-      $('imgSource').src = originalDataURL;
-      $('imgRendered').src = canvasToDataURL(hairCanvas, WEBP_QUALITY_HIGH);
-      if (canvasW && canvasH) $('compareStage').style.aspectRatio = `${canvasW} / ${canvasH}`;
-
-      $('badgeAfter').textContent = currentShadeName.toUpperCase();
-      setSlider(50);
-      setCompareMode('slide');
-      openedFromVault = false;
-      activateScreen(screens.compare);
-
-      cachedShareBlob = null;
-      buildCollageBlob().then(b => { cachedShareBlob = b; }).catch(() => { cachedShareBlob = null; });
+      openCompareWithImages(originalDataURL, canvasToDataURL(hairCanvas, WEBP_QUALITY_HIGH), currentShadeName, false);
       saveLookToVault(false);
     });
 
@@ -2569,12 +2453,24 @@
     });
 
     /* ==========================================================================
-       VAULT GALLERY
+       VAULT GALLERY WITH SKELETON PLACEHOLDERS
        ========================================================================== */
+    function renderVaultSkeletons() {
+      const grid = $('galleryGrid');
+      grid.innerHTML = Array(4).fill(0).map(() => `
+        <div class="gallery-card skeleton-card">
+          <div class="skeleton-thumb shimmer-active"></div>
+          <div class="gallery-card-body">
+            <div class="skeleton-line shimmer-active" style="width:75%; height:14px; margin-bottom:4px;"></div>
+            <div class="skeleton-line shimmer-active" style="width:45%; height:11px;"></div>
+          </div>
+        </div>
+      `).join('');
+    }
+
     async function loadUserVault() {
       activateScreen(screens.gallery);
-      const grid = $('galleryGrid');
-      grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:30px; font-weight:800;">LOADING LOOKS...</div>';
+      renderVaultSkeletons();
 
       let cloudItems = [];
       if (sb && currentUserPhone) {
@@ -2625,6 +2521,7 @@
 
       $('vaultCountBadge').textContent = `${finalItems.length} / ${LOCAL_VAULT_LIMIT}`;
 
+      const grid = $('galleryGrid');
       if (finalItems.length === 0) {
         grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:30px; font-weight:800;">NO LOOKS SAVED YET</div>';
         return;
