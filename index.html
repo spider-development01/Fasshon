@@ -1,25 +1,3 @@
-Root Cause of the Bug
-
-In strict mode (which <script type="module"> enforces by default), assigning to
-or referencing an undeclared variable throws a fatal ReferenceError.
-
-1.  currentCompareMode was used in setCompareMode(mode) and in the compareStage
-    pointer event listener, but was never declared with let or var at the top of
-    the script.
-2.  When the AI transformation succeeded or when a saved look was tapped in the
-    Vault, openCompareWithImages(...) invoked setCompareMode('slide'). This
-    threw ReferenceError: currentCompareMode is not defined.
-3.  The try ... catch block in the AI generator caught this error and surfaced
-    it in the custom brutalist modal with the text: currentCompareMode is not
-    defined.
-4.  Inside openCompareWithImages, openedFromVault was also inadvertently
-    hardcoded to false, causing the "BACK" button to redirect to the
-    camera/studio instead of returning to the Vault when inspecting saved looks.
-
-Complete, Production-Grade Fixed Code
-
-Replace your entire file with the fully audited, production-grade code below:
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
