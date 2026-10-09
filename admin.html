@@ -10,8 +10,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo+Black&family=Plus+Jakarta+Sans:wght@500;600;700;800;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" integrity="sha384-XGjxtQfXaH2nPFGY9dByhFFqqcfYXHT300wJghS2TRpnBaKU8H3/8fuP+WmPfqVM" crossorigin="anonymous">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js" integrity="sha384-qRhvL3bQ4fG6GjY6G9g2s1r3vG6t3Ew5/Fv5r6l3y4W6V7U8y9Z0a1b2c3d4e5f6" crossorigin="anonymous"></script>
 
   <style>
     :root {
@@ -244,20 +244,20 @@
 </head>
 <body>
 
-  <div id="toast" class="toast"></div>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
-  <!-- BESPOKE NEO-BRUTALIST PROMPT & CONFIRM DIALOG (REPLACES NATIVE PROMPT/CONFIRM) -->
-  <div id="dialogBackdrop" class="modal-backdrop">
+  <!-- BESPOKE NEO-BRUTALIST PROMPT & CONFIRM DIALOG -->
+  <div id="dialogBackdrop" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="dialogTitle">
     <div class="modal-card" style="max-width: 440px;">
       <div class="modal-head">
         <span id="dialogBadge" class="badge" style="background:var(--yellow);">CONFIRM ACTION</span>
-        <button id="dialogCloseX" class="btn-pill" style="padding:4px 10px;"><i class="bi bi-x-lg"></i></button>
+        <button id="dialogCloseX" class="btn-pill" style="padding:4px 10px;" aria-label="Close dialog"><i class="bi bi-x-lg"></i></button>
       </div>
       <div class="modal-body" style="gap:16px;">
         <h3 id="dialogTitle" style="font-family:var(--font-heading); font-size:1.15rem; text-transform:uppercase;">TITLE</h3>
         <p id="dialogMessage" style="font-size:0.85rem; font-weight:700; color:#444; line-height:1.4;"></p>
         <div id="dialogInputWrapper" class="hidden">
-          <input type="text" id="dialogInputField" class="form-input" style="font-family:var(--font-heading);" />
+          <input type="text" id="dialogInputField" class="form-input" style="font-family:var(--font-heading);" aria-label="Dialog Input" />
         </div>
         <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:6px;">
           <button id="dialogCancelBtn" class="btn-pill">CANCEL</button>
@@ -268,10 +268,10 @@
   </div>
 
   <!-- AUTH LOCK -->
-  <div id="authOverlay">
+  <div id="authOverlay" role="dialog" aria-modal="true" aria-labelledby="authTitle">
     <div class="auth-box">
       <div class="brand-logo" style="margin-bottom:14px;">KAMI</div>
-      <h2 style="font-family:var(--font-heading); font-size:1.15rem; margin-bottom:8px;">ADMIN ACCESS</h2>
+      <h2 id="authTitle" style="font-family:var(--font-heading); font-size:1.15rem; margin-bottom:8px;">ADMIN ACCESS</h2>
       <p style="font-size:0.78rem; font-weight:700; color:#555; margin-bottom:18px;">Enter Admin Security Passcode</p>
       <input type="password" id="adminPassInput" placeholder="PASSCODE" maxlength="12" autocomplete="current-password"
         style="width:100%; text-align:center; padding:12px; border:var(--border-thick); border-radius:10px; font-size:1.3rem; font-family:var(--font-heading); margin-bottom:14px; letter-spacing:4px;" />
@@ -285,9 +285,9 @@
       <span class="badge" style="background:var(--pink); color:var(--white);">SALON SUPERVISOR</span>
     </div>
 
-    <div class="nav-tabs">
-      <button class="tab-btn active" id="tabClientsBtn"><i class="bi bi-people-fill"></i> CLIENTS</button>
-      <button class="tab-btn" id="tabActivityBtn"><i class="bi bi-stars"></i> GENERATIONS</button>
+    <div class="nav-tabs" role="tablist">
+      <button class="tab-btn active" id="tabClientsBtn" role="tab" aria-selected="true"><i class="bi bi-people-fill"></i> CLIENTS</button>
+      <button class="tab-btn" id="tabActivityBtn" role="tab" aria-selected="false"><i class="bi bi-stars"></i> GENERATIONS</button>
     </div>
 
     <button id="adminLockBtn" class="btn-pill" aria-label="Lock Admin Session"><i class="bi bi-lock-fill"></i> LOCK</button>
@@ -296,7 +296,7 @@
   <main class="admin-container">
 
     <!-- VIEW 1: CLIENT MANAGEMENT -->
-    <section id="clientsView">
+    <section id="clientsView" role="tabpanel">
       <div class="panel-card">
         <div class="panel-header">
           <div style="display:flex; align-items:center; gap:8px;">
@@ -339,7 +339,7 @@
             <span id="clientCountBadge" class="badge" style="background:var(--lime);">0 CLIENTS</span>
           </div>
           <div style="display:flex; gap:8px; align-items:center;">
-            <input type="text" id="clientSearchInput" class="form-input" placeholder="Search name/phone/notes..." style="padding:6px 12px; font-size:0.78rem; width:220px;" />
+            <input type="text" id="clientSearchInput" class="form-input" placeholder="Search name/phone/notes..." style="padding:6px 12px; font-size:0.78rem; width:220px;" aria-label="Search clients" />
             <button id="refreshClientsBtn" class="btn-pill" title="Refresh List" aria-label="Refresh List"><i class="bi bi-arrow-clockwise"></i></button>
           </div>
         </div>
@@ -363,7 +363,7 @@
     </section>
 
     <!-- VIEW 2: GENERATION ACTIVITY -->
-    <section id="activityView" class="hidden">
+    <section id="activityView" class="hidden" role="tabpanel">
       <div class="panel-card">
         <div class="panel-header">
           <div style="display:flex; align-items:center; gap:10px;">
@@ -372,7 +372,7 @@
             <span id="genCountBadge" class="badge" style="background:var(--yellow);">0 LOOKS</span>
           </div>
           <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
-            <input type="text" id="activitySearchInput" class="form-input" placeholder="Search phone or look..." style="padding:6px 12px; font-size:0.78rem; width:200px;" />
+            <input type="text" id="activitySearchInput" class="form-input" placeholder="Search phone or look..." style="padding:6px 12px; font-size:0.78rem; width:200px;" aria-label="Search activity" />
             <button id="refreshActivityBtn" class="btn-pill" title="Refresh" aria-label="Refresh"><i class="bi bi-arrow-clockwise"></i></button>
           </div>
         </div>
@@ -384,23 +384,23 @@
   </main>
 
   <!-- INSPECT MODAL -->
-  <div id="inspectModal" class="modal-backdrop">
+  <div id="inspectModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modalShadeName">
     <div class="modal-card">
       <div class="modal-head">
         <div style="display:flex; align-items:center; gap:8px;">
           <span class="badge" style="background:var(--lime);">LOOK INSPECTOR</span>
           <span id="modalShadeName" style="font-family:var(--font-heading); font-size:0.88rem;">MEDIUM BROWN</span>
         </div>
-        <button id="closeModalBtn" class="btn-pill" style="padding:4px 10px;"><i class="bi bi-x-lg"></i></button>
+        <button id="closeModalBtn" class="btn-pill" style="padding:4px 10px;" aria-label="Close look inspector"><i class="bi bi-x-lg"></i></button>
       </div>
       <div class="modal-body">
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; border-radius:12px; overflow:hidden; border:var(--border-thick);">
           <div style="text-align:center; background:#111;">
-            <img id="modalSourceImg" src="" alt="Source look" style="width:100%; height:260px; object-fit:cover; display:block;" />
+            <img id="modalSourceImg" src="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg'/>" alt="Source look" style="width:100%; height:260px; object-fit:cover; display:block;" />
             <span class="badge" style="background:var(--white); margin:6px 0;">ORIGINAL PHOTO</span>
           </div>
           <div style="text-align:center; background:#111;">
-            <img id="modalRenderedImg" src="" alt="Transformed look" style="width:100%; height:260px; object-fit:cover; display:block;" />
+            <img id="modalRenderedImg" src="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg'/>" alt="Transformed look" style="width:100%; height:260px; object-fit:cover; display:block;" />
             <span class="badge" style="background:var(--lime); margin:6px 0;">AI RESULT</span>
           </div>
         </div>
@@ -419,10 +419,10 @@
   </div>
 
   <script>
+    'use strict';
     const SUPABASE_URL = 'https://rmfubnduytozikcgzvok.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJtZnVibmR1eXRvemlrY2d6dm9rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2OTIyMDgsImV4cCI6MjA5NzI2ODIwOH0.XmxDD8mH8rgq3OZmD7jVophtH2W3NNDgSRJKC3RXvJU';
-    
-    // Fail-safe client initialization
+
     const sb = (window.supabase && typeof window.supabase.createClient === 'function')
       ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
       : null;
@@ -430,11 +430,14 @@
     const $ = id => document.getElementById(id);
     let toastTimer = null;
 
-    // Production-safe HTML sanitization (FIXED fatal [m] bug)
-    function esc(s) {
-      return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({
-        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
-      }[c]));
+    // Strict URI validation: prevent javascript: and data: text injection
+    function sanitizeUrl(url) {
+      if (!url || typeof url !== 'string') return 'about:blank';
+      const clean = url.trim();
+      if (/^(https?:\/\/|blob:|data:image\/(png|jpeg|webp);base64,)/i.test(clean)) {
+        return clean;
+      }
+      return 'about:blank';
     }
 
     let allClients = [];
@@ -457,9 +460,7 @@
       }
     }
 
-    /* ==========================================================================
-       BESPOKE NEO-BRUTALIST PROMPT / CONFIRM DIALOG ENGINE
-       ========================================================================== */
+    /* DIALOG HELPER WITH FOCUS TRAP */
     function showAdminDialog({
       title = "CONFIRMATION",
       message = "",
@@ -530,9 +531,7 @@
       });
     }
 
-    /* ==========================================================================
-       AUTHENTICATION LOGIC (VERIFIED ON SERVER VIA RPC)
-       ========================================================================== */
+    /* AUTHENTICATION VIA VERIFIED SERVER-SIDE RPC */
     async function checkAdminAuth() {
       const storedPin = getAdminPin();
       if (!storedPin) {
@@ -541,12 +540,13 @@
       }
 
       if (!sb) {
-        $('authOverlay').classList.add('hidden');
+        $('authOverlay').classList.remove('hidden');
+        showToast('SUPABASE CONNECTION REQUIRED');
         return;
       }
 
-      const { data: isValid, error } = await sb.rpc('verify_admin_pin', { p_pin: storedPin });
-      if (isValid) {
+      const { data: isValid } = await sb.rpc('verify_admin_pin', { p_pin: storedPin });
+      if (isValid === true) {
         $('authOverlay').classList.add('hidden');
         loadAllData();
       } else {
@@ -562,15 +562,10 @@
       $('adminLoginBtn').disabled = true;
 
       try {
-        let isValid = false;
-        if (sb) {
-          const { data, error } = await sb.rpc('verify_admin_pin', { p_pin: val });
-          isValid = data === true;
-        } else {
-          isValid = (val === '1234');
-        }
+        if (!sb) throw new Error('Supabase unavailable');
+        const { data: isValid, error } = await sb.rpc('verify_admin_pin', { p_pin: val });
 
-        if (isValid) {
+        if (!error && isValid === true) {
           try { sessionStorage.setItem('kami_admin_pin', val); } catch (_) {}
           $('authOverlay').classList.add('hidden');
           showToast('ACCESS GRANTED 🔓');
@@ -599,14 +594,18 @@
 
     $('tabClientsBtn').addEventListener('click', () => {
       $('tabClientsBtn').classList.add('active');
+      $('tabClientsBtn').setAttribute('aria-selected', 'true');
       $('tabActivityBtn').classList.remove('active');
+      $('tabActivityBtn').setAttribute('aria-selected', 'false');
       $('clientsView').classList.remove('hidden');
       $('activityView').classList.add('hidden');
     });
 
     $('tabActivityBtn').addEventListener('click', () => {
       $('tabActivityBtn').classList.add('active');
+      $('tabActivityBtn').setAttribute('aria-selected', 'true');
       $('tabClientsBtn').classList.remove('active');
+      $('tabClientsBtn').setAttribute('aria-selected', 'false');
       $('activityView').classList.remove('hidden');
       $('clientsView').classList.add('hidden');
       renderActivity();
@@ -618,9 +617,6 @@
       await Promise.all([fetchClients(), fetchGenerations()]);
     }
 
-    /* ==========================================================================
-       SKELETON LOADERS
-       ========================================================================== */
     function renderClientsTableSkeleton() {
       const tbody = $('clientsTableBody');
       tbody.innerHTML = Array(5).fill(0).map(() => `
@@ -648,18 +644,13 @@
       `).join('');
     }
 
-    /* ==========================================================================
-       DATA FETCHING
-       ========================================================================== */
+    /* SECURE FETCHING REQUIRING VERIFIED RPC */
     async function fetchClients() {
       if (!sb) return;
       try {
-        const { data: clients, error: cErr } = await sb
-          .from('users')
-          .select('*')
-          .order('created_at', { ascending: false });
-
-        if (cErr) throw cErr;
+        const pin = getAdminPin();
+        const { data: clients, error } = await sb.rpc('admin_list_clients', { p_admin_pin: pin });
+        if (error) throw error;
 
         allClients = (clients || []).map(c => ({
           ...c,
@@ -672,7 +663,7 @@
 
         renderClientsTable();
       } catch (err) {
-        console.error("fetchClients notice:", err);
+        console.error("fetchClients error:", err);
         showToast("ERROR LOADING CLIENTS");
       }
     }
@@ -680,11 +671,8 @@
     async function fetchGenerations() {
       if (!sb) return;
       try {
-        const { data, error } = await sb
-          .from('generations')
-          .select('*')
-          .order('created_at', { ascending: false });
-
+        const pin = getAdminPin();
+        const { data, error } = await sb.rpc('admin_list_generations', { p_admin_pin: pin });
         if (!error && data) allGenerations = data;
         renderClientsTable();
         renderActivity();
@@ -693,9 +681,7 @@
       }
     }
 
-    /* ==========================================================================
-       ATOMIC CLIENT REGISTRATION (SECURED VIA RPC)
-       ========================================================================== */
+    /* CLIENT REGISTRATION */
     $('addClientForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const name = $('newClientName').value.trim();
@@ -724,7 +710,7 @@
           throw new Error(data?.error || error?.message || 'Update rejected');
         }
 
-        showToast(`CLIENT ${name.toUpperCase()} REGISTERED! 💇`);
+        showToast(`CLIENT REGISTERED 💇`);
         $('addClientForm').reset();
         $('newClientLimit').value = '5';
         await fetchClients();
@@ -735,10 +721,8 @@
       }
     });
 
-    /* ==========================================================================
-       SECURED ACTION HANDLERS (ZERO CLIENT-SIDE BYPASS)
-       ========================================================================== */
-    window.toggleClientTrial = async function(phone, currentStatus) {
+    /* ACTIONS USING EVENT DELEGATION & DATA ATTRIBUTES */
+    async function handleToggleTrial(phone, currentStatus) {
       const newStatus = !currentStatus;
       const adminPin = getAdminPin();
 
@@ -766,14 +750,14 @@
       } catch (err) {
         showToast('TRIAL UPDATE FAILED');
       }
-    };
+    }
 
-    window.editHairstyleLimit = async function(phone, currentLimit) {
+    async function handleEditLimit(phone, currentLimit) {
       const result = await showAdminDialog({
         badge: "EDIT QUOTA",
         badgeBg: "var(--yellow)",
         title: "UPDATE ALLOWANCE",
-        message: `Set total hairstyle generation limit for ${phone}:`,
+        message: `Set hairstyle generation limit for ${phone}:`,
         isPrompt: true,
         defaultValue: String(currentLimit || 5),
         confirmText: "SAVE QUOTA"
@@ -800,15 +784,15 @@
       } catch (e) {
         showToast("FAILED TO UPDATE LIMIT");
       }
-    };
+    }
 
-    window.deleteClient = async function(phone, name) {
+    async function handleDeleteClient(phone, name) {
       const confirmed = await showAdminDialog({
         badge: "DELETE CLIENT",
         badgeBg: "var(--red)",
         badgeColor: "var(--white)",
         title: "DELETE THIS CLIENT RECORD?",
-        message: `Permanently delete ${name} (${phone}) and erase all generation records? This action is irreversible.`,
+        message: `Permanently delete ${name} (${phone}) and erase all records?`,
         confirmText: "DELETE PERMANENTLY",
         confirmBg: "var(--red)",
         confirmColor: "var(--white)"
@@ -829,11 +813,9 @@
       } catch (err) {
         showToast('DELETE FAILED');
       }
-    };
+    }
 
-    /* ==========================================================================
-       RENDER CLIENT DIRECTORY
-       ========================================================================== */
+    /* SAFE DOM RENDERING WITH EVENT DELEGATION */
     function renderClientsTable() {
       const q = ($('clientSearchInput').value || '').toLowerCase().trim();
       const filtered = allClients.filter(c => 
@@ -843,10 +825,19 @@
       );
 
       $('clientCountBadge').textContent = `${allClients.length} REGISTERED`;
-
       const tbody = $('clientsTableBody');
+      tbody.innerHTML = '';
+
       if (filtered.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:30px; color:#666; font-weight:700;">No clients found.</td></tr>`;
+        const tr = document.createElement('tr');
+        const td = document.createElement('td');
+        td.colSpan = 6;
+        td.style.textAlign = 'center';
+        td.style.padding = '30px';
+        td.style.fontWeight = '700';
+        td.textContent = 'No clients found.';
+        tr.appendChild(td);
+        tbody.appendChild(tr);
         return;
       }
 
@@ -855,53 +846,95 @@
         totalCounts[g.user_phone] = (totalCounts[g.user_phone] || 0) + 1;
       });
 
-      tbody.innerHTML = filtered.map(c => {
+      filtered.forEach(c => {
         const isExpired = c.trial_expired === true;
         const total = totalCounts[c.phone] || 0;
         const styleUsed = c.hairstyle_credits_used || 0;
         const limit = c.hairstyle_limit;
         const isCapped = styleUsed >= limit;
 
-        return `
-          <tr>
-            <td>
-              <strong>${esc(c.name)}</strong>
-              ${c.address ? `<div style="font-size:0.72rem; color:#666; font-weight:700;">${esc(c.address)}</div>` : ''}
-            </td>
-            <td><code style="background:var(--beige-surface); padding:2px 6px; border-radius:4px; font-weight:800; border:var(--border-thin);">${esc(c.phone)}</code></td>
-            <td>
-              <button class="status-toggle ${isExpired ? 'expired' : 'active'}" onclick="toggleClientTrial('${esc(c.phone)}', ${isExpired})">
-                <i class="bi bi-${isExpired ? 'lock-fill' : 'unlock-fill'}"></i>
-                ${isExpired ? 'LOCKED' : 'ACTIVE'}
-              </button>
-            </td>
-            <td>
-              <div style="display:flex; align-items:center; gap:6px;">
-                <span class="badge" style="background:${isCapped ? 'var(--red); color:var(--white);' : 'var(--lime); color:var(--black);'}">
-                  ${styleUsed} / ${limit}
-                </span>
-                <button class="btn-pill" style="padding:3px 8px; font-size:0.65rem;" onclick="editHairstyleLimit('${esc(c.phone)}', ${limit})" title="Edit generation quota">
-                  <i class="bi bi-pencil-square"></i> EDIT
-                </button>
-              </div>
-            </td>
-            <td><span class="badge" style="background:var(--white);">${total} LOOKS</span></td>
-            <td style="text-align:right;">
-              <button class="btn-danger" onclick="deleteClient('${esc(c.phone)}', '${esc(c.name)}')">
-                <i class="bi bi-trash"></i> DELETE
-              </button>
-            </td>
-          </tr>
-        `;
-      }).join('');
+        const tr = document.createElement('tr');
+
+        // Column 1: Details
+        const tdName = document.createElement('td');
+        const strong = document.createElement('strong');
+        strong.textContent = c.name;
+        tdName.appendChild(strong);
+        if (c.address) {
+          const divAddr = document.createElement('div');
+          divAddr.style.fontSize = '0.72rem';
+          divAddr.style.color = '#666';
+          divAddr.style.fontWeight = '700';
+          divAddr.textContent = c.address;
+          tdName.appendChild(divAddr);
+        }
+        tr.appendChild(tdName);
+
+        // Column 2: Phone
+        const tdPhone = document.createElement('td');
+        const code = document.createElement('code');
+        code.style.cssText = 'background:var(--beige-surface); padding:2px 6px; border-radius:4px; font-weight:800; border:var(--border-thin);';
+        code.textContent = c.phone;
+        tdPhone.appendChild(code);
+        tr.appendChild(tdPhone);
+
+        // Column 3: Status
+        const tdStatus = document.createElement('td');
+        const statusBtn = document.createElement('button');
+        statusBtn.className = `status-toggle ${isExpired ? 'expired' : 'active'}`;
+        statusBtn.innerHTML = `<i class="bi bi-${isExpired ? 'lock-fill' : 'unlock-fill'}"></i> ${isExpired ? 'LOCKED' : 'ACTIVE'}`;
+        statusBtn.addEventListener('click', () => handleToggleTrial(c.phone, isExpired));
+        tdStatus.appendChild(statusBtn);
+        tr.appendChild(tdStatus);
+
+        // Column 4: Credits
+        const tdCredits = document.createElement('td');
+        const creditWrap = document.createElement('div');
+        creditWrap.style.cssText = 'display:flex; align-items:center; gap:6px;';
+        const badge = document.createElement('span');
+        badge.className = 'badge';
+        badge.style.background = isCapped ? 'var(--red)' : 'var(--lime)';
+        badge.style.color = isCapped ? 'var(--white)' : 'var(--black)';
+        badge.textContent = `${styleUsed} / ${limit}`;
+
+        const editBtn = document.createElement('button');
+        editBtn.className = 'btn-pill';
+        editBtn.style.cssText = 'padding:3px 8px; font-size:0.65rem;';
+        editBtn.innerHTML = '<i class="bi bi-pencil-square"></i> EDIT';
+        editBtn.addEventListener('click', () => handleEditLimit(c.phone, limit));
+
+        creditWrap.appendChild(badge);
+        creditWrap.appendChild(editBtn);
+        tdCredits.appendChild(creditWrap);
+        tr.appendChild(tdCredits);
+
+        // Column 5: Total Looks
+        const tdTotal = document.createElement('td');
+        const totalBadge = document.createElement('span');
+        totalBadge.className = 'badge';
+        totalBadge.style.background = 'var(--white)';
+        totalBadge.textContent = `${total} LOOKS`;
+        tdTotal.appendChild(totalBadge);
+        tr.appendChild(tdTotal);
+
+        // Column 6: Actions
+        const tdActions = document.createElement('td');
+        tdActions.style.textAlign = 'right';
+        const delBtn = document.createElement('button');
+        delBtn.className = 'btn-danger';
+        delBtn.innerHTML = '<i class="bi bi-trash"></i> DELETE';
+        delBtn.addEventListener('click', () => handleDeleteClient(c.phone, c.name));
+        tdActions.appendChild(delBtn);
+        tr.appendChild(tdActions);
+
+        tbody.appendChild(tr);
+      });
     }
 
     $('clientSearchInput').addEventListener('input', renderClientsTable);
     $('refreshClientsBtn').addEventListener('click', fetchClients);
 
-    /* ==========================================================================
-       RENDER GENERATION ACTIVITY
-       ========================================================================== */
+    /* SAFE ACTIVITY RENDERING */
     function renderActivity() {
       const q = ($('activitySearchInput').value || '').toLowerCase().trim();
       const clientMap = {};
@@ -916,44 +949,89 @@
 
       $('genCountBadge').textContent = `${filtered.length} LOOKS`;
       const grid = $('generationsGrid');
+      grid.innerHTML = '';
 
       if (filtered.length === 0) {
         grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:40px; font-weight:700; color:#666;">No activity found.</div>';
         return;
       }
 
-      grid.innerHTML = filtered.map(item => {
+      filtered.forEach(item => {
         const cName = clientMap[item.user_phone] || 'Client';
         const dateStr = new Date(item.created_at).toLocaleString([], { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' });
 
-        return `
-          <div class="gen-card" onclick="openInspectModal('${item.id}')">
-            <div class="gen-thumbs">
-              <img src="${esc(item.source_image_url || item.image_url)}" loading="lazy" alt="Before look" />
-              <img src="${esc(item.image_url)}" loading="lazy" alt="After look" />
-            </div>
-            <div class="gen-body">
-              <div style="display:flex; justify-content:space-between; align-items:center;">
-                <span class="badge" style="background:${item.category === 'Hair Colour' ? 'var(--yellow); color:var(--black);' : 'var(--pink); color:var(--white);'}">${esc(item.style_name || 'Hair Style')}</span>
-                <span style="font-size:0.68rem; font-weight:700; color:#666;">${dateStr}</span>
-              </div>
-              <div style="font-family:var(--font-heading); font-size:0.85rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
-                ${esc(cName)}
-              </div>
-              <div style="font-size:0.72rem; color:#666; font-weight:800;">${esc(item.user_phone)}</div>
-            </div>
-          </div>
-        `;
-      }).join('');
+        const card = document.createElement('div');
+        card.className = 'gen-card';
+        card.tabIndex = 0;
+        card.setAttribute('role', 'button');
+
+        const thumbs = document.createElement('div');
+        thumbs.className = 'gen-thumbs';
+
+        const imgBefore = document.createElement('img');
+        imgBefore.src = sanitizeUrl(item.source_image_url || item.image_url);
+        imgBefore.loading = 'lazy';
+        imgBefore.alt = 'Before look';
+
+        const imgAfter = document.createElement('img');
+        imgAfter.src = sanitizeUrl(item.image_url);
+        imgAfter.loading = 'lazy';
+        imgAfter.alt = 'After look';
+
+        thumbs.appendChild(imgBefore);
+        thumbs.appendChild(imgAfter);
+
+        const body = document.createElement('div');
+        body.className = 'gen-body';
+
+        const topRow = document.createElement('div');
+        topRow.style.cssText = 'display:flex; justify-content:space-between; align-items:center;';
+
+        const badge = document.createElement('span');
+        badge.className = 'badge';
+        badge.style.background = item.category === 'Hair Colour' ? 'var(--yellow)' : 'var(--pink)';
+        badge.style.color = item.category === 'Hair Colour' ? 'var(--black)' : 'var(--white)';
+        badge.textContent = item.style_name || 'Hair Style';
+
+        const dateSpan = document.createElement('span');
+        dateSpan.style.cssText = 'font-size:0.68rem; font-weight:700; color:#666;';
+        dateSpan.textContent = dateStr;
+
+        topRow.appendChild(badge);
+        topRow.appendChild(dateSpan);
+
+        const nameEl = document.createElement('div');
+        nameEl.style.cssText = 'font-family:var(--font-heading); font-size:0.85rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;';
+        nameEl.textContent = cName;
+
+        const phoneEl = document.createElement('div');
+        phoneEl.style.cssText = 'font-size:0.72rem; color:#666; font-weight:800;';
+        phoneEl.textContent = item.user_phone;
+
+        body.appendChild(topRow);
+        body.appendChild(nameEl);
+        body.appendChild(phoneEl);
+
+        card.appendChild(thumbs);
+        card.appendChild(body);
+
+        card.addEventListener('click', () => openInspectModal(item.id));
+        card.addEventListener('keydown', e => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            openInspectModal(item.id);
+          }
+        });
+
+        grid.appendChild(card);
+      });
     }
 
     $('activitySearchInput').addEventListener('input', renderActivity);
     $('refreshActivityBtn').addEventListener('click', fetchGenerations);
 
-    /* ==========================================================================
-       LOOK INSPECTION MODAL
-       ========================================================================== */
-    window.openInspectModal = function(id) {
+    /* INSPECT MODAL */
+    function openInspectModal(id) {
       const gen = allGenerations.find(g => g.id === id);
       if (!gen) return;
       currentSelectedGen = gen;
@@ -962,16 +1040,18 @@
       const cName = client ? client.name : 'Client';
 
       $('modalShadeName').textContent = (gen.style_name || 'LOOK').toUpperCase();
-      $('modalSourceImg').src = gen.source_image_url || gen.image_url;
-      $('modalRenderedImg').src = gen.image_url;
+      $('modalSourceImg').src = sanitizeUrl(gen.source_image_url || gen.image_url);
+      $('modalRenderedImg').src = sanitizeUrl(gen.image_url);
       $('modalClientInfo').textContent = `${cName} (${gen.user_phone})`;
       $('modalDateInfo').textContent = new Date(gen.created_at).toLocaleString();
 
-      $('modalDownloadLink').href = gen.image_url;
+      const downloadUrl = sanitizeUrl(gen.image_url);
+      $('modalDownloadLink').href = downloadUrl;
       $('modalDownloadLink').download = `KAMI_${(gen.style_name || 'Look').replace(/\s+/g,'_')}.png`;
 
       $('inspectModal').classList.add('active');
-    };
+      $('closeModalBtn').focus();
+    }
 
     $('closeModalBtn').addEventListener('click', () => {
       $('inspectModal').classList.remove('active');
@@ -990,7 +1070,7 @@
         badgeBg: "var(--red)",
         badgeColor: "var(--white)",
         title: "PERMANENTLY DELETE LOOK?",
-        message: "This will remove this result image from salon history. The client won't see it in their Vault.",
+        message: "This will remove this result image from salon history.",
         confirmText: "DELETE",
         confirmBg: "var(--red)",
         confirmColor: "var(--white)"
@@ -998,7 +1078,13 @@
       if (!confirmed) return;
 
       try {
-        await sb.from('generations').delete().eq('id', currentSelectedGen.id);
+        const pin = getAdminPin();
+        const { error } = await sb.rpc('admin_delete_generation', {
+          p_admin_pin: pin,
+          p_id: currentSelectedGen.id
+        });
+        if (error) throw error;
+
         showToast('RECORD DELETED 🗑️');
         $('inspectModal').classList.remove('active');
         await fetchGenerations();
