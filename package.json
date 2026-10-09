@@ -1,12 +1,15 @@
 {
-  "name": "code-in-black-inpainter",
-  "version": "1.0.0",
-  "description": "Image inpainting using Gemini AI",
+  "name": "kami-hair-studio",
+  "version": "1.1.0",
+  "description": "KAMI AI Hair & Colour Studio Production Web Application",
   "scripts": {
     "start": "wrangler pages dev .",
-    "deploy": "wrangler pages deploy ."
+    "deploy": "wrangler pages deploy .",
+    "lint": "eslint . --ext .html,.js",
+    "test": "node --test tests/**/*.test.js"
   },
   "devDependencies": {
-    "wrangler": "^3.0.0"
+    "eslint": "^8.57.0",
+    "wrangler": "^3.78.0"
   }
 }
