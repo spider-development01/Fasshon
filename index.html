@@ -314,7 +314,7 @@
       box-shadow: var(--shadow-sm); display: block;
     }
 
-    /* MODE TOGGLE */
+    /* MODE SWITCH */
     .mode-switch-bar {
       display: grid; grid-template-columns: 1fr 1fr;
       background: var(--white); border: var(--border-thick);
@@ -330,11 +330,9 @@
       background: var(--black); color: var(--lime);
       box-shadow: var(--shadow-xs);
     }
-    .mode-tab-btn.active.pink-mode {
-      background: var(--black); color: var(--pink);
-    }
+    .mode-tab-btn.active.pink-mode { background: var(--black); color: var(--pink); }
 
-    /* TOOL CARDS */
+    /* TOOL CARD */
     .tool-card {
       background: var(--white); border: var(--border-thick);
       border-radius: var(--radius-card); padding: 16px;
@@ -392,7 +390,7 @@
       overflow: hidden; text-overflow: ellipsis; padding: 0 2px;
     }
 
-    /* HAIRSTYLE CHIP GRID */
+    /* HAIRSTYLES GRID */
     .hairstyles-grid {
       display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
       gap: 8px; max-height: 280px; overflow-y: auto; padding: 6px;
@@ -413,7 +411,7 @@
       border-color: var(--black); box-shadow: var(--shadow-sm); transform: translate(-2px, -2px);
     }
 
-    /* REFERENCE UPLOAD CARD */
+    /* REFERENCE CARD */
     .ref-uploader {
       background: var(--beige-surface); border: var(--border-thick);
       border-radius: 12px; padding: 12px; display: flex; align-items: center;
@@ -549,7 +547,6 @@
     .gallery-card-body { padding: 10px; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
     .gallery-card-name { font-family: var(--font-heading); font-size: clamp(0.68rem, 2.4vw, 0.78rem); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-    /* OVERLAYS */
     .toast {
       position: fixed; top: max(18px, env(safe-area-inset-top)); left: 50%;
       transform: translateX(-50%) translateY(-100px); background: var(--black); color: var(--white);
@@ -589,7 +586,7 @@
     <div id="loadingTimer" class="timer-badge hidden">0S ELAPSED</div>
   </div>
 
-  <!-- CUSTOM NEO-BRUTALIST MODAL DIALOG -->
+  <!-- MODAL DIALOG -->
   <div id="kamiCustomModal" class="custom-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="customModalTitle" aria-describedby="customModalMessage">
     <div class="custom-modal-card">
       <div style="display:inline-block; margin-bottom:4px;">
@@ -806,7 +803,7 @@
           <img id="imgSource" class="stage-img" alt="Original look" />
           <img id="imgRendered" class="stage-img" alt="Transformed look" />
         </div>
-        <div id="sliderDivider" class="slider-divider" role="slider" tabindex="0" aria-label="Before and after comparison slider" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50">
+        <div id="sliderDivider" class="slider-divider" role="slider" tabindex="0" aria-label="Comparison slider" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50">
           <div class="divider-line"></div>
           <div class="divider-btn"><i class="bi bi-arrows-expand" style="transform:rotate(45deg);"></i></div>
         </div>
@@ -1028,6 +1025,7 @@
     let currentUserName  = safeStorageGet('kami_user_name');
     let userHairstyleLimit = 5;
     let usedHairstyleCount = 0;
+    let userRealtimeChannel = null;
 
     let activeStudioMode = 'color';
     let originalImageData = null;
@@ -1127,7 +1125,7 @@
       });
     }
 
-    // COMPLETE 50-SHADE SALON COLOR PALETTE
+    // ALL 50 SALON SHADES
     const SHADE_CATALOG = [
       { name: "Jet Black",         family: "browns", h: 30,  s: 4,  l: 8 },
       { name: "Blue Black",        family: "browns", h: 220, s: 18, l: 12 },
@@ -1186,7 +1184,7 @@
       { name: "Silver Grey",       family: "fashion", h: 220, s: 8,  l: 74 }
     ];
 
-    // COMPLETE 13-PRESET HAIRSTYLE SUITE
+    // ALL 13 HAIRSTYLES
     const DEFAULT_HAIRSTYLES = [
       { id:'pixie', category:'Bob & Short', name:'Pixie Cut', desc_prompt:'a realistic short textured feminine pixie cut with tapered sides and nape, slightly longer layered top' },
       { id:'bluntbob', category:'Bob & Short', name:'Blunt Bob', desc_prompt:'a realistic blunt bob cut straight across at jaw length with a crisp even hemline' },
@@ -1298,11 +1296,108 @@
       $('clientStudioBadge').textContent = label;
     }
 
+    // REAL-TIME POSTGRES LISTENER FOR INSTANT EVICTION ON ADMIN DELETE / UPDATE
+    function subscribeToUserRealtime(phone) {
+      if (!sb || !phone) return;
+      if (userRealtimeChannel) {
+        sb.removeChannel(userRealtimeChannel);
+        userRealtimeChannel = null;
+      }
+
+      userRealtimeChannel = sb
+        .channel(`user-realtime-${phone}`)
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'users', filter: `phone=eq.${phone}` },
+          async (payload) => {
+            if (payload.eventType === 'DELETE') {
+              // Admin deleted the user record in admin.html in real time
+              await forceEvictDeletedUser("YOUR SALON ACCOUNT WAS REMOVED BY THE SUPERVISOR.");
+            } else if (payload.eventType === 'UPDATE') {
+              const updated = payload.new;
+              if (updated.trial_expired === true) {
+                $('trialLockOverlay').classList.add('active');
+                if (cameraStream) { cameraStream.getTracks().forEach(t => t.stop()); cameraStream = null; }
+              } else {
+                $('trialLockOverlay').classList.remove('active');
+              }
+              userHairstyleLimit = typeof updated.hairstyle_limit === 'number' ? updated.hairstyle_limit : 5;
+              usedHairstyleCount = typeof updated.hairstyle_credits_used === 'number' ? updated.hairstyle_credits_used : 0;
+              updateQuotaDisplay();
+            }
+          }
+        )
+        .subscribe();
+    }
+
+    // COMPLETE EVICTION & LOCAL DATA WIPE
+    async function forceEvictDeletedUser(reason = "ACCOUNT NOT REGISTERED OR REMOVED BY SALON") {
+      const phoneToWipe = currentUserPhone;
+
+      safeStorageRemove('kami_user_phone');
+      safeStorageRemove('kami_user_name');
+      currentUserPhone = null;
+      currentUserName = null;
+
+      // Wipe local IndexedDB vault cache for this phone
+      if (phoneToWipe) {
+        try {
+          const db = await openVaultDB();
+          const tx = db.transaction(STORE_NAME, 'readwrite');
+          const store = tx.objectStore(STORE_NAME);
+          const req = store.getAll();
+          req.onsuccess = () => {
+            const all = req.result || [];
+            all.filter(i => i.user_phone === phoneToWipe).forEach(i => store.delete(i.id));
+          };
+        } catch (_) {}
+      }
+
+      if (userRealtimeChannel && sb) {
+        sb.removeChannel(userRealtimeChannel);
+        userRealtimeChannel = null;
+      }
+
+      BlobRegistry.clear();
+
+      if (cameraStream) {
+        cameraStream.getTracks().forEach(t => t.stop());
+        cameraStream = null;
+      }
+
+      $('trialLockOverlay').classList.remove('active');
+      hideLoading();
+
+      activateScreen(screens.login);
+      $('loginPhoneInput').value = '';
+
+      showBrutalModal({
+        badge: "ACCESS REVOKED",
+        badgeBg: "var(--red)",
+        badgeColor: "var(--white)",
+        title: "ACCOUNT REMOVED",
+        message: reason,
+        confirmText: "UNDERSTOOD",
+        confirmBg: "var(--yellow)"
+      });
+    }
+
+    // STRICT SERVER STATUS VERIFICATION (FAILS CLOSED)
     async function verifyUserTrialStatus(phone) {
-      if (!sb || !phone) return true;
+      if (!phone) {
+        await forceEvictDeletedUser();
+        return false;
+      }
+      if (!sb) return true;
+
       try {
         const { data, error } = await sb.from('users').select('*').eq('phone', phone).maybeSingle();
-        if (error || !data) return true;
+        
+        // IF USER WAS DELETED FROM DATABASE:
+        if (error || !data) {
+          await forceEvictDeletedUser("YOUR ACCOUNT IS NOT REGISTERED OR HAS BEEN REMOVED BY THE SALON.");
+          return false;
+        }
 
         if (data.trial_expired === true) {
           $('trialLockOverlay').classList.add('active');
@@ -1317,7 +1412,7 @@
         updateQuotaDisplay();
         return true;
       } catch (_) {
-        return true;
+        return false;
       }
     }
 
@@ -1331,10 +1426,9 @@
         applyUserIdentity();
         const active = await verifyUserTrialStatus(currentUserPhone);
         if (active) {
+          subscribeToUserRealtime(currentUserPhone);
           activateScreen(screens.camera);
           startCamera();
-        } else {
-          activateScreen(screens.login);
         }
       } else {
         activateScreen(screens.login);
@@ -1350,32 +1444,29 @@
       btn.disabled = true;
 
       try {
-        if (sb) {
-          const { data, error } = await sb.from('users').select('*').eq('phone', raw).maybeSingle();
-          if (error || !data) {
-            showToast('NUMBER NOT REGISTERED — CONTACT DESK');
-            return;
-          }
-
-          currentUserPhone = raw;
-          currentUserName = data.name || raw;
-          safeStorageSet('kami_user_phone', currentUserPhone);
-          safeStorageSet('kami_user_name', currentUserName);
-          applyUserIdentity();
-
-          if (data.trial_expired === true) {
-            $('trialLockOverlay').classList.add('active');
-            return;
-          }
-
-          userHairstyleLimit = data.hairstyle_limit || 5;
-          usedHairstyleCount = data.hairstyle_credits_used || 0;
-          updateQuotaDisplay();
-        } else {
-          currentUserPhone = raw;
-          currentUserName = raw;
+        if (!sb) throw new Error('Network unavailable');
+        const { data, error } = await sb.from('users').select('*').eq('phone', raw).maybeSingle();
+        if (error || !data) {
+          showToast('NUMBER NOT REGISTERED — CONTACT DESK');
+          return;
         }
 
+        currentUserPhone = raw;
+        currentUserName = data.name || raw;
+        safeStorageSet('kami_user_phone', currentUserPhone);
+        safeStorageSet('kami_user_name', currentUserName);
+        applyUserIdentity();
+
+        if (data.trial_expired === true) {
+          $('trialLockOverlay').classList.add('active');
+          return;
+        }
+
+        userHairstyleLimit = data.hairstyle_limit || 5;
+        usedHairstyleCount = data.hairstyle_credits_used || 0;
+        updateQuotaDisplay();
+
+        subscribeToUserRealtime(currentUserPhone);
         activateScreen(screens.camera);
         startCamera();
       } catch (_) {
@@ -1397,6 +1488,11 @@
         confirmColor: "var(--white)"
       });
       if (!confirmed) return;
+
+      if (userRealtimeChannel && sb) {
+        sb.removeChannel(userRealtimeChannel);
+        userRealtimeChannel = null;
+      }
 
       safeStorageRemove('kami_user_phone');
       safeStorageRemove('kami_user_name');
@@ -1486,17 +1582,24 @@
     }
 
     $('shutterBtn').addEventListener('click', async () => {
+      const active = await verifyUserTrialStatus(currentUserPhone);
+      if (!active) return;
       const cvs = captureCamera();
       if (!cvs) { $('clientFileInput').click(); return; }
       await processStudioImage(cvs);
     });
 
-    $('uploadPhotoBtn').addEventListener('click', () => {
+    $('uploadPhotoBtn').addEventListener('click', async () => {
+      const active = await verifyUserTrialStatus(currentUserPhone);
+      if (!active) return;
       $('clientFileInput').value = '';
       $('clientFileInput').click();
     });
 
     $('clientFileInput').addEventListener('change', async (e) => {
+      const active = await verifyUserTrialStatus(currentUserPhone);
+      if (!active) return;
+
       const file = e.target.files?.[0];
       if (!file) return;
 
@@ -1706,7 +1809,9 @@
       hairCtx.putImageData(working, 0, 0);
     }
 
-    $('retakeBtn').addEventListener('click', () => {
+    $('retakeBtn').addEventListener('click', async () => {
+      const active = await verifyUserTrialStatus(currentUserPhone);
+      if (!active) return;
       activateScreen(screens.camera);
       startCamera();
     });
@@ -1915,6 +2020,9 @@
     });
 
     $('executeStyleBtn').addEventListener('click', async () => {
+      const active = await verifyUserTrialStatus(currentUserPhone);
+      if (!active) return;
+
       if (!sb) {
         showToast('KAMI CLOUD OFFLINE');
         return;
@@ -2107,7 +2215,10 @@
       else activateScreen(screens.studio);
     });
 
-    $('viewCompareBtn').addEventListener('click', () => {
+    $('viewCompareBtn').addEventListener('click', async () => {
+      const active = await verifyUserTrialStatus(currentUserPhone);
+      if (!active) return;
+
       if (!currentColorApplied) {
         showToast("SELECT A COLOUR FIRST");
         return;
@@ -2117,6 +2228,9 @@
     });
 
     async function saveLookToVault(notify = false) {
+      const active = await verifyUserTrialStatus(currentUserPhone);
+      if (!active) return;
+
       if (!currentUserPhone || isSavingVault || !currentColorApplied) return;
       const timeBucket = Math.floor(Date.now() / DEDUPE_WINDOW_MS);
       const hash = `${currentUserPhone}_${currentShadeName}_${targetH}_${timeBucket}`;
@@ -2172,6 +2286,9 @@
     }
 
     $('shareBtn').addEventListener('click', async () => {
+      const active = await verifyUserTrialStatus(currentUserPhone);
+      if (!active) return;
+
       try {
         const blob = await buildCollageBlob();
         const file = new File([blob], `KAMI_${Date.now()}.webp`, { type: 'image/webp' });
@@ -2187,6 +2304,9 @@
     });
 
     $('saveLocalBtn').addEventListener('click', async () => {
+      const active = await verifyUserTrialStatus(currentUserPhone);
+      if (!active) return;
+
       const src = $('imgRendered').src;
       if (!src) return;
       try {
@@ -2199,6 +2319,9 @@
     });
 
     async function loadUserVault() {
+      const active = await verifyUserTrialStatus(currentUserPhone);
+      if (!active) return;
+
       activateScreen(screens.gallery);
       const localItems = await getLocalLooks(currentUserPhone);
       $('vaultCountBadge').textContent = `${localItems.length} / 10`;
@@ -2241,7 +2364,9 @@
     }
 
     $('openGalleryBtn').addEventListener('click', loadUserVault);
-    $('closeGalleryBtn').addEventListener('click', () => {
+    $('closeGalleryBtn').addEventListener('click', async () => {
+      const active = await verifyUserTrialStatus(currentUserPhone);
+      if (!active) return;
       activateScreen(screens.camera);
       if (!cameraStream) startCamera();
     });
