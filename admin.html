@@ -243,7 +243,7 @@
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
-  <!-- CONFIRM / PROMPT DIALOG -->
+  <!-- CONFIRM DIALOG -->
   <div id="dialogBackdrop" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="dialogTitle">
     <div class="modal-card" style="max-width: 440px;">
       <div class="modal-head">
@@ -427,6 +427,13 @@
     const $ = id => document.getElementById(id);
     let toastTimer = null;
 
+    // Normalizes phone to last 10 digits for seamless matching across country codes
+    function getNormalizedPhone(phone) {
+      if (!phone) return '';
+      const digits = String(phone).replace(/\D/g, '');
+      return digits.length >= 10 ? digits.slice(-10) : digits;
+    }
+
     function sanitizeUrl(url) {
       if (!url || typeof url !== 'string') return 'about:blank';
       const clean = url.trim();
@@ -517,7 +524,7 @@
       });
     }
 
-    // REAL-TIME LISTENER FOR NEW LOOKS & CLIENT REGISTRATIONS
+    // REAL-TIME LISTENER: Immediately catches new looks generated from client index.html
     function subscribeToAdminRealtime() {
       if (!sb) return;
       if (adminRealtimeChannel) {
@@ -623,7 +630,7 @@
       $('tabClientsBtn').setAttribute('aria-selected', 'false');
       $('activityView').classList.remove('hidden');
       $('clientsView').classList.add('hidden');
-      fetchGenerations();
+      fetchGenerations(); // Refetches immediately every time tab is clicked
     });
 
     async function loadAllData() {
@@ -699,11 +706,14 @@
         if (!rpcErr && rpcData) {
           fetchedData = rpcData;
         } else {
+          // Direct table SELECT using anon key (enabled by the SQL grant above)
           const { data, error } = await sb.from('generations').select('*').order('created_at', { ascending: false });
           if (!error && data) fetchedData = data;
         }
 
-        if (fetchedData) allGenerations = fetchedData;
+        if (fetchedData) {
+          allGenerations = fetchedData;
+        }
         renderClientsTable();
         renderActivity();
       } catch (err) {
@@ -868,14 +878,19 @@
         return;
       }
 
+      // Count looks matching the last 10 digits of mobile number
       const totalCounts = {};
       allGenerations.forEach(g => {
-        totalCounts[g.user_phone] = (totalCounts[g.user_phone] || 0) + 1;
+        const norm = getNormalizedPhone(g.user_phone);
+        if (norm) {
+          totalCounts[norm] = (totalCounts[norm] || 0) + 1;
+        }
       });
 
       filtered.forEach(c => {
         const isExpired = c.trial_expired === true;
-        const total = totalCounts[c.phone] || 0;
+        const normPhone = getNormalizedPhone(c.phone);
+        const total = totalCounts[normPhone] || 0;
         const styleUsed = c.hairstyle_credits_used || 0;
         const limit = c.hairstyle_limit;
         const isCapped = styleUsed >= limit;
@@ -953,15 +968,23 @@
     }
 
     $('clientSearchInput').addEventListener('input', renderClientsTable);
-    $('refreshClientsBtn').addEventListener('click', fetchClients);
+    $('refreshClientsBtn').addEventListener('click', () => {
+      fetchClients();
+      fetchGenerations();
+    });
 
     function renderActivity() {
       const q = ($('activitySearchInput').value || '').toLowerCase().trim();
       const clientMap = {};
-      allClients.forEach(c => { clientMap[c.phone] = c.name; });
+      allClients.forEach(c => { 
+        const norm = getNormalizedPhone(c.phone);
+        clientMap[norm] = c.name;
+        clientMap[c.phone] = c.name;
+      });
 
       const filtered = allGenerations.filter(g => {
-        const cName = (clientMap[g.user_phone] || '').toLowerCase();
+        const normG = getNormalizedPhone(g.user_phone);
+        const cName = (clientMap[normG] || clientMap[g.user_phone] || '').toLowerCase();
         return (g.user_phone || '').toLowerCase().includes(q) ||
                (g.style_name || '').toLowerCase().includes(q) ||
                cName.includes(q);
@@ -977,7 +1000,8 @@
       }
 
       filtered.forEach(item => {
-        const cName = clientMap[item.user_phone] || 'Client';
+        const normG = getNormalizedPhone(item.user_phone);
+        const cName = clientMap[normG] || clientMap[item.user_phone] || 'Client';
         const dateStr = new Date(item.created_at).toLocaleString([], { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' });
 
         const card = document.createElement('div');
@@ -1055,7 +1079,8 @@
       if (!gen) return;
       currentSelectedGen = gen;
 
-      const client = allClients.find(c => c.phone === gen.user_phone);
+      const normG = getNormalizedPhone(gen.user_phone);
+      const client = allClients.find(c => getNormalizedPhone(c.phone) === normG);
       const cName = client ? client.name : 'Client';
 
       $('modalShadeName').textContent = (gen.style_name || 'LOOK').toUpperCase();
