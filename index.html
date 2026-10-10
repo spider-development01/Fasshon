@@ -145,6 +145,7 @@
       letter-spacing: 2px; transform: rotate(-2deg); flex-shrink: 0;
     }
 
+    /* TRIAL LOCK OVERLAY */
     #trialLockOverlay {
       position: fixed; inset: 0;
       background: rgba(26, 26, 26, 0.92);
@@ -190,6 +191,7 @@
     .action-btn-call { background: var(--yellow); color: var(--black); }
     .action-btn-wa { background: var(--whatsapp); color: var(--white); }
 
+    /* CUSTOM MODAL */
     .custom-modal-backdrop {
       position: fixed; inset: 0;
       background: rgba(26, 26, 26, 0.88);
@@ -213,6 +215,7 @@
       animation: popIn 0.25s var(--bounce);
     }
 
+    /* LOGIN SCREEN */
     #loginScreen { z-index: var(--z-overlay); align-items: center; justify-content: center; padding: 24px; }
     .login-card {
       background: var(--white);
@@ -223,6 +226,7 @@
       max-width: 420px; width: 100%; text-align: center;
     }
 
+    /* CAMERA WRAPPER */
     .camera-wrapper { position: absolute; inset: 0; background: #000; overflow: hidden; }
     #cameraFeed { width: 100%; height: 100%; object-fit: cover; display: block; }
     #cameraFeed.mirrored { transform: scaleX(-1); }
@@ -276,6 +280,7 @@
       flex-shrink: 0;
     }
 
+    /* STUDIO */
     .studio-header {
       padding: 12px 18px; background: var(--beige);
       border-bottom: var(--border-thick);
@@ -309,6 +314,7 @@
       box-shadow: var(--shadow-sm); display: block;
     }
 
+    /* MODE TOGGLE */
     .mode-switch-bar {
       display: grid; grid-template-columns: 1fr 1fr;
       background: var(--white); border: var(--border-thick);
@@ -323,6 +329,7 @@
     .mode-tab-btn.active { background: var(--black); color: var(--lime); box-shadow: var(--shadow-xs); }
     .mode-tab-btn.active.pink-mode { background: var(--black); color: var(--pink); }
 
+    /* TOOL CARD */
     .tool-card {
       background: var(--white); border: var(--border-thick);
       border-radius: var(--radius-card); padding: 16px;
@@ -351,6 +358,7 @@
     .filter-chip:active { transform: scale(0.95); }
     .filter-chip.active { background: var(--black); color: var(--lime); border-color: var(--black); }
 
+    /* SWATCH GRID */
     .swatch-grid {
       display: grid; grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
       gap: 6px; max-height: 280px; overflow-y: auto; padding: 6px;
@@ -377,6 +385,7 @@
       overflow: hidden; text-overflow: ellipsis; padding: 0 2px;
     }
 
+    /* HAIRSTYLES GRID */
     .hairstyles-grid {
       display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
       gap: 8px; max-height: 280px; overflow-y: auto; padding: 6px;
@@ -397,6 +406,7 @@
       border-color: var(--black); box-shadow: var(--shadow-sm); transform: translate(-2px, -2px);
     }
 
+    /* REFERENCE CARD */
     .ref-uploader {
       background: var(--beige-surface); border: var(--border-thick);
       border-radius: 12px; padding: 12px; display: flex; align-items: center;
@@ -409,6 +419,7 @@
     }
     .ref-thumb img { width: 100%; height: 100%; object-fit: cover; }
 
+    /* SLIDERS */
     .slider-stack { position: relative; display: flex; flex-direction: column; gap: 10px; }
     .slider-block {
       display: flex; flex-direction: column; gap: 6px;
@@ -449,6 +460,7 @@
       font-size: clamp(0.6rem, 2.4vw, 0.72rem); box-shadow: var(--shadow-sm); display: inline-flex; align-items: center; gap: 7px;
     }
 
+    /* COMPARE SCREEN */
     .compare-top-nav {
       padding: 12px 14px; background: var(--beige); border-bottom: var(--border-thick);
       display: flex; justify-content: space-between; align-items: center; gap: 8px; z-index: var(--z-dock); flex-shrink: 0;
@@ -515,6 +527,7 @@
       display: inline-flex; align-items: center; gap: 8px;
     }
 
+    /* VAULT GALLERY */
     .gallery-grid {
       flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 14px;
       display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; align-content: start;
@@ -1648,8 +1661,9 @@
 
       hairCtx.clearRect(0, 0, w, h);
       hairCtx.drawImage(source, 0, 0, w, h);
-      originalImageData = hairCtx.getImageData(0, 0, w, h);
 
+      // SAVE UNTOUCHED ORIGINAL PIXEL DATA IN MEMORY
+      originalImageData = hairCtx.getImageData(0, 0, w, h);
       originalDataURL = canvasToDataURL(hairCanvas, WEBP_QUALITY);
       originalWebpBlob = await encodeCanvas(hairCanvas, WEBP_QUALITY);
 
@@ -2057,7 +2071,14 @@
         return;
       }
 
-      const sourceToUpload = await compressToWebP(hairCanvas, { maxDim: 800, quality: 0.75 });
+      // SOURCE IMAGE FOR AI IS UNTOUCHED ORIGINAL PHOTO
+      const sourceCanvas = document.createElement('canvas');
+      sourceCanvas.width = canvasW;
+      sourceCanvas.height = canvasH;
+      const sCtx = sourceCanvas.getContext('2d');
+      sCtx.putImageData(originalImageData, 0, 0);
+
+      const sourceToUpload = await compressToWebP(sourceCanvas, { maxDim: 800, quality: 0.75 });
       showLoading("STYLING WITH KAMI AI...", true);
 
       try {
@@ -2230,7 +2251,7 @@
       saveLookToVault(true);
     });
 
-    // ROBUST CLOUD & STORAGE PERSISTENCE WITH EXPLICIT LOGGING
+    // GUARANTEED PERSISTENCE: SOURCE IS PURE ORIGINAL, RENDERED IS COLORED
     async function saveLookToVault(notify = false) {
       const active = await verifyUserTrialStatus(currentUserPhone);
       if (!active) return;
@@ -2241,22 +2262,34 @@
       try {
         const timestamp = Date.now();
         const localKey = `look_${timestamp}`;
-        const renderedBlob = await encodeCanvas(hairCanvas, 0.75);
+
+        // 1. GENERATE PURE SOURCE FROM UNTOUCHED ORIGINAL PIXEL DATA
+        const sourceCanvas = document.createElement('canvas');
+        sourceCanvas.width = canvasW;
+        sourceCanvas.height = canvasH;
+        const sCtx = sourceCanvas.getContext('2d');
+        sCtx.putImageData(originalImageData, 0, 0);
+
+        const sourceBlob = await compressToWebP(sourceCanvas, { maxDim: 800, quality: 0.75 });
+        const sourceDataURL = originalDataURL || canvasToDataURL(sourceCanvas, 0.75);
+
+        // 2. GENERATE RENDERED FROM COLORED hairCanvas
+        const renderedBlob = await compressToWebP(hairCanvas, { maxDim: 800, quality: 0.75 });
         const renderedDataURL = canvasToDataURL(hairCanvas, 0.75);
 
-        // 1. Save locally to IndexedDB immediately
+        // 3. Save locally to IndexedDB immediately
         const localItem = {
           id: localKey,
           user_phone: currentUserPhone,
           image_url: renderedDataURL,
-          source_image_url: originalDataURL,
+          source_image_url: sourceDataURL,
           style_name: currentShadeName,
           category: 'Hair Colour',
           created_at: new Date().toISOString()
         };
         await saveLocalLook(localItem);
 
-        // 2. Persist to Supabase Storage & Database
+        // 4. Persist to Supabase Storage & Database
         if (sb) {
           const safePhone = String(currentUserPhone).replace(/\D/g, '').slice(-10);
           const sourcePath = `${safePhone}/${timestamp}_source.webp`;
@@ -2266,9 +2299,7 @@
           let renderedUrl = '';
 
           try {
-            // Compress source image before storage upload (under 40KB)
-            const sourceBlob = await compressToWebP(hairCanvas, { maxDim: 800, quality: 0.70 });
-            
+            // Upload pure original to storage
             const upSrc = await sb.storage.from(STORAGE_BUCKET).upload(sourcePath, sourceBlob, { 
               contentType: 'image/webp', 
               upsert: true 
@@ -2276,6 +2307,7 @@
             if (upSrc.error) console.error('[STORAGE SOURCE UPLOAD ERROR]', upSrc.error);
             else sourceUrl = publicUrlFor(sourcePath);
 
+            // Upload colored result to storage
             const upRend = await sb.storage.from(STORAGE_BUCKET).upload(renderedPath, renderedBlob, { 
               contentType: 'image/webp', 
               upsert: true 
@@ -2286,8 +2318,8 @@
             console.error('[STORAGE EXCEPTION]', stEx);
           }
 
-          // Fallback if storage upload failed
-          if (!sourceUrl) sourceUrl = originalDataURL;
+          // Fallbacks if storage upload failed
+          if (!sourceUrl) sourceUrl = sourceDataURL;
           if (!renderedUrl) renderedUrl = renderedDataURL;
 
           const { data: insertedRows, error: insErr } = await sb.from('generations').insert({
