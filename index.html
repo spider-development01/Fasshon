@@ -145,7 +145,6 @@
       letter-spacing: 2px; transform: rotate(-2deg); flex-shrink: 0;
     }
 
-    /* TRIAL LOCK OVERLAY */
     #trialLockOverlay {
       position: fixed; inset: 0;
       background: rgba(26, 26, 26, 0.92);
@@ -191,7 +190,6 @@
     .action-btn-call { background: var(--yellow); color: var(--black); }
     .action-btn-wa { background: var(--whatsapp); color: var(--white); }
 
-    /* CUSTOM MODAL */
     .custom-modal-backdrop {
       position: fixed; inset: 0;
       background: rgba(26, 26, 26, 0.88);
@@ -215,7 +213,6 @@
       animation: popIn 0.25s var(--bounce);
     }
 
-    /* LOGIN SCREEN */
     #loginScreen { z-index: var(--z-overlay); align-items: center; justify-content: center; padding: 24px; }
     .login-card {
       background: var(--white);
@@ -226,7 +223,6 @@
       max-width: 420px; width: 100%; text-align: center;
     }
 
-    /* CAMERA WRAPPER */
     .camera-wrapper { position: absolute; inset: 0; background: #000; overflow: hidden; }
     #cameraFeed { width: 100%; height: 100%; object-fit: cover; display: block; }
     #cameraFeed.mirrored { transform: scaleX(-1); }
@@ -280,7 +276,6 @@
       flex-shrink: 0;
     }
 
-    /* STUDIO */
     .studio-header {
       padding: 12px 18px; background: var(--beige);
       border-bottom: var(--border-thick);
@@ -314,7 +309,6 @@
       box-shadow: var(--shadow-sm); display: block;
     }
 
-    /* MODE TOGGLE */
     .mode-switch-bar {
       display: grid; grid-template-columns: 1fr 1fr;
       background: var(--white); border: var(--border-thick);
@@ -329,7 +323,6 @@
     .mode-tab-btn.active { background: var(--black); color: var(--lime); box-shadow: var(--shadow-xs); }
     .mode-tab-btn.active.pink-mode { background: var(--black); color: var(--pink); }
 
-    /* TOOL CARD */
     .tool-card {
       background: var(--white); border: var(--border-thick);
       border-radius: var(--radius-card); padding: 16px;
@@ -358,7 +351,6 @@
     .filter-chip:active { transform: scale(0.95); }
     .filter-chip.active { background: var(--black); color: var(--lime); border-color: var(--black); }
 
-    /* SWATCH GRID */
     .swatch-grid {
       display: grid; grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
       gap: 6px; max-height: 280px; overflow-y: auto; padding: 6px;
@@ -385,7 +377,6 @@
       overflow: hidden; text-overflow: ellipsis; padding: 0 2px;
     }
 
-    /* HAIRSTYLES GRID */
     .hairstyles-grid {
       display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
       gap: 8px; max-height: 280px; overflow-y: auto; padding: 6px;
@@ -406,7 +397,6 @@
       border-color: var(--black); box-shadow: var(--shadow-sm); transform: translate(-2px, -2px);
     }
 
-    /* REFERENCE CARD */
     .ref-uploader {
       background: var(--beige-surface); border: var(--border-thick);
       border-radius: 12px; padding: 12px; display: flex; align-items: center;
@@ -419,7 +409,6 @@
     }
     .ref-thumb img { width: 100%; height: 100%; object-fit: cover; }
 
-    /* SLIDERS */
     .slider-stack { position: relative; display: flex; flex-direction: column; gap: 10px; }
     .slider-block {
       display: flex; flex-direction: column; gap: 6px;
@@ -460,7 +449,6 @@
       font-size: clamp(0.6rem, 2.4vw, 0.72rem); box-shadow: var(--shadow-sm); display: inline-flex; align-items: center; gap: 7px;
     }
 
-    /* COMPARE SCREEN */
     .compare-top-nav {
       padding: 12px 14px; background: var(--beige); border-bottom: var(--border-thick);
       display: flex; justify-content: space-between; align-items: center; gap: 8px; z-index: var(--z-dock); flex-shrink: 0;
@@ -527,7 +515,6 @@
       display: inline-flex; align-items: center; gap: 8px;
     }
 
-    /* VAULT GALLERY */
     .gallery-grid {
       flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 14px;
       display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; align-content: start;
@@ -900,10 +887,8 @@
       return heicPromise;
     }
 
-    const WEBP_QUALITY       = 0.82;
-    const WEBP_QUALITY_HIGH  = 0.90;
-    const MAX_UPLOAD_DIM     = 1600;
-    const DEDUPE_WINDOW_MS   = 180000;
+    const WEBP_QUALITY = 0.80;
+    const MAX_UPLOAD_DIM = 1200;
 
     const WEBP_SUPPORTED = (() => {
       try {
@@ -1034,14 +1019,11 @@
     let cameraStream = null;
     let cameraFacing = 'user';
 
-    let cachedShareBlob = null;
-    let lastSavedHash = null;
     let isSavingVault = false;
     let isDividerDragging = false;
     let renderScheduled = false;
     let openedFromVault = false;
     let toastTimer = null;
-    let compareLoadToken = 0;
 
     let currentCompareMode = 'slide';
     let currentColorApplied = false;
@@ -1222,7 +1204,10 @@
           const req = tx.objectStore(STORE_NAME).getAll();
           req.onsuccess = () => {
             const all = req.result || [];
-            const filtered = phone ? all.filter(item => item.user_phone === phone) : all;
+            const normP = phone ? phone.replace(/\D/g, '').slice(-10) : '';
+            const filtered = normP 
+              ? all.filter(item => (item.user_phone || '').replace(/\D/g, '').slice(-10) === normP) 
+              : all;
             filtered.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
             resolve(filtered.slice(0, LOCAL_VAULT_LIMIT));
           };
@@ -1295,12 +1280,17 @@
         userRealtimeChannel = null;
       }
 
+      const digits = phone.replace(/\D/g, '');
       userRealtimeChannel = sb
-        .channel(`user-realtime-${phone}`)
+        .channel(`user-realtime-${digits}`)
         .on(
           'postgres_changes',
-          { event: '*', schema: 'public', table: 'users', filter: `phone=eq.${phone}` },
+          { event: '*', schema: 'public', table: 'users' },
           async (payload) => {
+            const rowPhone = (payload.old?.phone || payload.new?.phone || '').replace(/\D/g, '').slice(-10);
+            const myPhone = digits.slice(-10);
+            if (rowPhone !== myPhone) return;
+
             if (payload.eventType === 'DELETE') {
               await forceEvictDeletedUser("YOUR SALON ACCOUNT WAS REMOVED BY THE SUPERVISOR.");
             } else if (payload.eventType === 'UPDATE') {
@@ -1336,7 +1326,8 @@
           const req = store.getAll();
           req.onsuccess = () => {
             const all = req.result || [];
-            all.filter(i => i.user_phone === phoneToWipe).forEach(i => store.delete(i.id));
+            all.filter(i => (i.user_phone || '').replace(/\D/g, '').slice(-10) === phoneToWipe.replace(/\D/g, '').slice(-10))
+               .forEach(i => store.delete(i.id));
           };
         } catch (_) {}
       }
@@ -1378,7 +1369,14 @@
       if (!sb) return true;
 
       try {
-        const { data, error } = await sb.from('users').select('*').eq('phone', phone).maybeSingle();
+        const raw = phone.trim();
+        const norm = raw.replace(/\D/g, '').slice(-10);
+
+        const { data, error } = await sb
+          .from('users')
+          .select('*')
+          .or(`phone.eq.${raw},phone.eq.+91${norm},phone.eq.${norm}`)
+          .maybeSingle();
         
         if (error || !data) {
           await forceEvictDeletedUser("YOUR ACCOUNT IS NOT REGISTERED OR HAS BEEN REMOVED BY THE SALON.");
@@ -1423,21 +1421,32 @@
 
     $('loginForm').addEventListener('submit', async (e) => {
       e.preventDefault();
-      const raw = $('loginPhoneInput').value.trim().replace(/[^\d+]/g, '');
-      if (!/^\+?\d{7,15}$/.test(raw)) { showToast('ENTER A VALID PHONE NUMBER'); return; }
+      const raw = $('loginPhoneInput').value.trim();
+      const norm = raw.replace(/\D/g, '').slice(-10);
+
+      if (norm.length !== 10) { 
+        showToast('ENTER A VALID 10-DIGIT MOBILE NUMBER'); 
+        return; 
+      }
 
       const btn = $('loginBtn');
       btn.disabled = true;
 
       try {
         if (!sb) throw new Error('Network unavailable');
-        const { data, error } = await sb.from('users').select('*').eq('phone', raw).maybeSingle();
+
+        const { data, error } = await sb
+          .from('users')
+          .select('*')
+          .or(`phone.eq.${raw},phone.eq.+91${norm},phone.eq.${norm}`)
+          .maybeSingle();
+
         if (error || !data) {
           showToast('NUMBER NOT REGISTERED — CONTACT DESK');
           return;
         }
 
-        currentUserPhone = raw;
+        currentUserPhone = data.phone || raw;
         currentUserName = data.name || raw;
         safeStorageSet('kami_user_phone', currentUserPhone);
         safeStorageSet('kami_user_name', currentUserName);
@@ -1623,7 +1632,7 @@
       if (!source) return;
       const currentRun = ++processToken;
 
-      const maxDim = 1440;
+      const maxDim = 1200;
       let w = source.naturalWidth || source.videoWidth || source.width;
       let h = source.naturalHeight || source.videoHeight || source.height;
       if (!w || !h) throw new Error('Invalid image dimensions');
@@ -1641,8 +1650,8 @@
       hairCtx.drawImage(source, 0, 0, w, h);
       originalImageData = hairCtx.getImageData(0, 0, w, h);
 
-      originalDataURL = canvasToDataURL(hairCanvas, WEBP_QUALITY_HIGH);
-      originalWebpBlob = await encodeCanvas(hairCanvas, WEBP_QUALITY_HIGH);
+      originalDataURL = canvasToDataURL(hairCanvas, WEBP_QUALITY);
+      originalWebpBlob = await encodeCanvas(hairCanvas, WEBP_QUALITY);
 
       currentColorApplied = false;
       currentShadeName = "Natural";
@@ -1983,7 +1992,7 @@
       const file = e.target.files?.[0];
       if (!file) return;
       try {
-        refBlob = await compressToWebP(file, { maxDim: 1024, quality: WEBP_QUALITY });
+        refBlob = await compressToWebP(file, { maxDim: 800, quality: 0.8 });
       } catch (_) {
         refBlob = file;
       }
@@ -2048,11 +2057,11 @@
         return;
       }
 
-      const sourceToUpload = originalWebpBlob || await compressToWebP(hairCanvas, { maxDim: 1440, quality: WEBP_QUALITY_HIGH });
+      const sourceToUpload = await compressToWebP(hairCanvas, { maxDim: 800, quality: 0.75 });
       showLoading("STYLING WITH KAMI AI...", true);
 
       try {
-        const safePhone = String(currentUserPhone).replace(/[^\d+]/g, '');
+        const safePhone = String(currentUserPhone).replace(/\D/g, '').slice(-10);
         const timeKey = Date.now();
         const sourcePath = `${safePhone}/${timeKey}_source.webp`;
 
@@ -2060,7 +2069,10 @@
           contentType: 'image/webp',
           upsert: true
         });
-        if (upSource.error) throw new Error('Upload failed');
+        if (upSource.error) {
+          console.error('[STORAGE ERROR]', upSource.error);
+          throw new Error('Storage upload failed: ' + upSource.error.message);
+        }
         const sourcePublicUrl = publicUrlFor(sourcePath);
 
         const imageUrls = [sourcePublicUrl];
@@ -2086,13 +2098,18 @@
         if (!res.ok || !data.output) throw new Error(data.error || 'AI generation failed');
 
         const renderedPublicUrl = data.output;
-        await sb.from('generations').insert({
+        const { error: insErr } = await sb.from('generations').insert({
           user_phone: currentUserPhone,
           image_url: renderedPublicUrl,
           source_image_url: sourcePublicUrl,
           style_name: selectedHairstyle.name,
           category: selectedHairstyle.category
         });
+
+        if (insErr) {
+          console.error('[DB INSERT ERROR]', insErr);
+          showToast('DB ERROR: ' + insErr.message);
+        }
 
         await saveLocalLook({
           id: `look_${timeKey}`,
@@ -2209,30 +2226,23 @@
         showToast("SELECT A COLOUR FIRST");
         return;
       }
-      openCompareWithImages(originalDataURL, canvasToDataURL(hairCanvas, WEBP_QUALITY_HIGH), currentShadeName, false);
-      saveLookToVault(false);
+      openCompareWithImages(originalDataURL, canvasToDataURL(hairCanvas, WEBP_QUALITY), currentShadeName, false);
+      saveLookToVault(true);
     });
 
-    // CLOUD PERSISTENCE: UPLOADS BEFORE/AFTER & INSERTS GENERATION ROW
+    // ROBUST CLOUD & STORAGE PERSISTENCE WITH EXPLICIT LOGGING
     async function saveLookToVault(notify = false) {
       const active = await verifyUserTrialStatus(currentUserPhone);
       if (!active) return;
 
       if (!currentUserPhone || isSavingVault || !currentColorApplied) return;
-      const timeBucket = Math.floor(Date.now() / DEDUPE_WINDOW_MS);
-      const hash = `${currentUserPhone}_${currentShadeName}_${targetH}_${timeBucket}`;
-      if (lastSavedHash === hash) {
-        if (notify) showToast("LOOK ALREADY SAVED 💾");
-        return;
-      }
       isSavingVault = true;
-      lastSavedHash = hash;
 
       try {
         const timestamp = Date.now();
         const localKey = `look_${timestamp}`;
-        const renderedBlob = await encodeCanvas(hairCanvas, WEBP_QUALITY);
-        const renderedDataURL = canvasToDataURL(hairCanvas, WEBP_QUALITY);
+        const renderedBlob = await encodeCanvas(hairCanvas, 0.75);
+        const renderedDataURL = canvasToDataURL(hairCanvas, 0.75);
 
         // 1. Save locally to IndexedDB immediately
         const localItem = {
@@ -2245,31 +2255,42 @@
           created_at: new Date().toISOString()
         };
         await saveLocalLook(localItem);
-        if (notify) showToast("SAVED TO MY LOOKS 💾");
 
-        // 2. Persist to Supabase so admin.html sees it
+        // 2. Persist to Supabase Storage & Database
         if (sb) {
-          const safePhone = String(currentUserPhone).replace(/[^\d+]/g, '');
+          const safePhone = String(currentUserPhone).replace(/\D/g, '').slice(-10);
           const sourcePath = `${safePhone}/${timestamp}_source.webp`;
           const renderedPath = `${safePhone}/${timestamp}_rendered.webp`;
 
-          let sourceUrl = originalDataURL;
-          let renderedUrl = renderedDataURL;
+          let sourceUrl = '';
+          let renderedUrl = '';
 
           try {
-            const sourceBlob = originalWebpBlob || (originalDataURL ? dataURLToBlob(originalDataURL) : null);
-            if (sourceBlob) {
-              const upSrc = await sb.storage.from(STORAGE_BUCKET).upload(sourcePath, sourceBlob, { contentType: 'image/webp', upsert: true });
-              if (!upSrc.error) sourceUrl = publicUrlFor(sourcePath);
-            }
+            // Compress source image before storage upload (under 40KB)
+            const sourceBlob = await compressToWebP(hairCanvas, { maxDim: 800, quality: 0.70 });
+            
+            const upSrc = await sb.storage.from(STORAGE_BUCKET).upload(sourcePath, sourceBlob, { 
+              contentType: 'image/webp', 
+              upsert: true 
+            });
+            if (upSrc.error) console.error('[STORAGE SOURCE UPLOAD ERROR]', upSrc.error);
+            else sourceUrl = publicUrlFor(sourcePath);
 
-            if (renderedBlob) {
-              const upRend = await sb.storage.from(STORAGE_BUCKET).upload(renderedPath, renderedBlob, { contentType: 'image/webp', upsert: true });
-              if (!upRend.error) renderedUrl = publicUrlFor(renderedPath);
-            }
-          } catch (_) {}
+            const upRend = await sb.storage.from(STORAGE_BUCKET).upload(renderedPath, renderedBlob, { 
+              contentType: 'image/webp', 
+              upsert: true 
+            });
+            if (upRend.error) console.error('[STORAGE RENDER UPLOAD ERROR]', upRend.error);
+            else renderedUrl = publicUrlFor(renderedPath);
+          } catch (stEx) {
+            console.error('[STORAGE EXCEPTION]', stEx);
+          }
 
-          const { data: insertedRows } = await sb.from('generations').insert({
+          // Fallback if storage upload failed
+          if (!sourceUrl) sourceUrl = originalDataURL;
+          if (!renderedUrl) renderedUrl = renderedDataURL;
+
+          const { data: insertedRows, error: insErr } = await sb.from('generations').insert({
             user_phone: currentUserPhone,
             image_url: renderedUrl,
             source_image_url: sourceUrl,
@@ -2277,7 +2298,11 @@
             category: 'Hair Colour'
           }).select();
 
-          if (insertedRows && insertedRows[0]) {
+          if (insErr) {
+            console.error('[DB INSERT ERROR on generations table]', insErr);
+            showToast('DB ERROR: ' + (insErr.message || 'Check Supabase permissions'));
+          } else if (insertedRows && insertedRows[0]) {
+            console.log('[SAVED TO CLOUD DB SUCCESSFULLY]', insertedRows[0]);
             await deleteLocalLook(localKey);
             await saveLocalLook({
               ...localItem,
@@ -2285,8 +2310,13 @@
               image_url: renderedUrl,
               source_image_url: sourceUrl
             });
+            if (notify) showToast("SAVED TO MY LOOKS & SALON 💾");
           }
+        } else {
+          if (notify) showToast("SAVED TO MY LOOKS (OFFLINE) 💾");
         }
+      } catch (err) {
+        console.error('[SAVE LOOK EXCEPTION]', err);
       } finally {
         isSavingVault = false;
       }
@@ -2315,7 +2345,7 @@
       c.lineTo(colW, targetH);
       c.stroke();
 
-      return encodeCanvas(cvs, WEBP_QUALITY);
+      return encodeCanvas(cvs, 0.85);
     }
 
     $('shareBtn').addEventListener('click', async () => {
@@ -2343,15 +2373,15 @@
       const src = $('imgRendered').src;
       if (!src) return;
       try {
-        const blob = await compressToWebP(src, { maxDim: 1600, quality: WEBP_QUALITY_HIGH });
+        const blob = await compressToWebP(src, { maxDim: 1200, quality: 0.85 });
         downloadBlob(blob, `KAMI_${Date.now()}.webp`);
         showToast("SAVED TO DEVICE 📥");
+        saveLookToVault(false);
       } catch (_) {
         showToast("SAVE FAILED");
       }
     });
 
-    // VAULT LOADER: SYNCS CLOUD GENERATIONS WITH LOCAL INDEXEDDB
     async function loadUserVault() {
       const active = await verifyUserTrialStatus(currentUserPhone);
       if (!active) return;
@@ -2361,12 +2391,16 @@
       let cloudItems = [];
       if (sb && currentUserPhone) {
         try {
+          const raw = currentUserPhone.trim();
+          const norm = raw.replace(/\D/g, '').slice(-10);
+
           const { data } = await sb
             .from('generations')
             .select('*')
-            .eq('user_phone', currentUserPhone)
+            .or(`user_phone.eq.${raw},user_phone.eq.+91${norm},user_phone.eq.${norm}`)
             .order('created_at', { ascending: false })
             .limit(LOCAL_VAULT_LIMIT);
+
           if (data) cloudItems = data;
         } catch (_) {}
       }
