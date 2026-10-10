@@ -264,7 +264,7 @@
     </div>
   </div>
 
-  <!-- AUTH LOCK OVERLAY -->
+  <!-- AUTH OVERLAY -->
   <div id="authOverlay" role="dialog" aria-modal="true" aria-labelledby="authTitle">
     <div class="auth-box">
       <div class="brand-logo" style="margin-bottom:14px;">KAMI</div>
@@ -439,6 +439,7 @@
     let allClients = [];
     let allGenerations = [];
     let currentSelectedGen = null;
+    let adminRealtimeChannel = null;
 
     function showToast(msg) {
       const t = $('toast');
@@ -449,11 +450,7 @@
     }
 
     function getAdminPin() {
-      try {
-        return sessionStorage.getItem('kami_admin_pin') || '';
-      } catch (_) {
-        return '';
-      }
+      try { return sessionStorage.getItem('kami_admin_pin') || ''; } catch (_) { return ''; }
     }
 
     function showAdminDialog({
@@ -520,6 +517,25 @@
       });
     }
 
+    // REAL-TIME LISTENER FOR NEW LOOKS & CLIENT REGISTRATIONS
+    function subscribeToAdminRealtime() {
+      if (!sb) return;
+      if (adminRealtimeChannel) {
+        sb.removeChannel(adminRealtimeChannel);
+        adminRealtimeChannel = null;
+      }
+
+      adminRealtimeChannel = sb
+        .channel('admin-dashboard-realtime')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'generations' }, () => {
+          fetchGenerations();
+        })
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'users' }, () => {
+          fetchClients();
+        })
+        .subscribe();
+    }
+
     async function checkAdminAuth() {
       const storedPin = getAdminPin();
       if (!storedPin) {
@@ -537,6 +553,7 @@
         const { data: isValid, error } = await sb.rpc('verify_admin_pin', { p_pin: storedPin });
         if (!error && isValid === true) {
           $('authOverlay').classList.add('hidden');
+          subscribeToAdminRealtime();
           loadAllData();
         } else {
           try { sessionStorage.removeItem('kami_admin_pin'); } catch (_) {}
@@ -561,6 +578,7 @@
           try { sessionStorage.setItem('kami_admin_pin', val); } catch (_) {}
           $('authOverlay').classList.add('hidden');
           showToast('ACCESS GRANTED 🔓');
+          subscribeToAdminRealtime();
           loadAllData();
         } else {
           showToast('INCORRECT PASSCODE');
@@ -580,6 +598,10 @@
 
     $('adminLockBtn').addEventListener('click', () => {
       try { sessionStorage.removeItem('kami_admin_pin'); } catch (_) {}
+      if (adminRealtimeChannel && sb) {
+        sb.removeChannel(adminRealtimeChannel);
+        adminRealtimeChannel = null;
+      }
       $('authOverlay').classList.remove('hidden');
       $('adminPassInput').value = '';
     });
@@ -591,6 +613,7 @@
       $('tabActivityBtn').setAttribute('aria-selected', 'false');
       $('clientsView').classList.remove('hidden');
       $('activityView').classList.add('hidden');
+      fetchClients();
     });
 
     $('tabActivityBtn').addEventListener('click', () => {
@@ -600,7 +623,7 @@
       $('tabClientsBtn').setAttribute('aria-selected', 'false');
       $('activityView').classList.remove('hidden');
       $('clientsView').classList.add('hidden');
-      renderActivity();
+      fetchGenerations();
     });
 
     async function loadAllData() {
@@ -642,7 +665,6 @@
         const pin = getAdminPin();
         let clients = null;
 
-        // Attempt verified RPC first; fall back gracefully to direct SELECT if RPC is not yet created
         const { data: rpcData, error: rpcErr } = await sb.rpc('admin_list_clients', { p_admin_pin: pin });
         if (!rpcErr && rpcData) {
           clients = rpcData;
@@ -664,7 +686,6 @@
         renderClientsTable();
       } catch (err) {
         console.error("fetchClients error:", err);
-        showToast("ERROR LOADING CLIENTS");
       }
     }
 
@@ -672,13 +693,17 @@
       if (!sb) return;
       try {
         const pin = getAdminPin();
+        let fetchedData = null;
+
         const { data: rpcData, error: rpcErr } = await sb.rpc('admin_list_generations', { p_admin_pin: pin });
         if (!rpcErr && rpcData) {
-          allGenerations = rpcData;
+          fetchedData = rpcData;
         } else {
           const { data, error } = await sb.from('generations').select('*').order('created_at', { ascending: false });
-          if (!error && data) allGenerations = data;
+          if (!error && data) fetchedData = data;
         }
+
+        if (fetchedData) allGenerations = fetchedData;
         renderClientsTable();
         renderActivity();
       } catch (err) {
@@ -1079,7 +1104,6 @@
         });
 
         if (rpcErr) {
-          // Fallback to table DELETE if RPC is pending migration
           const { error: delErr } = await sb.from('generations').delete().eq('id', currentSelectedGen.id);
           if (delErr) throw delErr;
         }
