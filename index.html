@@ -191,7 +191,7 @@
     .action-btn-call { background: var(--yellow); color: var(--black); }
     .action-btn-wa { background: var(--whatsapp); color: var(--white); }
 
-    /* CUSTOM NEO-BRUTALIST MODAL */
+    /* CUSTOM MODAL */
     .custom-modal-backdrop {
       position: fixed; inset: 0;
       background: rgba(26, 26, 26, 0.88);
@@ -314,7 +314,7 @@
       box-shadow: var(--shadow-sm); display: block;
     }
 
-    /* MODE SWITCH */
+    /* MODE TOGGLE */
     .mode-switch-bar {
       display: grid; grid-template-columns: 1fr 1fr;
       background: var(--white); border: var(--border-thick);
@@ -326,10 +326,7 @@
       font-family: var(--font-heading); font-size: clamp(0.7rem, 2.6vw, 0.84rem);
       display: flex; align-items: center; justify-content: center; gap: 8px;
     }
-    .mode-tab-btn.active {
-      background: var(--black); color: var(--lime);
-      box-shadow: var(--shadow-xs);
-    }
+    .mode-tab-btn.active { background: var(--black); color: var(--lime); box-shadow: var(--shadow-xs); }
     .mode-tab-btn.active.pink-mode { background: var(--black); color: var(--pink); }
 
     /* TOOL CARD */
@@ -377,9 +374,7 @@
       background: var(--white);
     }
     .swatch-tile:active { transform: scale(0.94); }
-    .swatch-tile.active {
-      background: var(--yellow); border-color: var(--black); box-shadow: var(--shadow-xs);
-    }
+    .swatch-tile.active { background: var(--yellow); border-color: var(--black); box-shadow: var(--shadow-xs); }
     .swatch-tile-circle {
       width: 44px; height: 44px; border-radius: 50%; border: 2px solid var(--black);
       box-shadow: var(--shadow-xs); position: relative; flex-shrink: 0;
@@ -828,7 +823,6 @@
   <script type="module">
     'use strict';
 
-    // MEMORY-SAFE BLOB URL REGISTRY
     const BlobRegistry = {
       activeUrls: new Set(),
       create(blob) {
@@ -1125,7 +1119,6 @@
       });
     }
 
-    // ALL 50 SALON SHADES
     const SHADE_CATALOG = [
       { name: "Jet Black",         family: "browns", h: 30,  s: 4,  l: 8 },
       { name: "Blue Black",        family: "browns", h: 220, s: 18, l: 12 },
@@ -1184,7 +1177,6 @@
       { name: "Silver Grey",       family: "fashion", h: 220, s: 8,  l: 74 }
     ];
 
-    // ALL 13 HAIRSTYLES
     const DEFAULT_HAIRSTYLES = [
       { id:'pixie', category:'Bob & Short', name:'Pixie Cut', desc_prompt:'a realistic short textured feminine pixie cut with tapered sides and nape, slightly longer layered top' },
       { id:'bluntbob', category:'Bob & Short', name:'Blunt Bob', desc_prompt:'a realistic blunt bob cut straight across at jaw length with a crisp even hemline' },
@@ -1296,7 +1288,6 @@
       $('clientStudioBadge').textContent = label;
     }
 
-    // REAL-TIME POSTGRES LISTENER FOR INSTANT EVICTION ON ADMIN DELETE / UPDATE
     function subscribeToUserRealtime(phone) {
       if (!sb || !phone) return;
       if (userRealtimeChannel) {
@@ -1311,7 +1302,6 @@
           { event: '*', schema: 'public', table: 'users', filter: `phone=eq.${phone}` },
           async (payload) => {
             if (payload.eventType === 'DELETE') {
-              // Admin deleted the user record in admin.html in real time
               await forceEvictDeletedUser("YOUR SALON ACCOUNT WAS REMOVED BY THE SUPERVISOR.");
             } else if (payload.eventType === 'UPDATE') {
               const updated = payload.new;
@@ -1330,7 +1320,6 @@
         .subscribe();
     }
 
-    // COMPLETE EVICTION & LOCAL DATA WIPE
     async function forceEvictDeletedUser(reason = "ACCOUNT NOT REGISTERED OR REMOVED BY SALON") {
       const phoneToWipe = currentUserPhone;
 
@@ -1339,7 +1328,6 @@
       currentUserPhone = null;
       currentUserName = null;
 
-      // Wipe local IndexedDB vault cache for this phone
       if (phoneToWipe) {
         try {
           const db = await openVaultDB();
@@ -1382,7 +1370,6 @@
       });
     }
 
-    // STRICT SERVER STATUS VERIFICATION (FAILS CLOSED)
     async function verifyUserTrialStatus(phone) {
       if (!phone) {
         await forceEvictDeletedUser();
@@ -1393,7 +1380,6 @@
       try {
         const { data, error } = await sb.from('users').select('*').eq('phone', phone).maybeSingle();
         
-        // IF USER WAS DELETED FROM DATABASE:
         if (error || !data) {
           await forceEvictDeletedUser("YOUR ACCOUNT IS NOT REGISTERED OR HAS BEEN REMOVED BY THE SALON.");
           return false;
@@ -2227,6 +2213,7 @@
       saveLookToVault(false);
     });
 
+    // CLOUD PERSISTENCE: UPLOADS BEFORE/AFTER & INSERTS GENERATION ROW
     async function saveLookToVault(notify = false) {
       const active = await verifyUserTrialStatus(currentUserPhone);
       if (!active) return;
@@ -2243,10 +2230,15 @@
 
       try {
         const timestamp = Date.now();
+        const localKey = `look_${timestamp}`;
+        const renderedBlob = await encodeCanvas(hairCanvas, WEBP_QUALITY);
+        const renderedDataURL = canvasToDataURL(hairCanvas, WEBP_QUALITY);
+
+        // 1. Save locally to IndexedDB immediately
         const localItem = {
-          id: `look_${timestamp}`,
+          id: localKey,
           user_phone: currentUserPhone,
-          image_url: canvasToDataURL(hairCanvas, WEBP_QUALITY),
+          image_url: renderedDataURL,
           source_image_url: originalDataURL,
           style_name: currentShadeName,
           category: 'Hair Colour',
@@ -2254,6 +2246,47 @@
         };
         await saveLocalLook(localItem);
         if (notify) showToast("SAVED TO MY LOOKS 💾");
+
+        // 2. Persist to Supabase so admin.html sees it
+        if (sb) {
+          const safePhone = String(currentUserPhone).replace(/[^\d+]/g, '');
+          const sourcePath = `${safePhone}/${timestamp}_source.webp`;
+          const renderedPath = `${safePhone}/${timestamp}_rendered.webp`;
+
+          let sourceUrl = originalDataURL;
+          let renderedUrl = renderedDataURL;
+
+          try {
+            const sourceBlob = originalWebpBlob || (originalDataURL ? dataURLToBlob(originalDataURL) : null);
+            if (sourceBlob) {
+              const upSrc = await sb.storage.from(STORAGE_BUCKET).upload(sourcePath, sourceBlob, { contentType: 'image/webp', upsert: true });
+              if (!upSrc.error) sourceUrl = publicUrlFor(sourcePath);
+            }
+
+            if (renderedBlob) {
+              const upRend = await sb.storage.from(STORAGE_BUCKET).upload(renderedPath, renderedBlob, { contentType: 'image/webp', upsert: true });
+              if (!upRend.error) renderedUrl = publicUrlFor(renderedPath);
+            }
+          } catch (_) {}
+
+          const { data: insertedRows } = await sb.from('generations').insert({
+            user_phone: currentUserPhone,
+            image_url: renderedUrl,
+            source_image_url: sourceUrl,
+            style_name: currentShadeName,
+            category: 'Hair Colour'
+          }).select();
+
+          if (insertedRows && insertedRows[0]) {
+            await deleteLocalLook(localKey);
+            await saveLocalLook({
+              ...localItem,
+              id: String(insertedRows[0].id),
+              image_url: renderedUrl,
+              source_image_url: sourceUrl
+            });
+          }
+        }
       } finally {
         isSavingVault = false;
       }
@@ -2318,23 +2351,62 @@
       }
     });
 
+    // VAULT LOADER: SYNCS CLOUD GENERATIONS WITH LOCAL INDEXEDDB
     async function loadUserVault() {
       const active = await verifyUserTrialStatus(currentUserPhone);
       if (!active) return;
 
       activateScreen(screens.gallery);
+
+      let cloudItems = [];
+      if (sb && currentUserPhone) {
+        try {
+          const { data } = await sb
+            .from('generations')
+            .select('*')
+            .eq('user_phone', currentUserPhone)
+            .order('created_at', { ascending: false })
+            .limit(LOCAL_VAULT_LIMIT);
+          if (data) cloudItems = data;
+        } catch (_) {}
+      }
+
       const localItems = await getLocalLooks(currentUserPhone);
-      $('vaultCountBadge').textContent = `${localItems.length} / 10`;
+
+      const combined = [];
+      const seenIds = new Set();
+      const seenUrls = new Set();
+
+      for (const item of cloudItems) {
+        if (!seenIds.has(String(item.id)) && !seenUrls.has(item.image_url)) {
+          seenIds.add(String(item.id));
+          seenUrls.add(item.image_url);
+          combined.push(item);
+        }
+      }
+
+      for (const item of localItems) {
+        if (!seenIds.has(String(item.id)) && !seenUrls.has(item.image_url)) {
+          seenIds.add(String(item.id));
+          seenUrls.add(item.image_url);
+          combined.push(item);
+        }
+      }
+
+      combined.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+      const finalItems = combined.slice(0, LOCAL_VAULT_LIMIT);
+
+      $('vaultCountBadge').textContent = `${finalItems.length} / 10`;
 
       const grid = $('galleryGrid');
       grid.innerHTML = '';
 
-      if (localItems.length === 0) {
+      if (finalItems.length === 0) {
         grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:30px; font-weight:800;">NO LOOKS SAVED YET</div>';
         return;
       }
 
-      localItems.forEach(item => {
+      finalItems.forEach(item => {
         const card = document.createElement('div');
         card.className = 'gallery-card';
         card.innerHTML = `
@@ -2355,6 +2427,9 @@
         card.querySelector('.vault-del').addEventListener('click', async (e) => {
           e.stopPropagation();
           await deleteLocalLook(item.id);
+          if (sb && currentUserPhone && !String(item.id).startsWith('look_')) {
+            try { await sb.from('generations').delete().eq('id', item.id); } catch (_) {}
+          }
           showToast('DELETED FROM VAULT');
           loadUserVault();
         });
