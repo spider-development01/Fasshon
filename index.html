@@ -11,9 +11,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo+Black&family=Plus+Jakarta+Sans:wght@500;600;700;800;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" integrity="sha384-XGjxtQfXaH2nPFGY9dByhFFqqcfYXHT300wJghS2TRpnBaKU8H3/8fuP+WmPfqVM" crossorigin="anonymous">
-
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js" integrity="sha384-qRhvL3bQ4fG6GjY6G9g2s1r3vG6t3Ew5/Fv5r6l3y4W6V7U8y9Z0a1b2c3d4e5f6" crossorigin="anonymous"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" integrity="sha384-XGjxtQfXaH2tnPFa9x+ruJTuLE3Aa6LhHSWRr1XeTyhezb4abCG4ccI5AkVDxqC+" crossorigin="anonymous">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js" integrity="sha384-GFr3yTh5lJznCbZfpTtXnwboFsxqtTQoeTZCRHhE0579KrRmlCzen5AA8ohaB5ug" crossorigin="anonymous"></script>
 
   <style>
     :root {
@@ -141,7 +140,6 @@
       letter-spacing: 2px; transform: rotate(-2deg); flex-shrink: 0;
     }
 
-    /* TRIAL LOCK OVERLAY */
     #trialLockOverlay {
       position: fixed; inset: 0;
       background: rgba(26, 26, 26, 0.92);
@@ -187,7 +185,6 @@
     .action-btn-call { background: var(--yellow); color: var(--black); }
     .action-btn-wa { background: var(--whatsapp); color: var(--white); }
 
-    /* CUSTOM NEO-BRUTALIST MODAL */
     .custom-modal-backdrop {
       position: fixed; inset: 0;
       background: rgba(26, 26, 26, 0.88);
@@ -211,7 +208,6 @@
       animation: popIn 0.25s var(--bounce);
     }
 
-    /* LOGIN SCREEN */
     #loginScreen { z-index: var(--z-overlay); align-items: center; justify-content: center; padding: 24px; }
     .login-card {
       background: var(--white);
@@ -222,7 +218,6 @@
       max-width: 420px; width: 100%; text-align: center;
     }
 
-    /* FULLSCREEN WYSIWYG CAMERA */
     .camera-wrapper { position: absolute; inset: 0; background: #000; overflow: hidden; }
     #cameraFeed { width: 100%; height: 100%; object-fit: cover; display: block; }
     #cameraFeed.mirrored { transform: scaleX(-1); }
@@ -276,7 +271,6 @@
       flex-shrink: 0;
     }
 
-    /* STUDIO */
     .studio-header {
       padding: 12px 18px; background: var(--beige);
       border-bottom: var(--border-thick);
@@ -310,7 +304,6 @@
       box-shadow: var(--shadow-sm); display: block;
     }
 
-    /* MODE TOGGLE */
     .mode-switch-bar {
       display: grid; grid-template-columns: 1fr 1fr;
       background: var(--white); border: var(--border-thick);
@@ -328,7 +321,6 @@
     }
     .mode-tab-btn.active.pink-mode { background: var(--black); color: var(--pink); }
 
-    /* TOOL CARDS */
     .tool-card {
       background: var(--white); border: var(--border-thick);
       border-radius: var(--radius-card); padding: 16px;
@@ -407,7 +399,6 @@
     }
     .ref-thumb img { width: 100%; height: 100%; object-fit: cover; }
 
-    /* SLIDERS */
     .slider-stack { position: relative; display: flex; flex-direction: column; gap: 10px; }
     .slider-block {
       display: flex; flex-direction: column; gap: 6px;
@@ -448,7 +439,6 @@
       font-size: clamp(0.6rem, 2.4vw, 0.72rem); box-shadow: var(--shadow-sm); display: inline-flex; align-items: center; gap: 7px;
     }
 
-    /* COMPARE SCREEN */
     .compare-top-nav {
       padding: 12px 14px; background: var(--beige); border-bottom: var(--border-thick);
       display: flex; justify-content: space-between; align-items: center; gap: 8px; z-index: var(--z-dock); flex-shrink: 0;
@@ -515,7 +505,6 @@
       display: inline-flex; align-items: center; gap: 8px;
     }
 
-    /* VAULT GALLERY */
     .gallery-grid {
       flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 14px;
       display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; align-content: start;
@@ -530,7 +519,6 @@
     .gallery-card-body { padding: 10px; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
     .gallery-card-name { font-family: var(--font-heading); font-size: clamp(0.68rem, 2.4vw, 0.78rem); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-    /* OVERLAYS */
     .toast {
       position: fixed; top: max(18px, env(safe-area-inset-top)); left: 50%;
       transform: translateX(-50%) translateY(-100px); background: var(--black); color: var(--white);
@@ -570,7 +558,7 @@
     <div id="loadingTimer" class="timer-badge hidden">0S ELAPSED</div>
   </div>
 
-  <!-- CUSTOM NEO-BRUTALIST MODAL DIALOG -->
+  <!-- MODAL DIALOG -->
   <div id="kamiCustomModal" class="custom-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="customModalTitle" aria-describedby="customModalMessage">
     <div class="custom-modal-card">
       <div style="display:inline-block; margin-bottom:4px;">
@@ -627,7 +615,7 @@
       </form>
 
       <div style="margin-top:16px; font-size:0.64rem; font-weight:700; color:#777; line-height:1.35;">
-        🔒 DPDP Act 2023 Compliant. Your photo is strictly processed for instant visual hair consultation and never shared.
+        🔒 DPDP Act 2023 Compliant. Your photo is strictly processed for visual hair consultation and never shared.
       </div>
     </div>
   </section>
@@ -812,7 +800,6 @@
   <script type="module">
     'use strict';
 
-    // DETERMINISTIC BLOB REGISTRY TO PREVENT MEMORY LEAKS
     const BlobRegistry = {
       activeUrls: new Set(),
       create(blob) {
@@ -861,17 +848,15 @@
       return 'about:blank';
     }
 
-    // HEIC CONVERTER WITH CONCURRENCY LOCK & TIMEOUT
     let heicPromise = null;
     async function getHeicConverter() {
       if (window.heic2any) return window.heic2any;
       if (heicPromise) return heicPromise;
 
       heicPromise = new Promise((resolve, reject) => {
-        const timeout = setTimeout(() => reject(new Error('HEIC library loading timed out')), 10000);
+        const timeout = setTimeout(() => reject(new Error('HEIC loader timeout')), 10000);
         const script = document.createElement('script');
         script.src = 'https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js';
-        script.integrity = 'sha384-9rN9G1Wk8b5G8Z1C4T1s9R5z0A4b1c2d3e4f5g6h7i8j9k0l1m2n3o4p5q6r7s8t';
         script.crossOrigin = 'anonymous';
         script.onload = () => {
           clearTimeout(timeout);
@@ -879,7 +864,7 @@
         };
         script.onerror = () => {
           clearTimeout(timeout);
-          reject(new Error('Failed to load HEIC converter'));
+          reject(new Error('Failed to load iPhone HEIC converter'));
         };
         document.head.appendChild(script);
       });
@@ -1029,7 +1014,6 @@
     let renderScheduled = false;
     let openedFromVault = false;
     let toastTimer = null;
-    let compareLoadToken = 0;
 
     let currentCompareMode = 'slide';
     let currentColorApplied = false;
@@ -1222,7 +1206,6 @@
       $('clientStudioBadge').textContent = label;
     }
 
-    /* FAIL-CLOSED AUTHENTICATION & TRIAL VERIFICATION */
     async function verifyUserTrialStatus(phone) {
       if (!sb || !phone) return false;
       try {
@@ -1655,7 +1638,161 @@
       scheduleRender();
     }
 
-    /* FAIL-CLOSED AI GENERATION TRIGGER */
+    function setSlidersLocked(locked) {
+      slidersUnlocked = !locked;
+      $('sliderStack').classList.toggle('sliders-locked', locked);
+      $('sliderLockBtn').innerHTML = locked
+        ? '<i class="bi bi-lock-fill"></i> FINE TUNE'
+        : '<i class="bi bi-unlock-fill"></i> LOCK';
+      showToast(locked ? 'SLIDERS LOCKED 🔒' : 'SLIDERS UNLOCKED 🎚️');
+    }
+
+    $('sliderLockBtn').addEventListener('click', () => setSlidersLocked(slidersUnlocked));
+    $('sliderLockOverlay').addEventListener('click', () => setSlidersLocked(false));
+
+    $('hueSlider').addEventListener('input', e => {
+      if (!slidersUnlocked) return;
+      currentColorApplied = true;
+      targetH = parseInt(e.target.value, 10);
+      currentShadeName = 'Custom';
+      $('hueVal').textContent = `${targetH}°`;
+      $('currentShadeBadge').textContent = 'CUSTOM';
+      document.querySelectorAll('.swatch-tile').forEach(t => t.classList.remove('active'));
+      scheduleRender();
+    });
+
+    $('satSlider').addEventListener('input', e => {
+      if (!slidersUnlocked) return;
+      currentColorApplied = true;
+      targetS = parseInt(e.target.value, 10);
+      currentShadeName = 'Custom';
+      $('satVal').textContent = `${targetS}%`;
+      $('currentShadeBadge').textContent = 'CUSTOM';
+      document.querySelectorAll('.swatch-tile').forEach(t => t.classList.remove('active'));
+      scheduleRender();
+    });
+
+    $('liftSlider').addEventListener('input', e => {
+      if (!slidersUnlocked) return;
+      currentColorApplied = true;
+      currentLift = parseFloat(e.target.value);
+      const v = Math.round(currentLift * 100);
+      $('liftVal').textContent = Math.abs(v) < 2 ? '0%' : (v > 0 ? `+${v}%` : `${v}%`);
+      scheduleRender();
+    });
+
+    $('familyFilterRow').addEventListener('click', e => {
+      const chip = e.target.closest('.filter-chip');
+      if (!chip) return;
+      document.querySelectorAll('#familyFilterRow .filter-chip').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+      selectedFamily = chip.dataset.family;
+      renderSwatches();
+    });
+
+    $('tabModeColor').addEventListener('click', () => {
+      activeStudioMode = 'color';
+      $('tabModeColor').classList.add('active');
+      $('tabModeStyle').classList.remove('active', 'pink-mode');
+      $('panelColor').classList.remove('hidden');
+      $('panelStyle').classList.add('hidden');
+      stylePreviewImg.classList.add('hidden');
+      hairCanvas.classList.remove('hidden');
+    });
+
+    $('tabModeStyle').addEventListener('click', () => {
+      activeStudioMode = 'style';
+      $('tabModeStyle').classList.add('active', 'pink-mode');
+      $('tabModeColor').classList.remove('active');
+      $('panelStyle').classList.remove('hidden');
+      $('panelColor').classList.add('hidden');
+    });
+
+    async function loadHairstylesCatalog() {
+      if (sb) {
+        try {
+          const { data } = await sb.from('hairstyles').select('*').order('created_at', { ascending: true });
+          if (data && data.length) {
+            liveHairstyles = data.map(h => ({
+              id: h.id,
+              category: h.category || 'Modern Cuts',
+              name: h.name,
+              desc_prompt: h.desc_prompt || h.name
+            }));
+          }
+        } catch (_) {}
+      }
+      renderHairstyleCategories();
+      renderHairstyleGrid();
+    }
+
+    function renderHairstyleCategories() {
+      const row = $('catFilterRow');
+      row.innerHTML = '';
+      const categories = [...new Set(liveHairstyles.map(h => h.category))];
+      if (!categories.includes(selectedHairstyleCat)) selectedHairstyleCat = categories[0] || 'Bob & Short';
+
+      categories.forEach(cat => {
+        const chip = document.createElement('button');
+        chip.className = 'filter-chip' + (cat === selectedHairstyleCat ? ' active' : '');
+        chip.textContent = cat;
+        chip.addEventListener('click', () => {
+          selectedHairstyleCat = cat;
+          renderHairstyleCategories();
+          renderHairstyleGrid();
+        });
+        row.appendChild(chip);
+      });
+    }
+
+    function renderHairstyleGrid() {
+      const grid = $('hairstylesGrid');
+      grid.innerHTML = '';
+      const filtered = liveHairstyles.filter(h => h.category === selectedHairstyleCat);
+
+      filtered.forEach(style => {
+        const btn = document.createElement('button');
+        btn.className = 'style-chip' + (style.id === selectedHairstyle?.id ? ' selected' : '');
+        btn.innerHTML = `<i class="bi bi-scissors"></i> <span>${style.name}</span>`;
+        btn.addEventListener('click', () => {
+          selectedHairstyle = style;
+          renderHairstyleGrid();
+        });
+        grid.appendChild(btn);
+      });
+    }
+
+    $('refCard').addEventListener('click', e => {
+      if (e.target.closest('#clearRefBtn')) return;
+      $('refFileInput').click();
+    });
+
+    $('refFileInput').addEventListener('change', async (e) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      try {
+        refBlob = await compressToWebP(file, { maxDim: 1024, quality: WEBP_QUALITY });
+      } catch (_) {
+        refBlob = file;
+      }
+      const url = BlobRegistry.create(refBlob);
+      $('refImg').src = url;
+      $('refImg').classList.remove('hidden');
+      $('refIcon').classList.add('hidden');
+      $('clearRefBtn').classList.remove('hidden');
+      $('refSubtext').textContent = 'Reference cut attached';
+    });
+
+    $('clearRefBtn').addEventListener('click', e => {
+      e.stopPropagation();
+      refBlob = null;
+      $('refImg').src = '';
+      $('refImg').classList.add('hidden');
+      $('refIcon').classList.remove('hidden');
+      $('clearRefBtn').classList.add('hidden');
+      $('refSubtext').textContent = 'Tap to upload fringe/length reference';
+    });
+
     $('executeStyleBtn').addEventListener('click', async () => {
       if (!sb) {
         showToast('KAMI CLOUD OFFLINE');
@@ -1681,7 +1818,7 @@
             badgeBg: "var(--red)",
             badgeColor: "var(--white)",
             title: "ALLOWANCE EXHAUSTED",
-            message: `You have used your allowance. Please contact the salon supervisor for additional credits.`,
+            message: `You have consumed all ${userHairstyleLimit} hairstyle previews. Contact the salon supervisor for a top-up.`,
             confirmText: "OK"
           });
           return;
@@ -1712,8 +1849,17 @@
         const sourcePublicUrl = sb.storage.from(STORAGE_BUCKET).getPublicUrl(sourcePath).data.publicUrl;
 
         const imageUrls = [sourcePublicUrl];
+        if (refBlob) {
+          const refPath = `${safePhone}/${timeKey}_ref.webp`;
+          const upRef = await sb.storage.from(STORAGE_BUCKET).upload(refPath, refBlob, {
+            contentType: 'image/webp',
+            upsert: true
+          });
+          if (!upRef.error) imageUrls.push(sb.storage.from(STORAGE_BUCKET).getPublicUrl(refPath).data.publicUrl);
+        }
+
         const promptDesc = selectedHairstyle.desc_prompt || selectedHairstyle.name;
-        const finalPrompt = `Professional hair consultation: transform hair to ${promptDesc}. Keep facial features intact.`;
+        const finalPrompt = `Professional hair consultation: transform hair to ${promptDesc}. Keep face and skin tones exactly identical.`;
 
         const res = await fetch('/api/tryon', {
           method: 'POST',
@@ -1733,6 +1879,16 @@
           category: selectedHairstyle.category
         });
 
+        await saveLocalLook({
+          id: `look_${timeKey}`,
+          user_phone: currentUserPhone,
+          image_url: renderedPublicUrl,
+          source_image_url: sourcePublicUrl,
+          style_name: selectedHairstyle.name,
+          category: selectedHairstyle.category,
+          created_at: new Date().toISOString()
+        });
+
         openCompareWithImages(sourcePublicUrl, renderedPublicUrl, selectedHairstyle.name, false);
       } catch (err) {
         showToast(err.message || 'GENERATION ERROR');
@@ -1747,6 +1903,7 @@
       $('imgRendered').src = sanitizeUrl(renderedSrc);
       $('badgeAfter').textContent = (title || 'NEW LOOK').toUpperCase();
       activateScreen(screens.compare);
+      setCompareMode('slide');
       setSlider(50);
     }
 
@@ -1759,6 +1916,7 @@
 
     const compareStage = $('compareStage');
     compareStage.addEventListener('pointerdown', e => {
+      if (currentCompareMode !== 'slide') return;
       isDividerDragging = true;
       try { compareStage.setPointerCapture(e.pointerId); } catch (_) {}
       moveDivider(e.clientX);
@@ -1782,6 +1940,34 @@
       setSlider((x / rect.width) * 100);
     }
 
+    function setCompareMode(mode) {
+      currentCompareMode = mode;
+      $('modeSlide').classList.toggle('active', mode === 'slide');
+      $('modeBefore').classList.toggle('active', mode === 'before');
+      $('modeAfter').classList.toggle('active', mode === 'after');
+
+      if (mode === 'slide') {
+        $('sliderDivider').style.display = 'flex';
+        $('badgeBefore').style.display = 'block';
+        $('badgeAfter').style.display = 'block';
+        setSlider(50);
+      } else if (mode === 'before') {
+        $('imgRendered').style.clipPath = 'polygon(100% 0, 100% 0, 100% 100%, 100% 100%)';
+        $('sliderDivider').style.display = 'none';
+        $('badgeBefore').style.display = 'block';
+        $('badgeAfter').style.display = 'none';
+      } else {
+        $('imgRendered').style.clipPath = 'polygon(0 0, 100% 0, 100% 100%, 0 100%)';
+        $('sliderDivider').style.display = 'none';
+        $('badgeBefore').style.display = 'none';
+        $('badgeAfter').style.display = 'block';
+      }
+    }
+
+    $('modeSlide').addEventListener('click', () => setCompareMode('slide'));
+    $('modeBefore').addEventListener('click', () => setCompareMode('before'));
+    $('modeAfter').addEventListener('click', () => setCompareMode('after'));
+
     $('compareBackBtn').addEventListener('click', () => {
       if (openedFromVault) activateScreen(screens.gallery);
       else activateScreen(screens.studio);
@@ -1793,9 +1979,141 @@
         return;
       }
       openCompareWithImages(originalDataURL, canvasToDataURL(hairCanvas, WEBP_QUALITY_HIGH), currentShadeName, false);
+      saveLookToVault(false);
+    });
+
+    async function saveLookToVault(notify = false) {
+      if (!currentUserPhone || isSavingVault || !currentColorApplied) return;
+      const timeBucket = Math.floor(Date.now() / DEDUPE_WINDOW_MS);
+      const hash = `${currentUserPhone}_${currentShadeName}_${targetH}_${timeBucket}`;
+      if (lastSavedHash === hash) {
+        if (notify) showToast("LOOK ALREADY SAVED 💾");
+        return;
+      }
+      isSavingVault = true;
+      lastSavedHash = hash;
+
+      try {
+        const timestamp = Date.now();
+        const localItem = {
+          id: `look_${timestamp}`,
+          user_phone: currentUserPhone,
+          image_url: canvasToDataURL(hairCanvas, WEBP_QUALITY),
+          source_image_url: originalDataURL,
+          style_name: currentShadeName,
+          category: 'Hair Colour',
+          created_at: new Date().toISOString()
+        };
+        await saveLocalLook(localItem);
+        if (notify) showToast("SAVED TO MY LOOKS 💾");
+      } finally {
+        isSavingVault = false;
+      }
+    }
+
+    async function buildCollageBlob() {
+      const beforeSrc = $('imgSource').src;
+      const afterSrc = $('imgRendered').src;
+      const [img1, img2] = await Promise.all([loadDrawable(beforeSrc), loadDrawable(afterSrc)]);
+
+      const targetH = Math.max(img1.naturalHeight || 800, img2.naturalHeight || 800);
+      const ratio1 = (img1.naturalWidth || 800) / (img1.naturalHeight || 800);
+      const colW = Math.round(targetH * ratio1);
+
+      const cvs = document.createElement('canvas');
+      cvs.width = colW * 2;
+      cvs.height = targetH;
+      const c = cvs.getContext('2d');
+      c.drawImage(img1, 0, 0, colW, targetH);
+      c.drawImage(img2, colW, 0, colW, targetH);
+
+      c.lineWidth = 6;
+      c.strokeStyle = '#1A1A1A';
+      c.beginPath();
+      c.moveTo(colW, 0);
+      c.lineTo(colW, targetH);
+      c.stroke();
+
+      return encodeCanvas(cvs, WEBP_QUALITY);
+    }
+
+    $('shareBtn').addEventListener('click', async () => {
+      try {
+        const blob = await buildCollageBlob();
+        const file = new File([blob], `KAMI_${Date.now()}.webp`, { type: 'image/webp' });
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          await navigator.share({ files: [file], title: 'KAMI Hair Studio', text: 'My new look from KAMI! 💇' });
+          return;
+        }
+        downloadBlob(blob, file.name);
+        showToast('SAVED — SHARE ON WHATSAPP');
+      } catch (_) {
+        showToast('COULD NOT SHARE IMAGE');
+      }
+    });
+
+    $('saveLocalBtn').addEventListener('click', async () => {
+      const src = $('imgRendered').src;
+      if (!src) return;
+      try {
+        const blob = await compressToWebP(src, { maxDim: 1600, quality: WEBP_QUALITY_HIGH });
+        downloadBlob(blob, `KAMI_${Date.now()}.webp`);
+        showToast("SAVED TO DEVICE 📥");
+      } catch (_) {
+        showToast("SAVE FAILED");
+      }
+    });
+
+    async function loadUserVault() {
+      activateScreen(screens.gallery);
+      const localItems = await getLocalLooks(currentUserPhone);
+      $('vaultCountBadge').textContent = `${localItems.length} / 10`;
+
+      const grid = $('galleryGrid');
+      grid.innerHTML = '';
+
+      if (localItems.length === 0) {
+        grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:30px; font-weight:800;">NO LOOKS SAVED YET</div>';
+        return;
+      }
+
+      localItems.forEach(item => {
+        const card = document.createElement('div');
+        card.className = 'gallery-card';
+        card.innerHTML = `
+          <img src="${sanitizeUrl(item.image_url)}" loading="lazy" alt="${item.style_name || 'Look'}" />
+          <div class="gallery-card-body">
+            <div class="gallery-card-name">${item.style_name || 'Hair Style'}</div>
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <span style="font-size:0.65rem; color:#666; font-weight:700;">${new Date(item.created_at).toLocaleDateString()}</span>
+              <button class="btn-icon vault-del" aria-label="Delete look" style="width:28px; height:28px; font-size:0.7rem; color:var(--red);"><i class="bi bi-trash"></i></button>
+            </div>
+          </div>
+        `;
+
+        card.addEventListener('click', () => {
+          openCompareWithImages(item.source_image_url || item.image_url, item.image_url, item.style_name || 'Look', true);
+        });
+
+        card.querySelector('.vault-del').addEventListener('click', async (e) => {
+          e.stopPropagation();
+          await deleteLocalLook(item.id);
+          showToast('DELETED FROM VAULT');
+          loadUserVault();
+        });
+
+        grid.appendChild(card);
+      });
+    }
+
+    $('openGalleryBtn').addEventListener('click', loadUserVault);
+    $('closeGalleryBtn').addEventListener('click', () => {
+      activateScreen(screens.camera);
+      if (!cameraStream) startCamera();
     });
 
     window.addEventListener('DOMContentLoaded', () => {
+      loadHairstylesCatalog();
       checkAuthSession();
     });
   </script>
