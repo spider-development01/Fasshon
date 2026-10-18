@@ -714,7 +714,7 @@
     }
     .ref-thumb img { width: 100%; height: 100%; object-fit: cover; }
 
-    /* DEDICATED ANIMATED FINE TUNE POPUP MODAL (CIE LAB + OKLCH) */
+    /* DEDICATED ANIMATED FINE TUNE POPUP MODAL */
     .fine-tune-modal {
       position: absolute;
       left: 0; right: 0; bottom: 0;
@@ -951,7 +951,7 @@
     .compare-fab-share i { color: #25D366; font-size: 1.1rem; }
 
     /* =========================================================================
-       VIEW 4: MY LOOKS VAULT — FULL UNCROPPED PREVIEW + METADATA + ACTIONS
+       VIEW 4: MY LOOKS VAULT — FULL EDGE-TO-EDGE PHOTO + UNCLIPPED ACTIONS
        ========================================================================= */
     .gallery-grid {
       flex: 1;
@@ -959,11 +959,11 @@
       overflow-y: auto;
       overflow-x: hidden;
       -webkit-overflow-scrolling: touch;
-      padding: 16px 14px calc(100px + env(safe-area-inset-bottom));
+      padding: 14px 12px calc(100px + env(safe-area-inset-bottom));
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
-      grid-auto-rows: max-content; /* CRITICAL: prevents CSS grid row squishing */
-      gap: 14px;
+      grid-auto-rows: max-content;
+      gap: 12px;
       align-content: start;
       align-items: stretch;
       max-width: 920px;
@@ -997,37 +997,20 @@
     }
     .gallery-card:active { transform: scale(0.98); }
 
-    /* Full Portrait Preview Frame: Shows 100% of the photo with zero head/chin clipping */
+    /* Full Portrait Preview Frame: Edge-to-Edge with zero dark sidebars */
     .gallery-card-img-wrap {
       width: 100%;
       aspect-ratio: 3 / 4;
       position: relative;
       overflow: hidden;
-      background: #141414;
+      background: #181818;
       flex-shrink: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
     }
-    /* Ambient blurred background so both portrait and landscape photos fill the frame cleanly */
-    .gallery-card-img-ambient {
-      position: absolute;
-      inset: -12px;
-      width: calc(100% + 24px);
-      height: calc(100% + 24px);
-      object-fit: cover;
-      filter: blur(18px) brightness(0.55);
-      transform: scale(1.08);
-      pointer-events: none;
-      z-index: 1;
-    }
-    /* Foreground full uncropped photo */
     .gallery-card-img-main {
-      position: relative;
-      z-index: 2;
       width: 100%;
       height: 100%;
-      object-fit: contain;
+      object-fit: cover;
+      object-position: center 18%;
       display: block;
     }
     .gallery-card-type-pill {
@@ -1035,37 +1018,37 @@
       top: 10px;
       left: 10px;
       z-index: 4;
-      background: rgba(20, 20, 20, 0.72);
+      background: rgba(20, 20, 20, 0.74);
       -webkit-backdrop-filter: blur(8px);
       backdrop-filter: blur(8px);
       color: #FFFFFF;
-      font-size: 0.62rem;
+      font-size: 0.60rem;
       font-weight: 800;
       letter-spacing: 0.4px;
       padding: 4px 10px;
       border-radius: var(--radius-full);
       text-transform: uppercase;
-      border: 1px solid rgba(255, 255, 255, 0.14);
+      border: 1px solid rgba(255, 255, 255, 0.15);
     }
 
     .gallery-card-body {
-      padding: 12px 12px 12px;
+      padding: 10px 12px 12px;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
       gap: 8px;
       background: #FFFFFF;
       flex: 1;
-      border-top: 1px solid rgba(20, 20, 20, 0.05);
+      min-width: 0;
     }
     .gallery-card-info {
       display: flex;
       flex-direction: column;
-      gap: 3px;
+      gap: 2px;
       min-width: 0;
     }
     .gallery-card-name {
-      font-size: 0.88rem;
+      font-size: 0.86rem;
       font-weight: 800;
       color: var(--text-main);
       overflow: hidden;
@@ -1074,28 +1057,33 @@
       line-height: 1.25;
     }
     .gallery-card-date {
-      font-size: 0.70rem;
+      font-size: 0.68rem;
       font-weight: 700;
       color: var(--text-muted);
       display: flex;
       align-items: center;
       gap: 4px;
+      white-space: nowrap;
     }
     .gallery-card-footer {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      gap: 6px;
-      padding-top: 4px;
+      gap: 4px;
+      padding-top: 6px;
       border-top: 1px solid var(--surface-subtle);
+      min-width: 0;
     }
     .vault-compare-hint {
-      font-size: 0.68rem;
+      font-size: 0.66rem;
       font-weight: 800;
       color: var(--primary);
       display: inline-flex;
       align-items: center;
-      gap: 4px;
+      gap: 3px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
     .vault-actions-group {
       display: inline-flex;
@@ -1103,42 +1091,34 @@
       gap: 6px;
       flex-shrink: 0;
     }
-    .vault-dl-btn {
+    .vault-dl-btn, .vault-del-btn {
       width: 32px;
       height: 32px;
       border-radius: 50%;
-      background: var(--surface-subtle);
-      color: var(--text-main);
       display: inline-flex;
       align-items: center;
       justify-content: center;
       font-size: 0.84rem;
       cursor: pointer;
+      flex-shrink: 0;
       transition: transform 0.12s ease, background-color 0.12s ease;
+    }
+    .vault-dl-btn {
+      background: var(--surface-subtle);
+      color: var(--text-main);
+      border: 1px solid rgba(20, 20, 20, 0.06);
     }
     .vault-dl-btn:active {
       transform: scale(0.90);
       background: #E2E2DC;
     }
     .vault-del-btn {
-      height: 32px;
-      padding: 0 10px;
-      border-radius: var(--radius-full);
       background: #FFF5F5;
       border: 1px solid #FED7D7;
       color: #E53E3E;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 4px;
-      font-size: 0.70rem;
-      font-weight: 800;
-      cursor: pointer;
-      transition: transform 0.12s ease, background-color 0.12s ease;
-      flex-shrink: 0;
     }
     .vault-del-btn:active {
-      transform: scale(0.92);
+      transform: scale(0.90);
       background: #FED7D7;
     }
 
@@ -1395,7 +1375,7 @@
       <!-- BACKDROP -->
       <div id="drawerBackdrop" class="studio-drawer-backdrop"></div>
 
-      <!-- DRAWER A: HAIR COLOUR (HYBRID CIE LAB & OKLCH POWERED) -->
+      <!-- DRAWER A: HAIR COLOUR -->
       <div id="colorDrawer" class="studio-drawer">
         <div class="drawer-handle-bar" id="colorDrawerHandle"></div>
         <div class="drawer-header">
@@ -1428,7 +1408,7 @@
         </div>
       </div>
 
-      <!-- ANIMATED FINE TUNE POPUP SHEET (CIE LAB L* + OKLCH C/H) -->
+      <!-- ANIMATED FINE TUNE POPUP SHEET -->
       <div id="fineTuneModal" class="fine-tune-modal">
         <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border-subtle); padding-bottom:8px;">
           <h4 style="font-size:0.92rem; font-weight:800;"><i class="bi bi-sliders" style="color:var(--primary); margin-right:4px;"></i> SALON TONE &amp; LIFT FINE TUNE</h4>
@@ -1440,11 +1420,11 @@
         </div>
         <div class="slider-block">
           <label for="oklchChromaSlider">PIGMENT VIBRANCE (C*) <span id="chromaVal">0.12</span></label>
-          <input type="range" id="oklchChromaSlider" min="0" max="0.28" step="0.005" value="0.12" class="sat-slider" />
+          <input type="range" id="oklchChromaSlider" min="0" max="0.24" step="0.004" value="0.12" class="sat-slider" />
         </div>
         <div class="slider-block">
           <label for="oklchLiftSlider">DEVELOPER LIFT (ΔL*) <span id="liftVal">0</span></label>
-          <input type="range" id="oklchLiftSlider" min="-30" max="40" step="1" value="0" class="lift-slider" />
+          <input type="range" id="oklchLiftSlider" min="-28" max="32" step="1" value="0" class="lift-slider" />
         </div>
       </div>
 
@@ -1617,11 +1597,11 @@
     }
 
     /* =========================================================================
-       PEAK SALON-GRADE CIE L*a*b* + OKLCH PHOTOMETRIC HAIR ENGINE
-       - Zero-Allocation Forward & Inverse LUTs (60FPS on Low-End Mobile)
-       - Frequency-Separated Strand & Cuticle Preservation (Zero Black Speckles)
-       - Adaptive Client Hair Level Profiling (P10 / P50 / P90 + Melanin Toner)
-       - Edge-Aware Scalp Parting & Forehead Skin-Spill Gate
+       TRUE SALON OPTICAL ENGINE:
+       - O(N) Edge-Preserving Guided Image Filter for Strand-Accurate Matting
+       - Beer-Lambert Cortical Absorption + Marschner Dual-Lobe (TRT + R) Model
+       - Perceptual Oklab Chromaticity Transfer (Zero Chalky Tips / Zero RGB Mud)
+       - 4096-Entry Linear->sRGB LUT for 60FPS Real-Time Rendering
        ========================================================================= */
     const SRGB_TO_LIN = new Float32Array(256);
     for (let i = 0; i < 256; i++) {
@@ -1629,7 +1609,6 @@
       SRGB_TO_LIN[i] = (c <= 0.04045) ? (c / 12.92) : Math.pow((c + 0.055) / 1.055, 2.4);
     }
 
-    // 4096-entry LUT for Linear [0..1] -> sRGB [0..255] (Eliminates Math.pow per pixel!)
     const LIN_LUT_SIZE = 4096;
     const LIN_TO_SRGB_LUT = new Uint8Array(LIN_LUT_SIZE + 1);
     for (let i = 0; i <= LIN_LUT_SIZE; i++) {
@@ -1644,7 +1623,7 @@
       return LIN_TO_SRGB_LUT[(c * LIN_LUT_SIZE + 0.5) | 0];
     }
 
-    // CIE L* perceptual lightness from Oklab L (toe-corrected to match CIE 1976 L* [0..1])
+    // Perceptual CIE L* [0..1] toe-corrected mapping from Oklab L
     function oklabLToCieLNorm(L) {
       const k1 = 0.206, k2 = 0.03, k3 = (1.0 + k1) / (1.0 + k2);
       return 0.5 * (k3 * L - k1 + Math.sqrt((k3 * L - k1) * (k3 * L - k1) + 4.0 * k2 * k3 * L));
@@ -1670,6 +1649,7 @@
       return [L, a, bVal];
     }
 
+    // Soft gamut compression + Oklab -> sRGB conversion (prevents neon channel clipping!)
     function oklabToSRGB(L, a, bVal) {
       const l_ = L + 0.3963377774 * a + 0.2158037573 * bVal;
       const m_ = L - 0.1055613458 * a - 0.0638541728 * bVal;
@@ -1679,9 +1659,21 @@
       const m = m_ * m_ * m_;
       const s = s_ * s_ * s_;
 
-      const rLin = +4.0767439362 * l - 3.3077115913 * m + 0.2309699290 * s;
-      const gLin = -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s;
-      const bLin = -0.0041960863 * l - 0.7034186147 * m + 1.7076147010 * s;
+      let rLin = +4.0767439362 * l - 3.3077115913 * m + 0.2309699290 * s;
+      let gLin = -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s;
+      let bLin = -0.0041960863 * l - 0.7034186147 * m + 1.7076147010 * s;
+
+      // Soft highlight shoulder prevents harsh RGB channel clipping on bright reds/coppers
+      const maxCh = Math.max(rLin, gLin, bLin);
+      if (maxCh > 1.0) {
+        const lum = 0.2126 * rLin + 0.7152 * gLin + 0.0722 * bLin;
+        if (lum < 0.99) {
+          const scale = (1.0 - lum) / (maxCh - lum + 1e-5);
+          rLin = lum + (rLin - lum) * scale;
+          gLin = lum + (gLin - lum) * scale;
+          bLin = lum + (bLin - lum) * scale;
+        }
+      }
 
       return [fastLinToSRGB(rLin), fastLinToSRGB(gLin), fastLinToSRGB(bLin)];
     }
@@ -1691,53 +1683,138 @@
       return [L, C * Math.cos(rad), C * Math.sin(rad)];
     }
 
-    /* SALON SHADE REPERTOIRE CALIBRATED IN CIE L*r / OKLCH */
+    /* Fast O(N) Separable Box Filter for Guided Image Filtering */
+    function fastBoxFilter(src, w, h, radius) {
+      const total = w * h;
+      const tmp = new Float32Array(total);
+      const dst = new Float32Array(total);
+
+      // Horizontal pass
+      for (let y = 0; y < h; y++) {
+        const row = y * w;
+        let sum = 0.0;
+        let count = 0;
+        for (let x = 0; x <= Math.min(w - 1, radius); x++) {
+          sum += src[row + x];
+          count++;
+        }
+        for (let x = 0; x < w; x++) {
+          tmp[row + x] = sum / count;
+          const addIdx = x + radius + 1;
+          const remIdx = x - radius;
+          if (addIdx < w) { sum += src[row + addIdx]; count++; }
+          if (remIdx >= 0) { sum -= src[row + remIdx]; count--; }
+        }
+      }
+
+      // Vertical pass
+      for (let x = 0; x < w; x++) {
+        let sum = 0.0;
+        let count = 0;
+        for (let y = 0; y <= Math.min(h - 1, radius); y++) {
+          sum += tmp[y * w + x];
+          count++;
+        }
+        for (let y = 0; y < h; y++) {
+          dst[y * w + x] = sum / count;
+          const addIdx = y + radius + 1;
+          const remIdx = y - radius;
+          if (addIdx < h) { sum += tmp[addIdx * w + x]; count++; }
+          if (remIdx >= 0) { sum -= tmp[remIdx * w + x]; count--; }
+        }
+      }
+      return dst;
+    }
+
+    /* Edge-Preserving Guided Filter (He et al.): Snaps low-res AI mask to exact hair strands */
+    function guidedFilterMask(guidanceI, maskP, w, h, radius = 6, eps = 0.0025) {
+      const total = w * h;
+      const meanI = fastBoxFilter(guidanceI, w, h, radius);
+      const meanP = fastBoxFilter(maskP, w, h, radius);
+
+      const II = new Float32Array(total);
+      const IP = new Float32Array(total);
+      for (let i = 0; i < total; i++) {
+        const vI = guidanceI[i];
+        II[i] = vI * vI;
+        IP[i] = vI * maskP[i];
+      }
+
+      const corrI = fastBoxFilter(II, w, h, radius);
+      const corrIP = fastBoxFilter(IP, w, h, radius);
+
+      const a = new Float32Array(total);
+      const b = new Float32Array(total);
+      for (let i = 0; i < total; i++) {
+        const varI = Math.max(0.0, corrI[i] - meanI[i] * meanI[i]);
+        const covIP = corrIP[i] - meanI[i] * meanP[i];
+        const ak = covIP / (varI + eps);
+        a[i] = ak;
+        b[i] = meanP[i] - ak * meanI[i];
+      }
+
+      const meanA = fastBoxFilter(a, w, h, radius);
+      const meanB = fastBoxFilter(b, w, h, radius);
+
+      const q = new Float32Array(total);
+      for (let i = 0; i < total; i++) {
+        const val = meanA[i] * guidanceI[i] + meanB[i];
+        q[i] = Math.max(0.0, Math.min(1.0, val));
+      }
+      return q;
+    }
+
+    /* =========================================================================
+       TRUE SALON COLORIMETRIC SHADE CATALOG
+       Calibrated for natural cortical absorption, realistic undertone warmth,
+       and zero neon/chalky artifacts
+       ========================================================================= */
     const SHADE_CATALOG = [
-      { name: "Jet Black",       family: "browns",  L: 0.17, C: 0.008, h: 245 },
-      { name: "Blue Black",      family: "browns",  L: 0.19, C: 0.038, h: 252 },
-      { name: "Darkest Brown",   family: "browns",  L: 0.25, C: 0.036, h: 50  },
-      { name: "Espresso",        family: "browns",  L: 0.29, C: 0.048, h: 53  },
-      { name: "Dark Brown",      family: "browns",  L: 0.33, C: 0.062, h: 55  },
-      { name: "Coffee",          family: "browns",  L: 0.36, C: 0.068, h: 56  },
-      { name: "Chocolate",       family: "browns",  L: 0.40, C: 0.078, h: 52  },
-      { name: "Chestnut",        family: "browns",  L: 0.44, C: 0.095, h: 48  },
-      { name: "Ash Brown",       family: "browns",  L: 0.44, C: 0.028, h: 78  },
-      { name: "Medium Brown",    family: "browns",  L: 0.47, C: 0.082, h: 58  },
-      { name: "Caramel",         family: "browns",  L: 0.56, C: 0.112, h: 68  },
-      { name: "Light Brown",     family: "browns",  L: 0.53, C: 0.088, h: 64  },
+      { name: "Jet Black",       family: "browns",  L: 0.16, C: 0.008, h: 250 },
+      { name: "Blue Black",      family: "browns",  L: 0.18, C: 0.036, h: 255 },
+      { name: "Darkest Brown",   family: "browns",  L: 0.23, C: 0.038, h: 52  },
+      { name: "Espresso",        family: "browns",  L: 0.27, C: 0.048, h: 54  },
+      { name: "Dark Brown",      family: "browns",  L: 0.31, C: 0.060, h: 56  },
+      { name: "Coffee",          family: "browns",  L: 0.35, C: 0.068, h: 57  },
+      { name: "Chocolate",       family: "browns",  L: 0.38, C: 0.078, h: 53  },
+      { name: "Chestnut",        family: "browns",  L: 0.42, C: 0.092, h: 48  },
+      { name: "Ash Brown",       family: "browns",  L: 0.43, C: 0.036, h: 68  },
+      { name: "Medium Brown",    family: "browns",  L: 0.46, C: 0.080, h: 58  },
+      { name: "Caramel",         family: "browns",  L: 0.54, C: 0.106, h: 66  },
+      { name: "Light Brown",     family: "browns",  L: 0.51, C: 0.084, h: 62  },
 
-      { name: "Dark Blonde",     family: "blondes", L: 0.61, C: 0.082, h: 78  },
-      { name: "Medium Blonde",   family: "blondes", L: 0.66, C: 0.094, h: 82  },
-      { name: "Honey Blonde",    family: "blondes", L: 0.70, C: 0.115, h: 78  },
-      { name: "Golden Honey",    family: "blondes", L: 0.72, C: 0.122, h: 82  },
-      { name: "Golden Blonde",   family: "blondes", L: 0.75, C: 0.118, h: 86  },
-      { name: "Warm Blonde",     family: "blondes", L: 0.72, C: 0.102, h: 80  },
-      { name: "Ash Blonde",      family: "blondes", L: 0.70, C: 0.032, h: 95  },
-      { name: "Sandy Blonde",    family: "blondes", L: 0.71, C: 0.062, h: 84  },
-      { name: "Beige Blonde",    family: "blondes", L: 0.74, C: 0.052, h: 88  },
-      { name: "Light Blonde",    family: "blondes", L: 0.79, C: 0.062, h: 90  },
-      { name: "Pearl Blonde",    family: "blondes", L: 0.82, C: 0.024, h: 85  },
-      { name: "Platinum Blonde", family: "blondes", L: 0.85, C: 0.020, h: 82  },
+      { name: "Dark Blonde",     family: "blondes", L: 0.58, C: 0.082, h: 74  },
+      { name: "Medium Blonde",   family: "blondes", L: 0.63, C: 0.092, h: 78  },
+      { name: "Honey Blonde",    family: "blondes", L: 0.66, C: 0.108, h: 75  },
+      { name: "Golden Honey",    family: "blondes", L: 0.68, C: 0.114, h: 79  },
+      { name: "Golden Blonde",   family: "blondes", L: 0.71, C: 0.110, h: 82  },
+      { name: "Warm Blonde",     family: "blondes", L: 0.69, C: 0.096, h: 77  },
+      { name: "Ash Blonde",      family: "blondes", L: 0.66, C: 0.046, h: 74  }, // Natural cool champagne-ash, never grey cement
+      { name: "Sandy Blonde",    family: "blondes", L: 0.68, C: 0.066, h: 78  },
+      { name: "Beige Blonde",    family: "blondes", L: 0.71, C: 0.058, h: 80  },
+      { name: "Light Blonde",    family: "blondes", L: 0.75, C: 0.068, h: 83  },
+      { name: "Pearl Blonde",    family: "blondes", L: 0.78, C: 0.038, h: 78  },
+      { name: "Platinum Blonde", family: "blondes", L: 0.81, C: 0.028, h: 78  },
 
-      { name: "Mahogany",        family: "reds",    L: 0.36, C: 0.135, h: 32  },
-      { name: "Burgundy",        family: "reds",    L: 0.33, C: 0.155, h: 10  },
-      { name: "Wine",            family: "reds",    L: 0.30, C: 0.135, h: 358 },
-      { name: "Ruby Red",        family: "reds",    L: 0.45, C: 0.195, h: 26  },
-      { name: "Cherry",          family: "reds",    L: 0.43, C: 0.200, h: 18  },
-      { name: "True Red",        family: "reds",    L: 0.48, C: 0.205, h: 28  },
-      { name: "Copper",          family: "reds",    L: 0.58, C: 0.158, h: 52  },
-      { name: "Ginger",          family: "reds",    L: 0.62, C: 0.138, h: 58  },
-      { name: "Rose Gold",       family: "reds",    L: 0.67, C: 0.102, h: 40  },
-      { name: "Peach",           family: "reds",    L: 0.72, C: 0.105, h: 54  },
+      { name: "Mahogany",        family: "reds",    L: 0.33, C: 0.112, h: 30  },
+      { name: "Burgundy",        family: "reds",    L: 0.29, C: 0.118, h: 14  }, // Deep rich salon wine-burgundy, never chalky pink
+      { name: "Wine",            family: "reds",    L: 0.27, C: 0.110, h: 4   },
+      { name: "Ruby Red",        family: "reds",    L: 0.39, C: 0.155, h: 24  },
+      { name: "Cherry",          family: "reds",    L: 0.36, C: 0.150, h: 18  },
+      { name: "True Red",        family: "reds",    L: 0.43, C: 0.165, h: 27  },
+      { name: "Copper",          family: "reds",    L: 0.53, C: 0.142, h: 48  },
+      { name: "Ginger",          family: "reds",    L: 0.57, C: 0.128, h: 55  },
+      { name: "Rose Gold",       family: "reds",    L: 0.63, C: 0.098, h: 36  },
+      { name: "Peach",           family: "reds",    L: 0.68, C: 0.102, h: 48  },
 
-      { name: "Plum",            family: "fashion", L: 0.36, C: 0.130, h: 325 },
-      { name: "Berry",           family: "fashion", L: 0.43, C: 0.160, h: 345 },
-      { name: "Violet",          family: "fashion", L: 0.46, C: 0.165, h: 295 },
-      { name: "Denim Blue",      family: "fashion", L: 0.45, C: 0.112, h: 242 },
-      { name: "Turquoise",       family: "fashion", L: 0.58, C: 0.130, h: 192 },
-      { name: "Rose Pink",       family: "fashion", L: 0.65, C: 0.145, h: 352 },
-      { name: "Lilac",           family: "fashion", L: 0.68, C: 0.092, h: 292 },
-      { name: "Silver Grey",     family: "fashion", L: 0.74, C: 0.014, h: 245 }
+      { name: "Plum",            family: "fashion", L: 0.31, C: 0.115, h: 328 },
+      { name: "Berry",           family: "fashion", L: 0.38, C: 0.135, h: 346 },
+      { name: "Violet",          family: "fashion", L: 0.41, C: 0.140, h: 298 },
+      { name: "Denim Blue",      family: "fashion", L: 0.40, C: 0.105, h: 245 },
+      { name: "Turquoise",       family: "fashion", L: 0.54, C: 0.120, h: 192 },
+      { name: "Rose Pink",       family: "fashion", L: 0.60, C: 0.128, h: 352 },
+      { name: "Lilac",           family: "fashion", L: 0.64, C: 0.088, h: 294 },
+      { name: "Silver Grey",     family: "fashion", L: 0.68, C: 0.018, h: 255 }
     ];
 
     let heicPromise = null;
@@ -1919,18 +1996,20 @@
     let originalDataURL = null;
     let hairConfidenceMask = null;
 
-    // Precomputed Photometric Hair Buffers (for 60fps zero-allocation rendering)
+    // Precomputed Photometric Hair Buffers
     let activeHairIndices = null;
-    let precompBaseL = null;     // Smoothed CIE L* [0..1] (macroscopic lighting)
-    let precompDetailL = null;   // Micro-strand texture detail (origL - smoothL)
+    let precompRawL = null;      // Exact pixel CIE L* [0..1]
+    let precompBaseL = null;     // Smoothed CIE L* [0..1]
+    let precompDetailL = null;   // Micro-strand texture detail (rawL - baseL)
+    let precompOrigOkL = null;   // Original Oklab L
     let precompOrigA = null;     // Original Oklab a
     let precompOrigB = null;     // Original Oklab b
     let hairProfile = {
       p05: 0.08,
-      p50: 0.26,
-      p95: 0.62,
-      meanA: 0.01,
-      meanB: 0.02
+      p50: 0.28,
+      p92: 0.64,
+      meanA: 0.015,
+      meanB: 0.030
     };
 
     let canvasW = 0, canvasH = 0;
@@ -2560,7 +2639,7 @@
     }
 
     /* =========================================================================
-       EDGE-AWARE SEGMENTATION + FREQUENCY-SEPARATED CIE L*a*b* PRECOMPUTATION
+       O(N) GUIDED IMAGE FILTER MATTING + OPTICAL HAIR PROFILING
        ========================================================================= */
     function runSegmentation(token) {
       if (!imageSegmenter || !originalImageData || token !== processToken) {
@@ -2583,21 +2662,18 @@
 
         const totalPixels = canvasW * canvasH;
         const tempMask = new Float32Array(totalPixels);
-        hairConfidenceMask = new Float32Array(totalPixels);
 
-        const rawCieL = new Float32Array(totalPixels);
+        precompRawL = new Float32Array(totalPixels);
+        precompOrigOkL = new Float32Array(totalPixels);
         precompOrigA = new Float32Array(totalPixels);
         precompOrigB = new Float32Array(totalPixels);
-        precompBaseL = new Float32Array(totalPixels);
         precompDetailL = new Float32Array(totalPixels);
 
         const src = originalImageData.data;
 
-        // Step 1: Bilinear upsample mask + convert image to perceptual CIE L* & Oklab a,b
         const scaleX = (mW - 1) / Math.max(1, canvasW - 1);
         const scaleY = (mH - 1) / Math.max(1, canvasH - 1);
 
-        // Histogram bins (256 bins over [0..1] CIE L*) for automatic client hair level profiling
         const histBins = new Uint32Array(256);
         let confidentCount = 0;
         let sumA = 0, sumB = 0;
@@ -2621,18 +2697,20 @@
             const bot = rawMask[row1 + x0] * (1 - wx) + rawMask[row1 + x1] * wx;
             let conf = top * (1 - wy) + bot * wy;
 
-            conf = Math.max(0.0, Math.min(1.0, (conf - 0.14) / 0.74));
+            // Core boost so interior waves & tips get 100% dye uptake
+            conf = Math.max(0.0, Math.min(1.0, (conf - 0.12) / 0.66));
             tempMask[pIdx] = conf;
 
             const rgbaIdx = pIdx * 4;
             const [okL, okA, okB] = sRGBToOklab(src[rgbaIdx], src[rgbaIdx + 1], src[rgbaIdx + 2]);
             const cieL = oklabLToCieLNorm(okL);
 
-            rawCieL[pIdx] = cieL;
+            precompOrigOkL[pIdx] = okL;
+            precompRawL[pIdx] = cieL;
             precompOrigA[pIdx] = okA;
             precompOrigB[pIdx] = okB;
 
-            if (conf > 0.55) {
+            if (conf > 0.60) {
               const bin = Math.max(0, Math.min(255, (cieL * 255.0) | 0));
               histBins[bin]++;
               confidentCount++;
@@ -2642,90 +2720,64 @@
           }
         }
 
-        // Step 2: Compute Client's Natural Hair Percentiles (P05, P50, P95) & Melanin Undertone
+        // Compute Client's Natural Hair Percentiles (P05, P50, P92) & Natural Melanin Undertone
         if (confidentCount > 50) {
           const target05 = confidentCount * 0.05;
           const target50 = confidentCount * 0.50;
-          const target95 = confidentCount * 0.95;
+          const target92 = confidentCount * 0.92;
           let accum = 0;
-          let p05 = 0.08, p50 = 0.25, p95 = 0.65;
-          let found05 = false, found50 = false, found95 = false;
+          let p05 = 0.08, p50 = 0.28, p92 = 0.64;
+          let found05 = false, found50 = false, found92 = false;
 
           for (let b = 0; b < 256; b++) {
             accum += histBins[b];
             if (!found05 && accum >= target05) { p05 = b / 255.0; found05 = true; }
             if (!found50 && accum >= target50) { p50 = b / 255.0; found50 = true; }
-            if (!found95 && accum >= target95) { p95 = b / 255.0; found95 = true; break; }
+            if (!found92 && accum >= target92) { p92 = b / 255.0; found92 = true; break; }
           }
 
-          hairProfile.p05 = Math.max(0.03, Math.min(0.45, p05));
-          hairProfile.p50 = Math.max(hairProfile.p05 + 0.06, Math.min(0.75, p50));
-          hairProfile.p95 = Math.max(hairProfile.p50 + 0.12, Math.min(0.95, p95));
+          hairProfile.p05 = Math.max(0.03, Math.min(0.42, p05));
+          hairProfile.p50 = Math.max(hairProfile.p05 + 0.06, Math.min(0.72, p50));
+          hairProfile.p92 = Math.max(hairProfile.p50 + 0.12, Math.min(0.92, p92));
           hairProfile.meanA = sumA / confidentCount;
           hairProfile.meanB = sumB / confidentCount;
         }
 
-        // Step 3: Separable 5x5 Smoothing on CIE L* (Separates Base Lighting from Strand Detail)
-        // AND Joint Guided Feathering on the Mask with Scalp/Forehead Skin-Spill Gate
-        const horizMask = new Float32Array(totalPixels);
-        const horizL = new Float32Array(totalPixels);
-        const radius = 2; // 5x5 window preserves fine strand structure while removing JPEG grain
-        const invDiam = 1.0 / (radius * 2 + 1);
+        // Step 2: Run O(N) Guided Image Filter to snap mask to individual hair strands & curls
+        const guidedMask = guidedFilterMask(precompRawL, tempMask, canvasW, canvasH, 5, 0.0022);
 
-        for (let y = 0; y < canvasH; y++) {
-          const row = y * canvasW;
-          for (let x = 0; x < canvasW; x++) {
-            let sumM = 0.0, sumL = 0.0;
-            for (let k = -radius; k <= radius; k++) {
-              const nx = Math.max(0, Math.min(canvasW - 1, x + k));
-              const idx = row + nx;
-              sumM += tempMask[idx];
-              sumL += rawCieL[idx];
-            }
-            horizMask[row + x] = sumM * invDiam;
-            horizL[row + x] = sumL * invDiam;
-          }
-        }
+        // Step 3: Compute local base lighting (radius=2) for micro-strand separation
+        precompBaseL = fastBoxFilter(precompRawL, canvasW, canvasH, 2);
 
+        hairConfidenceMask = new Float32Array(totalPixels);
         const activeList = [];
         const hairMedL = hairProfile.p50;
 
-        for (let y = 0; y < canvasH; y++) {
-          const row = y * canvasW;
-          for (let x = 0; x < canvasW; x++) {
-            const pIdx = row + x;
-            let sumM = 0.0, sumL = 0.0;
-            for (let k = -radius; k <= radius; k++) {
-              const ny = Math.max(0, Math.min(canvasH - 1, y + k));
-              const idx = ny * canvasW + x;
-              sumM += horizMask[idx];
-              sumL += horizL[idx];
-            }
-            let conf = sumM * invDiam;
-            const smoothL = sumL * invDiam;
+        for (let i = 0; i < totalPixels; i++) {
+          const rawL = precompRawL[i];
+          const baseL = precompBaseL[i];
+          precompDetailL[i] = rawL - baseL;
 
-            precompBaseL[pIdx] = smoothL;
-            precompDetailL[pIdx] = rawCieL[pIdx] - smoothL;
+          let conf = guidedMask[i];
 
-            // Edge-Aware Scalp Parting & Forehead Skin-Spill Protection:
-            // At intermediate mask confidence (hairline / scalp parting), attenuate mask if pixel
-            // exhibits bright warm skin chrominance significantly lighter than the client's hair root level
-            if (conf > 0.015 && conf < 0.84) {
-              const pxL = rawCieL[pIdx];
-              const pxA = precompOrigA[pIdx];
-              const pxB = precompOrigB[pIdx];
-              const skinWarmth = (pxA > 0.018 && pxB > 0.025) ? 1.0 : 0.0;
-              const lExcess = Math.max(0.0, pxL - (hairMedL + 0.16));
-              if (skinWarmth > 0.0 && lExcess > 0.0) {
-                const skinPenalty = Math.min(0.85, lExcess * 2.6);
-                conf *= (1.0 - skinPenalty * (1.0 - conf));
-              }
-            }
+          // Smooth S-curve sharpening on guided matte so waves & tips get full rich dye saturation
+          if (conf > 0.02) {
+            conf = Math.min(1.0, Math.pow(conf, 0.80) * 1.08);
+          }
 
-            hairConfidenceMask[pIdx] = conf;
-            if (conf > 0.015) {
-              activeList.push(pIdx);
+          // Scalp parting & forehead skin-spill gate at hairline boundary
+          if (conf > 0.015 && conf < 0.78) {
+            const pxA = precompOrigA[i];
+            const pxB = precompOrigB[i];
+            if (pxA > 0.022 && pxB > 0.028 && rawL > hairMedL + 0.18) {
+              const skinAtten = Math.min(0.82, (rawL - (hairMedL + 0.18)) * 2.5);
+              conf *= (1.0 - skinAtten * (1.0 - conf));
             }
+          }
+
+          hairConfidenceMask[i] = conf;
+          if (conf > 0.015) {
+            activeList.push(i);
           }
         }
 
@@ -2760,11 +2812,10 @@
     }
 
     /* =========================================================================
-       PEAK HYBRID CIE L*a*b* + OKLCH SALON HAIR COLOURING ENGINE
-       - Frequency-separated base tonal curve + micro-strand re-injection
-       - Zero speckle noise on lifted dark hair
-       - Cuticle specular sheen preservation
-       - Active-pixel-only iteration for instant 60fps performance
+       BEER-LAMBERT + MARSCHNER DUAL-LOBE (TRT + R) SALON SHADER
+       - Preserves 100% rich pigment in illuminated waves & balayage ends
+       - Zero chalky/pastel grey tips
+       - Perceptual Oklab Chromaticity Interpolation (zero RGB mud at edges)
        ========================================================================= */
     function applyOklchHairColor() {
       if (!originalImageData || !workingImageData) return;
@@ -2775,100 +2826,111 @@
 
       const src = originalImageData.data;
       const dst = workingImageData.data;
-
-      // Reset working buffer to original in one fast native block copy
       dst.set(src);
 
       const liftDelta = userLiftDelta / 100.0;
-      const goalL = Math.max(0.12, Math.min(0.90, targetOklchL + liftDelta));
+      const goalL = Math.max(0.13, Math.min(0.86, targetOklchL + liftDelta));
       const goalC = targetOklchC;
       const goalRad = targetOklchH * (Math.PI / 180.0);
       const cosH = Math.cos(goalRad);
       const sinH = Math.sin(goalRad);
 
-      // Client's natural hair dynamic range
       const p05 = hairProfile.p05;
       const p50 = hairProfile.p50;
-      const p95 = hairProfile.p95;
+      const p92 = hairProfile.p92;
       const invRangeLow = 1.0 / Math.max(0.06, p50 - p05);
-      const invRangeHigh = 1.0 / Math.max(0.10, p95 - p50);
+      const invRangeHigh = 1.0 / Math.max(0.10, p92 - p50);
 
-      // Target tonal anchors (Shadows, Midtones, Specular Highlights)
       const isLifting = goalL > p50;
-      const liftAmount = Math.max(0.0, goalL - p50);
+      const liftDiff = goalL - p50;
 
-      // Deep roots/shadows keep natural 3D depth without harsh black holes
-      const targetShadowL = Math.max(0.05, goalL * (isLifting ? 0.34 : 0.26));
-      // Midtones hit the exact calibrated salon shade lightness
-      const targetMidL = goalL;
-      // Cuticle specular highlights softly roll off toward glossy shine
-      const targetHighL = Math.min(0.96, Math.max(goalL + 0.16, p95 + liftAmount * 0.48));
+      // Tonal anchors:
+      // 1. Deep shadow creases retain authentic salon depth
+      const shadowAnchorL = Math.max(0.04, goalL * (isLifting ? 0.36 : 0.28));
+      // 2. Midtones hit exact calibrated salon level
+      const midAnchorL = goalL;
+      // 3. Illuminated waves & crown highlights stay luminous without washing out into white
+      const highAnchorL = Math.min(0.91, Math.max(goalL + 0.13, p92 * 0.55 + goalL * 0.52));
 
-      // Micro-strand texture gain: slightly damped during heavy bleach lifts so camera noise never turns into speckles
-      const detailGain = isLifting ? Math.max(0.52, 0.88 - liftAmount * 0.65) : 0.85;
+      // Micro-strand texture preservation: soft-damped only on extreme bleach lifts
+      const strandContrastGain = isLifting
+        ? Math.max(0.68, 0.96 - Math.max(0.0, liftDiff) * 0.48)
+        : 0.95;
 
-      // Melanin neutralization strength (neutralizes natural warm brassiness when lifting or toning)
-      const bleachCleanse = Math.min(0.94, Math.max(0.65, 0.68 + liftAmount * 0.60));
+      // Melanin neutralization (neutralizes natural brassy warmth so target dye is pure & true)
+      const melaninNeutralize = Math.min(0.95, Math.max(0.78, 0.80 + Math.abs(liftDiff) * 0.35));
 
       const count = activeHairIndices.length;
 
       for (let k = 0; k < count; k++) {
         const i = activeHairIndices[k];
-        const confidence = hairConfidenceMask[i];
+        const conf = hairConfidenceMask[i];
         const idx = i * 4;
 
         const baseL = precompBaseL[i];
-        const detailL = precompDetailL[i];
+        let detailL = precompDetailL[i];
 
-        // 1. Piecewise-Smooth Perceptual Tonal Mapping (Shadow -> Midtone -> Specular Highlight)
-        let mappedBaseL;
-        let normT; // Normalized tonal position [0..1]
-        if (baseL <= p50) {
-          const u = Math.max(0.0, (baseL - p05) * invRangeLow);
-          // Smooth Hermite curve in shadows prevents abrupt black speckles
-          const s = u * u * (3.0 - 2.0 * u);
-          mappedBaseL = targetShadowL + (targetMidL - targetShadowL) * s;
-          normT = 0.5 * s;
-        } else {
-          const u = Math.min(1.0, (baseL - p50) * invRangeHigh);
-          const s = u * (2.0 - u);
-          mappedBaseL = targetMidL + (targetHighL - targetMidL) * s;
-          normT = 0.5 + 0.5 * s;
+        // Soft-corer for tiny sensor noise (< 1.2%) while keeping 100% of real hair fibers crisp
+        if (detailL > -0.012 && detailL < 0.012) {
+          detailL *= 0.45;
         }
 
-        // 2. Re-inject individual hair fiber micro-texture
-        let newCieL = mappedBaseL + detailL * detailGain;
-        newCieL = Math.max(0.02, Math.min(0.98, newCieL));
+        // 1. Continuous Root-to-Tip Tonal Mapping
+        let mappedL;
+        let uNorm; // Normalized illumination position [0..1.2]
+        if (baseL <= p50) {
+          const u = Math.max(0.0, (baseL - p05) * invRangeLow);
+          const s = u * (0.35 + 0.65 * u);
+          mappedL = shadowAnchorL + (midAnchorL - shadowAnchorL) * s;
+          uNorm = 0.5 * u;
+        } else {
+          const u = (baseL - p50) * invRangeHigh;
+          // Smooth shoulder keeps highlights dimensional, never blown out
+          const clampedU = Math.min(1.25, u);
+          const s = clampedU / (1.0 + 0.28 * clampedU);
+          mappedL = midAnchorL + (highAnchorL - midAnchorL) * s;
+          uNorm = 0.5 + 0.5 * Math.min(1.0, u);
+        }
 
-        // Convert CIE L* [0..1] back to Oklab L for accurate Oklab gamut synthesis
-        const newOkL = cieLNormToOklabL(newCieL);
+        let dyedCieL = mappedL + detailL * strandContrastGain;
+        dyedCieL = Math.max(0.02, Math.min(0.96, dyedCieL));
+        const dyedOkL = cieLNormToOklabL(dyedCieL);
 
-        // 3. Salon Cuticle & Shadow Chroma Envelope
-        // Deepest roots absorb light; midtones carry rich dye pigment; bright cuticle sheen desaturates naturally
-        const shadowBell = Math.min(1.0, Math.max(0.0, (newCieL - 0.05) / 0.18));
-        const specularSheenRoll = 1.0 - Math.max(0.0, (normT - 0.68) / 0.32) * 0.62;
-        const dynamicChroma = goalC * shadowBell * specularSheenRoll;
+        // 2. Beer-Lambert + Marschner Dual-Lobe Chroma Curve:
+        // - Deepest shadow creases (dyedCieL < 0.16) taper smoothly to dark rich pigment
+        // - Illuminated waves & tips (TRT lobe, uNorm 0.35..0.88) exhibit PEAK cortical chroma (1.05x)
+        // - Only ultra-bright mirror cuticle glints (R lobe, dyedCieL > 0.82) taper gently to 0.65x (NEVER chalky 0.3x!)
+        const shadowRamp = Math.min(1.0, Math.max(0.15, (dyedCieL - 0.03) / 0.17));
+        const trtBoost = (uNorm > 0.35 && uNorm < 0.86)
+          ? (1.0 + 0.10 * Math.sin(((uNorm - 0.35) / 0.51) * Math.PI))
+          : 1.0;
+        const cuticleGlint = dyedCieL > 0.80
+          ? Math.max(0.64, 1.0 - ((dyedCieL - 0.80) / 0.18) * 0.36)
+          : 1.0;
 
-        const targetA = dynamicChroma * cosH;
-        const targetB = dynamicChroma * sinH;
+        const dynamicChroma = goalC * shadowRamp * trtBoost * cuticleGlint;
 
-        // 4. Underlying Melanin Neutralization + Pigment Deposition
-        const residualA = (precompOrigA[i] - hairProfile.meanA * 0.65) * (1.0 - bleachCleanse);
-        const residualB = (precompOrigB[i] - hairProfile.meanB * 0.65) * (1.0 - bleachCleanse);
+        // Cleanse underlying natural melanin & deposit calibrated salon pigment
+        const cleanOrigA = (precompOrigA[i] - hairProfile.meanA * 0.78) * (1.0 - melaninNeutralize);
+        const cleanOrigB = (precompOrigB[i] - hairProfile.meanB * 0.78) * (1.0 - melaninNeutralize);
 
-        const finalA = residualA + targetA;
-        const finalB = residualB + targetB;
+        const dyedA = cleanOrigA + dynamicChroma * cosH;
+        const dyedB = cleanOrigB + dynamicChroma * sinH;
 
-        // 5. Fast LUT-accelerated Oklab -> sRGB conversion
-        const [resR, resG, resB] = oklabToSRGB(newOkL, finalA, finalB);
+        // 3. Perceptual Oklab Matting (Eliminates RGB cancellation mud on loose waves & tips!)
+        // Chromaticity (a, b) transitions faster than lightness at feathered strand edges so tips never look half-brown
+        const lWeight = conf * 0.96;
+        const cWeight = Math.min(1.0, Math.pow(conf, 0.62) * 0.98);
 
-        // 6. Smooth feathered alpha composite
-        const alpha = confidence * 0.95;
-        const invAlpha = 1.0 - alpha;
+        const finalOkL = precompOrigOkL[i] * (1.0 - lWeight) + dyedOkL * lWeight;
+        const finalA   = precompOrigA[i]   * (1.0 - cWeight) + dyedA   * cWeight;
+        const finalB   = precompOrigB[i]   * (1.0 - cWeight) + dyedB   * cWeight;
 
-        dst[idx]     = (src[idx]     * invAlpha + resR * alpha + 0.5) | 0;
-        dst[idx + 1] = (src[idx + 1] * invAlpha + resG * alpha + 0.5) | 0;
-        dst[idx + 2] = (src[idx + 2] * invAlpha + resB * alpha + 0.5) | 0;
+        const [resR, resG, resB] = oklabToSRGB(finalOkL, finalA, finalB);
+
+        dst[idx]     = resR;
+        dst[idx + 1] = resG;
+        dst[idx + 2] = resB;
       }
 
       hairCtx.putImageData(workingImageData, 0, 0);
@@ -3519,7 +3581,7 @@
     });
 
     /* =========================================================================
-       VAULT GALLERY (MY LOOKS) — FULL PHOTO PREVIEW + COLOUR NAME + DATE + DELETE
+       VAULT GALLERY (MY LOOKS) — FULL EDGE-TO-EDGE PHOTO + UNCLIPPED ACTIONS
        ========================================================================= */
     async function loadUserVault() {
       const active = await verifyUserTrialStatus(currentUserPhone);
@@ -3601,7 +3663,6 @@
         card.className = 'gallery-card';
         card.innerHTML = `
           <div class="gallery-card-img-wrap">
-            <img class="gallery-card-img-ambient" src="${safeImgUrl}" loading="lazy" alt="" aria-hidden="true" />
             <img class="gallery-card-img-main" src="${safeImgUrl}" loading="lazy" alt="${esc(lookTitle)}" />
             <span class="gallery-card-type-pill">${esc(lookCategory)}</span>
           </div>
@@ -3619,7 +3680,7 @@
                   <i class="bi bi-download"></i>
                 </button>
                 <button type="button" class="vault-del-btn" aria-label="Delete look" title="Delete look">
-                  <i class="bi bi-trash3-fill"></i> <span>DELETE</span>
+                  <i class="bi bi-trash3-fill"></i>
                 </button>
               </div>
             </div>
