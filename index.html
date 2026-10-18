@@ -866,12 +866,12 @@
     }
     .compare-fab-share i { color: #25D366; font-size: 1.1rem; }
 
-    /* VIEW 4: VAULT GALLERY - FIXED EXPANSION TO PREVENT CLIPPING */
+    /* VIEW 4: VAULT GALLERY - BULLETPROOF NO-CLIP CARD DESIGN */
     .gallery-grid {
       flex: 1;
       overflow-y: auto;
       -webkit-overflow-scrolling: touch;
-      padding: 16px 16px 90px;
+      padding: 16px 16px 100px;
       display: grid;
       grid-template-columns: repeat(2, 1fr);
       gap: 14px;
@@ -883,64 +883,81 @@
     @media (min-width: 640px) { .gallery-grid { grid-template-columns: repeat(3, 1fr); } }
     
     .gallery-card {
-      background: var(--surface);
-      border-radius: 18px;
-      box-shadow: var(--shadow-card);
-      border: 1px solid var(--border-subtle);
+      background: #FFFFFF;
+      border: 1px solid rgba(20, 20, 20, 0.08);
+      border-radius: 20px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
       display: flex;
       flex-direction: column;
       cursor: pointer;
       overflow: hidden;
-      transition: transform 0.15s ease;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+      width: 100%;
       height: auto;
+      min-height: 0;
     }
     .gallery-card:active { transform: scale(0.97); }
-    .gallery-card img {
+    
+    .gallery-card-img-wrap {
       width: 100%;
       aspect-ratio: 1 / 1;
+      position: relative;
+      overflow: hidden;
+      background: #EAEAE4;
+    }
+    .gallery-card-img-wrap img {
+      width: 100%;
+      height: 100%;
       object-fit: cover;
       display: block;
     }
+    
     .gallery-card-body {
-      padding: 12px 14px 14px;
+      padding: 12px 14px 16px;
       display: flex;
       flex-direction: column;
-      gap: 8px;
-      min-width: 0;
-      background: var(--surface);
+      gap: 10px;
+      background: #FFFFFF;
+      flex: 1;
     }
     .gallery-card-name {
-      font-size: 0.82rem;
+      font-size: 0.88rem;
       font-weight: 800;
+      color: var(--text-main);
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
-      color: var(--text-main);
-      line-height: 1.2;
+      line-height: 1.25;
     }
     .gallery-card-footer {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-top: 2px;
+      padding-top: 2px;
     }
     .gallery-card-date {
       font-size: 0.72rem;
+      font-weight: 700;
       color: var(--text-muted);
-      font-weight: 600;
     }
-    .vault-del {
-      width: 32px;
-      height: 32px;
+    .vault-del-btn {
+      width: 34px;
+      height: 34px;
       border-radius: 50%;
-      font-size: 0.82rem;
-      color: #EF4444;
-      background: #FEE2E2;
-      border: none;
+      background: #FFF5F5;
+      border: 1px solid #FED7D7;
+      color: #E53E3E;
       display: inline-flex;
       align-items: center;
       justify-content: center;
+      font-size: 0.88rem;
       cursor: pointer;
+      transition: transform 0.12s ease, background-color 0.12s ease;
+      flex-shrink: 0;
+    }
+    .vault-del-btn:active {
+      transform: scale(0.90);
+      background: #FED7D7;
     }
 
     /* TOAST */
@@ -2815,7 +2832,7 @@
       } catch (_) {}
     }
 
-    /* SLIDER BADGE VISIBILITY CONTROLLER: HIDES REDUNDANT LABELS AT EDGES */
+    /* SLIDER BADGE VISIBILITY: FADES OUT REDUNDANT LABELS AT EDGES */
     function setSlider(pct) {
       const clamped = Math.max(0, Math.min(100, pct));
       const clip = `polygon(${clamped}% 0, 100% 0, 100% 100%, ${clamped}% 100%)`;
@@ -2825,24 +2842,17 @@
       $('sliderDivider').setAttribute('aria-valuenow', Math.round(clamped));
 
       if (currentCompareMode === 'slide') {
-        // When slider is moved all the way right (>= 95%), only Original is shown.
-        // Hide the color/new look badge from the top.
         if (clamped >= 95) {
           $('badgeAfter').style.opacity = '0';
           $('badgeAfter').style.visibility = 'hidden';
           $('badgeBefore').style.opacity = '1';
           $('badgeBefore').style.visibility = 'visible';
-        } 
-        // When slider is moved all the way left (<= 5%), only Generated Look is shown.
-        // Hide the original badge from the top.
-        else if (clamped <= 5) {
+        } else if (clamped <= 5) {
           $('badgeBefore').style.opacity = '0';
           $('badgeBefore').style.visibility = 'hidden';
           $('badgeAfter').style.opacity = '1';
           $('badgeAfter').style.visibility = 'visible';
-        } 
-        // In the middle: both before and after are visible.
-        else {
+        } else {
           $('badgeBefore').style.opacity = '1';
           $('badgeBefore').style.visibility = 'visible';
           $('badgeAfter').style.opacity = '1';
@@ -2967,7 +2977,7 @@
       return encodeCanvas(cvs, 0.88);
     }
 
-    /* SHARE HANDLER: PRE-CACHED FOR STRICT SAFARI USER ACTIVATION */
+    /* SHARE HANDLER */
     $('shareBtn').addEventListener('click', async () => {
       if (navigator.share && cachedCollageFile && navigator.canShare && navigator.canShare({ files: [cachedCollageFile] })) {
         try {
@@ -2990,7 +3000,7 @@
       }
     });
 
-    /* CONTEXT-AWARE SAVE: SAVES SLIDE (COMPARISON), BEFORE (ORIGINAL), OR AFTER (NEW COLOR) */
+    /* CONTEXT-AWARE SAVE BUTTON */
     $('saveLocalBtn').addEventListener('click', async () => {
       showLoading("PREPARING IMAGE...");
       try {
@@ -2998,17 +3008,14 @@
         let filename = `KAMI_${currentShadeName.replace(/\s+/g, '_')}_${Date.now()}.${ENCODE_EXT}`;
 
         if (currentCompareMode === 'slide') {
-          // 1. Comparison photo: side-by-side original + new color
           blobToSave = await buildCollageBlob();
           filename = `KAMI_Comparison_${Date.now()}.${ENCODE_EXT}`;
         } else if (currentCompareMode === 'before') {
-          // 2. Original photo
           const src = $('imgSource').src;
           if (!src) throw new Error("No original image found");
           blobToSave = await compressToWebP(src, { maxDim: 1200, quality: 0.90 });
           filename = `KAMI_Original_${Date.now()}.${ENCODE_EXT}`;
         } else {
-          // 3. New generated photo ('after')
           const src = $('imgRendered').src;
           if (!src) throw new Error("No rendered image found");
           blobToSave = await compressToWebP(src, { maxDim: 1200, quality: 0.90 });
@@ -3025,7 +3032,7 @@
       }
     });
 
-    /* VAULT GALLERY WITH SIGNATURE DEDUPLICATION */
+    /* VAULT GALLERY WITH CLEAN CARD SPACING & DEDUPLICATION */
     async function loadUserVault() {
       const active = await verifyUserTrialStatus(currentUserPhone);
       if (!active) return;
@@ -3057,7 +3064,7 @@
       function getItemSignature(item) {
         const nameKey = (item.style_name || '').toLowerCase().trim();
         const time = new Date(item.created_at).getTime();
-        const timeBucket = Math.round(time / 15000); // 15-second signature window avoids duplicate saves
+        const timeBucket = Math.round(time / 15000);
         return `${nameKey}_${timeBucket}`;
       }
 
@@ -3094,12 +3101,14 @@
         const card = document.createElement('div');
         card.className = 'gallery-card';
         card.innerHTML = `
-          <img src="${sanitizeUrl(item.image_url)}" loading="lazy" alt="${esc(item.style_name || 'Look')}" />
+          <div class="gallery-card-img-wrap">
+            <img src="${sanitizeUrl(item.image_url)}" loading="lazy" alt="${esc(item.style_name || 'Look')}" />
+          </div>
           <div class="gallery-card-body">
             <div class="gallery-card-name">${esc(item.style_name || 'Hair Style')}</div>
             <div class="gallery-card-footer">
               <span class="gallery-card-date">${new Date(item.created_at).toLocaleDateString()}</span>
-              <button class="vault-del" aria-label="Delete look"><i class="bi bi-trash"></i></button>
+              <button class="vault-del-btn" aria-label="Delete look"><i class="bi bi-trash"></i></button>
             </div>
           </div>
         `;
@@ -3108,15 +3117,18 @@
           openCompareWithImages(item.source_image_url || item.image_url, item.image_url, item.style_name || 'Look', true);
         });
 
-        card.querySelector('.vault-del').addEventListener('click', async (e) => {
-          e.stopPropagation();
-          await deleteLocalLook(item.id);
-          if (sb && currentUserPhone && !String(item.id).startsWith('look_')) {
-            try { await sb.from('generations').delete().eq('id', item.id); } catch (_) {}
-          }
-          showToast('DELETED FROM VAULT');
-          loadUserVault();
-        });
+        const delBtn = card.querySelector('.vault-del-btn');
+        if (delBtn) {
+          delBtn.addEventListener('click', async (e) => {
+            e.stopPropagation();
+            await deleteLocalLook(item.id);
+            if (sb && currentUserPhone && !String(item.id).startsWith('look_')) {
+              try { await sb.from('generations').delete().eq('id', item.id); } catch (_) {}
+            }
+            showToast('DELETED FROM VAULT');
+            loadUserVault();
+          });
+        }
 
         grid.appendChild(card);
       });
