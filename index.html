@@ -7,6 +7,8 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="referrer" content="strict-origin-when-cross-origin" />
+  <!-- Explicit blank favicon to prevent any icon or 'K' badge from displaying -->
+  <link rel="icon" href="data:," />
   <title>KAMI — AI Hair &amp; Colour Studio</title>
 
   <!-- Google Fonts: Plus Jakarta Sans -->
@@ -41,19 +43,21 @@
       --border-focus: rgba(255, 100, 34, 0.45);
 
       --radius-full: 9999px;
-      --radius-card: 22px;
+      --radius-card: 24px;
       --radius-sm: 14px;
 
       --shadow-sm: 0 4px 14px rgba(0, 0, 0, 0.04);
-      --shadow-card: 0 10px 30px rgba(0, 0, 0, 0.06), 0 2px 6px rgba(0, 0, 0, 0.02);
+      --shadow-card: 0 10px 30px rgba(0, 0, 0, 0.07), 0 2px 6px rgba(0, 0, 0, 0.02);
       --shadow-orange: 0 8px 24px var(--primary-glow);
       --shadow-dock: 0 16px 40px rgba(0, 0, 0, 0.25);
+      --shadow-sheet: 0 -10px 40px rgba(0, 0, 0, 0.16);
 
       --font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       --ease-smooth: cubic-bezier(0.16, 1, 0.3, 1);
 
       --z-base: 10;
       --z-active-screen: 20;
+      --z-drawer: 80;
       --z-dock: 60;
       --z-overlay: 300;
       --z-modal: 5000;
@@ -169,13 +173,13 @@
       border: none;
       border-radius: var(--radius-full);
       padding: 15px 24px;
-      font-size: 0.94rem;
+      font-size: 0.92rem;
       font-weight: 800;
       box-shadow: var(--shadow-orange);
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      gap: 10px;
+      gap: 8px;
       width: 100%;
       text-align: center;
     }
@@ -226,7 +230,7 @@
                   url('https://images.unsplash.com/photo-1503951914875-452162b0f3f1?auto=format&fit=crop&w=1200&q=80') center/cover no-repeat;
     }
     .login-card {
-      background: rgba(25, 25, 25, 0.82);
+      background: rgba(25, 25, 25, 0.85);
       border: 1px solid rgba(255, 255, 255, 0.12);
       -webkit-backdrop-filter: blur(20px);
       backdrop-filter: blur(20px);
@@ -392,16 +396,18 @@
       align-items: center;
       gap: 12px;
       flex-shrink: 0;
+      z-index: var(--z-dock);
     }
     .studio-content {
       flex: 1;
-      overflow-y: auto;
-      -webkit-overflow-scrolling: touch;
-      padding: 16px 18px 36px;
+      position: relative;
+      overflow: hidden;
       display: flex;
       flex-direction: column;
-      gap: 16px;
-      max-width: 680px;
+      align-items: center;
+      justify-content: center;
+      padding: 12px 14px calc(90px + env(safe-area-inset-bottom));
+      max-width: 900px;
       margin: 0 auto;
       width: 100%;
     }
@@ -409,13 +415,14 @@
     .studio-preview-card {
       background: var(--surface);
       border-radius: var(--radius-card);
-      padding: 12px;
+      padding: 10px;
       box-shadow: var(--shadow-card);
       display: flex;
       justify-content: center;
       align-items: center;
-      height: clamp(280px, 43vh, 460px);
-      flex-shrink: 0;
+      width: 100%;
+      height: 100%;
+      max-height: calc(100vh - 200px);
       overflow: hidden;
       position: relative;
     }
@@ -425,7 +432,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      background: var(--surface-subtle);
+      background: #141414;
       border-radius: var(--radius-sm);
       overflow: hidden;
     }
@@ -439,51 +446,117 @@
       display: block;
     }
 
-    .mode-switch-bar {
+    /* STUDIO DOCKED ACTION TRIGGER BAR */
+    .studio-action-dock {
+      position: absolute;
+      bottom: max(16px, env(safe-area-inset-bottom));
+      left: 16px;
+      right: 16px;
+      max-width: 460px;
+      margin: 0 auto;
+      background: var(--dark-card);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: var(--radius-full);
+      padding: 6px;
       display: grid;
       grid-template-columns: 1fr 1fr;
-      background: var(--surface-subtle);
-      border-radius: var(--radius-full);
-      padding: 4px;
-      gap: 4px;
+      gap: 6px;
+      box-shadow: var(--shadow-dock);
+      z-index: 50;
     }
-    .mode-tab-btn {
-      padding: 10px 16px;
+    .dock-trigger-btn {
+      padding: 12px 18px;
       border-radius: var(--radius-full);
-      font-size: 0.8rem;
+      font-size: 0.84rem;
       font-weight: 800;
-      color: var(--text-muted);
+      color: #FFFFFF;
+      background: rgba(255, 255, 255, 0.08);
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 8px;
+      transition: all 0.2s ease;
     }
-    .mode-tab-btn.active {
+    .dock-trigger-btn.active, .dock-trigger-btn:hover {
       background: var(--primary);
-      color: #FFFFFF;
       box-shadow: var(--shadow-orange);
     }
 
-    .tool-card {
+    /* COLLAPSIBLE ANIMATED BOTTOM SHEET / POPUP DRAWER */
+    .studio-drawer-backdrop {
+      position: absolute;
+      top: 0; right: 0; bottom: 0; left: 0;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.45);
+      -webkit-backdrop-filter: blur(4px);
+      backdrop-filter: blur(4px);
+      z-index: var(--z-drawer);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s var(--ease-smooth);
+    }
+    .studio-drawer-backdrop.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .studio-drawer {
+      position: absolute;
+      left: 0; right: 0; bottom: 0;
       background: var(--surface);
-      border-radius: var(--radius-card);
-      padding: 18px;
-      box-shadow: var(--shadow-card);
+      border-top-left-radius: 28px;
+      border-top-right-radius: 28px;
+      box-shadow: var(--shadow-sheet);
+      max-height: 82vh;
       display: flex;
       flex-direction: column;
-      gap: 14px;
-      user-select: none;
-      -webkit-user-select: none;
-      flex-shrink: 0;
+      z-index: calc(var(--z-drawer) + 1);
+      transform: translateY(105%);
+      transition: transform 0.35s var(--ease-smooth);
+      max-width: 680px;
+      margin: 0 auto;
     }
-    .tool-header {
+    .studio-drawer.open {
+      transform: translateY(0);
+    }
+
+    .drawer-handle-bar {
+      width: 44px;
+      height: 5px;
+      background: #D8D8D2;
+      border-radius: var(--radius-full);
+      margin: 10px auto 4px;
+      cursor: pointer;
+    }
+    .drawer-header {
+      padding: 10px 20px 14px;
       display: flex;
       align-items: center;
       justify-content: space-between;
       border-bottom: 1px solid var(--border-subtle);
-      padding-bottom: 12px;
-      flex-wrap: wrap;
+    }
+    .drawer-header h3 {
+      font-size: 1rem;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
       gap: 8px;
+    }
+    .drawer-scroll-body {
+      padding: 16px 20px;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .drawer-footer-actions {
+      padding: 12px 20px max(14px, env(safe-area-inset-bottom));
+      border-top: 1px solid var(--border-subtle);
+      background: var(--surface);
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
     }
 
     .scroll-filter-row {
@@ -517,17 +590,17 @@
 
     .swatch-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(68px, 1fr));
-      gap: 8px;
-      max-height: 260px;
+      grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+      gap: 10px;
+      max-height: 240px;
       overflow-y: auto;
       -webkit-overflow-scrolling: touch;
       padding: 10px;
       background: var(--surface-subtle);
       border-radius: var(--radius-sm);
     }
-    .swatch-grid::-webkit-scrollbar { width: 6px; }
-    .swatch-grid::-webkit-scrollbar-thumb { background: #D5D5CE; border-radius: 4px; }
+    .swatch-grid::-webkit-scrollbar { width: 5px; }
+    .swatch-grid::-webkit-scrollbar-thumb { background: #D0D0CA; border-radius: 4px; }
 
     .swatch-tile {
       display: flex;
@@ -537,7 +610,7 @@
       padding: 8px 4px;
       border-radius: var(--radius-sm);
       cursor: pointer;
-      transition: transform 0.12s var(--ease-smooth), background 0.12s;
+      transition: transform 0.12s var(--ease-smooth), border-color 0.12s;
       background: var(--surface);
       border: 2px solid transparent;
     }
@@ -547,17 +620,17 @@
       box-shadow: 0 4px 12px var(--primary-glow);
     }
     .swatch-tile-circle {
-      width: 42px;
-      height: 42px;
+      width: 44px;
+      height: 44px;
       border-radius: 50%;
       border: 2px solid #FFFFFF;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
       position: relative;
       flex-shrink: 0;
     }
     .swatch-tile-name {
       font-size: 0.65rem;
-      font-weight: 700;
+      font-weight: 800;
       text-align: center;
       line-height: 1.15;
       color: var(--text-main);
@@ -571,15 +644,15 @@
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
       gap: 10px;
-      max-height: 260px;
+      max-height: 240px;
       overflow-y: auto;
       -webkit-overflow-scrolling: touch;
       padding: 10px;
       background: var(--surface-subtle);
       border-radius: var(--radius-sm);
     }
-    .hairstyles-grid::-webkit-scrollbar { width: 6px; }
-    .hairstyles-grid::-webkit-scrollbar-thumb { background: #D5D5CE; border-radius: 4px; }
+    .hairstyles-grid::-webkit-scrollbar { width: 5px; }
+    .hairstyles-grid::-webkit-scrollbar-thumb { background: #D0D0CA; border-radius: 4px; }
 
     .style-chip {
       background: var(--surface);
@@ -612,7 +685,7 @@
       align-items: center;
       gap: 12px;
       cursor: pointer;
-      border: 1px dashed rgba(0,0,0,0.15);
+      border: 1px dashed rgba(0,0,0,0.18);
     }
     .ref-thumb {
       width: 48px;
@@ -866,59 +939,58 @@
     }
     .compare-fab-share i { color: #25D366; font-size: 1.1rem; }
 
-    /* VIEW 4: VAULT GALLERY - BULLETPROOF NO-CLIP CARD DESIGN */
+    /* VIEW 4: VAULT GALLERY — FULL PREVIEW GRID */
     .gallery-grid {
       flex: 1;
       overflow-y: auto;
       -webkit-overflow-scrolling: touch;
-      padding: 16px 16px 100px;
+      padding: 16px 16px 120px;
       display: grid;
       grid-template-columns: repeat(2, 1fr);
-      gap: 14px;
+      gap: 16px;
       align-content: start;
-      max-width: 760px;
+      max-width: 820px;
       margin: 0 auto;
       width: 100%;
     }
-    @media (min-width: 640px) { .gallery-grid { grid-template-columns: repeat(3, 1fr); } }
+    @media (min-width: 680px) { .gallery-grid { grid-template-columns: repeat(3, 1fr); gap: 20px; } }
     
     .gallery-card {
       background: #FFFFFF;
       border: 1px solid rgba(20, 20, 20, 0.08);
       border-radius: 20px;
-      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+      box-shadow: 0 4px 18px rgba(0, 0, 0, 0.06);
       display: flex;
       flex-direction: column;
       cursor: pointer;
       overflow: hidden;
       transition: transform 0.15s ease, box-shadow 0.15s ease;
       width: 100%;
-      height: auto;
-      min-height: 0;
     }
     .gallery-card:active { transform: scale(0.97); }
     
+    /* Full portrait preview: hairstyles and face are never cropped out */
     .gallery-card-img-wrap {
       width: 100%;
-      aspect-ratio: 1 / 1;
+      aspect-ratio: 3 / 4;
       position: relative;
       overflow: hidden;
-      background: #EAEAE4;
+      background: #181818;
     }
     .gallery-card-img-wrap img {
       width: 100%;
       height: 100%;
       object-fit: cover;
+      object-position: top center;
       display: block;
     }
     
     .gallery-card-body {
-      padding: 12px 14px 16px;
+      padding: 12px 14px 14px;
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 8px;
       background: #FFFFFF;
-      flex: 1;
     }
     .gallery-card-name {
       font-size: 0.88rem;
@@ -1181,12 +1253,14 @@
     </div>
   </section>
 
-  <!-- VIEW 2: STUDIO -->
+  <!-- VIEW 2: STUDIO (LIVE PREVIEW + ANIMATED COLLAPSIBLE DRAWERS) -->
   <section id="studioScreen" class="view-screen">
     <header class="studio-header">
       <button id="retakeBtn" class="btn-pill"><i class="bi bi-arrow-left"></i> CAMERA</button>
       <div class="brand-logo">KAMI</div>
-      <div class="badge" id="clientStudioBadge" style="background:var(--primary-light); color:var(--primary); max-width:130px; overflow:hidden; text-overflow:ellipsis;">CLIENT</div>
+      <div style="display:flex; align-items:center; gap:6px;">
+        <div class="badge" id="clientStudioBadge" style="background:var(--primary-light); color:var(--primary); max-width:110px; overflow:hidden; text-overflow:ellipsis;">CLIENT</div>
+      </div>
     </header>
 
     <main class="studio-content">
@@ -1197,91 +1271,115 @@
         </div>
       </div>
 
-      <div class="mode-switch-bar">
-        <button id="tabModeColor" class="mode-tab-btn active"><i class="bi bi-palette-fill"></i> HAIR COLOUR</button>
-        <button id="tabModeStyle" class="mode-tab-btn"><i class="bi bi-scissors"></i> AI HAIRSTYLE</button>
+      <!-- DOCKED TRIGGER BAR TO OPEN COLLAPSIBLE PANELS -->
+      <div class="studio-action-dock">
+        <button id="openColorDrawerBtn" class="dock-trigger-btn active">
+          <i class="bi bi-palette-fill"></i> HAIR COLOUR
+        </button>
+        <button id="openStyleDrawerBtn" class="dock-trigger-btn">
+          <i class="bi bi-scissors"></i> AI HAIRSTYLE
+        </button>
       </div>
 
-      <!-- PANEL A: COLOUR STUDIO -->
-      <div id="panelColor" class="tool-card">
-        <div class="tool-header">
+      <!-- BACKDROP -->
+      <div id="drawerBackdrop" class="studio-drawer-backdrop"></div>
+
+      <!-- DRAWER A: HAIR COLOUR (ANIMATED COLLAPSIBLE) -->
+      <div id="colorDrawer" class="studio-drawer">
+        <div class="drawer-handle-bar" id="colorDrawerHandle"></div>
+        <div class="drawer-header">
+          <h3><i class="bi bi-palette-fill" style="color:var(--primary);"></i> HAIR COLOUR</h3>
           <div style="display:flex; align-items:center; gap:8px;">
-            <i class="bi bi-palette-fill" style="color:var(--primary); font-size:1.15rem;"></i>
-            <span style="font-weight:800; font-size:0.92rem;">CHOOSE SHADE</span>
-          </div>
-          <div style="display:flex; align-items:center; gap:6px;">
-            <div class="badge" id="currentShadeBadge" style="background:var(--primary-light); color:var(--primary); max-width:140px; overflow:hidden; text-overflow:ellipsis;">NATURAL</div>
+            <div class="badge" id="currentShadeBadge" style="background:var(--primary-light); color:var(--primary);">NATURAL</div>
             <button id="sliderLockBtn" type="button" class="btn-pill" style="font-size:0.68rem; padding:6px 12px;">
               <i class="bi bi-lock-fill"></i> FINE TUNE
+            </button>
+            <button id="closeColorDrawerBtn" class="btn-icon" style="width:34px; height:34px; font-size:0.95rem;"><i class="bi bi-x-lg"></i></button>
+          </div>
+        </div>
+
+        <div class="drawer-scroll-body">
+          <div class="scroll-filter-row" id="familyFilterRow">
+            <button class="filter-chip active" data-family="all">ALL SHADES</button>
+            <button class="filter-chip" data-family="browns">BROWNS</button>
+            <button class="filter-chip" data-family="blondes">BLONDES</button>
+            <button class="filter-chip" data-family="reds">REDS &amp; COPPER</button>
+            <button class="filter-chip" data-family="fashion">FASHION</button>
+          </div>
+
+          <div class="swatch-grid" id="swatchGrid"></div>
+
+          <div class="slider-stack sliders-locked" id="sliderStack">
+            <div class="slider-block">
+              <label for="hueSlider">COLOUR <span id="hueVal">26°</span></label>
+              <input type="range" id="hueSlider" min="0" max="360" step="1" value="26" class="rainbow-slider" />
+            </div>
+            <div class="slider-block">
+              <label for="satSlider">VIVIDNESS <span id="satVal">38%</span></label>
+              <input type="range" id="satSlider" min="0" max="100" step="1" value="38" class="sat-slider" />
+            </div>
+            <div class="slider-block">
+              <label for="liftSlider">LIGHTNESS / LIFT <span id="liftVal">0%</span></label>
+              <input type="range" id="liftSlider" min="-0.40" max="0.60" step="0.02" value="0.0" class="lift-slider" />
+            </div>
+            <button type="button" id="sliderLockOverlay" class="slider-lock-overlay" aria-label="Unlock fine tuning sliders">
+              <span class="lock-pill"><i class="bi bi-lock-fill"></i> TAP TO UNLOCK FINE TUNING</span>
             </button>
           </div>
         </div>
 
-        <div class="scroll-filter-row" id="familyFilterRow">
-          <button class="filter-chip active" data-family="all">ALL SHADES</button>
-          <button class="filter-chip" data-family="browns">BROWNS</button>
-          <button class="filter-chip" data-family="blondes">BLONDES</button>
-          <button class="filter-chip" data-family="reds">REDS &amp; COPPER</button>
-          <button class="filter-chip" data-family="fashion">FASHION</button>
+        <div class="drawer-footer-actions">
+          <button id="saveColorDirectBtn" class="btn-pill" style="padding:14px 18px; font-weight:800;">
+            <i class="bi bi-download"></i> SAVE LOOK
+          </button>
+          <button id="viewCompareBtn" class="btn-primary">
+            <span>COMPARE</span> <i class="bi bi-arrows-expand"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- DRAWER B: AI HAIRSTYLE (ANIMATED COLLAPSIBLE) -->
+      <div id="styleDrawer" class="studio-drawer">
+        <div class="drawer-handle-bar" id="styleDrawerHandle"></div>
+        <div class="drawer-header">
+          <h3><i class="bi bi-scissors" style="color:var(--primary);"></i> AI HAIRSTYLE</h3>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <div id="styleQuotaBadge" class="badge" style="background:var(--primary-light); color:var(--primary);">0 / 5 USED</div>
+            <button id="closeStyleDrawerBtn" class="btn-icon" style="width:34px; height:34px; font-size:0.95rem;"><i class="bi bi-x-lg"></i></button>
+          </div>
         </div>
 
-        <div class="swatch-grid" id="swatchGrid"></div>
+        <div class="drawer-scroll-body">
+          <div class="scroll-filter-row" id="catFilterRow"></div>
+          <div class="hairstyles-grid" id="hairstylesGrid"></div>
 
-        <div class="slider-stack sliders-locked" id="sliderStack">
-          <div class="slider-block">
-            <label for="hueSlider">COLOUR <span id="hueVal">26°</span></label>
-            <input type="range" id="hueSlider" min="0" max="360" step="1" value="26" class="rainbow-slider" />
+          <div class="ref-uploader" id="refCard" role="button" tabindex="0">
+            <div class="ref-thumb">
+              <i class="bi bi-pin-angle" id="refIcon"></i>
+              <img id="refImg" class="hidden" alt="Reference" />
+            </div>
+            <div style="flex:1; min-width:0;">
+              <div class="badge" style="background:var(--primary-light); color:var(--primary); margin-bottom:2px; font-size:0.65rem;">OPTIONAL REFERENCE</div>
+              <h4 style="font-size:0.82rem; font-weight:800;">REFERENCE CUT</h4>
+              <p id="refSubtext" style="font-size:0.72rem; color:var(--text-muted); font-weight:600;">Tap to upload fringe/length reference</p>
+            </div>
+            <button id="clearRefBtn" class="hidden btn-pill" style="padding:4px 8px; font-size:0.68rem; background:#EF4444; color:white;"><i class="bi bi-x-lg"></i></button>
           </div>
-          <div class="slider-block">
-            <label for="satSlider">VIVIDNESS <span id="satVal">38%</span></label>
-            <input type="range" id="satSlider" min="0" max="100" step="1" value="38" class="sat-slider" />
-          </div>
-          <div class="slider-block">
-            <label for="liftSlider">LIGHTNESS / LIFT <span id="liftVal">0%</span></label>
-            <input type="range" id="liftSlider" min="-0.40" max="0.60" step="0.02" value="0.0" class="lift-slider" />
-          </div>
-          <button type="button" id="sliderLockOverlay" class="slider-lock-overlay" aria-label="Unlock fine tuning sliders">
-            <span class="lock-pill"><i class="bi bi-lock-fill"></i> TAP TO UNLOCK FINE TUNING</span>
+          <input type="file" id="refFileInput" class="hidden" accept="image/*,.heic,.heif" />
+
+          <button id="executeStyleBtn" class="btn-primary pink-theme" style="margin-top:4px;">
+            <span>TRANSFORM WITH KAMI AI</span> <i class="bi bi-stars"></i>
           </button>
         </div>
 
-        <button id="viewCompareBtn" class="btn-primary" style="margin-top:6px;">
-          <span>COMPARE</span> <i class="bi bi-arrows-expand"></i>
-        </button>
-      </div>
-
-      <!-- PANEL B: HAIRSTYLE AI -->
-      <div id="panelStyle" class="tool-card hidden">
-        <div class="tool-header">
-          <div style="display:flex; align-items:center; gap:8px;">
-            <i class="bi bi-scissors" style="color:var(--primary); font-size:1.15rem;"></i>
-            <span style="font-weight:800; font-size:0.92rem;">HAIRSTYLE AI</span>
-          </div>
-          <div style="display:flex; align-items:center; gap:6px;">
-            <div id="styleQuotaBadge" class="badge" style="background:var(--primary-light); color:var(--primary);">0 / 5 USED</div>
-          </div>
+        <div class="drawer-footer-actions">
+          <button id="saveStyleDirectBtn" class="btn-pill" style="padding:14px 18px; font-weight:800;">
+            <i class="bi bi-download"></i> SAVE LOOK
+          </button>
+          <button id="viewCompareStyleBtn" class="btn-primary">
+            <span>COMPARE</span> <i class="bi bi-arrows-expand"></i>
+          </button>
         </div>
-
-        <div class="scroll-filter-row" id="catFilterRow"></div>
-        <div class="hairstyles-grid" id="hairstylesGrid"></div>
-
-        <div class="ref-uploader" id="refCard" role="button" tabindex="0">
-          <div class="ref-thumb">
-            <i class="bi bi-pin-angle" id="refIcon"></i>
-            <img id="refImg" class="hidden" alt="Reference" />
-          </div>
-          <div style="flex:1; min-width:0;">
-            <div class="badge" style="background:var(--primary-light); color:var(--primary); margin-bottom:2px; font-size:0.65rem;">OPTIONAL REFERENCE</div>
-            <h4 style="font-size:0.82rem; font-weight:800;">REFERENCE CUT</h4>
-            <p id="refSubtext" style="font-size:0.72rem; color:var(--text-muted); font-weight:600;">Tap to upload fringe/length reference</p>
-          </div>
-          <button id="clearRefBtn" class="hidden btn-pill" style="padding:4px 8px; font-size:0.68rem; background:#EF4444; color:white;"><i class="bi bi-x-lg"></i></button>
-        </div>
-        <input type="file" id="refFileInput" class="hidden" accept="image/*,.heic,.heif" />
-
-        <button id="executeStyleBtn" class="btn-primary pink-theme" style="margin-top:6px;">
-          <span>TRANSFORM WITH KAMI AI</span> <i class="bi bi-stars"></i>
-        </button>
       </div>
 
     </main>
@@ -1568,7 +1666,6 @@
     let usedHairstyleCount = 0;
     let userRealtimeChannel = null;
 
-    let activeStudioMode = 'color';
     let originalImageData = null;
     let originalWebpBlob = null;
     let originalDataURL = null;
@@ -1581,7 +1678,6 @@
     let cameraStream = null;
     let cameraFacing = 'user';
 
-    let isSavingVault = false;
     let isDividerDragging = false;
     let renderScheduled = false;
     let openedFromVault = false;
@@ -2143,7 +2239,6 @@
       return cvs;
     }
 
-    /* SYNCHRONOUS PICKER CALLS (SAFARI SAFE) */
     $('uploadPhotoBtn').addEventListener('click', () => {
       $('clientFileInput').value = '';
       $('clientFileInput').click();
@@ -2233,6 +2328,9 @@
       if (cameraStream) { cameraStream.getTracks().forEach(t => t.stop()); cameraStream = null; }
       activateScreen(screens.studio);
       renderSwatches();
+      
+      // Auto open Colour Drawer for immediate experience
+      openDrawer('color');
 
       if (!imageSegmenter) {
         pendingImage = source;
@@ -2243,7 +2341,7 @@
       setTimeout(() => runSegmentation(currentRun), 40);
     }
 
-    /* 1. CLEAN BILINEAR + 5x5 FEATHERED SEGMENTATION (No Patchy Holes) */
+    /* 1. CLEAN BILINEAR + 5x5 FEATHERED SEGMENTATION */
     function runSegmentation(token) {
       if (!imageSegmenter || !originalImageData || token !== processToken) {
         hideLoading();
@@ -2329,23 +2427,6 @@
       } finally {
         hideLoading();
       }
-    }
-
-    function rgbToHsl(r, g, b) {
-      r /= 255; g /= 255; b /= 255;
-      const max = Math.max(r, g, b), min = Math.min(r, g, b);
-      let h = 0, s = 0, l = (max + min) * 0.5;
-      if (max !== min) {
-        const d = max - min;
-        s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-        switch (max) {
-          case r: h = (g - b) / d + (g < b ? 6 : 0); break;
-          case g: h = (b - r) / d + 2; break;
-          default: h = (r - g) / d + 4; break;
-        }
-        h /= 6;
-      }
-      return [h, s, l];
     }
 
     function hslToRgb(h, s, l) {
@@ -2454,7 +2535,7 @@
       hairCtx.putImageData(working, 0, 0);
     }
 
-    /* 3. SWATCH APPLICATION */
+    /* 3. SWATCH APPLICATION (UPDATES PERSON LIVE IN CANVAS) */
     function applySwatch(shade) {
       currentColorApplied = true;
       targetH = shade.h;
@@ -2479,6 +2560,7 @@
     $('retakeBtn').addEventListener('click', async () => {
       const active = await verifyUserTrialStatus(currentUserPhone);
       if (!active) return;
+      closeAllDrawers();
       activateScreen(screens.camera);
       startCamera();
     });
@@ -2563,23 +2645,43 @@
       renderSwatches();
     });
 
-    $('tabModeColor').addEventListener('click', () => {
-      activeStudioMode = 'color';
-      $('tabModeColor').classList.add('active');
-      $('tabModeStyle').classList.remove('active');
-      $('panelColor').classList.remove('hidden');
-      $('panelStyle').classList.add('hidden');
-      stylePreviewImg.classList.add('hidden');
-      hairCanvas.classList.remove('hidden');
-    });
+    /* DRAWER MANAGEMENT & ANIMATIONS */
+    const drawerBackdrop = $('drawerBackdrop');
+    const colorDrawer = $('colorDrawer');
+    const styleDrawer = $('styleDrawer');
 
-    $('tabModeStyle').addEventListener('click', () => {
-      activeStudioMode = 'style';
-      $('tabModeStyle').classList.add('active');
-      $('tabModeColor').classList.remove('active');
-      $('panelStyle').classList.remove('hidden');
-      $('panelColor').classList.add('hidden');
-    });
+    function openDrawer(type) {
+      if (type === 'color') {
+        colorDrawer.classList.add('open');
+        styleDrawer.classList.remove('open');
+        $('openColorDrawerBtn').classList.add('active');
+        $('openStyleDrawerBtn').classList.remove('active');
+        stylePreviewImg.classList.add('hidden');
+        hairCanvas.classList.remove('hidden');
+      } else {
+        styleDrawer.classList.add('open');
+        colorDrawer.classList.remove('open');
+        $('openStyleDrawerBtn').classList.add('active');
+        $('openColorDrawerBtn').classList.remove('active');
+      }
+      drawerBackdrop.classList.add('open');
+    }
+
+    function closeAllDrawers() {
+      colorDrawer.classList.remove('open');
+      styleDrawer.classList.remove('open');
+      drawerBackdrop.classList.remove('open');
+      $('openColorDrawerBtn').classList.remove('active');
+      $('openStyleDrawerBtn').classList.remove('active');
+    }
+
+    $('openColorDrawerBtn').addEventListener('click', () => openDrawer('color'));
+    $('openStyleDrawerBtn').addEventListener('click', () => openDrawer('style'));
+    $('closeColorDrawerBtn').addEventListener('click', closeAllDrawers);
+    $('closeStyleDrawerBtn').addEventListener('click', closeAllDrawers);
+    $('colorDrawerHandle').addEventListener('click', closeAllDrawers);
+    $('styleDrawerHandle').addEventListener('click', closeAllDrawers);
+    drawerBackdrop.addEventListener('click', closeAllDrawers);
 
     async function loadHairstylesCatalog() {
       if (sb) {
@@ -2635,7 +2737,6 @@
       });
     }
 
-    /* SYNCHRONOUS PICKER CALL FOR REFERENCE UPLOADER */
     $('refCard').addEventListener('click', e => {
       if (e.target.closest('#clearRefBtn')) return;
       $('refFileInput').value = '';
@@ -2668,7 +2769,7 @@
       $('refSubtext').textContent = 'Tap to upload fringe/length reference';
     });
 
-    /* AI HAIRSTYLE HANDLER WITH RELIABLE ENDPOINT FALLBACK */
+    /* AI HAIRSTYLE GENERATION */
     $('executeStyleBtn').addEventListener('click', async () => {
       const active = await verifyUserTrialStatus(currentUserPhone);
       if (!active) return;
@@ -2804,6 +2905,12 @@
           created_at: new Date().toISOString()
         });
 
+        // Set live style image preview
+        stylePreviewImg.src = sanitizeUrl(renderedPublicUrl);
+        hairCanvas.classList.add('hidden');
+        stylePreviewImg.classList.remove('hidden');
+
+        closeAllDrawers();
         openCompareWithImages(sourcePublicUrl, renderedPublicUrl, selectedHairstyle.name, false);
       } catch (err) {
         showToast(err.message || 'GENERATION ERROR');
@@ -2832,7 +2939,6 @@
       } catch (_) {}
     }
 
-    /* SLIDER BADGE VISIBILITY: FADES OUT REDUNDANT LABELS AT EDGES */
     function setSlider(pct) {
       const clamped = Math.max(0, Math.min(100, pct));
       const clip = `polygon(${clamped}% 0, 100% 0, 100% 100%, ${clamped}% 100%)`;
@@ -2887,19 +2993,6 @@
       setSlider((x / rect.width) * 100);
     }
 
-    $('sliderDivider').addEventListener('keydown', e => {
-      if (currentCompareMode !== 'slide') return;
-      const current = parseFloat($('sliderDivider').getAttribute('aria-valuenow')) || 50;
-      const step = e.shiftKey ? 10 : 2;
-      if (e.key === 'ArrowLeft') {
-        setSlider(current - step);
-        e.preventDefault();
-      } else if (e.key === 'ArrowRight') {
-        setSlider(current + step);
-        e.preventDefault();
-      }
-    });
-
     function setCompareMode(mode) {
       currentCompareMode = mode;
       $('modeSlide').classList.toggle('active', mode === 'slide');
@@ -2939,16 +3032,60 @@
       else activateScreen(screens.studio);
     });
 
-    /* VIEW COMPARE: SWITCHES SCREEN WITHOUT UNWANTED AUTO-SAVING */
+    /* BUTTONS TO LAUNCH COMPARE DIRECTLY FROM DRAWERS */
     $('viewCompareBtn').addEventListener('click', async () => {
       const active = await verifyUserTrialStatus(currentUserPhone);
       if (!active) return;
-
       if (!currentColorApplied) {
         showToast("SELECT A COLOUR FIRST");
         return;
       }
+      closeAllDrawers();
       openCompareWithImages(originalDataURL, canvasToDataURL(hairCanvas, WEBP_QUALITY), currentShadeName, false);
+    });
+
+    $('viewCompareStyleBtn').addEventListener('click', async () => {
+      const active = await verifyUserTrialStatus(currentUserPhone);
+      if (!active) return;
+      if (stylePreviewImg.classList.contains('hidden') || !stylePreviewImg.src) {
+        showToast("GENERATE A HAIRSTYLE FIRST");
+        return;
+      }
+      closeAllDrawers();
+      openCompareWithImages(originalDataURL, stylePreviewImg.src, selectedHairstyle.name, false);
+    });
+
+    /* DIRECT SAVE BUTTONS INSIDE DRAWERS */
+    $('saveColorDirectBtn').addEventListener('click', async () => {
+      if (!currentColorApplied) {
+        showToast("SELECT A COLOUR FIRST");
+        return;
+      }
+      showLoading("PREPARING IMAGE...");
+      try {
+        const blob = await compressToWebP(hairCanvas, { maxDim: 1200, quality: 0.90 });
+        hideLoading();
+        await universalSaveImage(blob, `KAMI_${currentShadeName.replace(/\s+/g, '_')}_${Date.now()}.${ENCODE_EXT}`);
+      } catch (_) {
+        hideLoading();
+        showToast("SAVE FAILED");
+      }
+    });
+
+    $('saveStyleDirectBtn').addEventListener('click', async () => {
+      if (stylePreviewImg.classList.contains('hidden') || !stylePreviewImg.src) {
+        showToast("GENERATE A HAIRSTYLE FIRST");
+        return;
+      }
+      showLoading("PREPARING IMAGE...");
+      try {
+        const blob = await compressToWebP(stylePreviewImg.src, { maxDim: 1200, quality: 0.90 });
+        hideLoading();
+        await universalSaveImage(blob, `KAMI_${selectedHairstyle.name.replace(/\s+/g, '_')}_${Date.now()}.${ENCODE_EXT}`);
+      } catch (_) {
+        hideLoading();
+        showToast("SAVE FAILED");
+      }
     });
 
     async function buildCollageBlob() {
@@ -2977,7 +3114,6 @@
       return encodeCanvas(cvs, 0.88);
     }
 
-    /* SHARE HANDLER */
     $('shareBtn').addEventListener('click', async () => {
       if (navigator.share && cachedCollageFile && navigator.canShare && navigator.canShare({ files: [cachedCollageFile] })) {
         try {
@@ -3000,7 +3136,6 @@
       }
     });
 
-    /* CONTEXT-AWARE SAVE BUTTON */
     $('saveLocalBtn').addEventListener('click', async () => {
       showLoading("PREPARING IMAGE...");
       try {
@@ -3032,7 +3167,7 @@
       }
     });
 
-    /* VAULT GALLERY WITH CLEAN CARD SPACING & DEDUPLICATION */
+    /* VAULT GALLERY — FULL PORTRAIT PREVIEW WITHOUT CLIPPING */
     async function loadUserVault() {
       const active = await verifyUserTrialStatus(currentUserPhone);
       if (!active) return;
