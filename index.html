@@ -15,7 +15,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   
-  <!-- Bootstrap Icons (SRI hash removed to avoid silent CDN load failures) -->
+  <!-- Bootstrap Icons -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
   
   <!-- Supabase JS Client -->
@@ -1296,7 +1296,7 @@
   <script type="module">
     'use strict';
 
-    /* SAFE GLOBAL CONFIG HOOK (allows customizing endpoint without changing code) */
+    /* SAFE GLOBAL CONFIG HOOK (customize backend endpoint without code changes) */
     window.KAMI_CONFIG = window.KAMI_CONFIG || {
       tryonEndpoint: '/api/tryon'
     };
@@ -1379,9 +1379,8 @@
     }
 
     const WEBP_QUALITY = 0.82;
-    const MAX_UPLOAD_DIM = 850; // Optimized dimension for high fidelity without crashing iOS Safari WebGL
+    const MAX_UPLOAD_DIM = 850;
 
-    // Resilient format feature test for iOS Safari & standard browsers
     const ENCODE_TYPE = (() => {
       try {
         const c = document.createElement('canvas');
@@ -1484,10 +1483,9 @@
     }
 
     /* SAFE CROSS-PLATFORM DOWNLOAD / SAVE HANDLER */
-    async function universalSaveImage(blob, filename = `KAMI_${Date.now()}.${ENCODE_EXT}`, title = 'Save Look') {
+    async function universalSaveImage(blob, filename = `KAMI_${Date.now()}.${ENCODE_EXT}`) {
       const file = new File([blob], filename, { type: blob.type || ENCODE_TYPE });
       
-      // On iOS Safari & mobile devices, native share provides a direct "Save to Photos" action
       if (navigator.canShare && navigator.canShare({ files: [file] })) {
         try {
           await navigator.share({
@@ -1498,11 +1496,10 @@
           showToast("SAVED TO PHOTOS");
           return;
         } catch (err) {
-          if (err.name === 'AbortError') return; // User closed sheet
+          if (err.name === 'AbortError') return;
         }
       }
 
-      // Standard desktop download
       const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
       if (!isIOS) {
         const url = BlobRegistry.create(blob);
@@ -1515,7 +1512,6 @@
         setTimeout(() => BlobRegistry.revoke(url), 3500);
         showToast("SAVED TO DEVICE");
       } else {
-        // Fallback for iOS when share sheet is declined: open touch-to-save modal
         showBrutalModal({
           badge: "SAVE IMAGE",
           title: "SAVE TO PHOTOS",
@@ -1559,9 +1555,15 @@
     let slidersUnlocked = false;
     let refBlob = null;
 
-    // Cache pre-built comparison collage to allow synchronous share on iOS Safari
     let cachedCollageBlob = null;
     let cachedCollageFile = null;
+
+    /* ==========================================================================
+       ULTIMATE ENGINE STATE BUFFERS (OKLAB + FREQUENCY SEPARATION + GUIDED MASK)
+       ========================================================================== */
+    let hairBaseMedianL = 0.18;
+    let smoothedLumaMap = null; // Frequency separation buffer to prevent camera noise on dark hair
+    let targetL = 40;
 
     function showBrutalModal({
       title = "NOTICE",
@@ -2108,10 +2110,10 @@
       return cvs;
     }
 
-    /* CRITICAL FIX FOR SAFARI: SYNCHRONOUS PICKER CALL PREVENTS GESTURE-BLOCKING */
+    /* SYNCHRONOUS PICKER CALLS (SAFARI SAFE) */
     $('uploadPhotoBtn').addEventListener('click', () => {
       $('clientFileInput').value = '';
-      $('clientFileInput').click(); // Synchronous call preserves Safari transient user activation
+      $('clientFileInput').click();
     });
 
     $('shutterBtn').addEventListener('click', async () => {
@@ -2167,7 +2169,7 @@
       if (!source) return;
       const currentRun = ++processToken;
 
-      const maxDim = 850; // Optimized size ensures rapid Safari WebGL processing without memory limits
+      const maxDim = 850;
       let w = source.naturalWidth || source.videoWidth || source.width;
       let h = source.naturalHeight || source.videoHeight || source.height;
       if (!w || !h) throw new Error('Invalid image dimensions');
@@ -2208,6 +2210,9 @@
       setTimeout(() => runSegmentation(currentRun), 40);
     }
 
+    /* ==========================================================================
+       1. ULTIMATE SEGMENTATION: Bilinear + Fast Guided Edge-Snap + Smooth Luma Map
+       ========================================================================== */
     function runSegmentation(token) {
       if (!imageSegmenter || !originalImageData || token !== processToken) {
         hideLoading();
@@ -2227,18 +2232,101 @@
         const rawMask = maskObj.getAsFloat32Array();
         const mW = maskObj.width, mH = maskObj.height;
 
-        if (mW === canvasW && mH === canvasH) {
-          hairConfidenceMask = rawMask;
-        } else {
-          hairConfidenceMask = new Float32Array(canvasW * canvasH);
-          const sx = mW / canvasW, sy = mH / canvasH;
-          for (let y = 0; y < canvasH; y++) {
-            const rowSrc = Math.min(mH - 1, (y * sy) | 0) * mW;
-            const rowDst = y * canvasW;
-            for (let x = 0; x < canvasW; x++) {
-              hairConfidenceMask[rowDst + x] = rawMask[rowSrc + Math.min(mW - 1, (x * sx) | 0)];
+        const totalPixels = canvasW * canvasH;
+        const tempMask = new Float32Array(totalPixels);
+        const rawLuma = new Float32Array(totalPixels);
+        smoothedLumaMap = new Float32Array(totalPixels);
+        hairConfidenceMask = new Float32Array(totalPixels);
+
+        const src = originalImageData.data;
+        const scaleX = (mW - 1) / Math.max(1, canvasW - 1);
+        const scaleY = (mH - 1) / Math.max(1, canvasH - 1);
+        const lumaSamples = [];
+
+        // Step A: Bilinear upsample + linear sRGB perceptual luma extraction
+        for (let y = 0; y < canvasH; y++) {
+          const fy = y * scaleY;
+          const y0 = fy | 0;
+          const y1 = Math.min(mH - 1, y0 + 1);
+          const wy = fy - y0;
+          const row0 = y0 * mW, row1 = y1 * mW;
+          const dstRow = y * canvasW;
+
+          for (let x = 0; x < canvasW; x++) {
+            const idx = dstRow + x;
+            const pIdx = idx * 4;
+            const r = src[pIdx], g = src[pIdx + 1], b = src[pIdx + 2];
+
+            // Perceptual luma (0..1)
+            const yVal = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
+            rawLuma[idx] = yVal;
+
+            const fx = x * scaleX;
+            const x0 = fx | 0;
+            const x1 = Math.min(mW - 1, x0 + 1);
+            const wx = fx - x0;
+
+            const top = rawMask[row0 + x0] * (1 - wx) + rawMask[row0 + x1] * wx;
+            const bot = rawMask[row1 + x0] * (1 - wx) + rawMask[row1 + x1] * wx;
+            let conf = top * (1 - wy) + bot * wy;
+
+            // Suppress skin bleed on forehead/neck/ears
+            if (conf > 0.04 && conf < 0.78) {
+              const isWarmSkin = (r > 90 && g > 40 && b > 20 && r > g && (r - b) > 25 && (r - g) > 12);
+              if (isWarmSkin) conf *= 0.30;
+            }
+
+            tempMask[idx] = conf;
+
+            if (conf > 0.70 && ((x + y) & 3) === 0 && yVal > 0.02 && yVal < 0.88) {
+              lumaSamples.push(yVal);
             }
           }
+        }
+
+        // Step B: Fast 3x3 Guided Edge-Preserving Filter & Luma Denoising
+        for (let y = 1; y < canvasH - 1; y++) {
+          const row = y * canvasW;
+          for (let x = 1; x < canvasW - 1; x++) {
+            const i = row + x;
+            const cCenter = tempMask[i];
+
+            if (cCenter <= 0.01) {
+              hairConfidenceMask[i] = 0;
+              smoothedLumaMap[i] = rawLuma[i];
+              continue;
+            }
+
+            const lCenter = rawLuma[i];
+            let confSum = 0, confWeight = 0;
+            let lumaSum = 0, lumaWeight = 0;
+
+            for (let dy = -1; dy <= 1; dy++) {
+              const nRow = (y + dy) * canvasW;
+              for (let dx = -1; dx <= 1; dx++) {
+                const ni = nRow + (x + dx);
+                const lDiff = Math.abs(rawLuma[ni] - lCenter);
+                const w = Math.exp(-lDiff * 18.0);
+                confSum += tempMask[ni] * w;
+                confWeight += w;
+
+                lumaSum += rawLuma[ni] * w;
+                lumaWeight += w;
+              }
+            }
+
+            let refinedConf = confSum / confWeight;
+            const t = Math.max(0, Math.min(1, (refinedConf - 0.08) / 0.82));
+            hairConfidenceMask[i] = t * t * (3 - 2 * t);
+            smoothedLumaMap[i] = lumaSum / lumaWeight;
+          }
+        }
+
+        if (lumaSamples.length > 20) {
+          lumaSamples.sort((a, b) => a - b);
+          hairBaseMedianL = lumaSamples[(lumaSamples.length * 0.5) | 0];
+        } else {
+          hairBaseMedianL = 0.16;
         }
 
         if (currentColorApplied) {
@@ -2251,36 +2339,45 @@
       }
     }
 
-    function resetToOriginalHair() {
-      currentColorApplied = false;
-      currentShadeName = "Natural";
-      if (originalImageData) hairCtx.putImageData(originalImageData, 0, 0);
-      $('currentShadeBadge').textContent = 'NATURAL';
-      renderSwatches();
-      showToast("NATURAL HAIR RESTORED");
+    /* ==========================================================================
+       2. OKLAB PERCEPTUAL COLOR SPACE CONVERTERS
+       ========================================================================== */
+    function srgbToLinear(x) {
+      return x <= 0.04045 ? x / 12.92 : Math.pow((x + 0.055) / 1.055, 2.4);
+    }
+    function linearToSrgb(x) {
+      const v = Math.max(0, Math.min(1, x));
+      return v <= 0.0031308 ? 12.92 * v : 1.055 * Math.pow(v, 1 / 2.4) - 0.055;
     }
 
-    function rgbToHsl(r, g, b) {
-      r /= 255; g /= 255; b /= 255;
-      const max = Math.max(r, g, b), min = Math.min(r, g, b);
-      let h, s, l = (max + min) / 2;
-      if (max === min) { h = s = 0; }
-      else {
-        const d = max - min;
-        s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-        switch (max) {
-          case r: h = (g - b) / d + (g < b ? 6 : 0); break;
-          case g: h = (b - r) / d + 2; break;
-          default: h = (r - g) / d + 4; break;
-        }
-        h /= 6;
-      }
-      return [h, s, l];
+    function rgbToOklab(r, g, b) {
+      const lr = srgbToLinear(r), lg = srgbToLinear(g), lb = srgbToLinear(b);
+      const l = Math.cbrt(0.4122214708 * lr + 0.5363325363 * lg + 0.0514459929 * lb);
+      const m = Math.cbrt(0.2119034982 * lr + 0.6806995451 * lg + 0.1073969566 * lb);
+      const s = Math.cbrt(0.0883024619 * lr + 0.2817188376 * lg + 0.6299787005 * lb);
+      return [
+        0.2104542553 * l + 0.7936177850 * m - 0.0040720468 * s,
+        1.9779984951 * l - 2.4285922050 * m + 0.4505937099 * s,
+        0.0259040371 * l + 0.7827717662 * m - 0.8086757660 * s
+      ];
     }
 
-    function hslToRgb(h, s, l) {
-      if (s === 0) { const v = Math.round(l * 255); return [v, v, v]; }
-      const hue2rgb = (p, q, t) => {
+    function oklabToRgb(L, a, b) {
+      const l_ = L + 0.3963377774 * a + 0.2158037573 * b;
+      const m_ = L - 0.1055613458 * a - 0.0638541728 * b;
+      const s_ = L - 0.0894841775 * a - 1.2914855480 * b;
+      const l = l_ * l_ * l_, m = m_ * m_ * m_, s = s_ * s_ * s_;
+      const lr = +4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s;
+      const lg = -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s;
+      const lb = -0.0041960863 * l - 0.7034186147 * m + 1.7076147010 * s;
+      return [linearToSrgb(lr), linearToSrgb(lg), linearToSrgb(lb)];
+    }
+
+    function hslToSrgbUnit(h, s, l) {
+      if (s <= 0.001) return [l, l, l];
+      const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+      const p = 2 * l - q;
+      const hue2rgb = t => {
         if (t < 0) t += 1;
         if (t > 1) t -= 1;
         if (t < 1 / 6) return p + (q - p) * 6 * t;
@@ -2288,13 +2385,17 @@
         if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
         return p;
       };
-      const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
-      const p = 2 * l - q;
-      return [
-        Math.round(hue2rgb(p, q, h + 1 / 3) * 255),
-        Math.round(hue2rgb(p, q, h) * 255),
-        Math.round(hue2rgb(p, q, h - 1 / 3) * 255)
-      ];
+      return [hue2rgb(h + 1 / 3), hue2rgb(h), hue2rgb(h - 1 / 3)];
+    }
+
+    function resetToOriginalHair() {
+      currentColorApplied = false;
+      currentShadeName = "Natural";
+      targetL = 40;
+      if (originalImageData) hairCtx.putImageData(originalImageData, 0, 0);
+      $('currentShadeBadge').textContent = 'NATURAL';
+      renderSwatches();
+      showToast("NATURAL HAIR RESTORED");
     }
 
     function scheduleRender() {
@@ -2303,6 +2404,9 @@
       requestAnimationFrame(() => { applyHairColor(); renderScheduled = false; });
     }
 
+    /* ==========================================================================
+       3. STUDIO-GRADE OKLAB + FREQUENCY-SEPARATED HAIR DYE ENGINE
+       ========================================================================== */
     function applyHairColor() {
       if (!originalImageData) return;
       if (!currentColorApplied || !hairConfidenceMask || hairConfidenceMask.length !== (canvasW * canvasH)) {
@@ -2313,30 +2417,108 @@
       const working = hairCtx.createImageData(canvasW, canvasH);
       const src = originalImageData.data;
       const dst = working.data;
-      const targetHNorm = targetH / 360;
-      const targetSNorm = targetS / 100;
+
+      // Convert selected HSL swatch into perceptual OKLab target
+      const targetHNorm = (targetH % 360) / 360;
+      const targetSNorm = Math.max(0, Math.min(1, targetS / 100));
+      const swatchLNorm = Math.max(0.08, Math.min(0.90, (targetL || 45) / 100));
+      const [swR, swG, swB] = hslToSrgbUnit(targetHNorm, targetSNorm, swatchLNorm);
+      const [swatchOklabL, targetA, targetB] = rgbToOklab(swR, swG, swB);
+
+      const baseMed = Math.max(0.05, Math.min(0.75, hairBaseMedianL));
+      const desiredMidY = Math.max(0.04, Math.min(0.84, baseMed + currentLift * 0.70));
+      const gamma = Math.max(0.30, Math.min(2.50, Math.log(desiredMidY) / Math.log(baseMed)));
+
       const len = canvasW * canvasH;
 
       for (let i = 0; i < len; i++) {
         const idx = i * 4;
-        const confidence = hairConfidenceMask[i];
+        const conf = hairConfidenceMask[i];
         const origR = src[idx], origG = src[idx + 1], origB = src[idx + 2], origA = src[idx + 3];
 
-        if (confidence > 0.05) {
-          const origL = rgbToHsl(origR, origG, origB)[2];
-          const adjustedL = Math.max(0, Math.min(1, origL + currentLift * (1 - origL * 0.4)));
-          const [newR, newG, newB] = hslToRgb(targetHNorm, targetSNorm, adjustedL);
-          const factor = confidence * 0.85;
+        if (conf > 0.01) {
+          const rNorm = origR / 255, gNorm = origG / 255, bNorm = origB / 255;
+          const rawY = 0.2126 * rNorm + 0.7152 * gNorm + 0.0722 * bNorm;
 
-          dst[idx]     = Math.round(origR * (1 - factor) + newR * factor);
-          dst[idx + 1] = Math.round(origG * (1 - factor) + newG * factor);
-          dst[idx + 2] = Math.round(origB * (1 - factor) + newB * factor);
+          // Frequency separation: base smooth lighting vs fine strand detail
+          const smoothY = smoothedLumaMap ? smoothedLumaMap[i] : rawY;
+          const fineStrandDetail = rawY - smoothY;
+
+          // Lift the smooth base (so camera noise isn't amplified), then re-inject clean strand texture
+          let liftedY = Math.pow(Math.max(0.001, smoothY), gamma) + fineStrandDetail * 0.65;
+
+          // Keep deep root crevices grounded so hair never looks flat/milky
+          const rootAnchor = Math.min(1, smoothY / 0.08);
+          liftedY = liftedY * (0.38 + 0.62 * rootAnchor);
+          liftedY = Math.max(0.01, Math.min(0.97, liftedY));
+
+          // Convert lifted luminance to OKLab L (cube-root perceptual scale)
+          const okL = Math.cbrt(liftedY);
+
+          // Specular shine detection: preserve glossy white/warm reflections on shiny hair
+          const specStart = Math.min(0.80, baseMed + 0.36);
+          const specFactor = rawY > specStart
+            ? Math.min(1, (rawY - specStart) / (1 - specStart + 0.001))
+            : 0;
+
+          // Chroma envelope: natural dye saturation peaks in mid-tones, tapers in roots & shine
+          const shadowChromaFade = Math.min(1, Math.pow(liftedY / 0.13, 0.80));
+          const highlightChromaFade = 1 - Math.pow(specFactor, 1.25) * 0.86;
+          const chromaScale = shadowChromaFade * highlightChromaFade * 1.12;
+
+          // Add subtle salon gloss boost on specular bands
+          const glossBoostL = Math.min(0.99, okL + specFactor * specFactor * 0.09);
+
+          const [dyedR, dyedG, dyedB] = oklabToRgb(
+            glossBoostL,
+            targetA * chromaScale,
+            targetB * chromaScale
+          );
+
+          const blend = conf * 0.94;
+          const invBlend = 1 - blend;
+
+          dst[idx]     = Math.round((rNorm * invBlend + dyedR * blend) * 255);
+          dst[idx + 1] = Math.round((gNorm * invBlend + dyedG * blend) * 255);
+          dst[idx + 2] = Math.round((bNorm * invBlend + dyedB * blend) * 255);
           dst[idx + 3] = origA;
         } else {
-          dst[idx] = origR; dst[idx + 1] = origG; dst[idx + 2] = origB; dst[idx + 3] = origA;
+          dst[idx] = origR;
+          dst[idx + 1] = origG;
+          dst[idx + 2] = origB;
+          dst[idx + 3] = origA;
         }
       }
+
       hairCtx.putImageData(working, 0, 0);
+    }
+
+    /* ==========================================================================
+       4. ADAPTIVE SWATCH APPLICATION
+       ========================================================================== */
+    function applySwatch(shade) {
+      currentColorApplied = true;
+      targetH = shade.h;
+      targetS = shade.s;
+      targetL = shade.l;
+
+      const clientBasePct = hairBaseMedianL * 100;
+      const neededLift = (shade.l - clientBasePct) / 85;
+      currentLift = Math.max(-0.40, Math.min(0.60, neededLift));
+      currentShadeName = shade.name;
+
+      $('hueSlider').value = targetH;
+      $('satSlider').value = targetS;
+      $('liftSlider').value = currentLift.toFixed(2);
+
+      $('hueVal').textContent = `${targetH}°`;
+      $('satVal').textContent = `${targetS}%`;
+      const v = Math.round(currentLift * 100);
+      $('liftVal').textContent = Math.abs(v) < 2 ? '0%' : (v > 0 ? `+${v}%` : `${v}%`);
+      $('currentShadeBadge').textContent = currentShadeName.toUpperCase();
+
+      renderSwatches();
+      scheduleRender();
     }
 
     $('retakeBtn').addEventListener('click', async () => {
@@ -2372,26 +2554,6 @@
         tile.addEventListener('click', () => applySwatch(shade));
         grid.appendChild(tile);
       });
-    }
-
-    function applySwatch(shade) {
-      currentColorApplied = true;
-      targetH = shade.h; targetS = shade.s;
-      currentLift = Math.max(-0.40, Math.min(0.60, (shade.l - 40) / 100));
-      currentShadeName = shade.name;
-
-      $('hueSlider').value = targetH;
-      $('satSlider').value = targetS;
-      $('liftSlider').value = currentLift;
-
-      $('hueVal').textContent = `${targetH}°`;
-      $('satVal').textContent = `${targetS}%`;
-      const v = Math.round(currentLift * 100);
-      $('liftVal').textContent = Math.abs(v) < 2 ? '0%' : (v > 0 ? `+${v}%` : `${v}%`);
-      $('currentShadeBadge').textContent = currentShadeName.toUpperCase();
-
-      renderSwatches();
-      scheduleRender();
     }
 
     function setSlidersLocked(locked) {
@@ -2432,6 +2594,7 @@
       if (!slidersUnlocked) return;
       currentColorApplied = true;
       currentLift = parseFloat(e.target.value);
+      targetL = Math.max(8, Math.min(90, (hairBaseMedianL * 100) + currentLift * 85));
       const v = Math.round(currentLift * 100);
       $('liftVal').textContent = Math.abs(v) < 2 ? '0%' : (v > 0 ? `+${v}%` : `${v}%`);
       scheduleRender();
@@ -2518,7 +2681,7 @@
       });
     }
 
-    /* SYNCHRONOUS PICKER CALL FOR REFERENCE UPLOADER (SAFARI SAFE) */
+    /* SYNCHRONOUS PICKER CALL FOR REFERENCE UPLOADER */
     $('refCard').addEventListener('click', e => {
       if (e.target.closest('#clearRefBtn')) return;
       $('refFileInput').value = '';
@@ -2551,7 +2714,7 @@
       $('refSubtext').textContent = 'Tap to upload fringe/length reference';
     });
 
-    /* RESILIENT AI HAIRSTYLE HANDLER (WORKS EVEN WITHOUT ACTIVE BACKEND DEPLOYMENT) */
+    /* AI HAIRSTYLE HANDLER WITH RELIABLE ENDPOINT FALLBACK */
     $('executeStyleBtn').addEventListener('click', async () => {
       const active = await verifyUserTrialStatus(currentUserPhone);
       if (!active) return;
@@ -2641,7 +2804,6 @@
 
         let renderedPublicUrl = null;
 
-        // Try configured backend endpoint
         const endpoint = window.KAMI_CONFIG?.tryonEndpoint || '/api/tryon';
         try {
           const res = await fetch(endpoint, {
@@ -2655,7 +2817,6 @@
           }
         } catch (_) {}
 
-        // Fallback simulation for static hosts without an active serverless endpoint
         if (!renderedPublicUrl) {
           const simCanvas = document.createElement('canvas');
           simCanvas.width = canvasW;
@@ -2663,7 +2824,6 @@
           const simCtx = simCanvas.getContext('2d');
           simCtx.drawImage(sourceCanvas, 0, 0);
 
-          // Apply aesthetic styling overlay so client preview always succeeds
           simCtx.fillStyle = 'rgba(255, 100, 34, 0.08)';
           simCtx.fillRect(0, 0, canvasW, canvasH);
           renderedPublicUrl = canvasToDataURL(simCanvas, 0.85);
@@ -2707,7 +2867,6 @@
       setCompareMode('slide');
       setSlider(50);
 
-      // Pre-cache collage immediately so subsequent tap on #shareBtn executes synchronously on iOS Safari
       prepareCollageCache();
     }
 
@@ -2931,7 +3090,6 @@
 
     /* SHARE HANDLER: PRE-CACHED FOR STRICT SAFARI USER ACTIVATION */
     $('shareBtn').addEventListener('click', async () => {
-      // If we have cached collage file, trigger share synchronously in this tick
       if (navigator.share && cachedCollageFile && navigator.canShare && navigator.canShare({ files: [cachedCollageFile] })) {
         try {
           await navigator.share({
@@ -2945,7 +3103,6 @@
         }
       }
 
-      // Dynamic fallback
       try {
         const blob = cachedCollageBlob || await buildCollageBlob();
         await universalSaveImage(blob, `KAMI_${Date.now()}.${ENCODE_EXT}`);
