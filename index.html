@@ -2,1028 +2,2519 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <meta name="description" content="FASSHON - AI Virtual Try-On Experience" />
-  
-  <!-- Favicon -->
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%23111111'/><text y='54%' x='50%' dominant-baseline='middle' text-anchor='middle' font-size='70' fill='%23ffffff' font-family='sans-serif'>着</text></svg>">
-  
-  <title>FASSHON - Virtual Try-On</title>
-  
-  <!-- Supabase Web SDK (Deferred for faster initial render) -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
-  
-  <!-- Bootstrap Icons -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-  
-  <!-- Google Fonts -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#F4F4F0" />
+  <meta name="referrer" content="strict-origin-when-cross-origin" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💇</text></svg>" />
+  <title>KAMI — AI Hair &amp; Colour Studio</title>
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo+Black&family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
-  
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo+Black&family=Plus+Jakarta+Sans:wght@500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" integrity="sha384-XGjxtQfXaH2tnPFa9x+ruJTuLE3Aa6LhHSWRr1XeTyhezb4abCG4ccI5AkVDxqC+" crossorigin="anonymous">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js" integrity="sha384-GFr3yTh5lJznCbZfpTtXnwboFsxqtTQoeTZCRHhE0579KrRmlCzen5AA8ohaB5ug" crossorigin="anonymous"></script>
+
   <style>
-    /* =========================================
-       CSS VARIABLES: EURO-BRUTALISM SCHEME
-       ========================================= */
     :root {
       --beige: #F4F4F0;
-      --white: #FFFFFF;
+      --beige-surface: #EAEAE4;
       --black: #1A1A1A;
-      --red: #FF4742;
+      --white: #FFFFFF;
       --lime: #D4FF00;
       --cyan: #1597D0;
-      --pink: #F04A83;
-      
+      --pink: #FF5E97;
+      --red: #FF4742;
+      --yellow: #FFE600;
+      --whatsapp: #25D366;
+
       --font-display: 'Anton', sans-serif;
-      --font-bold: 'Archivo Black', sans-serif;
-      --font-body: 'Noto Sans JP', sans-serif;
+      --font-heading: 'Archivo Black', sans-serif;
+      --font-body: 'Plus Jakarta Sans', sans-serif;
 
       --border-thick: 3px solid var(--black);
+      --border-thin: 2px solid var(--black);
       --shadow-solid: 6px 6px 0px var(--black);
       --shadow-sm: 4px 4px 0px var(--black);
+      --shadow-xs: 2px 2px 0px var(--black);
       --radius-card: 16px;
-      --radius-pill: 100px;
-      
+      --radius-pill: 999px;
       --bounce: cubic-bezier(0.175, 0.885, 0.32, 1.275);
-      
-      --safe-top: env(safe-area-inset-top, 0px);
-      --safe-bottom: env(safe-area-inset-bottom, 0px);
+
+      --z-base: 10;
+      --z-active-screen: 20;
+      --z-dock: 50;
+      --z-overlay: 200;
+      --z-modal: 5000;
+      --z-lock: 10000;
+      --z-toast: 99999;
     }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    html, body { height: 100%; overflow: hidden; overscroll-behavior: none; }
+
     body {
       background-color: var(--beige);
+      background-image:
+        radial-gradient(rgba(26, 26, 26, 0.16) 1.5px, transparent 1.5px),
+        radial-gradient(rgba(26, 26, 26, 0.16) 1.5px, var(--beige) 1.5px);
+      background-size: 22px 22px;
+      background-position: 0 0, 11px 11px;
       color: var(--black);
       font-family: var(--font-body);
-      overflow: hidden;
-      overscroll-behavior-y: contain;
       touch-action: manipulation;
-      -webkit-tap-highlight-color: transparent;
       -webkit-font-smoothing: antialiased;
+      position: fixed;
+      inset: 0;
     }
 
-    /* =========================================
-       TYPOGRAPHY & UTILS
-       ========================================= */
-    h1, h2, h3 { font-family: var(--font-bold); text-transform: uppercase; letter-spacing: -1px; line-height: 1; margin: 0; }
-    .text-red { color: var(--red); }
-    .text-cyan { color: var(--cyan); }
-    .hidden { display: none !important; }
-    
-    .brand-logo {
-      font-family: var(--font-display);
-      font-size: 2.5rem;
-      color: var(--black);
-      text-shadow: 3px 3px 0px var(--cyan);
-      letter-spacing: 2px;
-      line-height: 1;
-      pointer-events: auto;
-    }
-
-    /* View Transition System */
-    .view-container {
+    .view-screen {
       position: absolute; inset: 0;
-      background-color: var(--beige);
       display: flex; flex-direction: column;
-      z-index: 10;
+      background-color: var(--beige);
+      background-image:
+        radial-gradient(rgba(26, 26, 26, 0.14) 1.5px, transparent 1.5px),
+        radial-gradient(rgba(26, 26, 26, 0.14) 1.5px, var(--beige) 1.5px);
+      background-size: 22px 22px;
+      background-position: 0 0, 11px 11px;
       opacity: 0; pointer-events: none; visibility: hidden;
-      transition: opacity 0.3s ease, visibility 0.3s ease;
+      transition: opacity 0.18s ease, visibility 0s linear 0.18s;
+      z-index: var(--z-base);
     }
-    .view-container.active {
-      opacity: 1; pointer-events: all; visibility: visible;
+    .view-screen.active {
+      opacity: 1; pointer-events: auto; visibility: visible;
+      transition: opacity 0.18s ease;
+      z-index: var(--z-active-screen);
     }
 
-    /* =========================================
-       BUTTONS & UI ELEMENTS
-       ========================================= */
     button {
       background: none; border: none; color: inherit; cursor: pointer;
-      font-family: var(--font-bold); text-transform: uppercase;
-      transition: transform 0.2s var(--bounce), box-shadow 0.2s var(--bounce);
+      font-family: var(--font-heading); text-transform: uppercase;
+      transition: transform 0.12s var(--bounce), box-shadow 0.12s var(--bounce);
+      user-select: none;
     }
-    button:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; box-shadow: none !important; }
+    button:disabled { opacity: 0.45; cursor: not-allowed; transform: none !important; box-shadow: none !important; }
 
     .btn-pill {
       background: var(--white); color: var(--black);
       border: var(--border-thick); border-radius: var(--radius-pill);
-      padding: 12px 24px; font-size: 1rem; font-weight: 900;
-      box-shadow: var(--shadow-sm); display: flex; align-items: center; justify-content: center; gap: 8px;
+      padding: 9px 16px;
+      font-size: clamp(0.7rem, 2.5vw, 0.82rem); font-weight: 900;
+      box-shadow: var(--shadow-sm);
+      display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+      white-space: nowrap; flex-shrink: 0;
     }
-    .btn-pill:active:not(:disabled) { transform: translate(4px, 4px); box-shadow: 0px 0px 0px var(--black); }
-    
+    .btn-pill:active:not(:disabled) { transform: translate(3px, 3px); box-shadow: none; }
+
     .btn-primary {
-      background: var(--red); color: var(--white);
+      background: var(--lime); color: var(--black);
       border: var(--border-thick); border-radius: var(--radius-pill);
-      padding: 18px 30px; font-size: 1.1rem; width: 100%;
+      padding: 15px 24px;
+      font-size: clamp(0.88rem, 3.4vw, 1.02rem);
       box-shadow: var(--shadow-solid);
+      display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+      width: 100%; text-align: center;
     }
-    .btn-primary:active:not(:disabled) { transform: translate(6px, 6px); box-shadow: 0px 0px 0px var(--black); }
+    .btn-primary:active:not(:disabled) { transform: translate(4px, 4px); box-shadow: none; }
+    .btn-primary.pink-theme { background: var(--pink); color: var(--black); }
 
-    .icon-btn {
-      width: 50px; height: 50px; border-radius: 50%;
+    .btn-icon {
+      width: 44px; height: 44px; border-radius: 50%;
       background: var(--white); border: var(--border-thick);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 1.2rem; box-shadow: var(--shadow-sm); flex-shrink: 0;
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: 1.1rem; box-shadow: var(--shadow-sm); flex-shrink: 0;
     }
-    .icon-btn:active:not(:disabled) { transform: translate(4px, 4px); box-shadow: 0px 0px 0px var(--black); }
-
-    .input-field {
-      width: 100%; background: var(--white); color: var(--black);
-      border: var(--border-thick); border-radius: 12px; padding: 16px;
-      font-size: 1rem; font-family: var(--font-body); font-weight: 700;
-      box-shadow: inset 3px 3px 0px rgba(0,0,0,0.05); outline: none;
-      transition: border-color 0.2s ease;
-    }
-    .input-field:focus { border-color: var(--cyan); box-shadow: var(--shadow-sm); }
-
-    /* =========================================
-       CAMERA & FLOATING DOCKS
-       ========================================= */
-    .camera-wrapper { position: absolute; inset: 0; background: var(--black); z-index: 10; }
-    #cameraFeed { position: absolute; width: 100%; height: 100%; object-fit: cover; }
-    
-    .error-overlay {
-      position: absolute; inset: 0; display: flex; flex-direction: column;
-      align-items: center; justify-content: center; background: var(--beige);
-      z-index: 20; text-align: center; padding: 20px;
-      opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
-    }
-    .error-overlay.active { opacity: 1; pointer-events: all; }
-
-    .top-bar {
-      position: absolute; top: calc(var(--safe-top) + 20px); left: 20px; right: 20px;
-      display: flex; justify-content: space-between; align-items: center; 
-      z-index: 50; pointer-events: none;
-    }
-    .top-bar > * { pointer-events: auto; }
-
-    .floating-dock {
-      position: absolute; bottom: calc(var(--safe-bottom) + 30px); left: 50%; transform: translateX(-50%);
-      background: var(--white); border: var(--border-thick); border-radius: var(--radius-pill);
-      padding: 10px 20px; display: flex; align-items: center; gap: 20px;
-      box-shadow: var(--shadow-solid); z-index: 50; pointer-events: auto;
-    }
-
-    .shutter-btn {
-      width: 64px; height: 64px; border-radius: 50%;
-      background: var(--red); border: var(--border-thick);
-      outline: 4px solid var(--white); box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-      flex-shrink: 0;
-    }
-    .shutter-btn:active { transform: scale(0.9); box-shadow: inset 0 4px 10px rgba(0,0,0,0.5); }
-
-    /* =========================================
-       GRIDS & CARDS
-       ========================================= */
-    .content-area { flex: 1; overflow-y: auto; padding: 20px; padding-bottom: calc(var(--safe-bottom) + 120px); }
-    .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
-    
-    .card {
-      background: var(--white); border: var(--border-thick); border-radius: var(--radius-card);
-      overflow: hidden; position: relative; cursor: pointer;
-      box-shadow: var(--shadow-sm); transition: transform 0.2s var(--bounce);
-      aspect-ratio: 4/5; display: flex; flex-direction: column;
-    }
-    .card:active { transform: scale(0.95); }
-    .card.selected { border-color: var(--cyan); box-shadow: 0 0 0 4px var(--cyan), var(--shadow-sm); }
-    .card img { width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
-    
-    .card-label {
-      position: absolute; bottom: 10px; left: 10px; right: 10px;
-      background: var(--white); border: 2px solid var(--black); border-radius: var(--radius-pill);
-      padding: 6px 10px; font-size: 0.7rem; font-family: var(--font-bold);
-      text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-      box-shadow: 2px 2px 0px var(--black);
-    }
+    .btn-icon:active:not(:disabled) { transform: translate(3px, 3px); box-shadow: none; }
 
     .badge {
-      position: absolute; top: 10px; right: 10px;
-      padding: 4px 8px; font-weight: 900; font-size: 0.65rem;
-      border: 2px solid var(--black); z-index: 5; text-transform: uppercase;
-      transform: rotate(4deg); box-shadow: 2px 2px 0px var(--black);
-    }
-    .badge-lime { background: var(--lime); color: var(--black); }
-    
-    .delete-card-btn {
-      position: absolute; top: 10px; left: 10px; background: var(--red);
-      color: var(--white); border: 2px solid var(--black); width: 32px; height: 32px;
-      border-radius: 50%; display: flex; align-items: center; justify-content: center; z-index: 10;
-      box-shadow: 2px 2px 0px var(--black);
-    }
-    .delete-card-btn:active { transform: translate(2px, 2px); box-shadow: 0 0 0 var(--black); }
-
-    /* =========================================
-       MODALS & OVERLAYS
-       ========================================= */
-    .overlay-view {
-      position: fixed; inset: 0; z-index: 60; 
-      background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(5px);
-      display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px;
-      opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
-    }
-    .overlay-view.active { opacity: 1; pointer-events: all; }
-    
-    .modal-card {
-      background: var(--beige); border: var(--border-thick);
-      border-radius: 24px; width: 100%; max-width: 420px; padding: 30px;
-      display: flex; flex-direction: column; gap: 20px; 
-      box-shadow: 12px 12px 0px var(--cyan);
-      transform: translateY(40px) scale(0.95); transition: transform 0.4s var(--bounce);
-    }
-    .overlay-view.active .modal-card { transform: translateY(0) scale(1); }
-
-    .preview-box {
-      width: 100%; aspect-ratio: 1; background: var(--white);
-      border: 3px dashed var(--black); border-radius: 16px;
-      display: flex; align-items: center; justify-content: center;
-      overflow: hidden; cursor: pointer; position: relative;
-    }
-    .preview-box img { width: 100%; height: 100%; object-fit: contain; }
-
-    /* =========================================
-       COMPARISON SLIDER
-       ========================================= */
-    .compare-wrapper {
-      flex: 1; position: relative; overflow: hidden; background: var(--white);
-      border-bottom: var(--border-thick); border-radius: 0 0 24px 24px;
-      touch-action: none; /* Prevent scroll while sliding */
-    }
-    .compare-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; pointer-events: none; }
-    #imgGenerated { clip-path: polygon(50% 0, 100% 0, 100% 100%, 50% 100%); }
-
-    .slider-handle {
-      position: absolute; left: 50%; top: 0; bottom: 0; width: 40px;
-      transform: translateX(-50%); cursor: ew-resize; z-index: 20;
-      display: flex; align-items: center; justify-content: center;
-    }
-    .slider-line { position: absolute; top: 0; bottom: 0; width: 4px; background: var(--black); }
-    .slider-btn {
-      position: relative; width: 44px; height: 44px; background: var(--lime);
-      border: var(--border-thick); border-radius: 50%; display: flex; align-items: center; justify-content: center;
-      box-shadow: 4px 4px 0px var(--black); color: var(--black); font-size: 1.2rem; pointer-events: none;
+      display: inline-flex; align-items: center; justify-content: center;
+      padding: 5px 10px;
+      font-family: var(--font-heading);
+      font-size: clamp(0.62rem, 2.3vw, 0.72rem);
+      text-transform: uppercase;
+      border: var(--border-thin); box-shadow: var(--shadow-xs);
+      border-radius: 6px; white-space: nowrap; flex-shrink: 0;
     }
 
-    .mode-toggle {
-      display: flex; background: var(--white); border: var(--border-thick);
-      border-radius: var(--radius-pill); padding: 4px; gap: 4px;
+    .brand-logo {
+      font-family: var(--font-display);
+      font-size: clamp(1.4rem, 5vw, 2rem);
+      background: var(--yellow);
+      border: var(--border-thick);
+      padding: 2px 14px; border-radius: 12px;
       box-shadow: var(--shadow-sm);
+      letter-spacing: 2px; transform: rotate(-2deg); flex-shrink: 0;
     }
-    .mode-btn {
-      padding: 8px 16px; border-radius: var(--radius-pill); font-size: 0.8rem;
-      color: var(--black); transition: background 0.2s ease;
-    }
-    .mode-btn.active { background: var(--black); color: var(--white); }
 
-    .loader-spinner {
-      width: 60px; height: 60px; border: 6px solid var(--black);
-      border-top-color: var(--lime); border-radius: 50%; animation: spin 1s linear infinite;
+    /* TRIAL LOCK OVERLAY */
+    #trialLockOverlay {
+      position: fixed; inset: 0;
+      background: rgba(26, 26, 26, 0.92);
+      -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+      z-index: var(--z-lock);
+      display: flex; align-items: center; justify-content: center;
+      padding: 20px;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.25s ease;
     }
-    @keyframes spin { 100% { transform: rotate(360deg); } }
+    #trialLockOverlay.active { opacity: 1; pointer-events: auto; }
 
-    /* =========================================
-       TOAST NOTIFICATIONS
-       ========================================= */
-    .toast-container {
-      position: fixed; top: calc(var(--safe-top) + 20px); left: 50%; transform: translateX(-50%);
-      z-index: 9999; display: flex; flex-direction: column; gap: 10px; pointer-events: none;
+    .lock-card {
+      background: var(--white);
+      border: 4px solid var(--black);
+      border-radius: 20px;
+      box-shadow: 10px 10px 0px var(--red);
+      padding: clamp(24px, 5vw, 36px);
+      max-width: 440px; width: 100%;
+      text-align: center;
+      display: flex; flex-direction: column; gap: 16px;
+      animation: popIn 0.3s var(--bounce);
     }
+    @keyframes popIn {
+      from { transform: scale(0.85); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+
+    .lock-title {
+      font-family: var(--font-heading);
+      font-size: clamp(1.3rem, 5vw, 1.6rem);
+      line-height: 1.15;
+      text-transform: uppercase;
+    }
+
+    .action-btn-call, .action-btn-wa {
+      border: var(--border-thick); border-radius: var(--radius-pill);
+      padding: 14px 20px; font-family: var(--font-heading);
+      font-size: 0.92rem; text-decoration: none;
+      box-shadow: var(--shadow-solid);
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    .action-btn-call { background: var(--yellow); color: var(--black); }
+    .action-btn-wa { background: var(--whatsapp); color: var(--white); }
+
+    /* CUSTOM MODAL */
+    .custom-modal-backdrop {
+      position: fixed; inset: 0;
+      background: rgba(26, 26, 26, 0.88);
+      -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+      z-index: var(--z-modal);
+      display: flex; align-items: center; justify-content: center;
+      padding: 20px;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.2s ease;
+    }
+    .custom-modal-backdrop.active { opacity: 1; pointer-events: auto; }
+    .custom-modal-card {
+      background: var(--white);
+      border: 4px solid var(--black);
+      border-radius: 20px;
+      box-shadow: 10px 10px 0px var(--black);
+      padding: clamp(22px, 5vw, 32px);
+      max-width: 430px; width: 100%;
+      text-align: center;
+      display: flex; flex-direction: column; gap: 14px;
+      animation: popIn 0.25s var(--bounce);
+    }
+
+    /* LOGIN SCREEN */
+    #loginScreen { z-index: var(--z-overlay); align-items: center; justify-content: center; padding: 24px; }
+    .login-card {
+      background: var(--white);
+      border: var(--border-thick);
+      border-radius: var(--radius-card);
+      box-shadow: var(--shadow-solid);
+      padding: clamp(22px, 5vw, 32px);
+      max-width: 420px; width: 100%; text-align: center;
+    }
+
+    /* CAMERA WRAPPER */
+    .camera-wrapper { position: absolute; inset: 0; background: #000; overflow: hidden; }
+    #cameraFeed { width: 100%; height: 100%; object-fit: cover; display: block; }
+    #cameraFeed.mirrored { transform: scaleX(-1); }
+
+    .top-dock {
+      position: absolute; top: max(14px, env(safe-area-inset-top));
+      left: 14px; right: 14px;
+      display: flex; justify-content: space-between; align-items: center;
+      gap: 8px; z-index: var(--z-dock);
+    }
+
+    .user-session-bar {
+      display: inline-flex; align-items: center;
+      background: var(--white);
+      border: var(--border-thick); border-radius: var(--radius-pill);
+      box-shadow: var(--shadow-sm); overflow: hidden; max-width: 260px;
+    }
+    .user-session-name {
+      padding: 6px 12px;
+      font-family: var(--font-heading);
+      font-size: clamp(0.64rem, 2.4vw, 0.74rem);
+      color: var(--black);
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 120px;
+    }
+    .logout-btn-unique {
+      background: var(--red); color: var(--white); border: none;
+      padding: 8px 12px;
+      font-family: var(--font-heading);
+      font-size: clamp(0.62rem, 2.2vw, 0.72rem);
+      display: flex; align-items: center; gap: 4px; cursor: pointer;
+    }
+
+    .bottom-dock {
+      position: absolute;
+      bottom: max(22px, env(safe-area-inset-bottom));
+      left: 50%; transform: translateX(-50%);
+      background: var(--beige);
+      border: var(--border-thick); border-radius: var(--radius-pill);
+      padding: 10px 22px;
+      display: flex; align-items: center;
+      gap: clamp(16px, 5vw, 28px);
+      box-shadow: var(--shadow-solid); z-index: var(--z-dock);
+    }
+    .shutter-btn {
+      width: clamp(66px, 18vw, 80px);
+      height: clamp(66px, 18vw, 80px);
+      border-radius: 50%; background: var(--red);
+      border: var(--border-thick);
+      outline: 4px solid var(--white);
+      box-shadow: 0 4px 14px rgba(0,0,0,0.4);
+      flex-shrink: 0;
+    }
+
+    /* STUDIO */
+    .studio-header {
+      padding: 12px 18px; background: var(--beige);
+      border-bottom: var(--border-thick);
+      display: flex; justify-content: space-between; align-items: center;
+      gap: 12px; flex-shrink: 0;
+    }
+    .studio-content {
+      flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch;
+      padding: 14px 16px 28px;
+      display: flex; flex-direction: column; gap: 14px;
+      max-width: 680px; margin: 0 auto; width: 100%;
+    }
+
+    .studio-preview-card {
+      background: var(--white); border: var(--border-thick);
+      border-radius: var(--radius-card); padding: 10px;
+      box-shadow: var(--shadow-solid);
+      display: flex; justify-content: center; align-items: center;
+      height: clamp(280px, 44vh, 480px);
+      flex-shrink: 0; overflow: hidden; position: relative;
+    }
+    .preview-box {
+      width: 100%; height: 100%;
+      display: flex; align-items: center; justify-content: center;
+      background: transparent; overflow: hidden;
+    }
+    #hairCanvas, #stylePreviewImg {
+      max-width: 100%; max-height: 100%;
+      width: auto; height: auto; object-fit: contain;
+      border-radius: 10px; border: var(--border-thick);
+      box-shadow: var(--shadow-sm); display: block;
+    }
+
+    /* MODE TOGGLE */
+    .mode-switch-bar {
+      display: grid; grid-template-columns: 1fr 1fr;
+      background: var(--white); border: var(--border-thick);
+      border-radius: var(--radius-pill); padding: 4px;
+      box-shadow: var(--shadow-sm); gap: 6px;
+    }
+    .mode-tab-btn {
+      padding: 10px 14px; border-radius: var(--radius-pill);
+      font-family: var(--font-heading); font-size: clamp(0.7rem, 2.6vw, 0.84rem);
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    .mode-tab-btn.active { background: var(--black); color: var(--lime); box-shadow: var(--shadow-xs); }
+    .mode-tab-btn.active.pink-mode { background: var(--black); color: var(--pink); }
+
+    /* TOOL CARD */
+    .tool-card {
+      background: var(--white); border: var(--border-thick);
+      border-radius: var(--radius-card); padding: 16px;
+      box-shadow: var(--shadow-solid);
+      display: flex; flex-direction: column; gap: 14px;
+      user-select: none; flex-shrink: 0;
+    }
+    .tool-header {
+      display: flex; align-items: center; justify-content: space-between;
+      border-bottom: var(--border-thin); padding-bottom: 10px;
+      flex-wrap: wrap; gap: 8px;
+    }
+
+    .scroll-filter-row {
+      display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none;
+    }
+    .scroll-filter-row::-webkit-scrollbar { display: none; }
+
+    .filter-chip {
+      background: var(--white); border: var(--border-thin);
+      border-radius: var(--radius-pill); padding: 7px 13px;
+      font-size: 0.68rem; font-family: var(--font-heading);
+      white-space: nowrap; cursor: pointer; box-shadow: var(--shadow-xs);
+      transition: transform 0.1s var(--bounce); flex-shrink: 0; text-transform: uppercase;
+    }
+    .filter-chip:active { transform: scale(0.95); }
+    .filter-chip.active { background: var(--black); color: var(--lime); border-color: var(--black); }
+
+    /* SWATCH GRID */
+    .swatch-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
+      gap: 6px; max-height: 280px; overflow-y: auto; padding: 6px;
+      background: var(--beige-surface); border: var(--border-thin); border-radius: 12px;
+    }
+    .swatch-grid::-webkit-scrollbar { width: 8px; }
+    .swatch-grid::-webkit-scrollbar-thumb { background: var(--black); border-radius: 4px; }
+
+    .swatch-tile {
+      display: flex; flex-direction: column; align-items: center; gap: 4px;
+      padding: 7px 2px 6px; border: 2px solid transparent; border-radius: 12px;
+      cursor: pointer; transition: transform 0.1s var(--bounce), background 0.1s;
+      background: var(--white);
+    }
+    .swatch-tile:active { transform: scale(0.94); }
+    .swatch-tile.active { background: var(--yellow); border-color: var(--black); box-shadow: var(--shadow-xs); }
+    .swatch-tile-circle {
+      width: 44px; height: 44px; border-radius: 50%; border: 2px solid var(--black);
+      box-shadow: var(--shadow-xs); position: relative; flex-shrink: 0;
+    }
+    .swatch-tile-name {
+      font-family: var(--font-heading); font-size: 0.62rem; text-align: center;
+      line-height: 1.15; text-transform: uppercase; max-width: 100%;
+      overflow: hidden; text-overflow: ellipsis; padding: 0 2px;
+    }
+
+    /* HAIRSTYLES GRID */
+    .hairstyles-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+      gap: 8px; max-height: 280px; overflow-y: auto; padding: 6px;
+      background: var(--beige-surface); border: var(--border-thin); border-radius: 12px;
+    }
+    .hairstyles-grid::-webkit-scrollbar { width: 8px; }
+    .hairstyles-grid::-webkit-scrollbar-thumb { background: var(--black); border-radius: 4px; }
+
+    .style-chip {
+      background: var(--white); border: var(--border-thin);
+      border-radius: 12px; padding: 10px; font-weight: 800;
+      font-size: clamp(0.68rem, 2.4vw, 0.78rem); box-shadow: var(--shadow-xs);
+      display: flex; align-items: center; gap: 6px; text-align: left;
+    }
+    .style-chip span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .style-chip.selected {
+      background: var(--pink); color: var(--black);
+      border-color: var(--black); box-shadow: var(--shadow-sm); transform: translate(-2px, -2px);
+    }
+
+    /* REFERENCE CARD */
+    .ref-uploader {
+      background: var(--beige-surface); border: var(--border-thick);
+      border-radius: 12px; padding: 12px; display: flex; align-items: center;
+      gap: 12px; cursor: pointer;
+    }
+    .ref-thumb {
+      width: 50px; height: 50px; border-radius: 8px; border: var(--border-thin);
+      background: var(--white); display: flex; align-items: center; justify-content: center;
+      font-size: 1.3rem; overflow: hidden; flex-shrink: 0;
+    }
+    .ref-thumb img { width: 100%; height: 100%; object-fit: cover; }
+
+    /* SLIDERS */
+    .slider-stack { position: relative; display: flex; flex-direction: column; gap: 10px; }
+    .slider-block {
+      display: flex; flex-direction: column; gap: 6px;
+      background: var(--beige-surface); border: var(--border-thin); border-radius: 12px; padding: 10px 12px;
+    }
+    .slider-block label {
+      font-size: 0.72rem; font-family: var(--font-heading);
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .slider-block label span {
+      background: var(--black); color: var(--white); padding: 2px 8px; border-radius: 6px; font-size: 0.65rem;
+    }
+    input[type="range"] {
+      -webkit-appearance: none; appearance: none; width: 100%; height: 22px;
+      border-radius: 11px; border: 2px solid var(--black); outline: none; box-shadow: var(--shadow-xs);
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none; width: 26px; height: 26px; background: var(--white);
+      border: 3px solid var(--black); border-radius: 50%; box-shadow: 2px 2px 0 var(--black); cursor: grab;
+    }
+    .rainbow-slider {
+      background: linear-gradient(to right, hsl(0,75%,50%), hsl(60,75%,50%), hsl(120,75%,50%), hsl(180,75%,50%), hsl(240,75%,50%), hsl(300,75%,50%), hsl(360,75%,50%));
+    }
+    .sat-slider { background: linear-gradient(to right, #B5B5B5, #E89A5A, #FF4742, #C92250); }
+    .lift-slider { background: linear-gradient(to right, #3A2A1E, #6E4E36, #B98A5B, #E8C69B, #FFFFFF); }
+
+    .slider-lock-overlay {
+      position: absolute; inset: 0; display: none; align-items: center; justify-content: center;
+      background: rgba(234, 234, 228, 0.6); -webkit-backdrop-filter: blur(2px); backdrop-filter: blur(2px);
+      border-radius: 14px; z-index: 6; cursor: pointer;
+    }
+    .sliders-locked .slider-lock-overlay { display: flex; }
+    .sliders-locked .slider-block { opacity: 0.5; filter: grayscale(0.35); }
+    .sliders-locked .slider-block input[type="range"] { pointer-events: none; }
+    .lock-pill {
+      background: var(--black); color: var(--lime); border: var(--border-thin);
+      border-radius: var(--radius-pill); padding: 10px 16px; font-family: var(--font-heading);
+      font-size: clamp(0.6rem, 2.4vw, 0.72rem); box-shadow: var(--shadow-sm); display: inline-flex; align-items: center; gap: 7px;
+    }
+
+    /* COMPARE SCREEN */
+    .compare-top-nav {
+      padding: 12px 14px; background: var(--beige); border-bottom: var(--border-thick);
+      display: flex; justify-content: space-between; align-items: center; gap: 8px; z-index: var(--z-dock); flex-shrink: 0;
+    }
+    .compare-controls-bar {
+      padding: 10px 16px; background: var(--beige-surface); border-bottom: var(--border-thin);
+      display: flex; justify-content: center; align-items: center; z-index: var(--z-dock); flex-shrink: 0;
+    }
+    .segmented-control {
+      display: inline-flex; background: var(--white); border-radius: var(--radius-pill);
+      padding: 4px; border: var(--border-thick); box-shadow: var(--shadow-xs); gap: 4px;
+    }
+    .seg-btn {
+      padding: 7px 16px; font-size: clamp(0.68rem, 2.3vw, 0.76rem); border-radius: var(--radius-pill);
+      font-family: var(--font-heading); display: inline-flex; align-items: center; gap: 6px;
+    }
+    .seg-btn.active { background: var(--black); color: var(--lime); }
+
+    .compare-viewport {
+      flex: 1; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center;
+      padding: 16px; touch-action: none;
+    }
+    .compare-stage {
+      position: relative; max-width: 92vw; max-height: 72vh; overflow: hidden;
+      border: var(--border-thick); border-radius: var(--radius-card); box-shadow: var(--shadow-solid);
+      display: flex; align-items: center; justify-content: center; touch-action: none;
+      background: var(--beige-surface);
+    }
+    .stage-wrapper { position: relative; width: 100%; height: 100%; display: block; }
+    .stage-img {
+      display: block; width: 100%; height: 100%; object-fit: contain; user-select: none; pointer-events: none;
+      transition: opacity 0.15s ease;
+    }
+    #imgRendered {
+      position: absolute; inset: 0;
+      clip-path: polygon(50% 0, 100% 0, 100% 100%, 50% 100%);
+      z-index: 10;
+    }
+    .stage-badge {
+      position: absolute; top: 12px; z-index: 35; padding: 5px 12px; font-size: 0.68rem;
+      border-radius: 8px; font-family: var(--font-heading); border: var(--border-thick); box-shadow: var(--shadow-xs);
+      pointer-events: none; transition: opacity 0.15s ease;
+    }
+    .stage-badge-left { left: 12px; background: var(--white); color: var(--black); }
+    .stage-badge-right { right: 12px; background: var(--lime); color: var(--black); }
+
+    .slider-divider {
+      position: absolute; top: 0; bottom: 0; left: 50%; width: 48px; transform: translateX(-50%);
+      cursor: ew-resize; display: flex; align-items: center; justify-content: center; z-index: 40; touch-action: none;
+      outline: none;
+    }
+    .divider-line { position: absolute; top: 0; bottom: 0; width: 4px; background: var(--black); pointer-events: none; }
+    .divider-btn {
+      width: 38px; height: 38px; border-radius: 50%; background: var(--yellow);
+      border: var(--border-thick); box-shadow: var(--shadow-xs); display: flex; align-items: center; justify-content: center;
+      font-size: 1rem; z-index: 45; pointer-events: none;
+    }
+
+    .compare-fab-share {
+      position: absolute; bottom: max(20px, env(safe-area-inset-bottom)); right: 18px; z-index: 60;
+      background: var(--lime); color: var(--black); border: var(--border-thick);
+      border-radius: var(--radius-pill); padding: 12px 22px; font-size: clamp(0.8rem, 2.8vw, 0.92rem);
+      font-family: var(--font-heading); box-shadow: var(--shadow-solid);
+      display: inline-flex; align-items: center; gap: 8px;
+    }
+
+    /* VAULT GALLERY */
+    .gallery-grid {
+      flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 14px;
+      display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; align-content: start;
+      max-width: 760px; margin: 0 auto; width: 100%;
+    }
+    @media (min-width: 640px) { .gallery-grid { grid-template-columns: repeat(3, 1fr); } }
+    .gallery-card {
+      background: var(--white); border: var(--border-thick); border-radius: 14px; box-shadow: var(--shadow-sm);
+      display: flex; flex-direction: column; cursor: pointer; transition: transform 0.15s var(--bounce);
+    }
+    .gallery-card img { width: 100%; aspect-ratio: 1 / 1; object-fit: cover; display: block; border-radius: 10px; border-bottom: var(--border-thin); }
+    .gallery-card-body { padding: 10px; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+    .gallery-card-name { font-family: var(--font-heading); font-size: clamp(0.68rem, 2.4vw, 0.78rem); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
     .toast {
-      background: var(--white); border: var(--border-thick); border-radius: var(--radius-pill);
-      padding: 12px 24px; font-family: var(--font-bold); font-size: 0.9rem;
-      box-shadow: var(--shadow-solid); display: flex; align-items: center; gap: 10px;
-      animation: slideDown 0.3s var(--bounce) forwards, fadeOut 0.3s ease 2.7s forwards;
+      position: fixed; top: max(18px, env(safe-area-inset-top)); left: 50%;
+      transform: translateX(-50%) translateY(-100px); background: var(--black); color: var(--white);
+      border: var(--border-thick); border-radius: var(--radius-pill); padding: 10px 20px; font-family: var(--font-heading);
+      font-size: 0.8rem; box-shadow: var(--shadow-sm); z-index: var(--z-toast); opacity: 0; transition: all 0.25s var(--bounce); pointer-events: none;
     }
-    .toast.error { background: var(--red); color: var(--white); }
-    @keyframes slideDown { from { transform: translateY(-50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-    @keyframes fadeOut { to { opacity: 0; transform: translateY(-20px); } }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    .loading-overlay {
+      position: absolute; inset: 0; background: rgba(26, 26, 26, 0.78);
+      -webkit-backdrop-filter: blur(5px); backdrop-filter: blur(5px);
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px;
+      z-index: var(--z-overlay); opacity: 0; pointer-events: none; transition: opacity 0.15s ease; text-align: center; padding: 20px;
+    }
+    .loading-overlay.active { opacity: 1; pointer-events: auto; }
+    .loading-badge {
+      background: var(--lime); color: var(--black); border: var(--border-thick); border-radius: var(--radius-pill);
+      padding: 12px 24px; font-family: var(--font-heading); font-size: 0.9rem; box-shadow: var(--shadow-solid);
+      display: inline-flex; align-items: center; gap: 10px;
+    }
+    .timer-badge {
+      background: var(--white); color: var(--black); border: var(--border-thick); border-radius: var(--radius-pill);
+      padding: 6px 14px; font-family: var(--font-heading); font-size: 0.76rem;
+    }
+    .hidden { display: none !important; }
   </style>
 </head>
 <body>
 
-  <!-- Toast Container -->
-  <div id="toastContainer" class="toast-container"></div>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
-  <!-- VIEW 1: Camera Interface -->
-  <div id="cameraView" class="view-container active">
-    <div class="top-bar">
-      <div class="brand-logo">FASSHON</div>
-      <div style="display: flex; gap: 10px;">
-        <button id="openAddGarmentBtn" class="btn-pill" aria-label="Add Suit"><i class="bi bi-plus-lg"></i> SUIT</button>
-        <button id="uploadBtn" class="icon-btn" aria-label="Upload Photo"><i class="bi bi-image"></i></button>
-        <input type="file" id="fileInput" class="hidden" accept="image/*" />
-      </div>
+  <!-- LOADING OVERLAY -->
+  <div id="loadingOverlay" class="loading-overlay" role="dialog" aria-modal="true" aria-labelledby="loadingMessage">
+    <div class="loading-badge">
+      <i class="bi bi-hourglass-split"></i> <span id="loadingMessage">ANALYSING HAIR...</span>
     </div>
-    
-    <div class="camera-wrapper">
-      <video id="cameraFeed" autoplay playsinline></video>
-      <div id="cameraErrorMsg" class="error-overlay">
-        <i class="bi bi-camera-video-off" style="font-size: 3.5rem; color: var(--black); margin-bottom: 10px;"></i>
-        <h2>CAMERA ERROR</h2>
-        <p style="font-weight: 700; margin: 10px 0 25px; color: var(--black);">Access denied or not found.</p>
-        <button onclick="document.getElementById('fileInput').click()" class="btn-primary" style="width: auto;">UPLOAD PHOTO</button>
-      </div>
-    </div>
+    <div id="loadingTimer" class="timer-badge hidden">0S ELAPSED</div>
+  </div>
 
-    <div class="floating-dock">
-      <button id="openLibraryBtn" class="icon-btn" aria-label="Open Gallery" style="background-size: cover; background-position: center;"></button>
-      <button id="captureBtn" class="shutter-btn" aria-label="Take Photo"></button>
-      <button id="switchCameraBtn" class="icon-btn" aria-label="Switch Camera"><i class="bi bi-arrow-repeat" style="font-size: 1.5rem;"></i></button>
+  <!-- MODAL DIALOG -->
+  <div id="kamiCustomModal" class="custom-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="customModalTitle" aria-describedby="customModalMessage">
+    <div class="custom-modal-card">
+      <div style="display:inline-block; margin-bottom:4px;">
+        <span id="customModalBadge" class="badge" style="background:var(--yellow); font-size:0.72rem; padding:4px 10px;">NOTICE</span>
+      </div>
+      <h3 id="customModalTitle" style="font-family:var(--font-heading); font-size:1.2rem; text-transform:uppercase; margin-bottom:4px; line-height:1.2;">TITLE</h3>
+      <p id="customModalMessage" style="font-size:0.85rem; font-weight:700; color:#444; line-height:1.45;"></p>
+      <div id="customModalExtra" class="hidden"></div>
+      <div style="display:flex; justify-content:center; gap:10px; margin-top:6px; flex-wrap:wrap;">
+        <button id="customModalCancelBtn" class="btn-pill hidden" style="background:var(--white);">CANCEL</button>
+        <button id="customModalConfirmBtn" class="btn-primary" style="padding:12px 22px; font-size:0.88rem; width:auto; min-width:130px;">OK</button>
+      </div>
     </div>
   </div>
 
-  <!-- VIEW 2: Add Garment Modal -->
-  <div id="addGarmentView" class="overlay-view">
-    <div class="modal-card">
-      <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-        <div>
-          <div style="background: var(--cyan); color: var(--white); display: inline-block; padding: 4px 10px; font-weight: 900; font-size: 0.7rem; text-transform: uppercase; border: 2px solid var(--black); margin-bottom: 10px; transform: rotate(-2deg); box-shadow: 2px 2px 0px var(--black);">Wardrobe</div>
-          <h1 style="font-size: 2rem;">ADD NEW SUIT</h1>
+  <!-- TRIAL LOCK OVERLAY -->
+  <div id="trialLockOverlay" role="dialog" aria-modal="true" aria-labelledby="lockTitle">
+    <div class="lock-card">
+      <div style="display:inline-block; margin:0 auto;">
+        <span class="badge" style="background:var(--red); color:var(--white); font-size:0.75rem; padding:6px 14px;">
+          <i class="bi bi-shield-lock-fill" style="margin-right:4px;"></i> ACCESS EXPIRED
+        </span>
+      </div>
+      <h2 id="lockTitle" class="lock-title">YOUR TRIAL HAS ENDED</h2>
+      <p style="font-size:0.85rem; font-weight:700; color:#555; line-height:1.45;">
+        Your salon preview trial has expired. To renew access, please call or WhatsApp support:
+      </p>
+      <div style="background:var(--beige-surface); border:var(--border-thin); padding:10px; border-radius:12px; font-family:var(--font-heading); font-size:1.1rem;">
+        +91 62392 87740
+      </div>
+      <div style="display:flex; flex-direction:column; gap:10px;">
+        <a href="tel:+916239287740" class="action-btn-call"><i class="bi bi-telephone-fill"></i> CALL TO RENEW</a>
+        <a href="https://wa.me/916239287740?text=Hi%20KAMI%2C%20my%20trial%20has%20ended.%20Please%20renew%20my%20access." target="_blank" rel="noopener noreferrer" class="action-btn-wa">
+          <i class="bi bi-whatsapp"></i> MESSAGE ON WHATSAPP
+        </a>
+      </div>
+      <button id="lockLogoutBtn" class="btn-pill" style="margin-top:6px;">LOG OUT / SWITCH CLIENT</button>
+    </div>
+  </div>
+
+  <!-- VIEW 0: LOGIN -->
+  <section id="loginScreen" class="view-screen active">
+    <div class="login-card">
+      <div class="brand-logo" style="display:inline-block; margin-bottom:16px;">KAMI</div>
+      <h2 style="font-size:1.25rem; font-family:var(--font-heading); margin-bottom:8px;">WELCOME</h2>
+      <p style="font-size:0.8rem; font-weight:700; color:#555; margin-bottom:16px; line-height:1.4;">
+        Enter your registered salon mobile number to try hair colours and AI hairstyles.
+      </p>
+
+      <form id="loginForm" autocomplete="on">
+        <input type="tel" id="loginPhoneInput" placeholder="+91XXXXXXXXXX" autocomplete="tel" inputmode="tel" required
+          style="width:100%; padding:14px; border:var(--border-thick); border-radius:12px; font-size:1.1rem; font-weight:800; font-family:var(--font-heading); margin-bottom:12px; text-align:center;" />
+        <button type="submit" id="loginBtn" class="btn-primary"><span>START</span> <i class="bi bi-arrow-right"></i></button>
+      </form>
+
+      <div style="margin-top:16px; font-size:0.64rem; font-weight:700; color:#777; line-height:1.35;">
+        🔒 DPDP Act 2023 Compliant. Your photo is strictly processed for instant visual hair consultation and never shared.
+      </div>
+    </div>
+  </section>
+
+  <!-- VIEW 1: FULLSCREEN WYSIWYG CAMERA -->
+  <section id="cameraScreen" class="view-screen">
+    <div class="top-dock">
+      <div class="brand-logo">KAMI</div>
+      <div style="display:flex; align-items:center; gap:8px;">
+        <div class="user-session-bar">
+          <span class="user-session-name" id="userSessionName">CLIENT</span>
+          <button id="logoutBtn" class="logout-btn-unique" aria-label="Logout"><i class="bi bi-power"></i></button>
         </div>
-        <button id="closeAddGarmentBtn" class="icon-btn" style="width: 40px; height: 40px;" aria-label="Close"><i class="bi bi-x-lg"></i></button>
+        <button id="uploadPhotoBtn" class="btn-icon" aria-label="Upload photo from device"><i class="bi bi-image"></i></button>
+        <input type="file" id="clientFileInput" class="hidden" accept="image/*,.heic,.heif" />
       </div>
-      
-      <div id="garmentPreviewContainer" class="preview-box">
-        <div style="text-align: center; color: var(--black);">
-          <i id="garmentPreviewIcon" class="bi bi-camera" style="font-size: 2.5rem;"></i>
-          <p style="font-size: 0.8rem; margin-top: 8px; font-weight: 700;">Select 1 or 2 Images<br/><span style="color: var(--red);">Will auto-stitch side-by-side</span></p>
-        </div>
-        <img id="garmentPreviewImg" class="hidden" style="position: absolute; inset: 0;" alt="Garment Preview" />
-      </div>
-      <input type="file" id="garmentFileInput" class="hidden" accept="image/*" multiple />
-      
-      <input type="text" id="garmentNameInput" placeholder="E.g. Vintage Pink Combo" class="input-field" autocomplete="off" />
-      <button id="saveGarmentBtn" class="btn-primary">SAVE TO WARDROBE</button>
     </div>
-  </div>
 
-  <!-- VIEW 3: Garment Selection -->
-  <div id="garmentSelectView" class="view-container">
-    <div style="padding: calc(var(--safe-top) + 20px) 20px 10px; display: flex; justify-content: space-between; align-items: center; border-bottom: var(--border-thick); background: var(--white); z-index: 20;">
-      <button id="cancelSelectBtn" class="btn-pill" style="padding: 8px 16px; font-size: 0.8rem;">CANCEL</button>
-      <h2 style="font-size: 1.5rem;">CHOOSE SUIT</h2>
-      <div style="width: 70px;"></div>
+    <div class="camera-wrapper" id="cameraWrapper">
+      <video id="cameraFeed" class="mirrored" autoplay playsinline muted></video>
     </div>
-    
-    <div class="content-area">
-      <div style="display: flex; gap: 12px; background: var(--white); padding: 12px; border: var(--border-thick); border-radius: 16px; box-shadow: var(--shadow-sm); margin-bottom: 20px;">
-        <img id="capturedThumb" style="width: 60px; height: 60px; object-fit: cover; border: 2px solid var(--black); border-radius: 8px;" alt="Captured" />
-        <div style="position: relative; flex: 1; display: flex; align-items: center;">
-          <i class="bi bi-search" style="position: absolute; left: 12px; font-size: 1.2rem;"></i>
-          <input type="text" id="searchInput" placeholder="SEARCH..." class="input-field" style="padding-left: 40px; border: none; box-shadow: none; background: transparent;" />
+
+    <div class="bottom-dock">
+      <button id="switchCameraBtn" class="btn-icon" aria-label="Flip camera front or back"><i class="bi bi-arrow-repeat"></i></button>
+      <button id="shutterBtn" class="shutter-btn" aria-label="Take Photo"></button>
+      <button id="openGalleryBtn" class="btn-icon" aria-label="Open My Looks Vault"><i class="bi bi-collection"></i></button>
+    </div>
+  </section>
+
+  <!-- VIEW 2: STUDIO -->
+  <section id="studioScreen" class="view-screen">
+    <header class="studio-header">
+      <button id="retakeBtn" class="btn-pill"><i class="bi bi-arrow-left"></i> CAMERA</button>
+      <div class="brand-logo" style="font-size:1.15rem; padding:2px 12px; transform:none;">KAMI</div>
+      <div class="badge" id="clientStudioBadge" style="background:var(--lime); max-width:130px; overflow:hidden; text-overflow:ellipsis;">CLIENT</div>
+    </header>
+
+    <main class="studio-content">
+      <div class="studio-preview-card">
+        <div class="preview-box">
+          <canvas id="hairCanvas"></canvas>
+          <img id="stylePreviewImg" class="hidden" alt="AI Hairstyle Preview" />
         </div>
       </div>
-      <div id="garmentsGrid" class="grid-2"></div>
-    </div>
 
-    <div style="position: absolute; bottom: 0; left: 0; right: 0; padding: 20px calc(var(--safe-bottom) + 20px); background: linear-gradient(transparent, var(--beige) 80%); z-index: 20;">
-      <button id="generateTryOnBtn" disabled class="btn-primary" style="box-shadow: 8px 8px 0px var(--cyan);">GENERATE TRY-ON</button>
-    </div>
-  </div>
-
-  <!-- VIEW 4: Processing Overlay -->
-  <div id="processingView" class="overlay-view" style="background: var(--beige);">
-    <div class="loader-spinner"></div>
-    <h1 id="timerText" style="font-size: 2.5rem; margin-top: 30px; color: var(--black);">STYLING... 0S</h1>
-    <div style="background: var(--lime); border: 2px solid var(--black); padding: 5px 15px; border-radius: 100px; font-weight: 900; margin-top: 15px; box-shadow: 2px 2px 0px var(--black);">
-      MAY TAKE UP TO 30 SECONDS
-    </div>
-  </div>
-
-  <!-- VIEW 5: Comparison / Result View -->
-  <div id="comparisonView" class="view-container">
-    <div style="padding: calc(var(--safe-top) + 15px) 20px; display: flex; justify-content: space-between; align-items: center; background: var(--beige); z-index: 20;">
-      <button id="closeComparisonBtn" class="btn-pill" style="padding: 8px 16px; font-size: 0.8rem;">BACK</button>
-      <div class="mode-toggle">
-        <button id="modeCompareBtn" class="mode-btn active">COMPARE</button>
-        <button id="modeResultBtn" class="mode-btn">RESULT</button>
+      <div class="mode-switch-bar">
+        <button id="tabModeColor" class="mode-tab-btn active"><i class="bi bi-palette-fill"></i> HAIR COLOUR</button>
+        <button id="tabModeStyle" class="mode-tab-btn"><i class="bi bi-scissors"></i> AI HAIRSTYLE</button>
       </div>
-      <div style="width: 70px;"></div>
+
+      <!-- PANEL A: COLOUR STUDIO -->
+      <div id="panelColor" class="tool-card">
+        <div class="tool-header">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <i class="bi bi-palette-fill" style="font-size:1.15rem;"></i>
+            <span style="font-family:var(--font-heading); font-size:0.9rem;">CHOOSE SHADE</span>
+          </div>
+          <div style="display:flex; align-items:center; gap:6px;">
+            <div class="badge" id="currentShadeBadge" style="background:var(--yellow); max-width:140px; overflow:hidden; text-overflow:ellipsis;">NATURAL</div>
+            <button id="sliderLockBtn" type="button" class="btn-pill" style="font-size:0.65rem; padding:6px 10px;">
+              <i class="bi bi-lock-fill"></i> FINE TUNE
+            </button>
+          </div>
+        </div>
+
+        <div class="scroll-filter-row" id="familyFilterRow">
+          <button class="filter-chip active" data-family="all">ALL SHADES</button>
+          <button class="filter-chip" data-family="browns">BROWNS</button>
+          <button class="filter-chip" data-family="blondes">BLONDES</button>
+          <button class="filter-chip" data-family="reds">REDS &amp; COPPER</button>
+          <button class="filter-chip" data-family="fashion">FASHION</button>
+        </div>
+
+        <div class="swatch-grid" id="swatchGrid"></div>
+
+        <div class="slider-stack sliders-locked" id="sliderStack">
+          <div class="slider-block">
+            <label for="hueSlider">COLOUR <span id="hueVal">26°</span></label>
+            <input type="range" id="hueSlider" min="0" max="360" step="1" value="26" class="rainbow-slider" />
+          </div>
+          <div class="slider-block">
+            <label for="satSlider">VIVIDNESS <span id="satVal">38%</span></label>
+            <input type="range" id="satSlider" min="0" max="100" step="1" value="38" class="sat-slider" />
+          </div>
+          <div class="slider-block">
+            <label for="liftSlider">LIGHTNESS / LIFT <span id="liftVal">0%</span></label>
+            <input type="range" id="liftSlider" min="-0.40" max="0.60" step="0.02" value="0.0" class="lift-slider" />
+          </div>
+          <button type="button" id="sliderLockOverlay" class="slider-lock-overlay" aria-label="Unlock fine tuning sliders">
+            <span class="lock-pill"><i class="bi bi-lock-fill"></i> TAP TO UNLOCK FINE TUNING</span>
+          </button>
+        </div>
+
+        <button id="viewCompareBtn" class="btn-primary" style="margin-top:6px;">
+          <span>COMPARE &amp; SAVE</span> <i class="bi bi-arrows-expand"></i>
+        </button>
+      </div>
+
+      <!-- PANEL B: HAIRSTYLE AI -->
+      <div id="panelStyle" class="tool-card hidden">
+        <div class="tool-header">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <i class="bi bi-scissors" style="font-size:1.15rem;"></i>
+            <span style="font-family:var(--font-heading); font-size:0.9rem;">HAIRSTYLE AI</span>
+          </div>
+          <div style="display:flex; align-items:center; gap:6px;">
+            <div id="styleQuotaBadge" class="badge" style="background:var(--pink); color:var(--black);">0 / 5 USED</div>
+          </div>
+        </div>
+
+        <div class="scroll-filter-row" id="catFilterRow"></div>
+        <div class="hairstyles-grid" id="hairstylesGrid"></div>
+
+        <div class="ref-uploader" id="refCard" role="button" tabindex="0">
+          <div class="ref-thumb">
+            <i class="bi bi-pin-angle" id="refIcon"></i>
+            <img id="refImg" class="hidden" alt="Reference" />
+          </div>
+          <div style="flex:1; min-width:0;">
+            <div class="badge" style="background:var(--yellow); margin-bottom:2px;">OPTIONAL REFERENCE</div>
+            <h4 style="font-size:0.82rem; font-family:var(--font-heading);">REFERENCE CUT</h4>
+            <p id="refSubtext" style="font-size:0.68rem; color:#555; font-weight:700;">Tap to upload fringe/length reference</p>
+          </div>
+          <button id="clearRefBtn" class="hidden btn-pill" style="padding:4px 8px; font-size:0.68rem; background:var(--red); color:white;">✕</button>
+        </div>
+        <input type="file" id="refFileInput" class="hidden" accept="image/*,.heic,.heif" />
+
+        <button id="executeStyleBtn" class="btn-primary pink-theme" style="margin-top:6px;">
+          <span>TRANSFORM WITH KAMI AI</span> <i class="bi bi-stars"></i>
+        </button>
+      </div>
+
+    </main>
+  </section>
+
+  <!-- VIEW 3: COMPARE SCREEN -->
+  <section id="compareScreen" class="view-screen">
+    <div class="compare-top-nav">
+      <button id="compareBackBtn" class="btn-pill"><i class="bi bi-arrow-left"></i> BACK</button>
+      <div class="badge" id="compareBadge" style="background:var(--pink); color:var(--black);">BEFORE / AFTER</div>
+      <button id="saveLocalBtn" class="btn-pill" style="background:var(--yellow);"><i class="bi bi-download"></i> SAVE</button>
     </div>
-    
-    <div id="compareContainer" class="compare-wrapper">
-      <img id="imgOriginal" class="compare-img" alt="Original" />
-      <img id="imgGenerated" class="compare-img" alt="Generated" />
-      
-      <div id="sliderHandle" class="slider-handle">
-        <div class="slider-line"></div>
-        <div class="slider-btn"><i class="bi bi-arrows-collapse"></i></div>
+
+    <div class="compare-controls-bar">
+      <div class="segmented-control" role="tablist">
+        <button id="modeSlide" class="seg-btn active" role="tab" aria-selected="true"><i class="bi bi-sliders"></i> SLIDE</button>
+        <button id="modeBefore" class="seg-btn" role="tab" aria-selected="false"><i class="bi bi-person"></i> BEFORE</button>
+        <button id="modeAfter" class="seg-btn" role="tab" aria-selected="false"><i class="bi bi-stars"></i> AFTER</button>
       </div>
     </div>
-    
-    <div style="position: absolute; bottom: calc(var(--safe-bottom) + 30px); left: 50%; transform: translateX(-50%); display: flex; gap: 15px; z-index: 30;">
-      <button id="zoomBtn" class="icon-btn" aria-label="Zoom" style="background: var(--white);"><i class="bi bi-arrows-fullscreen"></i></button>
-      <button id="downloadBtn" class="btn-pill" style="background: var(--cyan); color: var(--white);">SAVE <i class="bi bi-download"></i></button>
-      <button id="deleteBtn" class="icon-btn" aria-label="Delete" style="background: var(--red); color: var(--white);"><i class="bi bi-trash"></i></button>
-    </div>
-  </div>
 
-  <!-- VIEW 6: Library Gallery -->
-  <div id="libraryView" class="view-container">
-    <div style="padding: calc(var(--safe-top) + 20px) 20px 10px; display: flex; justify-content: space-between; align-items: center; border-bottom: var(--border-thick); background: var(--white); z-index: 20;">
-      <button id="closeLibraryBtn" class="btn-pill" style="padding: 8px 16px; font-size: 0.8rem;">CAMERA</button>
-      <h2 style="font-size: 1.5rem;">GALLERY</h2>
-      <div style="width: 70px;"></div>
-    </div>
-    <div class="content-area">
-      <div id="galleryGrid" class="grid-2"></div>
-    </div>
-  </div>
-
-  <!-- VIEW 7: Fullscreen Zoom Overlay -->
-  <div id="zoomOverlay" class="view-container" style="background: #000; z-index: 70;">
-    <div style="position: absolute; top: calc(var(--safe-top) + 20px); left: 20px; right: 20px; display: flex; justify-content: space-between; z-index: 71; pointer-events: none;">
-      <button id="closeZoomBtn" class="icon-btn" aria-label="Close Zoom" style="pointer-events: auto;"><i class="bi bi-x-lg"></i></button>
-      <div class="mode-toggle" style="box-shadow: none; pointer-events: auto;">
-         <button id="zoomOutBtn" class="icon-btn" aria-label="Zoom Out" style="width: 40px; height: 40px; box-shadow: none;"><i class="bi bi-zoom-out"></i></button>
-         <button id="zoomInBtn" class="icon-btn" aria-label="Zoom In" style="width: 40px; height: 40px; box-shadow: none;"><i class="bi bi-zoom-in"></i></button>
+    <div class="compare-viewport">
+      <div class="compare-stage" id="compareStage">
+        <div class="stage-badge stage-badge-left" id="badgeBefore">ORIGINAL</div>
+        <div class="stage-badge stage-badge-right" id="badgeAfter">NEW LOOK</div>
+        <div class="stage-wrapper">
+          <img id="imgSource" class="stage-img" alt="Original look" />
+          <img id="imgRendered" class="stage-img" alt="Transformed look" />
+        </div>
+        <div id="sliderDivider" class="slider-divider" role="slider" tabindex="0" aria-label="Comparison slider" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50">
+          <div class="divider-line"></div>
+          <div class="divider-btn"><i class="bi bi-arrows-expand" style="transform:rotate(45deg);"></i></div>
+        </div>
       </div>
     </div>
-    <div id="zoomPanContainer" style="width: 100%; height: 100%; overflow: auto; -webkit-overflow-scrolling: touch; display: flex; align-items: flex-start; justify-content: flex-start; background: var(--beige);">
-      <img id="zoomImg" style="width: 100%; height: auto; margin: auto; object-fit: contain; transition: width 0.2s ease-out;" alt="Zoomed Result" />
-    </div>
-  </div>
 
-  <script>
-    // Execute after DOM is fully loaded to ensure Supabase SDK is available
-    window.addEventListener('DOMContentLoaded', () => {
-      
-      // --- SUPABASE CONFIGURATION ---
-      // NOTE: Ensure Row Level Security (RLS) is enabled in your Supabase dashboard 
-      // since Anon Keys are exposed in client-side applications.
-      const SUPABASE_URL = 'https://rmfubnduytozikcgzvok.supabase.co';
-      const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJtZnVibmR1eXRvemlrY2d6dm9rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2OTIyMDgsImV4cCI6MjA5NzI2ODIwOH0.XmxDD8mH8rgq3OZmD7jVophtH2W3NNDgSRJKC3RXvJU';
-      const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    <button id="shareBtn" class="compare-fab-share">
+      <i class="bi bi-whatsapp"></i> SHARE
+    </button>
+  </section>
 
-      // --- STATE & PROMPT ---
-      let videoStream = null;
-      let currentFacingMode = 'environment';
-      let currentOriginalDataUrl = null; 
-      let selectedGarmentBase64 = null;
-      let allGarments = [];
-      let isCompareMode = true; 
-      
-      const VIRTUAL_TRY_ON_PROMPT = `Edit the **first photo** by replacing only the clothing/outfit with the **exact suit shown in the second reference photo**.
-### Strict preservation requirements
-* Keep my **face 100% unchanged**.
-* Keep my **body position and pose exactly unchanged**.
-* Keep the **entire background exactly unchanged**.
-* Keep my **hands, arms, neck, head position, and visible body proportions exactly as they are**.
-### Suit replacement
-Use the **second photo only as the clothing reference**. Recreate its suit accurately on my body. The suit must naturally conform to my **existing body position and anatomy**.`;
+  <!-- VIEW 4: VAULT SCREEN -->
+  <section id="galleryScreen" class="view-screen">
+    <header class="studio-header">
+      <button id="closeGalleryBtn" class="btn-pill"><i class="bi bi-arrow-left"></i> BACK</button>
+      <h2 style="font-size:1.05rem; font-family:var(--font-heading);">MY LOOKS</h2>
+      <div id="vaultCountBadge" class="badge" style="background:var(--lime);">0 / 10</div>
+    </header>
+    <div class="gallery-grid" id="galleryGrid"></div>
+  </section>
 
-      let isViewingGalleryItem = false;
-      let currentActiveDocId = null;
-      let currentActiveOrigPath = null;
-      let currentActiveGenPath = null;
+  <script type="module">
+    'use strict';
 
-      // DOM Elements
-      const cameraFeed = document.getElementById('cameraFeed');
-      const cameraView = document.getElementById('cameraView');
-      const garmentSelectView = document.getElementById('garmentSelectView');
-      const processingView = document.getElementById('processingView');
-      const comparisonView = document.getElementById('comparisonView');
-      const libraryView = document.getElementById('libraryView');
-      const addGarmentView = document.getElementById('addGarmentView');
-
-      // --- UTILITIES ---
-      function showView(viewElement) {
-        [cameraView, garmentSelectView, comparisonView, libraryView].forEach(v => v.classList.remove('active'));
-        if(viewElement) viewElement.classList.add('active');
-      }
-
-      function showToast(message, isError = false) {
-        const container = document.getElementById('toastContainer');
-        const toast = document.createElement('div');
-        toast.className = `toast ${isError ? 'error' : ''}`;
-        toast.innerHTML = `<i class="bi ${isError ? 'bi-exclamation-triangle' : 'bi-check-circle'}"></i> ${message}`;
-        container.appendChild(toast);
-        setTimeout(() => toast.remove(), 3000);
-      }
-
-      // --- CAMERA INIT ---
-      async function initCamera() {
-        if (videoStream) {
-          videoStream.getTracks().forEach(track => track.stop());
+    const BlobRegistry = {
+      activeUrls: new Set(),
+      create(blob) {
+        const url = URL.createObjectURL(blob);
+        this.activeUrls.add(url);
+        return url;
+      },
+      revoke(url) {
+        if (url && this.activeUrls.has(url)) {
+          URL.revokeObjectURL(url);
+          this.activeUrls.delete(url);
         }
-        try {
-          videoStream = await navigator.mediaDevices.getUserMedia({
-            video: { facingMode: currentFacingMode, width: { ideal: 1920 }, height: { ideal: 1080 } },
-            audio: false
-          });
-          cameraFeed.srcObject = videoStream;
-          document.getElementById('cameraErrorMsg').classList.remove('active');
-        } catch (err) { 
-          try {
-            // Fallback for devices without facingMode support
-            videoStream = await navigator.mediaDevices.getUserMedia({ video: { width: { ideal: 1920 }, height: { ideal: 1080 } }, audio: false });
-            cameraFeed.srcObject = videoStream;
-            document.getElementById('cameraErrorMsg').classList.remove('active');
-          } catch (fallbackErr) {
-            document.getElementById('cameraErrorMsg').classList.add('active');
-          }
-        }
-        loadGalleryThumbnail();
+      },
+      clear() {
+        this.activeUrls.forEach(url => URL.revokeObjectURL(url));
+        this.activeUrls.clear();
       }
+    };
 
-      document.getElementById('switchCameraBtn').addEventListener('click', () => {
-        currentFacingMode = currentFacingMode === 'environment' ? 'user' : 'environment';
-        initCamera();
-      });
+    function safeStorageGet(key) {
+      try { return localStorage.getItem(key); } catch (_) { return null; }
+    }
+    function safeStorageSet(key, val) {
+      try { localStorage.setItem(key, val); } catch (_) {}
+    }
+    function safeStorageRemove(key) {
+      try { localStorage.removeItem(key); } catch (_) {}
+    }
 
-      // --- IMAGE CAPTURE & UPLOAD ---
-      function prepareGarmentSelection(source, originalWidth, originalHeight) {
-        const MAX_SIZE = 2048; 
-        let width = originalWidth; let height = originalHeight;
-        
-        if (width > height) { if (width > MAX_SIZE) { height = Math.round(height * (MAX_SIZE / width)); width = MAX_SIZE; } } 
-        else { if (height > MAX_SIZE) { width = Math.round(width * (MAX_SIZE / height)); height = MAX_SIZE; } }
+    const SUPABASE_URL = 'https://rmfubnduytozikcgzvok.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJtZnVibmR1eXRvemlrY2d6dm9rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2OTIyMDgsImV4cCI6MjA5NzI2ODIwOH0.XmxDD8mH8rgq3OZmD7jVophtH2W3NNDgSRJKC3RXvJU';
+    const STORAGE_BUCKET = 'kami-images';
 
-        const tempCanvas = document.createElement('canvas');
-        tempCanvas.width = width; tempCanvas.height = height;
-        tempCanvas.getContext('2d').drawImage(source, 0, 0, width, height);
-        
-        currentOriginalDataUrl = tempCanvas.toDataURL('image/webp', 0.9);
-        document.getElementById('capturedThumb').src = currentOriginalDataUrl;
-        
-        selectedGarmentBase64 = null;
-        document.getElementById('generateTryOnBtn').disabled = true;
-        document.getElementById('searchInput').value = '';
-        
-        loadGarments();
-        showView(garmentSelectView);
+    const sb = (window.supabase && typeof window.supabase.createClient === 'function')
+      ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+      : null;
+
+    const $ = id => document.getElementById(id);
+
+    function esc(s) {
+      return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+      }[c]));
+    }
+
+    function sanitizeUrl(url) {
+      if (!url || typeof url !== 'string') return 'about:blank';
+      const clean = url.trim();
+      if (/^(https?:\/\/|blob:|data:image\/(png|jpeg|webp);base64,)/i.test(clean)) {
+        return clean;
       }
+      return 'about:blank';
+    }
 
-      document.getElementById('captureBtn').addEventListener('click', () => {
-        if(!cameraFeed.videoWidth) {
-          showToast("Camera not ready. Please use the upload button.", true);
-          return;
-        }
-        const tempCanvas = document.createElement('canvas');
-        tempCanvas.width = cameraFeed.videoWidth; tempCanvas.height = cameraFeed.videoHeight;
-        tempCanvas.getContext('2d').drawImage(cameraFeed, 0, 0);
-        prepareGarmentSelection(tempCanvas, tempCanvas.width, tempCanvas.height);
-      });
+    let heicPromise = null;
+    async function getHeicConverter() {
+      if (window.heic2any) return window.heic2any;
+      if (heicPromise) return heicPromise;
 
-      document.getElementById('uploadBtn').addEventListener('click', () => {
-        const fileInput = document.getElementById('fileInput');
-        fileInput.value = ''; // Reset to allow re-uploading the same file
-        fileInput.click();
-      });
-      
-      document.getElementById('fileInput').addEventListener('change', (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = (event) => {
-          const img = new Image();
-          img.onload = () => prepareGarmentSelection(img, img.width, img.height);
-          img.src = event.target.result;
+      heicPromise = new Promise((resolve, reject) => {
+        const timeout = setTimeout(() => reject(new Error('HEIC loader timeout')), 10000);
+        const script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js';
+        script.crossOrigin = 'anonymous';
+        script.onload = () => {
+          clearTimeout(timeout);
+          resolve(window.heic2any);
         };
-        reader.readAsDataURL(file);
+        script.onerror = () => {
+          clearTimeout(timeout);
+          reject(new Error('Failed to load iPhone HEIC converter'));
+        };
+        document.head.appendChild(script);
       });
+      return heicPromise;
+    }
 
-      document.getElementById('cancelSelectBtn').addEventListener('click', () => {
-        showView(cameraView);
-        document.getElementById('fileInput').value = '';
+    const WEBP_QUALITY = 0.80;
+    const MAX_UPLOAD_DIM = 1200;
+
+    const WEBP_SUPPORTED = (() => {
+      try {
+        const c = document.createElement('canvas');
+        c.width = c.height = 1;
+        return c.toDataURL('image/webp').startsWith('data:image/webp');
+      } catch (_) { return false; }
+    })();
+
+    const ENCODE_TYPE = WEBP_SUPPORTED ? 'image/webp' : 'image/jpeg';
+
+    function encodeCanvas(canvas, quality = WEBP_QUALITY) {
+      return new Promise(resolve => {
+        if (canvas.toBlob) {
+          canvas.toBlob(blob => {
+            if (blob) return resolve(blob);
+            resolve(dataURLToBlob(canvas.toDataURL(ENCODE_TYPE, quality)));
+          }, ENCODE_TYPE, quality);
+        } else {
+          resolve(dataURLToBlob(canvas.toDataURL(ENCODE_TYPE, quality)));
+        }
       });
+    }
 
-      // --- ADD GARMENT UI ---
-      document.getElementById('openAddGarmentBtn').addEventListener('click', () => addGarmentView.classList.add('active'));
-      document.getElementById('closeAddGarmentBtn').addEventListener('click', () => addGarmentView.classList.remove('active'));
+    function canvasToDataURL(canvas, quality = WEBP_QUALITY) {
+      return canvas.toDataURL(ENCODE_TYPE, quality);
+    }
 
-      const garmentPreviewContainer = document.getElementById('garmentPreviewContainer');
-      const garmentFileInput = document.getElementById('garmentFileInput');
-      const garmentPreviewImg = document.getElementById('garmentPreviewImg');
-      let newGarmentDataUrl = null;
+    function dataURLToBlob(dataURL) {
+      const parts = dataURL.split(',');
+      const mimeMatch = parts[0].match(/:(.*?);/);
+      const mime = mimeMatch ? mimeMatch[1] : 'image/webp';
+      const bin = atob(parts[1]);
+      const arr = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+      return new Blob([arr], { type: mime });
+    }
 
-      garmentPreviewContainer.addEventListener('click', () => {
-        garmentFileInput.value = '';
-        garmentFileInput.click();
-      });
-      
-      function loadImageFromFile(file) {
+    function loadDrawable(source) {
+      if (source instanceof HTMLImageElement) {
+        if (source.complete && source.naturalWidth !== 0) return Promise.resolve(source);
         return new Promise((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = (e) => {
-            const img = new Image();
-            img.onload = () => resolve(img);
-            img.onerror = reject;
-            img.src = e.target.result;
-          };
-          reader.readAsDataURL(file);
+          source.addEventListener('load', () => resolve(source), { once: true });
+          source.addEventListener('error', () => reject(new Error('Image decode failed')), { once: true });
         });
       }
+      if (source instanceof HTMLCanvasElement || source instanceof HTMLVideoElement) {
+        return Promise.resolve(source);
+      }
+      if (window.ImageBitmap && source instanceof ImageBitmap) return Promise.resolve(source);
+      if (source instanceof Blob) return blobToImage(source);
 
-      garmentFileInput.addEventListener('change', async (e) => {
-        const files = e.target.files;
-        if (!files || files.length === 0) return;
-        
-        try {
-          if (files.length === 1) {
-            const img = await loadImageFromFile(files[0]);
-            const canvas = document.createElement('canvas');
-            canvas.width = img.width; canvas.height = img.height;
-            canvas.getContext('2d').drawImage(img, 0, 0);
-            newGarmentDataUrl = canvas.toDataURL('image/webp', 0.9);
-          } else if (files.length >= 2) {
-            const img1 = await loadImageFromFile(files[0]);
-            const img2 = await loadImageFromFile(files[1]);
-            
-            const targetHeight = Math.max(img1.height, img2.height);
-            const w1 = img1.width * (targetHeight / img1.height);
-            const w2 = img2.width * (targetHeight / img2.height);
-            
-            const canvas = document.createElement('canvas');
-            canvas.width = w1 + w2; canvas.height = targetHeight;
-            const ctx = canvas.getContext('2d');
-            
-            ctx.fillStyle = '#FFFFFF'; ctx.fillRect(0, 0, canvas.width, canvas.height);
-            ctx.drawImage(img1, 0, 0, w1, targetHeight);
-            ctx.drawImage(img2, w1, 0, w2, targetHeight);
-            
-            newGarmentDataUrl = canvas.toDataURL('image/webp', 0.9);
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        if (typeof source === 'string' && !source.startsWith('data:')) img.crossOrigin = 'anonymous';
+        img.addEventListener('load', () => resolve(img), { once: true });
+        img.addEventListener('error', () => reject(new Error('Image load failed')), { once: true });
+        img.src = sanitizeUrl(source);
+      });
+    }
+
+    function blobToImage(blob) {
+      return new Promise((resolve, reject) => {
+        const url = BlobRegistry.create(blob);
+        const img = new Image();
+        img.addEventListener('load', () => {
+          BlobRegistry.revoke(url);
+          resolve(img);
+        }, { once: true });
+        img.addEventListener('error', () => {
+          BlobRegistry.revoke(url);
+          reject(new Error('Image decode failed'));
+        }, { once: true });
+        img.src = url;
+      });
+    }
+
+    async function compressToWebP(source, { maxDim = MAX_UPLOAD_DIM, quality = WEBP_QUALITY } = {}) {
+      const drawable = await loadDrawable(source);
+      const natW = drawable.naturalWidth || drawable.videoWidth || drawable.width;
+      const natH = drawable.naturalHeight || drawable.videoHeight || drawable.height;
+      if (!natW || !natH) throw new Error('Invalid image source');
+
+      const scale = Math.min(1, maxDim / Math.max(natW, natH));
+      const w = Math.max(1, Math.round(natW * scale));
+      const h = Math.max(1, Math.round(natH * scale));
+
+      const c = document.createElement('canvas');
+      c.width = w; c.height = h;
+      const ctx = c.getContext('2d');
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+      ctx.drawImage(drawable, 0, 0, w, h);
+
+      if (window.ImageBitmap && drawable instanceof ImageBitmap) {
+        try { drawable.close(); } catch (_) {}
+      }
+      return encodeCanvas(c, quality);
+    }
+
+    function downloadBlob(blob, filename) {
+      const url = BlobRegistry.create(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => BlobRegistry.revoke(url), 3000);
+    }
+
+    let currentUserPhone = safeStorageGet('kami_user_phone');
+    let currentUserName  = safeStorageGet('kami_user_name');
+    let userHairstyleLimit = 5;
+    let usedHairstyleCount = 0;
+    let userRealtimeChannel = null;
+
+    let activeStudioMode = 'color';
+    let originalImageData = null;
+    let originalWebpBlob = null;
+    let originalDataURL = null;
+    let hairConfidenceMask = null;
+    let canvasW = 0, canvasH = 0;
+    let processToken = 0;
+
+    let imageSegmenter = null;
+    let pendingImage = null;
+    let cameraStream = null;
+    let cameraFacing = 'user';
+
+    let isSavingVault = false;
+    let isDividerDragging = false;
+    let renderScheduled = false;
+    let openedFromVault = false;
+    let toastTimer = null;
+
+    let currentCompareMode = 'slide';
+    let currentColorApplied = false;
+    let currentShadeName = "Natural";
+    let targetH = 26, targetS = 38, currentLift = 0;
+    let selectedFamily = "all";
+    let slidersUnlocked = false;
+    let refBlob = null;
+
+    function showBrutalModal({
+      title = "NOTICE",
+      message = "",
+      badge = "KAMI NOTICE",
+      badgeBg = "var(--yellow)",
+      badgeColor = "var(--black)",
+      confirmText = "OK",
+      cancelText = null,
+      confirmBg = "var(--lime)",
+      confirmColor = "var(--black)",
+      extraHtml = ""
+    }) {
+      return new Promise((resolve) => {
+        const modal = $('kamiCustomModal');
+        const badgeEl = $('customModalBadge');
+        const titleEl = $('customModalTitle');
+        const msgEl = $('customModalMessage');
+        const extraEl = $('customModalExtra');
+        const cancelBtn = $('customModalCancelBtn');
+        const confirmBtn = $('customModalConfirmBtn');
+
+        badgeEl.textContent = badge;
+        badgeEl.style.background = badgeBg;
+        badgeEl.style.color = badgeColor;
+
+        titleEl.textContent = title;
+        msgEl.textContent = message;
+
+        if (extraHtml) {
+          extraEl.innerHTML = extraHtml;
+          extraEl.classList.remove('hidden');
+        } else {
+          extraEl.innerHTML = '';
+          extraEl.classList.add('hidden');
+        }
+
+        if (cancelText) {
+          cancelBtn.textContent = cancelText;
+          cancelBtn.classList.remove('hidden');
+        } else {
+          cancelBtn.classList.add('hidden');
+        }
+
+        confirmBtn.textContent = confirmText;
+        confirmBtn.style.background = confirmBg;
+        confirmBtn.style.color = confirmColor;
+
+        modal.classList.add('active');
+        confirmBtn.focus();
+
+        function cleanup(result) {
+          modal.classList.remove('active');
+          confirmBtn.removeEventListener('click', onConfirm);
+          cancelBtn.removeEventListener('click', onCancel);
+          document.removeEventListener('keydown', onKeyDown);
+          resolve(result);
+        }
+
+        function onConfirm() { cleanup(true); }
+        function onCancel() { cleanup(false); }
+        function onKeyDown(e) { if (e.key === 'Escape') onCancel(); }
+
+        confirmBtn.addEventListener('click', onConfirm);
+        cancelBtn.addEventListener('click', onCancel);
+        document.addEventListener('keydown', onKeyDown);
+      });
+    }
+
+    const SHADE_CATALOG = [
+      { name: "Jet Black",         family: "browns", h: 30,  s: 4,  l: 8 },
+      { name: "Blue Black",        family: "browns", h: 220, s: 18, l: 12 },
+      { name: "Soft Black",        family: "browns", h: 30,  s: 10, l: 15 },
+      { name: "Darkest Brown",     family: "browns", h: 26,  s: 22, l: 18 },
+      { name: "Espresso",          family: "browns", h: 24,  s: 30, l: 22 },
+      { name: "Dark Brown",        family: "browns", h: 25,  s: 36, l: 26 },
+      { name: "Coffee",            family: "browns", h: 24,  s: 32, l: 28 },
+      { name: "Chocolate",         family: "browns", h: 26,  s: 42, l: 32 },
+      { name: "Walnut",            family: "browns", h: 28,  s: 36, l: 34 },
+      { name: "Chestnut",          family: "browns", h: 22,  s: 45, l: 36 },
+      { name: "Ash Brown",         family: "browns", h: 30,  s: 14, l: 36 },
+      { name: "Mocha",             family: "browns", h: 24,  s: 32, l: 38 },
+      { name: "Hazelnut",          family: "browns", h: 30,  s: 40, l: 40 },
+      { name: "Medium Brown",      family: "browns", h: 26,  s: 38, l: 40 },
+      { name: "Toffee",            family: "browns", h: 28,  s: 46, l: 44 },
+      { name: "Cinnamon",          family: "browns", h: 20,  s: 55, l: 45 },
+      { name: "Auburn",            family: "browns", h: 16,  s: 52, l: 38 },
+      { name: "Caramel",           family: "browns", h: 29,  s: 50, l: 48 },
+      { name: "Light Brown",       family: "browns", h: 27,  s: 38, l: 48 },
+
+      { name: "Dark Blonde",       family: "blondes", h: 34,  s: 28, l: 52 },
+      { name: "Medium Blonde",     family: "blondes", h: 35,  s: 32, l: 58 },
+      { name: "Honey Blonde",      family: "blondes", h: 36,  s: 38, l: 62 },
+      { name: "Golden Honey",      family: "blondes", h: 37,  s: 40, l: 65 },
+      { name: "Golden Blonde",     family: "blondes", h: 38,  s: 38, l: 66 },
+      { name: "Warm Blonde",       family: "blondes", h: 34,  s: 32, l: 64 },
+      { name: "Ash Blonde",        family: "blondes", h: 32,  s: 12, l: 65 },
+      { name: "Sandy Blonde",      family: "blondes", h: 34,  s: 22, l: 67 },
+      { name: "Beige Blonde",      family: "blondes", h: 31,  s: 18, l: 67 },
+      { name: "Light Blonde",      family: "blondes", h: 36,  s: 32, l: 72 },
+      { name: "Pearl Blonde",      family: "blondes", h: 330, s: 10, l: 74 },
+      { name: "Platinum Blonde",   family: "blondes", h: 36,  s: 12, l: 86 },
+
+      { name: "Mahogany",          family: "reds", h: 350, s: 55, l: 34 },
+      { name: "Burgundy",          family: "reds", h: 345, s: 65, l: 32 },
+      { name: "Wine",              family: "reds", h: 340, s: 58, l: 28 },
+      { name: "Ruby",              family: "reds", h: 345, s: 72, l: 38 },
+      { name: "Cherry",            family: "reds", h: 350, s: 75, l: 40 },
+      { name: "True Red",          family: "reds", h: 0,   s: 82, l: 44 },
+      { name: "Bright Red",        family: "reds", h: 355, s: 88, l: 48 },
+      { name: "Copper",            family: "reds", h: 24,  s: 82, l: 50 },
+      { name: "Ginger",            family: "reds", h: 22,  s: 76, l: 52 },
+      { name: "Rose Gold",         family: "reds", h: 15,  s: 50, l: 64 },
+      { name: "Peach",             family: "reds", h: 20,  s: 54, l: 70 },
+
+      { name: "Plum",              family: "fashion", h: 290, s: 48, l: 34 },
+      { name: "Berry",             family: "fashion", h: 310, s: 52, l: 40 },
+      { name: "Smoky Grey",        family: "fashion", h: 220, s: 10, l: 46 },
+      { name: "Violet",            family: "fashion", h: 280, s: 55, l: 50 },
+      { name: "Blue",              family: "fashion", h: 220, s: 65, l: 52 },
+      { name: "Turquoise",         family: "fashion", h: 180, s: 58, l: 52 },
+      { name: "Rose",              family: "fashion", h: 350, s: 48, l: 62 },
+      { name: "Lilac",             family: "fashion", h: 285, s: 42, l: 66 },
+      { name: "Pink",              family: "fashion", h: 330, s: 72, l: 68 },
+      { name: "Silver Grey",       family: "fashion", h: 220, s: 8,  l: 74 }
+    ];
+
+    const DEFAULT_HAIRSTYLES = [
+      { id:'pixie', category:'Bob & Short', name:'Pixie Cut', desc_prompt:'a realistic short textured feminine pixie cut with tapered sides and nape, slightly longer layered top' },
+      { id:'bluntbob', category:'Bob & Short', name:'Blunt Bob', desc_prompt:'a realistic blunt bob cut straight across at jaw length with a crisp even hemline' },
+      { id:'frenchbob', category:'Bob & Short', name:'French Bob', desc_prompt:'a realistic French bob, chin-length and textured with a short soft fringe' },
+      { id:'butterfly', category:'Modern Cuts', name:'Butterfly Cut', desc_prompt:'a realistic butterfly cut with long cascading layers, short curtain bangs and soft flipped ends' },
+      { id:'wolf', category:'Modern Cuts', name:'Wolf Cut', desc_prompt:'a realistic wolf cut with choppy crown layers, heavy volume and longer tapered ends' },
+      { id:'curtainbangs', category:'Modern Cuts', name:'Curtain Bangs', desc_prompt:'a realistic cut with long curtain bangs parted in the middle and swept outward' },
+      { id:'longlayered', category:'Modern Cuts', name:'Long Layered Cut', desc_prompt:'a realistic long layered cut with smooth graduated layers and natural movement at the ends' },
+      { id:'glasshair', category:'Open & Styling', name:'Glass Hair', desc_prompt:'ultra-sleek mirror-shiny perfectly straight hair with a blunt cut' },
+      { id:'softwaves', category:'Open & Styling', name:'Soft Waves', desc_prompt:'romantic soft wavy hairstyle with gentle S-waves flowing through lengths' },
+      { id:'hollywoodwaves', category:'Open & Styling', name:'Hollywood Waves', desc_prompt:'deep glossy vintage Hollywood waves cascading down over the shoulder' },
+      { id:'highpony', category:'Ponytails', name:'High Ponytail', desc_prompt:'a realistic sleek high ponytail secured at crown' },
+      { id:'classicjuda', category:'Buns & Juda', name:'Classic Juda', desc_prompt:'a realistic classic rounded traditional Indian juda bun' },
+      { id:'punjabigutt', category:'Indian & Bridal', name:'Punjabi Gutt / Choti', desc_prompt:'a single long thick plait with smooth centre-parted front' }
+    ];
+
+    let liveHairstyles = [...DEFAULT_HAIRSTYLES];
+    let selectedHairstyle = DEFAULT_HAIRSTYLES[0];
+    let selectedHairstyleCat = 'Bob & Short';
+
+    const DB_NAME = 'kami_vault_db';
+    const DB_VERSION = 1;
+    const STORE_NAME = 'saved_looks';
+    const LOCAL_VAULT_LIMIT = 10;
+
+    function openVaultDB() {
+      return new Promise((resolve, reject) => {
+        const req = indexedDB.open(DB_NAME, DB_VERSION);
+        req.onupgradeneeded = e => {
+          const db = e.target.result;
+          if (!db.objectStoreNames.contains(STORE_NAME)) db.createObjectStore(STORE_NAME, { keyPath: 'id' });
+        };
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => reject(req.error);
+      });
+    }
+
+    async function getLocalLooks(phone) {
+      try {
+        const db = await openVaultDB();
+        return new Promise(resolve => {
+          const tx = db.transaction(STORE_NAME, 'readonly');
+          const req = tx.objectStore(STORE_NAME).getAll();
+          req.onsuccess = () => {
+            const all = req.result || [];
+            const normP = phone ? phone.replace(/\D/g, '').slice(-10) : '';
+            const filtered = normP 
+              ? all.filter(item => (item.user_phone || '').replace(/\D/g, '').slice(-10) === normP) 
+              : all;
+            filtered.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+            resolve(filtered.slice(0, LOCAL_VAULT_LIMIT));
+          };
+          req.onerror = () => resolve([]);
+        });
+      } catch (_) { return []; }
+    }
+
+    async function saveLocalLook(item) {
+      try {
+        const db = await openVaultDB();
+        const tx = db.transaction(STORE_NAME, 'readwrite');
+        tx.objectStore(STORE_NAME).put(item);
+      } catch (_) {}
+    }
+
+    async function deleteLocalLook(id) {
+      try {
+        const db = await openVaultDB();
+        const tx = db.transaction(STORE_NAME, 'readwrite');
+        tx.objectStore(STORE_NAME).delete(id);
+      } catch (_) {}
+    }
+
+    function publicUrlFor(path) {
+      return sb.storage.from(STORAGE_BUCKET).getPublicUrl(path).data.publicUrl;
+    }
+
+    const screens = {
+      login: $('loginScreen'),
+      camera: $('cameraScreen'),
+      studio: $('studioScreen'),
+      compare: $('compareScreen'),
+      gallery: $('galleryScreen')
+    };
+
+    function activateScreen(screen) {
+      Object.values(screens).forEach(s => s.classList.remove('active'));
+      screen.classList.add('active');
+    }
+
+    function showToast(msg) {
+      const t = $('toast');
+      t.textContent = msg;
+      t.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => t.classList.remove('show'), 2400);
+    }
+
+    function showLoading(msg = "ANALYSING HAIR...", showTimer = false) {
+      $('loadingMessage').textContent = msg;
+      $('loadingOverlay').classList.add('active');
+      $('loadingTimer').classList.toggle('hidden', !showTimer);
+    }
+
+    function hideLoading() {
+      $('loadingOverlay').classList.remove('active');
+    }
+
+    function applyUserIdentity() {
+      const label = currentUserName || currentUserPhone || 'CLIENT';
+      $('userSessionName').textContent = label;
+      $('clientStudioBadge').textContent = label;
+    }
+
+    function subscribeToUserRealtime(phone) {
+      if (!sb || !phone) return;
+      if (userRealtimeChannel) {
+        sb.removeChannel(userRealtimeChannel);
+        userRealtimeChannel = null;
+      }
+
+      const digits = phone.replace(/\D/g, '');
+      userRealtimeChannel = sb
+        .channel(`user-realtime-${digits}`)
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'users' },
+          async (payload) => {
+            const rowPhone = (payload.old?.phone || payload.new?.phone || '').replace(/\D/g, '').slice(-10);
+            const myPhone = digits.slice(-10);
+            if (rowPhone !== myPhone) return;
+
+            if (payload.eventType === 'DELETE') {
+              await forceEvictDeletedUser("YOUR SALON ACCOUNT WAS REMOVED BY THE SUPERVISOR.");
+            } else if (payload.eventType === 'UPDATE') {
+              const updated = payload.new;
+              if (updated.trial_expired === true) {
+                $('trialLockOverlay').classList.add('active');
+                if (cameraStream) { cameraStream.getTracks().forEach(t => t.stop()); cameraStream = null; }
+              } else {
+                $('trialLockOverlay').classList.remove('active');
+              }
+              userHairstyleLimit = typeof updated.hairstyle_limit === 'number' ? updated.hairstyle_limit : 5;
+              usedHairstyleCount = typeof updated.hairstyle_credits_used === 'number' ? updated.hairstyle_credits_used : 0;
+              updateQuotaDisplay();
+            }
           }
-          garmentPreviewImg.src = newGarmentDataUrl;
-          garmentPreviewImg.classList.remove('hidden');
-        } catch (err) { 
-          showToast("Error loading images.", true); 
-        }
-      });
+        )
+        .subscribe();
+    }
 
-      document.getElementById('saveGarmentBtn').addEventListener('click', async () => {
-        const name = document.getElementById('garmentNameInput').value.trim();
-        if(!name || !newGarmentDataUrl) {
-          showToast("Please provide both a name and an image.", true);
-          return;
-        }
-        
-        const btn = document.getElementById('saveGarmentBtn');
-        const originalHTML = btn.innerHTML;
-        btn.innerHTML = `<div class="loader-spinner" style="width: 24px; height: 24px; border-width: 3px; border-top-color: var(--white); margin: 0 auto;"></div>`;
-        btn.disabled = true;
-        
+    async function forceEvictDeletedUser(reason = "ACCOUNT NOT REGISTERED OR REMOVED BY SALON") {
+      const phoneToWipe = currentUserPhone;
+
+      safeStorageRemove('kami_user_phone');
+      safeStorageRemove('kami_user_name');
+      currentUserPhone = null;
+      currentUserName = null;
+
+      if (phoneToWipe) {
         try {
-          const blob = await convertToWebP(newGarmentDataUrl);
-          const path = `garment_${Date.now()}.webp`;
-          await supabaseClient.storage.from('garments').upload(path, blob, { contentType: 'image/webp' });
-          await supabaseClient.from('garments').insert([{ name: name, image_path: path }]);
-          
-          addGarmentView.classList.remove('active');
-          document.getElementById('garmentNameInput').value = '';
-          garmentPreviewImg.classList.add('hidden');
-          newGarmentDataUrl = null; 
-          garmentFileInput.value = '';
-          showToast("Suit added to wardrobe!");
-          if(garmentSelectView.classList.contains('active')) loadGarments();
-        } catch (err) { 
-          showToast("Upload failed.", true); 
-        } finally { 
-          btn.innerHTML = originalHTML;
-          btn.disabled = false;
-        }
-      });
-
-      // --- GARMENT SELECTION ---
-      async function loadGarments() {
-        const grid = document.getElementById('garmentsGrid');
-        grid.innerHTML = Array(6).fill(`<div class="card" style="background: #e0e0e0; animation: pulse 1.5s infinite;"></div>`).join('');
-        
-        const { data, error } = await supabaseClient.from('garments').select('*').order('created_at', { ascending: false });
-        if(error) {
-          showToast("Failed to load wardrobe.", true);
-          return;
-        }
-        
-        allGarments = data; 
-        renderGarments(allGarments);
+          const db = await openVaultDB();
+          const tx = db.transaction(STORE_NAME, 'readwrite');
+          const store = tx.objectStore(STORE_NAME);
+          const req = store.getAll();
+          req.onsuccess = () => {
+            const all = req.result || [];
+            all.filter(i => (i.user_phone || '').replace(/\D/g, '').slice(-10) === phoneToWipe.replace(/\D/g, '').slice(-10))
+               .forEach(i => store.delete(i.id));
+          };
+        } catch (_) {}
       }
 
-      function renderGarments(garments) {
-        const grid = document.getElementById('garmentsGrid');
-        grid.innerHTML = '';
+      if (userRealtimeChannel && sb) {
+        sb.removeChannel(userRealtimeChannel);
+        userRealtimeChannel = null;
+      }
+
+      BlobRegistry.clear();
+
+      if (cameraStream) {
+        cameraStream.getTracks().forEach(t => t.stop());
+        cameraStream = null;
+      }
+
+      $('trialLockOverlay').classList.remove('active');
+      hideLoading();
+
+      activateScreen(screens.login);
+      $('loginPhoneInput').value = '';
+
+      showBrutalModal({
+        badge: "ACCESS REVOKED",
+        badgeBg: "var(--red)",
+        badgeColor: "var(--white)",
+        title: "ACCOUNT REMOVED",
+        message: reason,
+        confirmText: "UNDERSTOOD",
+        confirmBg: "var(--yellow)"
+      });
+    }
+
+    async function verifyUserTrialStatus(phone) {
+      if (!phone) {
+        await forceEvictDeletedUser();
+        return false;
+      }
+      if (!sb) return true;
+
+      try {
+        const raw = phone.trim();
+        const norm = raw.replace(/\D/g, '').slice(-10);
+
+        const { data, error } = await sb
+          .from('users')
+          .select('*')
+          .or(`phone.eq.${raw},phone.eq.+91${norm},phone.eq.${norm}`)
+          .maybeSingle();
         
-        if(garments.length === 0) {
-          grid.innerHTML = `<div style="grid-column: span 2; text-align: center; padding: 20px; color: var(--black);">No suits found.</div>`;
+        if (error || !data) {
+          await forceEvictDeletedUser("YOUR ACCOUNT IS NOT REGISTERED OR HAS BEEN REMOVED BY THE SALON.");
+          return false;
+        }
+
+        if (data.trial_expired === true) {
+          $('trialLockOverlay').classList.add('active');
+          if (cameraStream) { cameraStream.getTracks().forEach(t => t.stop()); cameraStream = null; }
+          return false;
+        }
+
+        userHairstyleLimit = typeof data.hairstyle_limit === 'number' ? data.hairstyle_limit : 5;
+        usedHairstyleCount = typeof data.hairstyle_credits_used === 'number' ? data.hairstyle_credits_used : 0;
+        
+        $('trialLockOverlay').classList.remove('active');
+        updateQuotaDisplay();
+        return true;
+      } catch (_) {
+        return false;
+      }
+    }
+
+    function updateQuotaDisplay() {
+      $('styleQuotaBadge').textContent = `${usedHairstyleCount} / ${userHairstyleLimit} USED`;
+      $('styleQuotaBadge').style.background = usedHairstyleCount >= userHairstyleLimit ? 'var(--red)' : 'var(--pink)';
+    }
+
+    async function checkAuthSession() {
+      if (currentUserPhone) {
+        applyUserIdentity();
+        const active = await verifyUserTrialStatus(currentUserPhone);
+        if (active) {
+          subscribeToUserRealtime(currentUserPhone);
+          activateScreen(screens.camera);
+          startCamera();
+        }
+      } else {
+        activateScreen(screens.login);
+      }
+    }
+
+    $('loginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const raw = $('loginPhoneInput').value.trim();
+      const norm = raw.replace(/\D/g, '').slice(-10);
+
+      if (norm.length !== 10) { 
+        showToast('ENTER A VALID 10-DIGIT MOBILE NUMBER'); 
+        return; 
+      }
+
+      const btn = $('loginBtn');
+      btn.disabled = true;
+
+      try {
+        if (!sb) throw new Error('Network unavailable');
+
+        const { data, error } = await sb
+          .from('users')
+          .select('*')
+          .or(`phone.eq.${raw},phone.eq.+91${norm},phone.eq.${norm}`)
+          .maybeSingle();
+
+        if (error || !data) {
+          showToast('NUMBER NOT REGISTERED — CONTACT DESK');
           return;
         }
 
-        garments.forEach((g, index) => {
-          const url = supabaseClient.storage.from('garments').getPublicUrl(g.image_path).data.publicUrl;
-          const div = document.createElement('div');
-          div.className = "card";
-          div.innerHTML = `
-            <img src="${url}" crossorigin="anonymous" loading="lazy" alt="${g.name}" />
-            ${index === 0 ? '<div class="badge badge-lime">NEW</div>' : ''}
-            <div class="card-label">${g.name}</div>
-            <button class="delete-card-btn" aria-label="Delete Suit"><i class="bi bi-trash"></i></button>
-          `;
-          
-          div.querySelector('.delete-card-btn').onclick = async (e) => {
-            e.stopPropagation(); 
-            if(!confirm(`Delete "${g.name}" from your wardrobe?`)) return;
-            try {
-              await supabaseClient.from('garments').delete().eq('id', g.id);
-              await supabaseClient.storage.from('garments').remove([g.image_path]);
-              showToast("Suit deleted.");
-              loadGarments();
-            } catch(err) { showToast("Failed to delete suit.", true); }
-          };
+        currentUserPhone = data.phone || raw;
+        currentUserName = data.name || raw;
+        safeStorageSet('kami_user_phone', currentUserPhone);
+        safeStorageSet('kami_user_name', currentUserName);
+        applyUserIdentity();
 
-          div.onclick = async () => {
-            Array.from(grid.children).forEach(c => c.classList.remove('selected'));
-            div.classList.add('selected');
-            
-            try {
-              const response = await fetch(url);
-              const blob = await response.blob();
-              const reader = new FileReader();
-              reader.onloadend = () => {
-                selectedGarmentBase64 = reader.result.split(',')[1];
-                document.getElementById('generateTryOnBtn').disabled = false;
-              };
-              reader.readAsDataURL(blob);
-            } catch(e) {
-              showToast("Error selecting garment.", true);
-            }
-          };
-          grid.appendChild(div);
-        });
+        if (data.trial_expired === true) {
+          $('trialLockOverlay').classList.add('active');
+          return;
+        }
+
+        userHairstyleLimit = data.hairstyle_limit || 5;
+        usedHairstyleCount = data.hairstyle_credits_used || 0;
+        updateQuotaDisplay();
+
+        subscribeToUserRealtime(currentUserPhone);
+        activateScreen(screens.camera);
+        startCamera();
+      } catch (_) {
+        showToast('LOGIN FAILED — RETRY');
+      } finally {
+        btn.disabled = false;
+      }
+    });
+
+    async function logoutClient() {
+      const confirmed = await showBrutalModal({
+        badge: "LOG OUT",
+        badgeBg: "var(--yellow)",
+        title: "LOG OUT OF KAMI?",
+        message: "Are you sure you want to end your session?",
+        cancelText: "STAY",
+        confirmText: "LOG OUT",
+        confirmBg: "var(--red)",
+        confirmColor: "var(--white)"
+      });
+      if (!confirmed) return;
+
+      if (userRealtimeChannel && sb) {
+        sb.removeChannel(userRealtimeChannel);
+        userRealtimeChannel = null;
       }
 
-      // Debounced search
-      let searchTimeout;
-      document.getElementById('searchInput').addEventListener('input', (e) => {
-        clearTimeout(searchTimeout);
-        searchTimeout = setTimeout(() => {
-          const term = e.target.value.toLowerCase();
-          renderGarments(allGarments.filter(g => g.name.toLowerCase().includes(term)));
-        }, 300);
-      });
+      safeStorageRemove('kami_user_phone');
+      safeStorageRemove('kami_user_name');
+      currentUserPhone = null;
+      currentUserName = null;
+      BlobRegistry.clear();
 
-      // --- GENERATION & AUTO-SAVE ---
-      document.getElementById('generateTryOnBtn').addEventListener('click', async () => {
-        if(!selectedGarmentBase64) return;
-        
-        const base64Image = currentOriginalDataUrl.split(',')[1];
-        const btn = document.getElementById('generateTryOnBtn');
+      $('trialLockOverlay').classList.remove('active');
+      if (cameraStream) { cameraStream.getTracks().forEach(t => t.stop()); cameraStream = null; }
+      activateScreen(screens.login);
+    }
 
-        processingView.classList.add('active');
-        let seconds = 0;
-        const timerText = document.getElementById('timerText');
-        timerText.textContent = `STYLING... 0S`;
-        const timer = setInterval(() => { seconds++; timerText.textContent = `STYLING... ${seconds}S`; }, 1000);
+    $('logoutBtn').addEventListener('click', logoutClient);
+    $('lockLogoutBtn').addEventListener('click', logoutClient);
+
+    async function initModel() {
+      try {
+        const { ImageSegmenter, FilesetResolver } = await import("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/vision_bundle.mjs");
+        const vision = await FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm");
+        const modelAssetPath = "https://storage.googleapis.com/mediapipe-models/image_segmenter/hair_segmenter/float32/latest/hair_segmenter.tflite";
 
         try {
-          const response = await fetch('/api/tryon', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ prompt: VIRTUAL_TRY_ON_PROMPT, image: base64Image, mask: selectedGarmentBase64, model: 'gemini-3.1-flash-image' })
+          imageSegmenter = await ImageSegmenter.createFromOptions(vision, {
+            baseOptions: { modelAssetPath, delegate: "GPU" },
+            runningMode: "IMAGE",
+            outputConfidenceMasks: true
           });
-
-          const data = await response.json();
-          if (!response.ok) throw new Error(data.error || "Server error");
-
-          const candidateParts = data.candidates?.[0]?.content?.parts || [];
-          let generatedImgSrc = null;
-
-          candidateParts.forEach((part) => {
-            const inlineImg = part.inlineData || part.inline_data;
-            if (inlineImg && inlineImg.data) {
-              generatedImgSrc = `data:${inlineImg.mimeType || 'image/webp'};base64,${inlineImg.data}`;
-            }
+        } catch (_) {
+          imageSegmenter = await ImageSegmenter.createFromOptions(vision, {
+            baseOptions: { modelAssetPath, delegate: "CPU" },
+            runningMode: "IMAGE",
+            outputConfidenceMasks: true
           });
-
-          if (!generatedImgSrc) throw new Error("No image data returned from AI.");
-
-          timerText.textContent = `SAVING...`;
-          
-          const timestamp = Date.now();
-          const origPath = `original_${timestamp}.webp`;
-          const genPath = `generated_${timestamp}.webp`;
-
-          const origBlob = await convertToWebP(currentOriginalDataUrl);
-          const genBlob = await convertToWebP(generatedImgSrc);
-
-          await Promise.all([
-            supabaseClient.storage.from('photos').upload(origPath, origBlob, { contentType: 'image/webp' }),
-            supabaseClient.storage.from('photos').upload(genPath, genBlob, { contentType: 'image/webp' })
-          ]);
-
-          const { data: insertedData } = await supabaseClient.from('gallery').insert([{ original_image_path: origPath, generated_image_path: genPath }]).select();
-
-          isViewingGalleryItem = false;
-          currentActiveDocId = insertedData[0].id;
-          currentActiveOrigPath = origPath;
-          currentActiveGenPath = genPath;
-
-          document.getElementById('closeComparisonBtn').textContent = "RETAKE";
-          setupComparison(currentOriginalDataUrl, generatedImgSrc);
-          loadGalleryThumbnail();
-          showToast("Try-on successful!");
-
-        } catch (err) {
-          const originalText = btn.innerHTML;
-          btn.textContent = "FAILED - TRY AGAIN";
-          showToast("Generation failed. Please try again.", true);
-          setTimeout(() => { btn.innerHTML = originalText; }, 3000);
-        } finally {
-          clearInterval(timer);
-          processingView.classList.remove('active');
         }
-      });
 
-      // --- CONSTRAINED COMPARISON SLIDER (OPTIMIZED) ---
-      const compareContainer = document.getElementById('compareContainer');
-      const imgGen = document.getElementById('imgGenerated');
-      const sliderHandle = document.getElementById('sliderHandle');
-      let isSliding = false;
-
-      function setupComparison(origSrc, genSrc) {
-        document.getElementById('imgOriginal').src = origSrc;
-        imgGen.src = genSrc;
-        setCompareMode(true);
-        showView(comparisonView);
-        // Reset slider position
-        imgGen.style.clipPath = `polygon(50% 0, 100% 0, 100% 100%, 50% 100%)`;
-        sliderHandle.style.left = `50%`;
+        if (pendingImage) {
+          const queued = pendingImage;
+          pendingImage = null;
+          processStudioImage(queued).catch(() => hideLoading());
+        }
+      } catch (err) {
+        console.warn("AI Model init notice:", err);
       }
+    }
+    initModel();
 
-      function handleSlide(e) {
-        if (!isSliding || !isCompareMode) return;
-        if(e.cancelable) e.preventDefault(); 
-        
-        let clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
-        const rect = compareContainer.getBoundingClientRect();
-        
-        let x = clientX - rect.left;
-        x = Math.max(0, Math.min(x, rect.width));
-        
-        let percent = (x / rect.width) * 100;
-        imgGen.style.clipPath = `polygon(${percent}% 0, 100% 0, 100% 100%, ${percent}% 100%)`;
-        
-        const handleWidth = 40; 
-        let handleX = Math.max(handleWidth / 2, Math.min(x, rect.width - handleWidth / 2));
-        let handlePercent = (handleX / rect.width) * 100;
-        
-        sliderHandle.style.left = `${handlePercent}%`;
-      }
+    const cameraFeed = $('cameraFeed');
 
-      // Attach event listeners ONLY ONCE to prevent memory leaks and exponential firing
-      compareContainer.addEventListener('mousedown', (e) => { isSliding = true; handleSlide(e); });
-      window.addEventListener('mouseup', () => { isSliding = false; });
-      window.addEventListener('mousemove', handleSlide);
+    async function startCamera() {
+      if (cameraStream) { cameraStream.getTracks().forEach(t => t.stop()); cameraStream = null; }
+      if (!navigator.mediaDevices?.getUserMedia) return;
 
-      compareContainer.addEventListener('touchstart', (e) => { isSliding = true; handleSlide(e); }, { passive: false });
-      window.addEventListener('touchend', () => { isSliding = false; });
-      window.addEventListener('touchmove', handleSlide, { passive: false });
-
-      const btnCompare = document.getElementById('modeCompareBtn');
-      const btnResult = document.getElementById('modeResultBtn');
-
-      function setCompareMode(isCompare) {
-        isCompareMode = isCompare;
-        if (isCompare) {
-          btnCompare.classList.add('active'); btnResult.classList.remove('active');
-          sliderHandle.style.display = 'flex';
-          imgGen.style.clipPath = `polygon(50% 0, 100% 0, 100% 100%, 50% 100%)`;
-          sliderHandle.style.left = `50%`;
-        } else {
-          btnCompare.classList.remove('active'); btnResult.classList.add('active');
-          sliderHandle.style.display = 'none';
-          imgGen.style.clipPath = `polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)`;
-        }
-      }
-
-      btnCompare.addEventListener('click', () => setCompareMode(true));
-      btnResult.addEventListener('click', () => setCompareMode(false));
-
-      // --- FULLSCREEN ZOOM HANDLING ---
-      const zoomOverlay = document.getElementById('zoomOverlay');
-      const zoomImg = document.getElementById('zoomImg');
-      const zoomPanContainer = document.getElementById('zoomPanContainer');
-      let currentZoom = 1; let initialDistance = null; let initialZoom = 1;
-
-      function applyZoom() { zoomImg.style.width = `${currentZoom * 100}%`; }
-
-      document.getElementById('zoomBtn').addEventListener('click', () => {
-        zoomImg.src = document.getElementById('imgGenerated').src;
-        zoomOverlay.classList.add('active');
-        currentZoom = 1; applyZoom();
-      });
-
-      document.getElementById('closeZoomBtn').addEventListener('click', () => zoomOverlay.classList.remove('active'));
-      document.getElementById('zoomInBtn').addEventListener('click', () => { currentZoom = Math.min(currentZoom + 0.5, 5); applyZoom(); });
-      document.getElementById('zoomOutBtn').addEventListener('click', () => { currentZoom = Math.max(currentZoom - 0.5, 1); applyZoom(); });
-
-      zoomPanContainer.addEventListener('touchstart', (e) => {
-        if (e.touches.length === 2) {
-          initialDistance = Math.hypot(e.touches[0].pageX - e.touches[1].pageX, e.touches[0].pageY - e.touches[1].pageY);
-          initialZoom = currentZoom;
-        }
-      });
-      zoomPanContainer.addEventListener('touchmove', (e) => {
-        if (e.touches.length === 2 && initialDistance) {
-          e.preventDefault();
-          const currentDistance = Math.hypot(e.touches[0].pageX - e.touches[1].pageX, e.touches[0].pageY - e.touches[1].pageY);
-          const scale = currentDistance / initialDistance;
-          currentZoom = Math.min(Math.max(initialZoom * scale, 1), 5);
-          applyZoom();
-        }
-      }, { passive: false });
-      zoomPanContainer.addEventListener('touchend', (e) => { if (e.touches.length < 2) initialDistance = null; });
-
-      // --- UTILS & GALLERY ACTIONS ---
-      async function convertToWebP(src) {
-        return new Promise((resolve, reject) => {
-          const img = new Image(); img.crossOrigin = 'Anonymous'; 
-          img.onload = () => {
-            const canvas = document.createElement('canvas');
-            canvas.width = img.width; canvas.height = img.height;
-            canvas.getContext('2d').drawImage(img, 0, 0);
-            canvas.toBlob((blob) => resolve(blob), 'image/webp', 0.9);
-          };
-          img.onerror = reject; img.src = src;
+      try {
+        cameraStream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: cameraFacing, width: { ideal: 1920 }, height: { ideal: 1080 } },
+          audio: false
         });
+        cameraFeed.srcObject = cameraStream;
+        cameraFeed.classList.toggle('mirrored', cameraFacing === 'user');
+        await cameraFeed.play();
+      } catch (_) {
+        showToast("CAMERA INITIALIZATION FAILED — USE UPLOAD");
+      }
+    }
+
+    $('switchCameraBtn').addEventListener('click', () => {
+      cameraFacing = cameraFacing === 'user' ? 'environment' : 'user';
+      startCamera();
+    });
+
+    function captureCamera() {
+      const vw = cameraFeed.videoWidth;
+      const vh = cameraFeed.videoHeight;
+      if (!vw || !vh) return null;
+
+      const cvs = document.createElement('canvas');
+      cvs.width = vw;
+      cvs.height = vh;
+      const ctx = cvs.getContext('2d');
+
+      if (cameraFacing === 'user') {
+        ctx.translate(cvs.width, 0);
+        ctx.scale(-1, 1);
+      }
+      ctx.drawImage(cameraFeed, 0, 0, vw, vh);
+      return cvs;
+    }
+
+    $('shutterBtn').addEventListener('click', async () => {
+      const active = await verifyUserTrialStatus(currentUserPhone);
+      if (!active) return;
+      const cvs = captureCamera();
+      if (!cvs) { $('clientFileInput').click(); return; }
+      await processStudioImage(cvs);
+    });
+
+    $('uploadPhotoBtn').addEventListener('click', async () => {
+      const active = await verifyUserTrialStatus(currentUserPhone);
+      if (!active) return;
+      $('clientFileInput').value = '';
+      $('clientFileInput').click();
+    });
+
+    $('clientFileInput').addEventListener('change', async (e) => {
+      const active = await verifyUserTrialStatus(currentUserPhone);
+      if (!active) return;
+
+      const file = e.target.files?.[0];
+      if (!file) return;
+
+      const isHeic = file.type === 'image/heic' || file.type === 'image/heif' || /\.(heic|heif)$/i.test(file.name);
+      if (isHeic) {
+        showLoading("CONVERTING IPHONE PHOTO...");
+        try {
+          const heic2any = await getHeicConverter();
+          const converted = await heic2any({ blob: file, toType: "image/jpeg", quality: 0.92 });
+          await loadBlobIntoStudio(Array.isArray(converted) ? converted[0] : converted);
+        } catch (_) {
+          hideLoading();
+          showToast("HEIC CONVERSION FAILED — USE JPG/PNG");
+        }
+        return;
+      }
+      await loadBlobIntoStudio(file);
+    });
+
+    async function loadBlobIntoStudio(blob) {
+      try {
+        const img = await loadDrawable(blob);
+        await processStudioImage(img);
+      } catch (_) {
+        hideLoading();
+        showToast('COULD NOT READ IMAGE');
+      }
+    }
+
+    const hairCanvas = $('hairCanvas');
+    const hairCtx = hairCanvas.getContext('2d', { willReadFrequently: true });
+    const stylePreviewImg = $('stylePreviewImg');
+
+    async function processStudioImage(source) {
+      if (!source) return;
+      const currentRun = ++processToken;
+
+      const maxDim = 1200;
+      let w = source.naturalWidth || source.videoWidth || source.width;
+      let h = source.naturalHeight || source.videoHeight || source.height;
+      if (!w || !h) throw new Error('Invalid image dimensions');
+
+      if (w > maxDim || h > maxDim) {
+        if (w > h) { h = Math.round((h * maxDim) / w); w = maxDim; }
+        else { w = Math.round((w * maxDim) / h); h = maxDim; }
       }
 
-      document.getElementById('deleteBtn').addEventListener('click', async () => {
-        if(!confirm("Delete this try-on from your gallery?")) return;
-        try {
-          await supabaseClient.from('gallery').delete().eq('id', currentActiveDocId);
-          await supabaseClient.storage.from('photos').remove([currentActiveOrigPath, currentActiveGenPath]);
-          showToast("Photo deleted.");
-          if(isViewingGalleryItem) { showView(libraryView); loadGallery(); } else { showView(cameraView); }
-          loadGalleryThumbnail();
-        } catch (err) { showToast("Failed to delete.", true); }
-      });
+      canvasW = w; canvasH = h;
+      hairCanvas.width = w;
+      hairCanvas.height = h;
 
-      document.getElementById('downloadBtn').addEventListener('click', async () => {
-        try {
-          const response = await fetch(document.getElementById('imgGenerated').src);
-          const blob = await response.blob();
-          const blobUrl = URL.createObjectURL(blob);
-          const link = document.createElement('a');
-          link.href = blobUrl; link.download = `VirtualTryOn_${Date.now()}.webp`;
-          document.body.appendChild(link); link.click(); document.body.removeChild(link); URL.revokeObjectURL(blobUrl);
-          showToast("Image downloaded!");
-        } catch (err) { showToast("Failed to download.", true); }
-      });
+      hairCtx.clearRect(0, 0, w, h);
+      hairCtx.drawImage(source, 0, 0, w, h);
 
-      document.getElementById('closeComparisonBtn').addEventListener('click', () => {
-        if(isViewingGalleryItem) showView(libraryView); else showView(cameraView);
-      });
+      // SAVE UNTOUCHED ORIGINAL PIXEL DATA IN MEMORY
+      originalImageData = hairCtx.getImageData(0, 0, w, h);
+      originalDataURL = canvasToDataURL(hairCanvas, WEBP_QUALITY);
+      originalWebpBlob = await encodeCanvas(hairCanvas, WEBP_QUALITY);
 
-      // --- LIBRARY GALLERY ---
-      document.getElementById('openLibraryBtn').addEventListener('click', () => {
-        showView(libraryView); loadGallery();
-      });
-      document.getElementById('closeLibraryBtn').addEventListener('click', () => showView(cameraView));
+      currentColorApplied = false;
+      currentShadeName = "Natural";
+      $('currentShadeBadge').textContent = 'NATURAL';
 
-      async function loadGalleryThumbnail() {
-        const { data } = await supabaseClient.from('gallery').select('generated_image_path').order('created_at', { ascending: false }).limit(1);
-        if (data && data.length > 0) {
-          const { data: { publicUrl } } = supabaseClient.storage.from('photos').getPublicUrl(data[0].generated_image_path);
-          document.getElementById('openLibraryBtn').style.backgroundImage = `url('${publicUrl}')`;
+      stylePreviewImg.classList.add('hidden');
+      hairCanvas.classList.remove('hidden');
+
+      if (cameraStream) { cameraStream.getTracks().forEach(t => t.stop()); cameraStream = null; }
+      activateScreen(screens.studio);
+      renderSwatches();
+
+      if (!imageSegmenter) {
+        pendingImage = source;
+        return;
+      }
+
+      showLoading("ANALYSING HAIR...");
+      setTimeout(() => runSegmentation(currentRun), 40);
+    }
+
+    function runSegmentation(token) {
+      if (!imageSegmenter || !originalImageData || token !== processToken) {
+        hideLoading();
+        return;
+      }
+
+      try {
+        const result = imageSegmenter.segment(hairCanvas);
+        const masks = result.confidenceMasks;
+        if (!masks?.length) {
+          showToast('NO HAIR DETECTED');
+          hideLoading();
+          return;
+        }
+
+        const maskObj = masks.length > 1 ? masks[1] : masks[0];
+        const rawMask = maskObj.getAsFloat32Array();
+        const mW = maskObj.width, mH = maskObj.height;
+
+        if (mW === canvasW && mH === canvasH) {
+          hairConfidenceMask = rawMask;
         } else {
-          document.getElementById('openLibraryBtn').style.backgroundImage = 'none';
+          hairConfidenceMask = new Float32Array(canvasW * canvasH);
+          const sx = mW / canvasW, sy = mH / canvasH;
+          for (let y = 0; y < canvasH; y++) {
+            const rowSrc = Math.min(mH - 1, (y * sy) | 0) * mW;
+            const rowDst = y * canvasW;
+            for (let x = 0; x < canvasW; x++) {
+              hairConfidenceMask[rowDst + x] = rawMask[rowSrc + Math.min(mW - 1, (x * sx) | 0)];
+            }
+          }
+        }
+
+        if (currentColorApplied) {
+          scheduleRender();
+        }
+      } catch (e) {
+        console.warn("Segmentation notice:", e);
+      } finally {
+        hideLoading();
+      }
+    }
+
+    function resetToOriginalHair() {
+      currentColorApplied = false;
+      currentShadeName = "Natural";
+      if (originalImageData) hairCtx.putImageData(originalImageData, 0, 0);
+      $('currentShadeBadge').textContent = 'NATURAL';
+      renderSwatches();
+      showToast("NATURAL HAIR RESTORED");
+    }
+
+    function rgbToHsl(r, g, b) {
+      r /= 255; g /= 255; b /= 255;
+      const max = Math.max(r, g, b), min = Math.min(r, g, b);
+      let h, s, l = (max + min) / 2;
+      if (max === min) { h = s = 0; }
+      else {
+        const d = max - min;
+        s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+        switch (max) {
+          case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+          case g: h = (b - r) / d + 2; break;
+          default: h = (r - g) / d + 4; break;
+        }
+        h /= 6;
+      }
+      return [h, s, l];
+    }
+
+    function hslToRgb(h, s, l) {
+      if (s === 0) { const v = Math.round(l * 255); return [v, v, v]; }
+      const hue2rgb = (p, q, t) => {
+        if (t < 0) t += 1;
+        if (t > 1) t -= 1;
+        if (t < 1 / 6) return p + (q - p) * 6 * t;
+        if (t < 1 / 2) return q;
+        if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
+        return p;
+      };
+      const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+      const p = 2 * l - q;
+      return [
+        Math.round(hue2rgb(p, q, h + 1 / 3) * 255),
+        Math.round(hue2rgb(p, q, h) * 255),
+        Math.round(hue2rgb(p, q, h - 1 / 3) * 255)
+      ];
+    }
+
+    function scheduleRender() {
+      if (renderScheduled) return;
+      renderScheduled = true;
+      requestAnimationFrame(() => { applyHairColor(); renderScheduled = false; });
+    }
+
+    function applyHairColor() {
+      if (!originalImageData) return;
+      if (!currentColorApplied || !hairConfidenceMask || hairConfidenceMask.length !== (canvasW * canvasH)) {
+        hairCtx.putImageData(originalImageData, 0, 0);
+        return;
+      }
+
+      const working = hairCtx.createImageData(canvasW, canvasH);
+      const src = originalImageData.data;
+      const dst = working.data;
+      const targetHNorm = targetH / 360;
+      const targetSNorm = targetS / 100;
+      const len = canvasW * canvasH;
+
+      for (let i = 0; i < len; i++) {
+        const idx = i * 4;
+        const confidence = hairConfidenceMask[i];
+        const origR = src[idx], origG = src[idx + 1], origB = src[idx + 2], origA = src[idx + 3];
+
+        if (confidence > 0.05) {
+          const origL = rgbToHsl(origR, origG, origB)[2];
+          const adjustedL = Math.max(0, Math.min(1, origL + currentLift * (1 - origL * 0.4)));
+          const [newR, newG, newB] = hslToRgb(targetHNorm, targetSNorm, adjustedL);
+          const factor = confidence * 0.85;
+
+          dst[idx]     = Math.round(origR * (1 - factor) + newR * factor);
+          dst[idx + 1] = Math.round(origG * (1 - factor) + newG * factor);
+          dst[idx + 2] = Math.round(origB * (1 - factor) + newB * factor);
+          dst[idx + 3] = origA;
+        } else {
+          dst[idx] = origR; dst[idx + 1] = origG; dst[idx + 2] = origB; dst[idx + 3] = origA;
         }
       }
+      hairCtx.putImageData(working, 0, 0);
+    }
 
-      async function loadGallery() {
-        const grid = document.getElementById('galleryGrid');
-        grid.innerHTML = Array(6).fill(`<div class="card" style="background: #e0e0e0; animation: pulse 1.5s infinite;"></div>`).join('');
-        
-        const { data: docs, error } = await supabaseClient.from('gallery').select('*').order('created_at', { ascending: false });
-        if (!error && docs) {
-          grid.innerHTML = '';
-          if(docs.length === 0) {
-            grid.innerHTML = `<div style="grid-column: span 2; text-align: center; padding: 20px; color: var(--black);">Gallery is empty.</div>`;
+    $('retakeBtn').addEventListener('click', async () => {
+      const active = await verifyUserTrialStatus(currentUserPhone);
+      if (!active) return;
+      activateScreen(screens.camera);
+      startCamera();
+    });
+
+    function renderSwatches() {
+      const grid = $('swatchGrid');
+      grid.innerHTML = '';
+      const filtered = SHADE_CATALOG.filter(s => selectedFamily === 'all' || s.family === selectedFamily);
+
+      const origTile = document.createElement('div');
+      origTile.className = 'swatch-tile' + (!currentColorApplied ? ' active' : '');
+      origTile.innerHTML = `
+        <div class="swatch-tile-circle" style="background:#E2E2DC; display:flex; align-items:center; justify-content:center;">
+          <i class="bi bi-slash-circle-fill" style="font-size:1.35rem; color:var(--black);"></i>
+        </div>
+        <div class="swatch-tile-name">ORIGINAL</div>
+      `;
+      origTile.addEventListener('click', resetToOriginalHair);
+      grid.appendChild(origTile);
+
+      filtered.forEach(shade => {
+        const tile = document.createElement('div');
+        tile.className = 'swatch-tile' + (currentColorApplied && shade.name === currentShadeName ? ' active' : '');
+        tile.innerHTML = `
+          <div class="swatch-tile-circle" style="background:hsl(${shade.h}, ${shade.s}%, ${shade.l}%);"></div>
+          <div class="swatch-tile-name">${shade.name}</div>
+        `;
+        tile.addEventListener('click', () => applySwatch(shade));
+        grid.appendChild(tile);
+      });
+    }
+
+    function applySwatch(shade) {
+      currentColorApplied = true;
+      targetH = shade.h; targetS = shade.s;
+      currentLift = Math.max(-0.40, Math.min(0.60, (shade.l - 40) / 100));
+      currentShadeName = shade.name;
+
+      $('hueSlider').value = targetH;
+      $('satSlider').value = targetS;
+      $('liftSlider').value = currentLift;
+
+      $('hueVal').textContent = `${targetH}°`;
+      $('satVal').textContent = `${targetS}%`;
+      const v = Math.round(currentLift * 100);
+      $('liftVal').textContent = Math.abs(v) < 2 ? '0%' : (v > 0 ? `+${v}%` : `${v}%`);
+      $('currentShadeBadge').textContent = currentShadeName.toUpperCase();
+
+      renderSwatches();
+      scheduleRender();
+    }
+
+    function setSlidersLocked(locked) {
+      slidersUnlocked = !locked;
+      $('sliderStack').classList.toggle('sliders-locked', locked);
+      $('sliderLockBtn').innerHTML = locked
+        ? '<i class="bi bi-lock-fill"></i> FINE TUNE'
+        : '<i class="bi bi-unlock-fill"></i> LOCK';
+      showToast(locked ? 'SLIDERS LOCKED 🔒' : 'SLIDERS UNLOCKED 🎚️');
+    }
+
+    $('sliderLockBtn').addEventListener('click', () => setSlidersLocked(slidersUnlocked));
+    $('sliderLockOverlay').addEventListener('click', () => setSlidersLocked(false));
+
+    $('hueSlider').addEventListener('input', e => {
+      if (!slidersUnlocked) return;
+      currentColorApplied = true;
+      targetH = parseInt(e.target.value, 10);
+      currentShadeName = 'Custom';
+      $('hueVal').textContent = `${targetH}°`;
+      $('currentShadeBadge').textContent = 'CUSTOM';
+      document.querySelectorAll('.swatch-tile').forEach(t => t.classList.remove('active'));
+      scheduleRender();
+    });
+
+    $('satSlider').addEventListener('input', e => {
+      if (!slidersUnlocked) return;
+      currentColorApplied = true;
+      targetS = parseInt(e.target.value, 10);
+      currentShadeName = 'Custom';
+      $('satVal').textContent = `${targetS}%`;
+      $('currentShadeBadge').textContent = 'CUSTOM';
+      document.querySelectorAll('.swatch-tile').forEach(t => t.classList.remove('active'));
+      scheduleRender();
+    });
+
+    $('liftSlider').addEventListener('input', e => {
+      if (!slidersUnlocked) return;
+      currentColorApplied = true;
+      currentLift = parseFloat(e.target.value);
+      const v = Math.round(currentLift * 100);
+      $('liftVal').textContent = Math.abs(v) < 2 ? '0%' : (v > 0 ? `+${v}%` : `${v}%`);
+      scheduleRender();
+    });
+
+    $('familyFilterRow').addEventListener('click', e => {
+      const chip = e.target.closest('.filter-chip');
+      if (!chip) return;
+      document.querySelectorAll('#familyFilterRow .filter-chip').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+      selectedFamily = chip.dataset.family;
+      renderSwatches();
+    });
+
+    $('tabModeColor').addEventListener('click', () => {
+      activeStudioMode = 'color';
+      $('tabModeColor').classList.add('active');
+      $('tabModeStyle').classList.remove('active', 'pink-mode');
+      $('panelColor').classList.remove('hidden');
+      $('panelStyle').classList.add('hidden');
+      stylePreviewImg.classList.add('hidden');
+      hairCanvas.classList.remove('hidden');
+    });
+
+    $('tabModeStyle').addEventListener('click', () => {
+      activeStudioMode = 'style';
+      $('tabModeStyle').classList.add('active', 'pink-mode');
+      $('tabModeColor').classList.remove('active');
+      $('panelStyle').classList.remove('hidden');
+      $('panelColor').classList.add('hidden');
+    });
+
+    async function loadHairstylesCatalog() {
+      if (sb) {
+        try {
+          const { data } = await sb.from('hairstyles').select('*').order('created_at', { ascending: true });
+          if (data && data.length) {
+            liveHairstyles = data.map(h => ({
+              id: h.id,
+              category: h.category || 'Modern Cuts',
+              name: h.name,
+              desc_prompt: h.desc_prompt || h.name
+            }));
+          }
+        } catch (_) {}
+      }
+      renderHairstyleCategories();
+      renderHairstyleGrid();
+    }
+
+    function renderHairstyleCategories() {
+      const row = $('catFilterRow');
+      row.innerHTML = '';
+      const categories = [...new Set(liveHairstyles.map(h => h.category))];
+      if (!categories.includes(selectedHairstyleCat)) selectedHairstyleCat = categories[0] || 'Bob & Short';
+
+      categories.forEach(cat => {
+        const chip = document.createElement('button');
+        chip.className = 'filter-chip' + (cat === selectedHairstyleCat ? ' active' : '');
+        chip.textContent = cat;
+        chip.addEventListener('click', () => {
+          selectedHairstyleCat = cat;
+          renderHairstyleCategories();
+          renderHairstyleGrid();
+        });
+        row.appendChild(chip);
+      });
+    }
+
+    function renderHairstyleGrid() {
+      const grid = $('hairstylesGrid');
+      grid.innerHTML = '';
+      const filtered = liveHairstyles.filter(h => h.category === selectedHairstyleCat);
+
+      filtered.forEach(style => {
+        const btn = document.createElement('button');
+        btn.className = 'style-chip' + (style.id === selectedHairstyle?.id ? ' selected' : '');
+        btn.innerHTML = `<i class="bi bi-scissors"></i> <span>${esc(style.name)}</span>`;
+        btn.addEventListener('click', () => {
+          selectedHairstyle = style;
+          renderHairstyleGrid();
+        });
+        grid.appendChild(btn);
+      });
+    }
+
+    $('refCard').addEventListener('click', e => {
+      if (e.target.closest('#clearRefBtn')) return;
+      $('refFileInput').click();
+    });
+
+    $('refFileInput').addEventListener('change', async (e) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      try {
+        refBlob = await compressToWebP(file, { maxDim: 800, quality: 0.8 });
+      } catch (_) {
+        refBlob = file;
+      }
+      const url = BlobRegistry.create(refBlob);
+      $('refImg').src = url;
+      $('refImg').classList.remove('hidden');
+      $('refIcon').classList.add('hidden');
+      $('clearRefBtn').classList.remove('hidden');
+      $('refSubtext').textContent = 'Reference cut attached';
+    });
+
+    $('clearRefBtn').addEventListener('click', e => {
+      e.stopPropagation();
+      refBlob = null;
+      $('refImg').src = '';
+      $('refImg').classList.add('hidden');
+      $('refIcon').classList.remove('hidden');
+      $('clearRefBtn').classList.add('hidden');
+      $('refSubtext').textContent = 'Tap to upload fringe/length reference';
+    });
+
+    $('executeStyleBtn').addEventListener('click', async () => {
+      const active = await verifyUserTrialStatus(currentUserPhone);
+      if (!active) return;
+
+      if (!sb) {
+        showToast('KAMI CLOUD OFFLINE');
+        return;
+      }
+
+      showLoading("CHECKING QUOTA...", false);
+
+      try {
+        const { data: quotaRes, error: rpcErr } = await sb.rpc('consume_hairstyle_credit', {
+          p_phone: currentUserPhone
+        });
+
+        if (rpcErr || !quotaRes || !quotaRes.allowed) {
+          hideLoading();
+          const reason = quotaRes?.reason || rpcErr?.message || 'Quota exceeded';
+          if (reason === 'trial_expired') {
+            $('trialLockOverlay').classList.add('active');
             return;
           }
-          docs.forEach(doc => {
-            const genUrl = supabaseClient.storage.from('photos').getPublicUrl(doc.generated_image_path).data.publicUrl;
-            const origUrl = supabaseClient.storage.from('photos').getPublicUrl(doc.original_image_path).data.publicUrl;
-            
-            const div = document.createElement('div');
-            div.className = "card";
-            div.innerHTML = `<img src="${genUrl}" loading="lazy" alt="Gallery Try-On" />`;
-            
-            div.onclick = () => {
-              isViewingGalleryItem = true;
-              currentActiveDocId = doc.id; currentActiveOrigPath = doc.original_image_path; currentActiveGenPath = doc.generated_image_path;
-              document.getElementById('closeComparisonBtn').textContent = "BACK";
-              setupComparison(origUrl, genUrl);
-            };
-            grid.appendChild(div);
+          showBrutalModal({
+            badge: "QUOTA",
+            badgeBg: "var(--red)",
+            badgeColor: "var(--white)",
+            title: "ALLOWANCE EXHAUSTED",
+            message: `You have consumed all ${userHairstyleLimit} hairstyle previews. Contact the salon supervisor for a top-up.`,
+            confirmText: "OK"
           });
+          return;
+        }
+
+        usedHairstyleCount = quotaRes.used;
+        userHairstyleLimit = quotaRes.limit;
+        updateQuotaDisplay();
+      } catch (err) {
+        hideLoading();
+        showToast('VERIFICATION REJECTED');
+        return;
+      }
+
+      // SOURCE IMAGE FOR AI IS UNTOUCHED ORIGINAL PHOTO
+      const sourceCanvas = document.createElement('canvas');
+      sourceCanvas.width = canvasW;
+      sourceCanvas.height = canvasH;
+      const sCtx = sourceCanvas.getContext('2d');
+      sCtx.putImageData(originalImageData, 0, 0);
+
+      const sourceToUpload = await compressToWebP(sourceCanvas, { maxDim: 800, quality: 0.75 });
+      showLoading("STYLING WITH KAMI AI...", true);
+
+      try {
+        const safePhone = String(currentUserPhone).replace(/\D/g, '').slice(-10);
+        const timeKey = Date.now();
+        const sourcePath = `${safePhone}/${timeKey}_source.webp`;
+
+        const upSource = await sb.storage.from(STORAGE_BUCKET).upload(sourcePath, sourceToUpload, {
+          contentType: 'image/webp',
+          upsert: true
+        });
+        if (upSource.error) {
+          console.error('[STORAGE ERROR]', upSource.error);
+          throw new Error('Storage upload failed: ' + upSource.error.message);
+        }
+        const sourcePublicUrl = publicUrlFor(sourcePath);
+
+        const imageUrls = [sourcePublicUrl];
+        if (refBlob) {
+          const refPath = `${safePhone}/${timeKey}_ref.webp`;
+          const upRef = await sb.storage.from(STORAGE_BUCKET).upload(refPath, refBlob, {
+            contentType: 'image/webp',
+            upsert: true
+          });
+          if (!upRef.error) imageUrls.push(publicUrlFor(refPath));
+        }
+
+        const promptDesc = selectedHairstyle.desc_prompt || selectedHairstyle.name;
+        const finalPrompt = `Professional hair consultation: transform hair to ${promptDesc}. Keep face and skin tones exactly identical.`;
+
+        const res = await fetch('/api/tryon', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ prompt: finalPrompt, image_urls: imageUrls })
+        });
+
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || !data.output) throw new Error(data.error || 'AI generation failed');
+
+        const renderedPublicUrl = data.output;
+        const { error: insErr } = await sb.from('generations').insert({
+          user_phone: currentUserPhone,
+          image_url: renderedPublicUrl,
+          source_image_url: sourcePublicUrl,
+          style_name: selectedHairstyle.name,
+          category: selectedHairstyle.category
+        });
+
+        if (insErr) {
+          console.error('[DB INSERT ERROR]', insErr);
+          showToast('DB ERROR: ' + insErr.message);
+        }
+
+        await saveLocalLook({
+          id: `look_${timeKey}`,
+          user_phone: currentUserPhone,
+          image_url: renderedPublicUrl,
+          source_image_url: sourcePublicUrl,
+          style_name: selectedHairstyle.name,
+          category: selectedHairstyle.category,
+          created_at: new Date().toISOString()
+        });
+
+        openCompareWithImages(sourcePublicUrl, renderedPublicUrl, selectedHairstyle.name, false);
+      } catch (err) {
+        showToast(err.message || 'GENERATION ERROR');
+      } finally {
+        hideLoading();
+      }
+    });
+
+    async function openCompareWithImages(sourceSrc, renderedSrc, title, fromVault = false) {
+      openedFromVault = !!fromVault;
+      $('imgSource').src = sanitizeUrl(sourceSrc);
+      $('imgRendered').src = sanitizeUrl(renderedSrc);
+      $('badgeAfter').textContent = (title || 'NEW LOOK').toUpperCase();
+      activateScreen(screens.compare);
+      setCompareMode('slide');
+      setSlider(50);
+    }
+
+    function setSlider(pct) {
+      const clamped = Math.max(0, Math.min(100, pct));
+      $('imgRendered').style.clipPath = `polygon(${clamped}% 0, 100% 0, 100% 100%, ${clamped}% 100%)`;
+      $('sliderDivider').style.left = `${clamped}%`;
+      $('sliderDivider').setAttribute('aria-valuenow', Math.round(clamped));
+    }
+
+    const compareStage = $('compareStage');
+    compareStage.addEventListener('pointerdown', e => {
+      if (currentCompareMode !== 'slide') return;
+      isDividerDragging = true;
+      try { compareStage.setPointerCapture(e.pointerId); } catch (_) {}
+      moveDivider(e.clientX);
+    });
+    compareStage.addEventListener('pointermove', e => {
+      if (isDividerDragging) moveDivider(e.clientX);
+    });
+    const endDividerDrag = e => {
+      if (isDividerDragging) {
+        isDividerDragging = false;
+        try { compareStage.releasePointerCapture(e.pointerId); } catch (_) {}
+      }
+    };
+    compareStage.addEventListener('pointerup', endDividerDrag);
+    compareStage.addEventListener('pointercancel', endDividerDrag);
+
+    function moveDivider(clientX) {
+      const rect = $('compareStage').getBoundingClientRect();
+      if (!rect.width) return;
+      const x = Math.max(0, Math.min(clientX - rect.left, rect.width));
+      setSlider((x / rect.width) * 100);
+    }
+
+    $('sliderDivider').addEventListener('keydown', e => {
+      if (currentCompareMode !== 'slide') return;
+      const current = parseFloat($('sliderDivider').getAttribute('aria-valuenow')) || 50;
+      const step = e.shiftKey ? 10 : 2;
+      if (e.key === 'ArrowLeft') {
+        setSlider(current - step);
+        e.preventDefault();
+      } else if (e.key === 'ArrowRight') {
+        setSlider(current + step);
+        e.preventDefault();
+      }
+    });
+
+    function setCompareMode(mode) {
+      currentCompareMode = mode;
+      $('modeSlide').classList.toggle('active', mode === 'slide');
+      $('modeBefore').classList.toggle('active', mode === 'before');
+      $('modeAfter').classList.toggle('active', mode === 'after');
+
+      if (mode === 'slide') {
+        $('sliderDivider').style.display = 'flex';
+        $('badgeBefore').style.display = 'block';
+        $('badgeAfter').style.display = 'block';
+        setSlider(50);
+      } else if (mode === 'before') {
+        $('imgRendered').style.clipPath = 'polygon(100% 0, 100% 0, 100% 100%, 100% 100%)';
+        $('sliderDivider').style.display = 'none';
+        $('badgeBefore').style.display = 'block';
+        $('badgeAfter').style.display = 'none';
+      } else {
+        $('imgRendered').style.clipPath = 'polygon(0 0, 100% 0, 100% 100%, 0 100%)';
+        $('sliderDivider').style.display = 'none';
+        $('badgeBefore').style.display = 'none';
+        $('badgeAfter').style.display = 'block';
+      }
+    }
+
+    $('modeSlide').addEventListener('click', () => setCompareMode('slide'));
+    $('modeBefore').addEventListener('click', () => setCompareMode('before'));
+    $('modeAfter').addEventListener('click', () => setCompareMode('after'));
+
+    $('compareBackBtn').addEventListener('click', () => {
+      if (openedFromVault) activateScreen(screens.gallery);
+      else activateScreen(screens.studio);
+    });
+
+    $('viewCompareBtn').addEventListener('click', async () => {
+      const active = await verifyUserTrialStatus(currentUserPhone);
+      if (!active) return;
+
+      if (!currentColorApplied) {
+        showToast("SELECT A COLOUR FIRST");
+        return;
+      }
+      openCompareWithImages(originalDataURL, canvasToDataURL(hairCanvas, WEBP_QUALITY), currentShadeName, false);
+      saveLookToVault(true);
+    });
+
+    // GUARANTEED PERSISTENCE: SOURCE IS PURE ORIGINAL, RENDERED IS COLORED
+    async function saveLookToVault(notify = false) {
+      const active = await verifyUserTrialStatus(currentUserPhone);
+      if (!active) return;
+
+      if (!currentUserPhone || isSavingVault || !currentColorApplied) return;
+      isSavingVault = true;
+
+      try {
+        const timestamp = Date.now();
+        const localKey = `look_${timestamp}`;
+
+        // 1. GENERATE PURE SOURCE FROM UNTOUCHED ORIGINAL PIXEL DATA
+        const sourceCanvas = document.createElement('canvas');
+        sourceCanvas.width = canvasW;
+        sourceCanvas.height = canvasH;
+        const sCtx = sourceCanvas.getContext('2d');
+        sCtx.putImageData(originalImageData, 0, 0);
+
+        const sourceBlob = await compressToWebP(sourceCanvas, { maxDim: 800, quality: 0.75 });
+        const sourceDataURL = originalDataURL || canvasToDataURL(sourceCanvas, 0.75);
+
+        // 2. GENERATE RENDERED FROM COLORED hairCanvas
+        const renderedBlob = await compressToWebP(hairCanvas, { maxDim: 800, quality: 0.75 });
+        const renderedDataURL = canvasToDataURL(hairCanvas, 0.75);
+
+        // 3. Save locally to IndexedDB immediately
+        const localItem = {
+          id: localKey,
+          user_phone: currentUserPhone,
+          image_url: renderedDataURL,
+          source_image_url: sourceDataURL,
+          style_name: currentShadeName,
+          category: 'Hair Colour',
+          created_at: new Date().toISOString()
+        };
+        await saveLocalLook(localItem);
+
+        // 4. Persist to Supabase Storage & Database
+        if (sb) {
+          const safePhone = String(currentUserPhone).replace(/\D/g, '').slice(-10);
+          const sourcePath = `${safePhone}/${timestamp}_source.webp`;
+          const renderedPath = `${safePhone}/${timestamp}_rendered.webp`;
+
+          let sourceUrl = '';
+          let renderedUrl = '';
+
+          try {
+            // Upload pure original to storage
+            const upSrc = await sb.storage.from(STORAGE_BUCKET).upload(sourcePath, sourceBlob, { 
+              contentType: 'image/webp', 
+              upsert: true 
+            });
+            if (upSrc.error) console.error('[STORAGE SOURCE UPLOAD ERROR]', upSrc.error);
+            else sourceUrl = publicUrlFor(sourcePath);
+
+            // Upload colored result to storage
+            const upRend = await sb.storage.from(STORAGE_BUCKET).upload(renderedPath, renderedBlob, { 
+              contentType: 'image/webp', 
+              upsert: true 
+            });
+            if (upRend.error) console.error('[STORAGE RENDER UPLOAD ERROR]', upRend.error);
+            else renderedUrl = publicUrlFor(renderedPath);
+          } catch (stEx) {
+            console.error('[STORAGE EXCEPTION]', stEx);
+          }
+
+          // Fallbacks if storage upload failed
+          if (!sourceUrl) sourceUrl = sourceDataURL;
+          if (!renderedUrl) renderedUrl = renderedDataURL;
+
+          const { data: insertedRows, error: insErr } = await sb.from('generations').insert({
+            user_phone: currentUserPhone,
+            image_url: renderedUrl,
+            source_image_url: sourceUrl,
+            style_name: currentShadeName,
+            category: 'Hair Colour'
+          }).select();
+
+          if (insErr) {
+            console.error('[DB INSERT ERROR on generations table]', insErr);
+            showToast('DB ERROR: ' + (insErr.message || 'Check Supabase permissions'));
+          } else if (insertedRows && insertedRows[0]) {
+            console.log('[SAVED TO CLOUD DB SUCCESSFULLY]', insertedRows[0]);
+            await deleteLocalLook(localKey);
+            await saveLocalLook({
+              ...localItem,
+              id: String(insertedRows[0].id),
+              image_url: renderedUrl,
+              source_image_url: sourceUrl
+            });
+            if (notify) showToast("SAVED TO MY LOOKS & SALON 💾");
+          }
         } else {
-          showToast("Failed to load gallery.", true);
+          if (notify) showToast("SAVED TO MY LOOKS (OFFLINE) 💾");
+        }
+      } catch (err) {
+        console.error('[SAVE LOOK EXCEPTION]', err);
+      } finally {
+        isSavingVault = false;
+      }
+    }
+
+    async function buildCollageBlob() {
+      const beforeSrc = $('imgSource').src;
+      const afterSrc = $('imgRendered').src;
+      const [img1, img2] = await Promise.all([loadDrawable(beforeSrc), loadDrawable(afterSrc)]);
+
+      const targetH = Math.max(img1.naturalHeight || 800, img2.naturalHeight || 800);
+      const ratio1 = (img1.naturalWidth || 800) / (img1.naturalHeight || 800);
+      const colW = Math.round(targetH * ratio1);
+
+      const cvs = document.createElement('canvas');
+      cvs.width = colW * 2;
+      cvs.height = targetH;
+      const c = cvs.getContext('2d');
+      c.drawImage(img1, 0, 0, colW, targetH);
+      c.drawImage(img2, colW, 0, colW, targetH);
+
+      c.lineWidth = 6;
+      c.strokeStyle = '#1A1A1A';
+      c.beginPath();
+      c.moveTo(colW, 0);
+      c.lineTo(colW, targetH);
+      c.stroke();
+
+      return encodeCanvas(cvs, 0.85);
+    }
+
+    $('shareBtn').addEventListener('click', async () => {
+      const active = await verifyUserTrialStatus(currentUserPhone);
+      if (!active) return;
+
+      try {
+        const blob = await buildCollageBlob();
+        const file = new File([blob], `KAMI_${Date.now()}.webp`, { type: 'image/webp' });
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          await navigator.share({ files: [file], title: 'KAMI Hair Studio', text: 'My new look from KAMI! 💇' });
+          return;
+        }
+        downloadBlob(blob, file.name);
+        showToast('SAVED — SHARE ON WHATSAPP');
+      } catch (_) {
+        showToast('COULD NOT SHARE IMAGE');
+      }
+    });
+
+    $('saveLocalBtn').addEventListener('click', async () => {
+      const active = await verifyUserTrialStatus(currentUserPhone);
+      if (!active) return;
+
+      const src = $('imgRendered').src;
+      if (!src) return;
+      try {
+        const blob = await compressToWebP(src, { maxDim: 1200, quality: 0.85 });
+        downloadBlob(blob, `KAMI_${Date.now()}.webp`);
+        showToast("SAVED TO DEVICE 📥");
+        saveLookToVault(false);
+      } catch (_) {
+        showToast("SAVE FAILED");
+      }
+    });
+
+    async function loadUserVault() {
+      const active = await verifyUserTrialStatus(currentUserPhone);
+      if (!active) return;
+
+      activateScreen(screens.gallery);
+
+      let cloudItems = [];
+      if (sb && currentUserPhone) {
+        try {
+          const raw = currentUserPhone.trim();
+          const norm = raw.replace(/\D/g, '').slice(-10);
+
+          const { data } = await sb
+            .from('generations')
+            .select('*')
+            .or(`user_phone.eq.${raw},user_phone.eq.+91${norm},user_phone.eq.${norm}`)
+            .order('created_at', { ascending: false })
+            .limit(LOCAL_VAULT_LIMIT);
+
+          if (data) cloudItems = data;
+        } catch (_) {}
+      }
+
+      const localItems = await getLocalLooks(currentUserPhone);
+
+      const combined = [];
+      const seenIds = new Set();
+      const seenUrls = new Set();
+
+      for (const item of cloudItems) {
+        if (!seenIds.has(String(item.id)) && !seenUrls.has(item.image_url)) {
+          seenIds.add(String(item.id));
+          seenUrls.add(item.image_url);
+          combined.push(item);
         }
       }
 
-      // Initialize Application
-      initCamera();
+      for (const item of localItems) {
+        if (!seenIds.has(String(item.id)) && !seenUrls.has(item.image_url)) {
+          seenIds.add(String(item.id));
+          seenUrls.add(item.image_url);
+          combined.push(item);
+        }
+      }
+
+      combined.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+      const finalItems = combined.slice(0, LOCAL_VAULT_LIMIT);
+
+      $('vaultCountBadge').textContent = `${finalItems.length} / 10`;
+
+      const grid = $('galleryGrid');
+      grid.innerHTML = '';
+
+      if (finalItems.length === 0) {
+        grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:30px; font-weight:800;">NO LOOKS SAVED YET</div>';
+        return;
+      }
+
+      finalItems.forEach(item => {
+        const card = document.createElement('div');
+        card.className = 'gallery-card';
+        card.innerHTML = `
+          <img src="${sanitizeUrl(item.image_url)}" loading="lazy" alt="${esc(item.style_name || 'Look')}" />
+          <div class="gallery-card-body">
+            <div class="gallery-card-name">${esc(item.style_name || 'Hair Style')}</div>
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <span style="font-size:0.65rem; color:#666; font-weight:700;">${new Date(item.created_at).toLocaleDateString()}</span>
+              <button class="btn-icon vault-del" aria-label="Delete look" style="width:28px; height:28px; font-size:0.7rem; color:var(--red);"><i class="bi bi-trash"></i></button>
+            </div>
+          </div>
+        `;
+
+        card.addEventListener('click', () => {
+          openCompareWithImages(item.source_image_url || item.image_url, item.image_url, item.style_name || 'Look', true);
+        });
+
+        card.querySelector('.vault-del').addEventListener('click', async (e) => {
+          e.stopPropagation();
+          await deleteLocalLook(item.id);
+          if (sb && currentUserPhone && !String(item.id).startsWith('look_')) {
+            try { await sb.from('generations').delete().eq('id', item.id); } catch (_) {}
+          }
+          showToast('DELETED FROM VAULT');
+          loadUserVault();
+        });
+
+        grid.appendChild(card);
+      });
+    }
+
+    $('openGalleryBtn').addEventListener('click', loadUserVault);
+    $('closeGalleryBtn').addEventListener('click', async () => {
+      const active = await verifyUserTrialStatus(currentUserPhone);
+      if (!active) return;
+      activateScreen(screens.camera);
+      if (!cameraStream) startCamera();
+    });
+
+    window.addEventListener('DOMContentLoaded', () => {
+      loadHairstylesCatalog();
+      checkAuthSession();
     });
   </script>
 </body>
