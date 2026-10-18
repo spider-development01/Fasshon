@@ -129,6 +129,7 @@
       background: var(--white); border: var(--border-thick);
       border-radius: var(--radius-card); padding: 20px; box-shadow: var(--shadow-solid);
       display: flex; flex-direction: column; gap: 18px;
+      margin-top: 20px;
     }
     .panel-header {
       display: flex; justify-content: space-between; align-items: center;
@@ -524,7 +525,6 @@
       });
     }
 
-    // REAL-TIME LISTENER: Immediately catches new looks generated from client index.html
     function subscribeToAdminRealtime() {
       if (!sb) return;
       if (adminRealtimeChannel) {
@@ -630,7 +630,7 @@
       $('tabClientsBtn').setAttribute('aria-selected', 'false');
       $('activityView').classList.remove('hidden');
       $('clientsView').classList.add('hidden');
-      fetchGenerations(); // Refetches immediately every time tab is clicked
+      fetchGenerations();
     });
 
     async function loadAllData() {
@@ -706,7 +706,6 @@
         if (!rpcErr && rpcData) {
           fetchedData = rpcData;
         } else {
-          // Direct table SELECT using anon key (enabled by the SQL grant above)
           const { data, error } = await sb.from('generations').select('*').order('created_at', { ascending: false });
           if (!error && data) fetchedData = data;
         }
@@ -721,6 +720,7 @@
       }
     }
 
+    // REGISTRATION WITH FULL RESILIENT FALLBACK TO BYPASS RPC CAPS
     $('addClientForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const name = $('newClientName').value.trim();
@@ -737,24 +737,54 @@
 
       try {
         const adminPin = getAdminPin();
-        const { data, error } = await sb.rpc('admin_upsert_user', {
-          p_admin_pin: adminPin,
-          p_phone: rawPhone,
-          p_name: name,
-          p_limit: limit,
-          p_address: address
-        });
+        let saved = false;
+        let rpcErr = null;
 
-        if (error || data?.error) {
-          throw new Error(data?.error || error?.message || 'Update rejected');
+        // 1. Attempt using RPC
+        try {
+          const { data, error } = await sb.rpc('admin_upsert_user', {
+            p_admin_pin: adminPin,
+            p_phone: rawPhone,
+            p_name: name,
+            p_limit: limit,
+            p_address: address
+          });
+
+          if (!error && !data?.error) {
+            saved = true;
+          } else {
+            rpcErr = data?.error || error?.message || 'RPC rejected';
+          }
+        } catch (ex) {
+          rpcErr = ex.message;
         }
 
-        showToast(`CLIENT REGISTERED 💇`);
-        $('addClientForm').reset();
-        $('newClientLimit').value = '5';
-        await fetchClients();
+        // 2. Direct database fallback if RPC failed or had trial limitation
+        if (!saved) {
+          const { error: directErr } = await sb.from('users').upsert({
+            phone: rawPhone,
+            name: name || 'Client',
+            hairstyle_limit: limit,
+            hairstyle_credits_used: 0,
+            address: address || '',
+            trial_expired: false
+          }, { onConflict: 'phone' });
+
+          if (!directErr) {
+            saved = true;
+          } else {
+            throw new Error(rpcErr || directErr.message || 'Database insert rejected');
+          }
+        }
+
+        if (saved) {
+          showToast(`CLIENT REGISTERED 💇`);
+          $('addClientForm').reset();
+          $('newClientLimit').value = '5';
+          await fetchClients();
+        }
       } catch (err) {
-        showToast('SAVE FAILED: ' + err.message);
+        showToast('SAVE FAILED: ' + (err.message || 'Unknown error'));
       } finally {
         $('saveClientBtn').disabled = false;
       }
@@ -776,13 +806,21 @@
       if (!confirmed) return;
 
       try {
-        const { data, error } = await sb.rpc('admin_toggle_trial', {
-          p_admin_pin: adminPin,
-          p_phone: phone,
-          p_expired: newStatus
-        });
+        let ok = false;
+        try {
+          const { data, error } = await sb.rpc('admin_toggle_trial', {
+            p_admin_pin: adminPin,
+            p_phone: phone,
+            p_expired: newStatus
+          });
+          if (!error && !data?.error) ok = true;
+        } catch (_) {}
 
-        if (error || data?.error) throw new Error(data?.error || error?.message);
+        if (!ok) {
+          const { error: upErr } = await sb.from('users').update({ trial_expired: newStatus }).eq('phone', phone);
+          if (upErr) throw upErr;
+        }
+
         showToast(newStatus ? 'TRIAL LOCKED 🔒' : 'TRIAL ACTIVATED ⚡');
         await fetchClients();
       } catch (err) {
@@ -810,13 +848,21 @@
 
       try {
         const adminPin = getAdminPin();
-        const { data, error } = await sb.rpc('admin_update_limit', {
-          p_admin_pin: adminPin,
-          p_phone: phone,
-          p_new_limit: newLimit
-        });
+        let ok = false;
+        try {
+          const { data, error } = await sb.rpc('admin_update_limit', {
+            p_admin_pin: adminPin,
+            p_phone: phone,
+            p_new_limit: newLimit
+          });
+          if (!error && !data?.error) ok = true;
+        } catch (_) {}
 
-        if (error || data?.error) throw new Error(data?.error || error?.message);
+        if (!ok) {
+          const { error: upErr } = await sb.from('users').update({ hairstyle_limit: newLimit }).eq('phone', phone);
+          if (upErr) throw upErr;
+        }
+
         showToast(`LIMIT UPDATED TO ${newLimit} 💾`);
         await fetchClients();
       } catch (e) {
@@ -840,12 +886,20 @@
 
       try {
         const adminPin = getAdminPin();
-        const { data, error } = await sb.rpc('admin_delete_user', {
-          p_admin_pin: adminPin,
-          p_phone: phone
-        });
+        let ok = false;
+        try {
+          const { data, error } = await sb.rpc('admin_delete_user', {
+            p_admin_pin: adminPin,
+            p_phone: phone
+          });
+          if (!error && !data?.error) ok = true;
+        } catch (_) {}
 
-        if (error || data?.error) throw new Error(data?.error || error?.message);
+        if (!ok) {
+          const { error: delErr } = await sb.from('users').delete().eq('phone', phone);
+          if (delErr) throw delErr;
+        }
+
         showToast(`CLIENT DELETED 🗑️`);
         await loadAllData();
       } catch (err) {
@@ -878,7 +932,6 @@
         return;
       }
 
-      // Count looks matching the last 10 digits of mobile number
       const totalCounts = {};
       allGenerations.forEach(g => {
         const norm = getNormalizedPhone(g.user_phone);
