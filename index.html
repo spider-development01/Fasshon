@@ -951,7 +951,7 @@
     .compare-fab-share i { color: #25D366; font-size: 1.1rem; }
 
     /* =========================================================================
-       VIEW 4: MY LOOKS VAULT — FULL EDGE-TO-EDGE PHOTO + CLEAN FOOTER
+       VIEW 4: MY LOOKS VAULT — FULL PHOTO + FULL VISIBLE DATE + EXPORT & DELETE
        ========================================================================= */
     .gallery-grid {
       flex: 1;
@@ -1035,10 +1035,17 @@
       display: flex;
       flex-direction: column;
       justify-content: space-between;
-      gap: 8px;
+      gap: 9px;
       background: #FFFFFF;
       flex: 1;
       min-width: 0;
+    }
+    .gallery-card-info {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      min-width: 0;
+      width: 100%;
     }
     .gallery-card-name {
       font-size: 0.88rem;
@@ -1048,58 +1055,64 @@
       text-overflow: ellipsis;
       white-space: nowrap;
       line-height: 1.25;
+      width: 100%;
+    }
+    .gallery-card-date {
+      font-size: 0.71rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      white-space: nowrap;
+      width: 100%;
     }
     .gallery-card-footer {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      gap: 6px;
-      padding-top: 6px;
+      gap: 8px;
+      padding-top: 8px;
       border-top: 1px solid var(--surface-subtle);
-      min-width: 0;
+      width: 100%;
     }
-    .gallery-card-date {
-      font-size: 0.70rem;
-      font-weight: 700;
-      color: var(--text-muted);
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    .vault-actions-group {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      flex-shrink: 0;
-    }
-    .vault-dl-btn, .vault-del-btn {
-      width: 32px;
-      height: 32px;
-      border-radius: 50%;
+    .vault-dl-btn {
+      flex: 1;
+      height: 34px;
+      padding: 0 10px;
+      border-radius: var(--radius-full);
+      background: var(--surface-subtle);
+      color: var(--text-main);
+      border: 1px solid rgba(20, 20, 20, 0.08);
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      font-size: 0.84rem;
+      gap: 5px;
+      font-size: 0.71rem;
+      font-weight: 800;
+      letter-spacing: 0.3px;
       cursor: pointer;
-      flex-shrink: 0;
+      white-space: nowrap;
       transition: transform 0.12s ease, background-color 0.12s ease;
     }
-    .vault-dl-btn {
-      background: var(--surface-subtle);
-      color: var(--text-main);
-      border: 1px solid rgba(20, 20, 20, 0.06);
-    }
     .vault-dl-btn:active {
-      transform: scale(0.90);
+      transform: scale(0.95);
       background: #E2E2DC;
     }
     .vault-del-btn {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
       background: #FFF5F5;
       border: 1px solid #FED7D7;
       color: #E53E3E;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.86rem;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: transform 0.12s ease, background-color 0.12s ease;
     }
     .vault-del-btn:active {
       transform: scale(0.90);
@@ -1462,7 +1475,7 @@
       <button id="compareBackBtn" class="btn-pill"><i class="bi bi-arrow-left"></i> BACK</button>
       <div class="badge" id="compareBadge" style="background:var(--primary-light); color:var(--primary);">BEFORE / AFTER</div>
       <button id="saveLocalBtn" class="btn-pill" style="background:var(--surface-subtle); font-weight:800;">
-        <i class="bi bi-download"></i> DOWNLOAD
+        <i class="bi bi-download"></i> EXPORT
       </button>
     </div>
 
@@ -1664,7 +1677,6 @@
 
     /* =========================================================================
        CALIBRATED CIE 1976 L*a*b* (D65) SALON SHADE REPERTOIRE
-       L* in [0..100], a* in [-100..100], b* in [-100..100]
        ========================================================================= */
     const SHADE_CATALOG = [
       { name: "Jet Black",       family: "browns",  L: 14, a: 0.5,   b: -1.0  },
@@ -1841,7 +1853,7 @@
       return encodeCanvas(c, quality);
     }
 
-    /* SAFE CROSS-PLATFORM EXPORT HANDLER */
+    /* SAFE CROSS-PLATFORM EXPORT HANDLER (iOS, iPadOS, macOS Safari, Android, Desktop) */
     async function universalSaveImage(blob, filename = `KAMI_${Date.now()}.${ENCODE_EXT}`) {
       const file = new File([blob], filename, { type: blob.type || ENCODE_TYPE });
       
@@ -1852,7 +1864,7 @@
             title: 'KAMI Hair Studio',
             text: 'Save your transformed hair look.'
           });
-          showToast("SAVED TO PHOTOS");
+          showToast("EXPORTED SUCCESSFULLY");
           return;
         } catch (err) {
           if (err.name === 'AbortError') return;
@@ -1869,10 +1881,10 @@
         a.click();
         a.remove();
         setTimeout(() => BlobRegistry.revoke(url), 3500);
-        showToast("SAVED TO DEVICE");
+        showToast("EXPORTED TO DEVICE");
       } else {
         showBrutalModal({
-          badge: "SAVE IMAGE",
+          badge: "EXPORT IMAGE",
           title: "SAVE TO PHOTOS",
           message: "Touch and hold the preview below, then choose 'Save to Photos'.",
           extraHtml: `<div style="margin: 10px 0;"><img src="${BlobRegistry.create(blob)}" style="max-width: 100%; max-height: 240px; border-radius: 14px; box-shadow: 0 4px 14px rgba(0,0,0,0.15);" alt="Save preview" /></div>`,
@@ -2130,7 +2142,6 @@
       const raw = phone.trim();
       const norm = raw.replace(/\D/g, '').slice(-10);
 
-      // 1. Delete all user looks from local IndexedDB
       try {
         const db = await openVaultDB();
         await new Promise(resolve => {
@@ -2147,8 +2158,6 @@
         });
       } catch (_) {}
 
-      // 2. Delete all rows for this user from Supabase `generations` table
-      //    and remove all files in their `kami-images` storage folder
       if (sb) {
         try {
           await sb
@@ -2477,15 +2486,23 @@
 
     const cameraFeed = $('cameraFeed');
 
+    /* UNIVERSAL CAMERA INITIALIZER (iOS Safari, iPadOS, macOS, Android Chrome & Firefox) */
     async function startCamera() {
       if (cameraStream) { cameraStream.getTracks().forEach(t => t.stop()); cameraStream = null; }
       if (!navigator.mediaDevices?.getUserMedia) return;
 
       try {
-        cameraStream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: cameraFacing, width: { ideal: 1920 }, height: { ideal: 1080 } },
-          audio: false
-        });
+        try {
+          cameraStream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: cameraFacing, width: { ideal: 1920 }, height: { ideal: 1080 } },
+            audio: false
+          });
+        } catch (_) {
+          cameraStream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: cameraFacing },
+            audio: false
+          });
+        }
         cameraFeed.srcObject = cameraStream;
         cameraFeed.classList.toggle('mirrored', cameraFacing === 'user');
         await cameraFeed.play();
@@ -3123,7 +3140,6 @@
         return;
       }
 
-      // Check 10/10 Vault Limit first -> warn & auto-delete if full
       const canProceed = await ensureVaultSpaceBeforeSave(currentUserPhone);
       if (!canProceed) return;
 
@@ -3294,7 +3310,7 @@
       try {
         const blob = await buildCollageBlob();
         cachedCollageBlob = blob;
-        cachedCollageFile = new File([blob], `KAMI_${Date.now()}.${ENCODE_EXT}`, { type: blob.type || ENCODE_TYPE });
+        cachedCollageFile = new File( [blob], `KAMI_${Date.now()}.${ENCODE_EXT}`, { type: blob.type || ENCODE_TYPE });
       } catch (_) {}
     }
 
@@ -3402,7 +3418,6 @@
           return;
         }
 
-        // Check if vault is at 10/10 -> warn user & auto-delete all previous images
         const canProceed = await ensureVaultSpaceBeforeSave(currentUserPhone);
         if (!canProceed) return;
 
@@ -3500,7 +3515,7 @@
       }
     });
 
-    /* DIRECT DOWNLOAD BUTTON IN COMPARE NAV */
+    /* DIRECT EXPORT BUTTON IN COMPARE NAV */
     $('saveLocalBtn').addEventListener('click', async () => {
       showLoading("EXPORTING IMAGE...");
       try {
@@ -3528,12 +3543,12 @@
         }
       } catch (err) {
         hideLoading();
-        showToast("DOWNLOAD FAILED: " + (err.message || 'Error'));
+        showToast("EXPORT FAILED: " + (err.message || 'Error'));
       }
     });
 
     /* =========================================================================
-       VAULT GALLERY (MY LOOKS) — CLEAN CARDS + 10/10 WARNING & AUTO-DELETE
+       VAULT GALLERY (MY LOOKS) — FULL VISIBLE DATE + EXPORT BUTTON + 10/10 PURGE
        ========================================================================= */
     async function loadUserVault() {
       const active = await verifyUserTrialStatus(currentUserPhone);
@@ -3572,19 +3587,19 @@
             <span class="gallery-card-type-pill">${esc(lookCategory)}</span>
           </div>
           <div class="gallery-card-body">
-            <div class="gallery-card-name" title="${esc(lookTitle)}">${esc(lookTitle)}</div>
-            <div class="gallery-card-footer">
+            <div class="gallery-card-info">
+              <div class="gallery-card-name" title="${esc(lookTitle)}">${esc(lookTitle)}</div>
               <div class="gallery-card-date">
                 <i class="bi bi-calendar3"></i> <span>${esc(formattedDate)}</span>
               </div>
-              <div class="vault-actions-group">
-                <button type="button" class="vault-dl-btn" aria-label="Download look" title="Download photo">
-                  <i class="bi bi-download"></i>
-                </button>
-                <button type="button" class="vault-del-btn" aria-label="Delete look" title="Delete look">
-                  <i class="bi bi-trash3-fill"></i>
-                </button>
-              </div>
+            </div>
+            <div class="gallery-card-footer">
+              <button type="button" class="vault-dl-btn" aria-label="Export look" title="Export photo">
+                <i class="bi bi-download"></i> <span>EXPORT</span>
+              </button>
+              <button type="button" class="vault-del-btn" aria-label="Delete look" title="Delete look">
+                <i class="bi bi-trash3-fill"></i>
+              </button>
             </div>
           </div>
         `;
@@ -3597,14 +3612,14 @@
         if (dlBtn) {
           dlBtn.addEventListener('click', async (e) => {
             e.stopPropagation();
-            showLoading("PREPARING PHOTO...");
+            showLoading("EXPORTING PHOTO...");
             try {
               const blob = await compressToWebP(item.image_url, { maxDim: 1200, quality: 0.90 });
               hideLoading();
               await universalSaveImage(blob, `KAMI_${lookTitle.replace(/\s+/g, '_')}.${ENCODE_EXT}`);
             } catch (_) {
               hideLoading();
-              showToast("DOWNLOAD FAILED");
+              showToast("EXPORT FAILED");
             }
           });
         }
@@ -3638,8 +3653,8 @@
           badgeBg: "#FEE2E2",
           badgeColor: "#DC2626",
           title: "10/10 LIMIT REACHED",
-          message: "Your My Looks vault has reached 10/10 capacity. All saved images for your account will now be deleted from the database. Tap 'KEEP TO DOWNLOAD' if you want to save any photos to your device first.",
-          cancelText: "KEEP TO DOWNLOAD",
+          message: "Your My Looks vault has reached 10/10 capacity. All saved images for your account will now be deleted from the database. Tap 'KEEP TO EXPORT' if you want to export any photos to your device first.",
+          cancelText: "KEEP TO EXPORT",
           confirmText: "DELETE ALL 10 NOW",
           confirmBg: "#EF4444",
           confirmColor: "#FFFFFF"
