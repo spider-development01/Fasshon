@@ -1558,13 +1558,6 @@
     let cachedCollageBlob = null;
     let cachedCollageFile = null;
 
-    /* ==========================================================================
-       ULTIMATE ENGINE STATE BUFFERS (OKLAB + FREQUENCY SEPARATION + GUIDED MASK)
-       ========================================================================== */
-    let hairBaseMedianL = 0.18;
-    let smoothedLumaMap = null; // Frequency separation buffer to prevent camera noise on dark hair
-    let targetL = 40;
-
     function showBrutalModal({
       title = "NOTICE",
       message = "",
@@ -2211,7 +2204,7 @@
     }
 
     /* ==========================================================================
-       1. ULTIMATE SEGMENTATION: Bilinear + Fast Guided Edge-Snap + Smooth Luma Map
+       1. CLEAN BILINEAR + 5x5 FEATHERED SEGMENTATION (No Patchy Holes)
        ========================================================================== */
     function runSegmentation(token) {
       if (!imageSegmenter || !originalImageData || token !== processToken) {
@@ -2234,16 +2227,12 @@
 
         const totalPixels = canvasW * canvasH;
         const tempMask = new Float32Array(totalPixels);
-        const rawLuma = new Float32Array(totalPixels);
-        smoothedLumaMap = new Float32Array(totalPixels);
         hairConfidenceMask = new Float32Array(totalPixels);
 
-        const src = originalImageData.data;
         const scaleX = (mW - 1) / Math.max(1, canvasW - 1);
         const scaleY = (mH - 1) / Math.max(1, canvasH - 1);
-        const lumaSamples = [];
 
-        // Step A: Bilinear upsample + linear sRGB perceptual luma extraction
+        // Pass 1: Smooth Bilinear Upsample from 256x256 to Canvas size
         for (let y = 0; y < canvasH; y++) {
           const fy = y * scaleY;
           const y0 = fy | 0;
@@ -2253,14 +2242,6 @@
           const dstRow = y * canvasW;
 
           for (let x = 0; x < canvasW; x++) {
-            const idx = dstRow + x;
-            const pIdx = idx * 4;
-            const r = src[pIdx], g = src[pIdx + 1], b = src[pIdx + 2];
-
-            // Perceptual luma (0..1)
-            const yVal = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
-            rawLuma[idx] = yVal;
-
             const fx = x * scaleX;
             const x0 = fx | 0;
             const x1 = Math.min(mW - 1, x0 + 1);
@@ -2270,63 +2251,39 @@
             const bot = rawMask[row1 + x0] * (1 - wx) + rawMask[row1 + x1] * wx;
             let conf = top * (1 - wy) + bot * wy;
 
-            // Suppress skin bleed on forehead/neck/ears
-            if (conf > 0.04 && conf < 0.78) {
-              const isWarmSkin = (r > 90 && g > 40 && b > 20 && r > g && (r - b) > 25 && (r - g) > 12);
-              if (isWarmSkin) conf *= 0.30;
-            }
-
-            tempMask[idx] = conf;
-
-            if (conf > 0.70 && ((x + y) & 3) === 0 && yVal > 0.02 && yVal < 0.88) {
-              lumaSamples.push(yVal);
-            }
+            // Clean threshold so background is 0 and core hair is 1
+            conf = Math.max(0, Math.min(1, (conf - 0.12) / 0.76));
+            tempMask[dstRow + x] = conf;
           }
         }
 
-        // Step B: Fast 3x3 Guided Edge-Preserving Filter & Luma Denoising
-        for (let y = 1; y < canvasH - 1; y++) {
+        // Pass 2: Fast Separable 5-Pixel Feather (Smooths jagged hairline edges)
+        const horizMask = new Float32Array(totalPixels);
+        const radius = 3;
+        const diam = radius * 2 + 1;
+
+        for (let y = 0; y < canvasH; y++) {
           const row = y * canvasW;
-          for (let x = 1; x < canvasW - 1; x++) {
-            const i = row + x;
-            const cCenter = tempMask[i];
-
-            if (cCenter <= 0.01) {
-              hairConfidenceMask[i] = 0;
-              smoothedLumaMap[i] = rawLuma[i];
-              continue;
+          for (let x = 0; x < canvasW; x++) {
+            let sum = 0;
+            for (let k = -radius; k <= radius; k++) {
+              const nx = Math.max(0, Math.min(canvasW - 1, x + k));
+              sum += tempMask[row + nx];
             }
-
-            const lCenter = rawLuma[i];
-            let confSum = 0, confWeight = 0;
-            let lumaSum = 0, lumaWeight = 0;
-
-            for (let dy = -1; dy <= 1; dy++) {
-              const nRow = (y + dy) * canvasW;
-              for (let dx = -1; dx <= 1; dx++) {
-                const ni = nRow + (x + dx);
-                const lDiff = Math.abs(rawLuma[ni] - lCenter);
-                const w = Math.exp(-lDiff * 18.0);
-                confSum += tempMask[ni] * w;
-                confWeight += w;
-
-                lumaSum += rawLuma[ni] * w;
-                lumaWeight += w;
-              }
-            }
-
-            let refinedConf = confSum / confWeight;
-            const t = Math.max(0, Math.min(1, (refinedConf - 0.08) / 0.82));
-            hairConfidenceMask[i] = t * t * (3 - 2 * t);
-            smoothedLumaMap[i] = lumaSum / lumaWeight;
+            horizMask[row + x] = sum / diam;
           }
         }
 
-        if (lumaSamples.length > 20) {
-          lumaSamples.sort((a, b) => a - b);
-          hairBaseMedianL = lumaSamples[(lumaSamples.length * 0.5) | 0];
-        } else {
-          hairBaseMedianL = 0.16;
+        for (let y = 0; y < canvasH; y++) {
+          const row = y * canvasW;
+          for (let x = 0; x < canvasW; x++) {
+            let sum = 0;
+            for (let k = -radius; k <= radius; k++) {
+              const ny = Math.max(0, Math.min(canvasH - 1, y + k));
+              sum += horizMask[ny * canvasW + x];
+            }
+            hairConfidenceMask[row + x] = sum / diam;
+          }
         }
 
         if (currentColorApplied) {
@@ -2339,45 +2296,29 @@
       }
     }
 
-    /* ==========================================================================
-       2. OKLAB PERCEPTUAL COLOR SPACE CONVERTERS
-       ========================================================================== */
-    function srgbToLinear(x) {
-      return x <= 0.04045 ? x / 12.92 : Math.pow((x + 0.055) / 1.055, 2.4);
-    }
-    function linearToSrgb(x) {
-      const v = Math.max(0, Math.min(1, x));
-      return v <= 0.0031308 ? 12.92 * v : 1.055 * Math.pow(v, 1 / 2.4) - 0.055;
-    }
-
-    function rgbToOklab(r, g, b) {
-      const lr = srgbToLinear(r), lg = srgbToLinear(g), lb = srgbToLinear(b);
-      const l = Math.cbrt(0.4122214708 * lr + 0.5363325363 * lg + 0.0514459929 * lb);
-      const m = Math.cbrt(0.2119034982 * lr + 0.6806995451 * lg + 0.1073969566 * lb);
-      const s = Math.cbrt(0.0883024619 * lr + 0.2817188376 * lg + 0.6299787005 * lb);
-      return [
-        0.2104542553 * l + 0.7936177850 * m - 0.0040720468 * s,
-        1.9779984951 * l - 2.4285922050 * m + 0.4505937099 * s,
-        0.0259040371 * l + 0.7827717662 * m - 0.8086757660 * s
-      ];
+    function rgbToHsl(r, g, b) {
+      r /= 255; g /= 255; b /= 255;
+      const max = Math.max(r, g, b), min = Math.min(r, g, b);
+      let h = 0, s = 0, l = (max + min) * 0.5;
+      if (max !== min) {
+        const d = max - min;
+        s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+        switch (max) {
+          case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+          case g: h = (b - r) / d + 2; break;
+          default: h = (r - g) / d + 4; break;
+        }
+        h /= 6;
+      }
+      return [h, s, l];
     }
 
-    function oklabToRgb(L, a, b) {
-      const l_ = L + 0.3963377774 * a + 0.2158037573 * b;
-      const m_ = L - 0.1055613458 * a - 0.0638541728 * b;
-      const s_ = L - 0.0894841775 * a - 1.2914855480 * b;
-      const l = l_ * l_ * l_, m = m_ * m_ * m_, s = s_ * s_ * s_;
-      const lr = +4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s;
-      const lg = -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s;
-      const lb = -0.0041960863 * l - 0.7034186147 * m + 1.7076147010 * s;
-      return [linearToSrgb(lr), linearToSrgb(lg), linearToSrgb(lb)];
-    }
-
-    function hslToSrgbUnit(h, s, l) {
-      if (s <= 0.001) return [l, l, l];
-      const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
-      const p = 2 * l - q;
-      const hue2rgb = t => {
+    function hslToRgb(h, s, l) {
+      if (s <= 0) {
+        const v = Math.round(l * 255);
+        return [v, v, v];
+      }
+      const hue2rgb = (p, q, t) => {
         if (t < 0) t += 1;
         if (t > 1) t -= 1;
         if (t < 1 / 6) return p + (q - p) * 6 * t;
@@ -2385,13 +2326,18 @@
         if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
         return p;
       };
-      return [hue2rgb(h + 1 / 3), hue2rgb(h), hue2rgb(h - 1 / 3)];
+      const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+      const p = 2 * l - q;
+      return [
+        Math.round(hue2rgb(p, q, h + 1 / 3) * 255),
+        Math.round(hue2rgb(p, q, h) * 255),
+        Math.round(hue2rgb(p, q, h - 1 / 3) * 255)
+      ];
     }
 
     function resetToOriginalHair() {
       currentColorApplied = false;
       currentShadeName = "Natural";
-      targetL = 40;
       if (originalImageData) hairCtx.putImageData(originalImageData, 0, 0);
       $('currentShadeBadge').textContent = 'NATURAL';
       renderSwatches();
@@ -2405,7 +2351,7 @@
     }
 
     /* ==========================================================================
-       3. STUDIO-GRADE OKLAB + FREQUENCY-SEPARATED HAIR DYE ENGINE
+       2. SALON SOFT-LIGHT + CHROMA-BOOSTED HAIR COLOR ENGINE
        ========================================================================== */
     function applyHairColor() {
       if (!originalImageData) return;
@@ -2418,72 +2364,65 @@
       const src = originalImageData.data;
       const dst = working.data;
 
-      // Convert selected HSL swatch into perceptual OKLab target
       const targetHNorm = (targetH % 360) / 360;
-      const targetSNorm = Math.max(0, Math.min(1, targetS / 100));
-      const swatchLNorm = Math.max(0.08, Math.min(0.90, (targetL || 45) / 100));
-      const [swR, swG, swB] = hslToSrgbUnit(targetHNorm, targetSNorm, swatchLNorm);
-      const [swatchOklabL, targetA, targetB] = rgbToOklab(swR, swG, swB);
-
-      const baseMed = Math.max(0.05, Math.min(0.75, hairBaseMedianL));
-      const desiredMidY = Math.max(0.04, Math.min(0.84, baseMed + currentLift * 0.70));
-      const gamma = Math.max(0.30, Math.min(2.50, Math.log(desiredMidY) / Math.log(baseMed)));
+      // Boost catalog saturation slightly so browns/blondes look rich instead of washed out
+      const rawSNorm = targetS / 100;
+      const boostedSNorm = Math.min(1, Math.pow(rawSNorm, 0.78) * 1.18);
 
       const len = canvasW * canvasH;
 
       for (let i = 0; i < len; i++) {
         const idx = i * 4;
-        const conf = hairConfidenceMask[i];
+        const confidence = hairConfidenceMask[i];
         const origR = src[idx], origG = src[idx + 1], origB = src[idx + 2], origA = src[idx + 3];
 
-        if (conf > 0.01) {
-          const rNorm = origR / 255, gNorm = origG / 255, bNorm = origB / 255;
-          const rawY = 0.2126 * rNorm + 0.7152 * gNorm + 0.0722 * bNorm;
+        if (confidence > 0.02) {
+          // 1. Get natural hair lightness (weighted so green/red detail stays sharp)
+          const origL = (0.299 * origR + 0.587 * origG + 0.114 * origB) / 255;
 
-          // Frequency separation: base smooth lighting vs fine strand detail
-          const smoothY = smoothedLumaMap ? smoothedLumaMap[i] : rawY;
-          const fineStrandDetail = rawY - smoothY;
+          // 2. Lift curve that expands dark hair strands without turning jet-black hair chalky
+          let liftedL;
+          if (currentLift >= 0) {
+            // Soft-curve lift: raises dark midtones more than deep root shadows or bright shine
+            const shadowProtect = Math.min(1, origL / 0.06); // keeps deepest 6% roots dark
+            const liftCurve = Math.sin(Math.min(1, origL) * Math.PI * 0.85);
+            liftedL = origL + currentLift * (0.55 * liftCurve + 0.45 * (1 - origL * 0.5)) * (0.35 + 0.65 * shadowProtect);
+          } else {
+            // Darkening (e.g., Jet Black, Espresso)
+            liftedL = origL * (1 + currentLift * 0.85);
+          }
+          liftedL = Math.max(0.02, Math.min(0.95, liftedL));
 
-          // Lift the smooth base (so camera noise isn't amplified), then re-inject clean strand texture
-          let liftedY = Math.pow(Math.max(0.001, smoothY), gamma) + fineStrandDetail * 0.65;
+          // 3. Protect natural shine & deep root shadows from looking neon/plastic
+          let satWeight = 1.0;
+          if (liftedL < 0.12) {
+            satWeight = liftedL / 0.12;
+          } else if (origL > 0.70) {
+            satWeight = Math.max(0.15, 1 - ((origL - 0.70) / 0.30) * 0.80);
+          }
 
-          // Keep deep root crevices grounded so hair never looks flat/milky
-          const rootAnchor = Math.min(1, smoothY / 0.08);
-          liftedY = liftedY * (0.38 + 0.62 * rootAnchor);
-          liftedY = Math.max(0.01, Math.min(0.97, liftedY));
+          const finalS = Math.min(1, boostedSNorm * satWeight);
 
-          // Convert lifted luminance to OKLab L (cube-root perceptual scale)
-          const okL = Math.cbrt(liftedY);
+          // 4. Convert target Hue + dynamic Saturation + lifted Lightness to RGB
+          const [newR, newG, newB] = hslToRgb(targetHNorm, finalS, liftedL);
 
-          // Specular shine detection: preserve glossy white/warm reflections on shiny hair
-          const specStart = Math.min(0.80, baseMed + 0.36);
-          const specFactor = rawY > specStart
-            ? Math.min(1, (rawY - specStart) / (1 - specStart + 0.001))
-            : 0;
+          // 5. Preserve natural specular gloss highlights on top of the dye
+          const shine = origL > 0.72 ? Math.pow((origL - 0.72) / 0.28, 1.5) * 45 : 0;
 
-          // Chroma envelope: natural dye saturation peaks in mid-tones, tapers in roots & shine
-          const shadowChromaFade = Math.min(1, Math.pow(liftedY / 0.13, 0.80));
-          const highlightChromaFade = 1 - Math.pow(specFactor, 1.25) * 0.86;
-          const chromaScale = shadowChromaFade * highlightChromaFade * 1.12;
+          const dyedR = Math.min(255, newR + shine);
+          const dyedG = Math.min(255, newG + shine);
+          const dyedB = Math.min(255, newB + shine);
 
-          // Add subtle salon gloss boost on specular bands
-          const glossBoostL = Math.min(0.99, okL + specFactor * specFactor * 0.09);
+          // Smooth edge blend
+          const factor = confidence * 0.88;
+          const inv = 1 - factor;
 
-          const [dyedR, dyedG, dyedB] = oklabToRgb(
-            glossBoostL,
-            targetA * chromaScale,
-            targetB * chromaScale
-          );
-
-          const blend = conf * 0.94;
-          const invBlend = 1 - blend;
-
-          dst[idx]     = Math.round((rNorm * invBlend + dyedR * blend) * 255);
-          dst[idx + 1] = Math.round((gNorm * invBlend + dyedG * blend) * 255);
-          dst[idx + 2] = Math.round((bNorm * invBlend + dyedB * blend) * 255);
+          dst[idx]     = (origR * inv + dyedR * factor) | 0;
+          dst[idx + 1] = (origG * inv + dyedG * factor) | 0;
+          dst[idx + 2] = (origB * inv + dyedB * factor) | 0;
           dst[idx + 3] = origA;
         } else {
-          dst[idx] = origR;
+          dst[idx]     = origR;
           dst[idx + 1] = origG;
           dst[idx + 2] = origB;
           dst[idx + 3] = origA;
@@ -2494,17 +2433,14 @@
     }
 
     /* ==========================================================================
-       4. ADAPTIVE SWATCH APPLICATION
+       3. SWATCH APPLICATION
        ========================================================================== */
     function applySwatch(shade) {
       currentColorApplied = true;
       targetH = shade.h;
       targetS = shade.s;
-      targetL = shade.l;
-
-      const clientBasePct = hairBaseMedianL * 100;
-      const neededLift = (shade.l - clientBasePct) / 85;
-      currentLift = Math.max(-0.40, Math.min(0.60, neededLift));
+      // Calibrated lift so Browns, Blondes, and Reds pop immediately on dark hair
+      currentLift = Math.max(-0.40, Math.min(0.60, (shade.l - 34) / 90));
       currentShadeName = shade.name;
 
       $('hueSlider').value = targetH;
@@ -2594,7 +2530,6 @@
       if (!slidersUnlocked) return;
       currentColorApplied = true;
       currentLift = parseFloat(e.target.value);
-      targetL = Math.max(8, Math.min(90, (hairBaseMedianL * 100) + currentLift * 85));
       const v = Math.round(currentLift * 100);
       $('liftVal').textContent = Math.abs(v) < 2 ? '0%' : (v > 0 ? `+${v}%` : `${v}%`);
       scheduleRender();
