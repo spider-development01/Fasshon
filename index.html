@@ -7,7 +7,6 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="referrer" content="strict-origin-when-cross-origin" />
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='50' fill='%23FF6422'/><text y='.72em' x='50%25' text-anchor='middle' font-family='system-ui,sans-serif' font-weight='900' font-size='52' fill='white'>K</text></svg>" />
   <title>KAMI — AI Hair &amp; Colour Studio</title>
 
   <!-- Google Fonts: Plus Jakarta Sans -->
@@ -464,10 +463,6 @@
       color: #FFFFFF;
       box-shadow: var(--shadow-orange);
     }
-    .mode-tab-btn.active.pink-mode {
-      background: var(--primary);
-      color: #FFFFFF;
-    }
 
     .tool-card {
       background: var(--surface);
@@ -810,6 +805,8 @@
       font-weight: 800;
       box-shadow: var(--shadow-sm);
       pointer-events: none;
+      transition: opacity 0.2s ease, visibility 0.2s ease;
+      opacity: 1;
     }
     .stage-badge-left { left: 14px; background: rgba(255, 255, 255, 0.9); color: var(--text-main); }
     .stage-badge-right { right: 14px; background: var(--primary); color: #FFFFFF; }
@@ -869,12 +866,12 @@
     }
     .compare-fab-share i { color: #25D366; font-size: 1.1rem; }
 
-    /* VIEW 4: VAULT GALLERY */
+    /* VIEW 4: VAULT GALLERY - FIXED EXPANSION TO PREVENT CLIPPING */
     .gallery-grid {
       flex: 1;
       overflow-y: auto;
       -webkit-overflow-scrolling: touch;
-      padding: 16px;
+      padding: 16px 16px 90px;
       display: grid;
       grid-template-columns: repeat(2, 1fr);
       gap: 14px;
@@ -884,40 +881,66 @@
       width: 100%;
     }
     @media (min-width: 640px) { .gallery-grid { grid-template-columns: repeat(3, 1fr); } }
+    
     .gallery-card {
       background: var(--surface);
-      border-radius: var(--radius-card);
+      border-radius: 18px;
       box-shadow: var(--shadow-card);
+      border: 1px solid var(--border-subtle);
       display: flex;
       flex-direction: column;
       cursor: pointer;
       overflow: hidden;
       transition: transform 0.15s ease;
-      min-height: 180px;
+      height: auto;
     }
     .gallery-card:active { transform: scale(0.97); }
     .gallery-card img {
       width: 100%;
       aspect-ratio: 1 / 1;
-      height: auto;
-      min-height: 130px;
       object-fit: cover;
       display: block;
     }
     .gallery-card-body {
-      padding: 12px;
+      padding: 12px 14px 14px;
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 8px;
       min-width: 0;
+      background: var(--surface);
     }
     .gallery-card-name {
-      font-size: 0.78rem;
+      font-size: 0.82rem;
       font-weight: 800;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
       color: var(--text-main);
+      line-height: 1.2;
+    }
+    .gallery-card-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 2px;
+    }
+    .gallery-card-date {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+    .vault-del {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      font-size: 0.82rem;
+      color: #EF4444;
+      background: #FEE2E2;
+      border: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
     }
 
     /* TOAST */
@@ -1206,7 +1229,7 @@
         </div>
 
         <button id="viewCompareBtn" class="btn-primary" style="margin-top:6px;">
-          <span>COMPARE &amp; SAVE</span> <i class="bi bi-arrows-expand"></i>
+          <span>COMPARE</span> <i class="bi bi-arrows-expand"></i>
         </button>
       </div>
 
@@ -1296,7 +1319,7 @@
   <script type="module">
     'use strict';
 
-    /* SAFE GLOBAL CONFIG HOOK (customize backend endpoint without code changes) */
+    /* SAFE GLOBAL CONFIG HOOK */
     window.KAMI_CONFIG = window.KAMI_CONFIG || {
       tryonEndpoint: '/api/tryon'
     };
@@ -1378,7 +1401,7 @@
       return heicPromise;
     }
 
-    const WEBP_QUALITY = 0.82;
+    const WEBP_QUALITY = 0.85;
     const MAX_UPLOAD_DIM = 850;
 
     const ENCODE_TYPE = (() => {
@@ -2203,9 +2226,7 @@
       setTimeout(() => runSegmentation(currentRun), 40);
     }
 
-    /* ==========================================================================
-       1. CLEAN BILINEAR + 5x5 FEATHERED SEGMENTATION (No Patchy Holes)
-       ========================================================================== */
+    /* 1. CLEAN BILINEAR + 5x5 FEATHERED SEGMENTATION (No Patchy Holes) */
     function runSegmentation(token) {
       if (!imageSegmenter || !originalImageData || token !== processToken) {
         hideLoading();
@@ -2232,7 +2253,6 @@
         const scaleX = (mW - 1) / Math.max(1, canvasW - 1);
         const scaleY = (mH - 1) / Math.max(1, canvasH - 1);
 
-        // Pass 1: Smooth Bilinear Upsample from 256x256 to Canvas size
         for (let y = 0; y < canvasH; y++) {
           const fy = y * scaleY;
           const y0 = fy | 0;
@@ -2251,13 +2271,11 @@
             const bot = rawMask[row1 + x0] * (1 - wx) + rawMask[row1 + x1] * wx;
             let conf = top * (1 - wy) + bot * wy;
 
-            // Clean threshold so background is 0 and core hair is 1
             conf = Math.max(0, Math.min(1, (conf - 0.12) / 0.76));
             tempMask[dstRow + x] = conf;
           }
         }
 
-        // Pass 2: Fast Separable 5-Pixel Feather (Smooths jagged hairline edges)
         const horizMask = new Float32Array(totalPixels);
         const radius = 3;
         const diam = radius * 2 + 1;
@@ -2350,9 +2368,7 @@
       requestAnimationFrame(() => { applyHairColor(); renderScheduled = false; });
     }
 
-    /* ==========================================================================
-       2. SALON SOFT-LIGHT + CHROMA-BOOSTED HAIR COLOR ENGINE
-       ========================================================================== */
+    /* 2. SALON SOFT-LIGHT + CHROMA-BOOSTED HAIR COLOR ENGINE */
     function applyHairColor() {
       if (!originalImageData) return;
       if (!currentColorApplied || !hairConfidenceMask || hairConfidenceMask.length !== (canvasW * canvasH)) {
@@ -2365,7 +2381,6 @@
       const dst = working.data;
 
       const targetHNorm = (targetH % 360) / 360;
-      // Boost catalog saturation slightly so browns/blondes look rich instead of washed out
       const rawSNorm = targetS / 100;
       const boostedSNorm = Math.min(1, Math.pow(rawSNorm, 0.78) * 1.18);
 
@@ -2377,23 +2392,18 @@
         const origR = src[idx], origG = src[idx + 1], origB = src[idx + 2], origA = src[idx + 3];
 
         if (confidence > 0.02) {
-          // 1. Get natural hair lightness (weighted so green/red detail stays sharp)
           const origL = (0.299 * origR + 0.587 * origG + 0.114 * origB) / 255;
 
-          // 2. Lift curve that expands dark hair strands without turning jet-black hair chalky
           let liftedL;
           if (currentLift >= 0) {
-            // Soft-curve lift: raises dark midtones more than deep root shadows or bright shine
-            const shadowProtect = Math.min(1, origL / 0.06); // keeps deepest 6% roots dark
+            const shadowProtect = Math.min(1, origL / 0.06);
             const liftCurve = Math.sin(Math.min(1, origL) * Math.PI * 0.85);
             liftedL = origL + currentLift * (0.55 * liftCurve + 0.45 * (1 - origL * 0.5)) * (0.35 + 0.65 * shadowProtect);
           } else {
-            // Darkening (e.g., Jet Black, Espresso)
             liftedL = origL * (1 + currentLift * 0.85);
           }
           liftedL = Math.max(0.02, Math.min(0.95, liftedL));
 
-          // 3. Protect natural shine & deep root shadows from looking neon/plastic
           let satWeight = 1.0;
           if (liftedL < 0.12) {
             satWeight = liftedL / 0.12;
@@ -2402,18 +2412,13 @@
           }
 
           const finalS = Math.min(1, boostedSNorm * satWeight);
-
-          // 4. Convert target Hue + dynamic Saturation + lifted Lightness to RGB
           const [newR, newG, newB] = hslToRgb(targetHNorm, finalS, liftedL);
 
-          // 5. Preserve natural specular gloss highlights on top of the dye
           const shine = origL > 0.72 ? Math.pow((origL - 0.72) / 0.28, 1.5) * 45 : 0;
-
           const dyedR = Math.min(255, newR + shine);
           const dyedG = Math.min(255, newG + shine);
           const dyedB = Math.min(255, newB + shine);
 
-          // Smooth edge blend
           const factor = confidence * 0.88;
           const inv = 1 - factor;
 
@@ -2432,14 +2437,11 @@
       hairCtx.putImageData(working, 0, 0);
     }
 
-    /* ==========================================================================
-       3. SWATCH APPLICATION
-       ========================================================================== */
+    /* 3. SWATCH APPLICATION */
     function applySwatch(shade) {
       currentColorApplied = true;
       targetH = shade.h;
       targetS = shade.s;
-      // Calibrated lift so Browns, Blondes, and Reds pop immediately on dark hair
       currentLift = Math.max(-0.40, Math.min(0.60, (shade.l - 34) / 90));
       currentShadeName = shade.name;
 
@@ -2547,7 +2549,7 @@
     $('tabModeColor').addEventListener('click', () => {
       activeStudioMode = 'color';
       $('tabModeColor').classList.add('active');
-      $('tabModeStyle').classList.remove('active', 'pink-mode');
+      $('tabModeStyle').classList.remove('active');
       $('panelColor').classList.remove('hidden');
       $('panelStyle').classList.add('hidden');
       stylePreviewImg.classList.add('hidden');
@@ -2556,7 +2558,7 @@
 
     $('tabModeStyle').addEventListener('click', () => {
       activeStudioMode = 'style';
-      $('tabModeStyle').classList.add('active', 'pink-mode');
+      $('tabModeStyle').classList.add('active');
       $('tabModeColor').classList.remove('active');
       $('panelStyle').classList.remove('hidden');
       $('panelColor').classList.add('hidden');
@@ -2813,6 +2815,7 @@
       } catch (_) {}
     }
 
+    /* SLIDER BADGE VISIBILITY CONTROLLER: HIDES REDUNDANT LABELS AT EDGES */
     function setSlider(pct) {
       const clamped = Math.max(0, Math.min(100, pct));
       const clip = `polygon(${clamped}% 0, 100% 0, 100% 100%, ${clamped}% 100%)`;
@@ -2820,6 +2823,32 @@
       $('imgRendered').style.webkitClipPath = clip;
       $('sliderDivider').style.left = `${clamped}%`;
       $('sliderDivider').setAttribute('aria-valuenow', Math.round(clamped));
+
+      if (currentCompareMode === 'slide') {
+        // When slider is moved all the way right (>= 95%), only Original is shown.
+        // Hide the color/new look badge from the top.
+        if (clamped >= 95) {
+          $('badgeAfter').style.opacity = '0';
+          $('badgeAfter').style.visibility = 'hidden';
+          $('badgeBefore').style.opacity = '1';
+          $('badgeBefore').style.visibility = 'visible';
+        } 
+        // When slider is moved all the way left (<= 5%), only Generated Look is shown.
+        // Hide the original badge from the top.
+        else if (clamped <= 5) {
+          $('badgeBefore').style.opacity = '0';
+          $('badgeBefore').style.visibility = 'hidden';
+          $('badgeAfter').style.opacity = '1';
+          $('badgeAfter').style.visibility = 'visible';
+        } 
+        // In the middle: both before and after are visible.
+        else {
+          $('badgeBefore').style.opacity = '1';
+          $('badgeBefore').style.visibility = 'visible';
+          $('badgeAfter').style.opacity = '1';
+          $('badgeAfter').style.visibility = 'visible';
+        }
+      }
     }
 
     const compareStage = $('compareStage');
@@ -2869,23 +2898,25 @@
 
       if (mode === 'slide') {
         $('sliderDivider').style.display = 'flex';
-        $('badgeBefore').style.display = 'block';
-        $('badgeAfter').style.display = 'block';
         setSlider(50);
       } else if (mode === 'before') {
         const fullBefore = 'polygon(100% 0, 100% 0, 100% 100%, 100% 100%)';
         $('imgRendered').style.clipPath = fullBefore;
         $('imgRendered').style.webkitClipPath = fullBefore;
         $('sliderDivider').style.display = 'none';
-        $('badgeBefore').style.display = 'block';
-        $('badgeAfter').style.display = 'none';
+        $('badgeBefore').style.opacity = '1';
+        $('badgeBefore').style.visibility = 'visible';
+        $('badgeAfter').style.opacity = '0';
+        $('badgeAfter').style.visibility = 'hidden';
       } else {
         const fullAfter = 'polygon(0 0, 100% 0, 100% 100%, 0 100%)';
         $('imgRendered').style.clipPath = fullAfter;
         $('imgRendered').style.webkitClipPath = fullAfter;
         $('sliderDivider').style.display = 'none';
-        $('badgeBefore').style.display = 'none';
-        $('badgeAfter').style.display = 'block';
+        $('badgeBefore').style.opacity = '0';
+        $('badgeBefore').style.visibility = 'hidden';
+        $('badgeAfter').style.opacity = '1';
+        $('badgeAfter').style.visibility = 'visible';
       }
     }
 
@@ -2898,6 +2929,7 @@
       else activateScreen(screens.studio);
     });
 
+    /* VIEW COMPARE: SWITCHES SCREEN WITHOUT UNWANTED AUTO-SAVING */
     $('viewCompareBtn').addEventListener('click', async () => {
       const active = await verifyUserTrialStatus(currentUserPhone);
       if (!active) return;
@@ -2907,95 +2939,7 @@
         return;
       }
       openCompareWithImages(originalDataURL, canvasToDataURL(hairCanvas, WEBP_QUALITY), currentShadeName, false);
-      saveLookToVault(true);
     });
-
-    async function saveLookToVault(notify = false) {
-      const active = await verifyUserTrialStatus(currentUserPhone);
-      if (!active) return;
-
-      if (!currentUserPhone || isSavingVault || !currentColorApplied) return;
-      isSavingVault = true;
-
-      try {
-        const timestamp = Date.now();
-        const localKey = `look_${timestamp}`;
-
-        const sourceCanvas = document.createElement('canvas');
-        sourceCanvas.width = canvasW;
-        sourceCanvas.height = canvasH;
-        const sCtx = sourceCanvas.getContext('2d');
-        sCtx.putImageData(originalImageData, 0, 0);
-
-        const sourceBlob = await compressToWebP(sourceCanvas, { maxDim: 800, quality: 0.75 });
-        const sourceDataURL = originalDataURL || canvasToDataURL(sourceCanvas, 0.75);
-
-        const renderedBlob = await compressToWebP(hairCanvas, { maxDim: 800, quality: 0.75 });
-        const renderedDataURL = canvasToDataURL(hairCanvas, 0.75);
-
-        const localItem = {
-          id: localKey,
-          user_phone: currentUserPhone,
-          image_url: renderedDataURL,
-          source_image_url: sourceDataURL,
-          style_name: currentShadeName,
-          category: 'Hair Colour',
-          created_at: new Date().toISOString()
-        };
-        await saveLocalLook(localItem);
-
-        if (sb) {
-          const safePhone = String(currentUserPhone).replace(/\D/g, '').slice(-10);
-          const sourcePath = `${safePhone}/${timestamp}_source.${ENCODE_EXT}`;
-          const renderedPath = `${safePhone}/${timestamp}_rendered.${ENCODE_EXT}`;
-
-          let sourceUrl = '';
-          let renderedUrl = '';
-
-          try {
-            const upSrc = await sb.storage.from(STORAGE_BUCKET).upload(sourcePath, sourceBlob, { 
-              contentType: ENCODE_TYPE, 
-              upsert: true 
-            });
-            if (!upSrc.error) sourceUrl = publicUrlFor(sourcePath);
-
-            const upRend = await sb.storage.from(STORAGE_BUCKET).upload(renderedPath, renderedBlob, { 
-              contentType: ENCODE_TYPE, 
-              upsert: true 
-            });
-            if (!upRend.error) renderedUrl = publicUrlFor(renderedPath);
-          } catch (_) {}
-
-          if (!sourceUrl) sourceUrl = sourceDataURL;
-          if (!renderedUrl) renderedUrl = renderedDataURL;
-
-          const { data: insertedRows, error: insErr } = await sb.from('generations').insert({
-            user_phone: currentUserPhone,
-            image_url: renderedUrl,
-            source_image_url: sourceUrl,
-            style_name: currentShadeName,
-            category: 'Hair Colour'
-          }).select();
-
-          if (!insErr && insertedRows && insertedRows[0]) {
-            await deleteLocalLook(localKey);
-            await saveLocalLook({
-              ...localItem,
-              id: String(insertedRows[0].id),
-              image_url: renderedUrl,
-              source_image_url: sourceUrl
-            });
-            if (notify) showToast("SAVED TO MY LOOKS & SALON");
-          }
-        } else {
-          if (notify) showToast("SAVED TO MY LOOKS (OFFLINE)");
-        }
-      } catch (err) {
-        console.error('[SAVE LOOK EXCEPTION]', err);
-      } finally {
-        isSavingVault = false;
-      }
-    }
 
     async function buildCollageBlob() {
       const beforeSrc = $('imgSource').src;
@@ -3020,7 +2964,7 @@
       c.lineTo(colW, targetH);
       c.stroke();
 
-      return encodeCanvas(cvs, 0.85);
+      return encodeCanvas(cvs, 0.88);
     }
 
     /* SHARE HANDLER: PRE-CACHED FOR STRICT SAFARI USER ACTIVATION */
@@ -3040,24 +2984,48 @@
 
       try {
         const blob = cachedCollageBlob || await buildCollageBlob();
-        await universalSaveImage(blob, `KAMI_${Date.now()}.${ENCODE_EXT}`);
+        await universalSaveImage(blob, `KAMI_Comparison_${Date.now()}.${ENCODE_EXT}`);
       } catch (_) {
         showToast('COULD NOT SHARE IMAGE');
       }
     });
 
+    /* CONTEXT-AWARE SAVE: SAVES SLIDE (COMPARISON), BEFORE (ORIGINAL), OR AFTER (NEW COLOR) */
     $('saveLocalBtn').addEventListener('click', async () => {
-      const src = $('imgRendered').src;
-      if (!src) return;
+      showLoading("PREPARING IMAGE...");
       try {
-        const blob = await compressToWebP(src, { maxDim: 1200, quality: 0.85 });
-        await universalSaveImage(blob, `KAMI_${Date.now()}.${ENCODE_EXT}`);
-        saveLookToVault(false);
-      } catch (_) {
-        showToast("SAVE FAILED");
+        let blobToSave = null;
+        let filename = `KAMI_${currentShadeName.replace(/\s+/g, '_')}_${Date.now()}.${ENCODE_EXT}`;
+
+        if (currentCompareMode === 'slide') {
+          // 1. Comparison photo: side-by-side original + new color
+          blobToSave = await buildCollageBlob();
+          filename = `KAMI_Comparison_${Date.now()}.${ENCODE_EXT}`;
+        } else if (currentCompareMode === 'before') {
+          // 2. Original photo
+          const src = $('imgSource').src;
+          if (!src) throw new Error("No original image found");
+          blobToSave = await compressToWebP(src, { maxDim: 1200, quality: 0.90 });
+          filename = `KAMI_Original_${Date.now()}.${ENCODE_EXT}`;
+        } else {
+          // 3. New generated photo ('after')
+          const src = $('imgRendered').src;
+          if (!src) throw new Error("No rendered image found");
+          blobToSave = await compressToWebP(src, { maxDim: 1200, quality: 0.90 });
+          filename = `KAMI_${currentShadeName.replace(/\s+/g, '_')}_${Date.now()}.${ENCODE_EXT}`;
+        }
+
+        hideLoading();
+        if (blobToSave) {
+          await universalSaveImage(blobToSave, filename);
+        }
+      } catch (err) {
+        hideLoading();
+        showToast("SAVE FAILED: " + (err.message || 'Error'));
       }
     });
 
+    /* VAULT GALLERY WITH SIGNATURE DEDUPLICATION */
     async function loadUserVault() {
       const active = await verifyUserTrialStatus(currentUserPhone);
       if (!active) return;
@@ -3084,21 +3052,27 @@
       const localItems = await getLocalLooks(currentUserPhone);
 
       const combined = [];
-      const seenIds = new Set();
-      const seenUrls = new Set();
+      const seenSignatures = new Set();
+
+      function getItemSignature(item) {
+        const nameKey = (item.style_name || '').toLowerCase().trim();
+        const time = new Date(item.created_at).getTime();
+        const timeBucket = Math.round(time / 15000); // 15-second signature window avoids duplicate saves
+        return `${nameKey}_${timeBucket}`;
+      }
 
       for (const item of cloudItems) {
-        if (!seenIds.has(String(item.id)) && !seenUrls.has(item.image_url)) {
-          seenIds.add(String(item.id));
-          seenUrls.add(item.image_url);
+        const sig = getItemSignature(item);
+        if (!seenSignatures.has(sig)) {
+          seenSignatures.add(sig);
           combined.push(item);
         }
       }
 
       for (const item of localItems) {
-        if (!seenIds.has(String(item.id)) && !seenUrls.has(item.image_url)) {
-          seenIds.add(String(item.id));
-          seenUrls.add(item.image_url);
+        const sig = getItemSignature(item);
+        if (!seenSignatures.has(sig)) {
+          seenSignatures.add(sig);
           combined.push(item);
         }
       }
@@ -3123,9 +3097,9 @@
           <img src="${sanitizeUrl(item.image_url)}" loading="lazy" alt="${esc(item.style_name || 'Look')}" />
           <div class="gallery-card-body">
             <div class="gallery-card-name">${esc(item.style_name || 'Hair Style')}</div>
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-              <span style="font-size:0.68rem; color:var(--text-muted); font-weight:600;">${new Date(item.created_at).toLocaleDateString()}</span>
-              <button class="btn-icon vault-del" aria-label="Delete look" style="width:28px; height:28px; font-size:0.75rem; color:#EF4444;"><i class="bi bi-trash"></i></button>
+            <div class="gallery-card-footer">
+              <span class="gallery-card-date">${new Date(item.created_at).toLocaleDateString()}</span>
+              <button class="vault-del" aria-label="Delete look"><i class="bi bi-trash"></i></button>
             </div>
           </div>
         `;
