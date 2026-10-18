@@ -951,7 +951,7 @@
     .compare-fab-share i { color: #25D366; font-size: 1.1rem; }
 
     /* =========================================================================
-       VIEW 4: MY LOOKS VAULT — FULL EDGE-TO-EDGE PHOTO + UNCLIPPED ACTIONS
+       VIEW 4: MY LOOKS VAULT — FULL EDGE-TO-EDGE PHOTO + CLEAN FOOTER
        ========================================================================= */
     .gallery-grid {
       flex: 1;
@@ -1031,7 +1031,7 @@
     }
 
     .gallery-card-body {
-      padding: 10px 12px 12px;
+      padding: 11px 12px 12px;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
@@ -1040,14 +1040,8 @@
       flex: 1;
       min-width: 0;
     }
-    .gallery-card-info {
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-      min-width: 0;
-    }
     .gallery-card-name {
-      font-size: 0.86rem;
+      font-size: 0.88rem;
       font-weight: 800;
       color: var(--text-main);
       overflow: hidden;
@@ -1055,31 +1049,22 @@
       white-space: nowrap;
       line-height: 1.25;
     }
+    .gallery-card-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 6px;
+      padding-top: 6px;
+      border-top: 1px solid var(--surface-subtle);
+      min-width: 0;
+    }
     .gallery-card-date {
-      font-size: 0.68rem;
+      font-size: 0.70rem;
       font-weight: 700;
       color: var(--text-muted);
       display: flex;
       align-items: center;
       gap: 4px;
-      white-space: nowrap;
-    }
-    .gallery-card-footer {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 4px;
-      padding-top: 6px;
-      border-top: 1px solid var(--surface-subtle);
-      min-width: 0;
-    }
-    .vault-compare-hint {
-      font-size: 0.66rem;
-      font-weight: 800;
-      color: var(--primary);
-      display: inline-flex;
-      align-items: center;
-      gap: 3px;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -1666,7 +1651,6 @@
       let gLin = -0.9692660 * x + 1.8760108 * y + 0.0415560 * z;
       let bLin =  0.0556434 * x - 0.2040259 * y + 1.0572252 * z;
 
-      // Preserve luminance if chroma pushes a channel above 1.0
       const maxCh = Math.max(rLin, gLin, bLin);
       if (maxCh > 1.0 && y < 0.99) {
         const scale = (1.0 - y) / (maxCh - y + 1e-5);
@@ -2090,6 +2074,126 @@
       } catch (_) {}
     }
 
+    /* FETCH COMBINED DEDUPLICATED LOOKS FOR THIS USER */
+    async function getCombinedUserLooks(phone) {
+      let cloudItems = [];
+      if (sb && phone) {
+        try {
+          const raw = phone.trim();
+          const norm = raw.replace(/\D/g, '').slice(-10);
+
+          const { data } = await sb
+            .from('generations')
+            .select('*')
+            .or(`user_phone.eq.${raw},user_phone.eq.+91${norm},user_phone.eq.${norm}`)
+            .order('created_at', { ascending: false })
+            .limit(LOCAL_VAULT_LIMIT);
+
+          if (data) cloudItems = data;
+        } catch (_) {}
+      }
+
+      const localItems = await getLocalLooks(phone);
+      const combined = [];
+      const seenSignatures = new Set();
+
+      function getItemSignature(item) {
+        const nameKey = (item.style_name || '').toLowerCase().trim();
+        const time = new Date(item.created_at).getTime();
+        const timeBucket = Math.round(time / 15000);
+        return `${nameKey}_${timeBucket}`;
+      }
+
+      for (const item of cloudItems) {
+        const sig = getItemSignature(item);
+        if (!seenSignatures.has(sig)) {
+          seenSignatures.add(sig);
+          combined.push(item);
+        }
+      }
+
+      for (const item of localItems) {
+        const sig = getItemSignature(item);
+        if (!seenSignatures.has(sig)) {
+          seenSignatures.add(sig);
+          combined.push(item);
+        }
+      }
+
+      combined.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+      return combined.slice(0, LOCAL_VAULT_LIMIT);
+    }
+
+    /* PURGE ALL SAVED LOOKS FOR THIS USER FROM SUPABASE DB, STORAGE & LOCAL INDEXEDDB */
+    async function purgeAllUserLooks(phone) {
+      if (!phone) return;
+      const raw = phone.trim();
+      const norm = raw.replace(/\D/g, '').slice(-10);
+
+      // 1. Delete all user looks from local IndexedDB
+      try {
+        const db = await openVaultDB();
+        await new Promise(resolve => {
+          const tx = db.transaction(STORE_NAME, 'readwrite');
+          const store = tx.objectStore(STORE_NAME);
+          const req = store.getAll();
+          req.onsuccess = () => {
+            const all = req.result || [];
+            all.filter(i => (i.user_phone || '').replace(/\D/g, '').slice(-10) === norm)
+               .forEach(i => store.delete(i.id));
+          };
+          tx.oncomplete = () => resolve();
+          tx.onerror = () => resolve();
+        });
+      } catch (_) {}
+
+      // 2. Delete all rows for this user from Supabase `generations` table
+      //    and remove all files in their `kami-images` storage folder
+      if (sb) {
+        try {
+          await sb
+            .from('generations')
+            .delete()
+            .or(`user_phone.eq.${raw},user_phone.eq.+91${norm},user_phone.eq.${norm}`);
+        } catch (_) {}
+
+        try {
+          const { data: files } = await sb.storage.from(STORAGE_BUCKET).list(norm, { limit: 100 });
+          if (files && files.length > 0) {
+            const pathsToRemove = files.map(f => `${norm}/${f.name}`);
+            await sb.storage.from(STORAGE_BUCKET).remove(pathsToRemove);
+          }
+        } catch (_) {}
+      }
+    }
+
+    /* CHECK IF VAULT IS AT 10/10 CAPACITY -> WARN USER -> AUTO-DELETE ALL USER IMAGES */
+    async function ensureVaultSpaceBeforeSave(phone) {
+      const existingLooks = await getCombinedUserLooks(phone);
+      if (existingLooks.length < LOCAL_VAULT_LIMIT) return true;
+
+      hideLoading();
+      const confirmed = await showBrutalModal({
+        badge: "VAULT FULL (10 / 10)",
+        badgeBg: "#FEE2E2",
+        badgeColor: "#DC2626",
+        title: "AUTO-DELETE WARNING",
+        message: "Your My Looks vault has reached 10/10 capacity. All 10 existing saved images for your account will now be deleted from the database to save your new look.",
+        cancelText: "CANCEL",
+        confirmText: "DELETE ALL & CONTINUE",
+        confirmBg: "#EF4444",
+        confirmColor: "#FFFFFF"
+      });
+
+      if (!confirmed) return false;
+
+      showLoading("CLEARING 10/10 VAULT...", false);
+      await purgeAllUserLooks(phone);
+      hideLoading();
+      showToast("ALL 10 PREVIOUS LOOKS CLEARED");
+      return true;
+    }
+
     function publicUrlFor(path) {
       return sb.storage.from(STORAGE_BUCKET).getPublicUrl(path).data.publicUrl;
     }
@@ -2170,17 +2274,7 @@
       currentUserName = null;
 
       if (phoneToWipe) {
-        try {
-          const db = await openVaultDB();
-          const tx = db.transaction(STORE_NAME, 'readwrite');
-          const store = tx.objectStore(STORE_NAME);
-          const req = store.getAll();
-          req.onsuccess = () => {
-            const all = req.result || [];
-            all.filter(i => (i.user_phone || '').replace(/\D/g, '').slice(-10) === phoneToWipe.replace(/\D/g, '').slice(-10))
-               .forEach(i => store.delete(i.id));
-          };
-        } catch (_) {}
+        await purgeAllUserLooks(phoneToWipe);
       }
 
       if (userRealtimeChannel && sb) {
@@ -2602,7 +2696,6 @@
             const bot = rawMask[row1 + x0] * (1 - wx) + rawMask[row1 + x1] * wx;
             let conf = top * (1 - wy) + bot * wy;
 
-            // Clean threshold at 0.26 rejects faint false-positives on black salon capes
             conf = Math.max(0.0, Math.min(1.0, (conf - 0.26) / 0.58));
             tempMask[pIdx] = conf;
 
@@ -2627,7 +2720,6 @@
           hairStats.meanB = sumB / weightSum;
         }
 
-        // Smooth 2-Pass Separable Feathering on Mask (radius = 3) for natural hairline edges
         const horizMask = new Float32Array(totalPixels);
         const radius = 3;
         const diam = radius * 2 + 1;
@@ -2697,9 +2789,6 @@
        L_target = f_L(L_original)
        a_target = f_a(a_original, target_a)
        b_target = f_b(b_original, target_b)
-       - 100% Pointwise Monotonic Function: Zero Blotches, Zero Posterization
-       - Preserves dark brown, medium brown, warm highlights, bright highlights,
-         and deep shadows in natural proportion
        ========================================================================= */
     function applyCIELabHairColor() {
       if (!originalImageData || !workingImageData) return;
@@ -2712,7 +2801,6 @@
       const dst = workingImageData.data;
       dst.set(src);
 
-      // Desired target CIE L*a*b* coordinates
       const goalL = Math.max(12.0, Math.min(86.0, targetLabL + userLiftDelta));
       const goalA = targetLabA;
       const goalB = targetLabB;
@@ -2721,7 +2809,6 @@
       const baseA = hairStats.meanA;
       const baseB = hairStats.meanB;
 
-      // Controlled shift amount in CIE L*
       const deltaL = goalL - baseL;
       const count = activeHairIndices.length;
 
@@ -2734,22 +2821,16 @@
         const origA = precompLabA[i];
         const origB = precompLabB[i];
 
-        const lNorm = origL * 0.01; // [0..1]
+        const lNorm = origL * 0.01;
 
         // 1. Controlled Lightness Transformation: L_out = f_L(L_orig)
-        // Smoothly shifts L* while preserving every strand's relative shadow/midtone/highlight contrast
         let outL;
         if (deltaL >= 0.0) {
-          // Lifting (e.g., Dark/Medium Brown -> Blonde/Platinum/Copper):
-          // Soft shadow toe (1 - exp(-L*/14)) keeps deep creases anchored so hair never looks milky/flat,
-          // while (1 - 0.32 * lNorm^2) gently rolls off bright highlights so they never clip.
           const shadowToe = 1.0 - Math.exp(-origL / 14.0);
           const highlightRoll = 1.0 - 0.32 * lNorm * lNorm;
           const liftWeight = shadowToe * highlightRoll;
           outL = origL + deltaL * liftWeight * 0.92;
         } else {
-          // Darkening (e.g., Medium Brown/Blonde -> Jet Black/Espresso/Burgundy):
-          // Proportional scaling preserves natural specular crown highlights
           const scale = Math.max(0.25, goalL / Math.max(14.0, baseL));
           const shinePreserve = lNorm * lNorm * 0.22;
           outL = origL * (scale * (1.0 - shinePreserve) + shinePreserve);
@@ -2757,15 +2838,10 @@
         outL = Math.max(2.0, Math.min(96.0, outL));
 
         // 2. Controlled Chromatic Transformation:
-        // a_out = f_a(a_orig, target_a)
-        // b_out = f_b(b_orig, target_b)
-        // Preserves 18% of each strand's natural chromatic variation (da*, db*) around the hair mean
+        // a_out = f_a(a_orig, target_a), b_out = f_b(b_orig, target_b)
         const da = origA - baseA;
         const db = origB - baseB;
 
-        // Natural CIELAB gamut envelope E(L*):
-        // - Tapers chroma smoothly in deep shadows (L* < 22) so roots look naturally dark
-        // - Tapers chroma smoothly in bright specular glints (L* > 74) so shine looks glossy, never neon
         let chromaEnv = 1.0;
         if (outL < 22.0) {
           chromaEnv = Math.max(0.12, outL / 22.0);
@@ -3047,6 +3123,10 @@
         return;
       }
 
+      // Check 10/10 Vault Limit first -> warn & auto-delete if full
+      const canProceed = await ensureVaultSpaceBeforeSave(currentUserPhone);
+      if (!canProceed) return;
+
       showLoading("CHECKING QUOTA...", false);
 
       try {
@@ -3322,6 +3402,10 @@
           return;
         }
 
+        // Check if vault is at 10/10 -> warn user & auto-delete all previous images
+        const canProceed = await ensureVaultSpaceBeforeSave(currentUserPhone);
+        if (!canProceed) return;
+
         showLoading("SAVING LOOK...", false);
         try {
           const timeKey = Date.now();
@@ -3449,7 +3533,7 @@
     });
 
     /* =========================================================================
-       VAULT GALLERY (MY LOOKS) — FULL EDGE-TO-EDGE PHOTO + UNCLIPPED ACTIONS
+       VAULT GALLERY (MY LOOKS) — CLEAN CARDS + 10/10 WARNING & AUTO-DELETE
        ========================================================================= */
     async function loadUserVault() {
       const active = await verifyUserTrialStatus(currentUserPhone);
@@ -3457,54 +3541,7 @@
 
       activateScreen(screens.gallery);
 
-      let cloudItems = [];
-      if (sb && currentUserPhone) {
-        try {
-          const raw = currentUserPhone.trim();
-          const norm = raw.replace(/\D/g, '').slice(-10);
-
-          const { data } = await sb
-            .from('generations')
-            .select('*')
-            .or(`user_phone.eq.${raw},user_phone.eq.+91${norm},user_phone.eq.${norm}`)
-            .order('created_at', { ascending: false })
-            .limit(LOCAL_VAULT_LIMIT);
-
-          if (data) cloudItems = data;
-        } catch (_) {}
-      }
-
-      const localItems = await getLocalLooks(currentUserPhone);
-
-      const combined = [];
-      const seenSignatures = new Set();
-
-      function getItemSignature(item) {
-        const nameKey = (item.style_name || '').toLowerCase().trim();
-        const time = new Date(item.created_at).getTime();
-        const timeBucket = Math.round(time / 15000);
-        return `${nameKey}_${timeBucket}`;
-      }
-
-      for (const item of cloudItems) {
-        const sig = getItemSignature(item);
-        if (!seenSignatures.has(sig)) {
-          seenSignatures.add(sig);
-          combined.push(item);
-        }
-      }
-
-      for (const item of localItems) {
-        const sig = getItemSignature(item);
-        if (!seenSignatures.has(sig)) {
-          seenSignatures.add(sig);
-          combined.push(item);
-        }
-      }
-
-      combined.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-      const finalItems = combined.slice(0, LOCAL_VAULT_LIMIT);
-
+      const finalItems = await getCombinedUserLooks(currentUserPhone);
       $('vaultCountBadge').textContent = `${finalItems.length} / 10`;
 
       const grid = $('galleryGrid');
@@ -3535,14 +3572,11 @@
             <span class="gallery-card-type-pill">${esc(lookCategory)}</span>
           </div>
           <div class="gallery-card-body">
-            <div class="gallery-card-info">
-              <div class="gallery-card-name" title="${esc(lookTitle)}">${esc(lookTitle)}</div>
+            <div class="gallery-card-name" title="${esc(lookTitle)}">${esc(lookTitle)}</div>
+            <div class="gallery-card-footer">
               <div class="gallery-card-date">
                 <i class="bi bi-calendar3"></i> <span>${esc(formattedDate)}</span>
               </div>
-            </div>
-            <div class="gallery-card-footer">
-              <span class="vault-compare-hint"><i class="bi bi-arrows-angle-expand"></i> COMPARE</span>
               <div class="vault-actions-group">
                 <button type="button" class="vault-dl-btn" aria-label="Download look" title="Download photo">
                   <i class="bi bi-download"></i>
@@ -3596,6 +3630,29 @@
 
         grid.appendChild(card);
       });
+
+      // When vault reaches 10/10, show warning and auto-delete all user images from Supabase & local DB
+      if (finalItems.length >= LOCAL_VAULT_LIMIT) {
+        const shouldPurge = await showBrutalModal({
+          badge: "VAULT FULL (10 / 10)",
+          badgeBg: "#FEE2E2",
+          badgeColor: "#DC2626",
+          title: "10/10 LIMIT REACHED",
+          message: "Your My Looks vault has reached 10/10 capacity. All saved images for your account will now be deleted from the database. Tap 'KEEP TO DOWNLOAD' if you want to save any photos to your device first.",
+          cancelText: "KEEP TO DOWNLOAD",
+          confirmText: "DELETE ALL 10 NOW",
+          confirmBg: "#EF4444",
+          confirmColor: "#FFFFFF"
+        });
+
+        if (shouldPurge) {
+          showLoading("DELETING ALL SAVED LOOKS...", false);
+          await purgeAllUserLooks(currentUserPhone);
+          hideLoading();
+          showToast("ALL 10 LOOKS DELETED FROM DATABASE");
+          loadUserVault();
+        }
+      }
     }
 
     $('openGalleryBtn').addEventListener('click', loadUserVault);
