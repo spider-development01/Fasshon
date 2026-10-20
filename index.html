@@ -1548,8 +1548,8 @@
           <input type="range" id="oklchChromaSlider" min="0" max="60" step="1" value="32" class="sat-slider" />
         </div>
         <div class="slider-block">
-          <label for="oklchLiftSlider">LIGHTNESS SHIFT (k · ΔL*) <span id="liftVal">0.85</span></label>
-          <input type="range" id="oklchLiftSlider" min="0" max="150" step="5" value="85" class="lift-slider" />
+          <label for="oklchLiftSlider">TONE INTENSITY (k) <span id="liftVal">0.90</span></label>
+          <input type="range" id="oklchLiftSlider" min="15" max="135" step="5" value="90" class="lift-slider" />
         </div>
       </div>
 
@@ -1723,9 +1723,6 @@
 
     /* =========================================================================
        CIE 1976 L*a*b* (D65) COLORIMETRY & CALIBRATED SALON SHADE CATALOG
-       - Lightness formula: L_out = L_orig + k * weight * (L_target - mean_L_hair)
-         Preserves 100% of real local strand texture, flyaways, and soft reflections
-       - Deep brown & subtle merlot/plum shadow undertones + natural Root Shadow
        ========================================================================= */
     const SRGB_TO_LIN = new Float32Array(256);
     for (let i = 0; i < 256; i++) {
@@ -1798,61 +1795,56 @@
       return [fastLinToSRGB(rLin), fastLinToSRGB(gLin), fastLinToSRGB(bLin)];
     }
 
-    /* =========================================================================
-       CALIBRATED REAL-LIFE SALON SHADE CATALOG
-       - True Wine / Burgundy / Merlot uses deep L* (18..20) with rich merlot a*
-         and subtle brown/plum b*, never fire-engine red or neon pink
-       ========================================================================= */
     const SHADE_CATALOG = [
       // BROWNS & MOCHA
-      { name: "Jet Black",       family: "browns",  L: 11.5, a: 0.5,   b: -0.5  },
-      { name: "Blue Black",      family: "browns",  L: 13.0, a: 2.5,   b: -10.5 },
-      { name: "Darkest Brown",   family: "browns",  L: 16.5, a: 5.5,   b: 8.5   },
-      { name: "Espresso",        family: "browns",  L: 19.5, a: 7.5,   b: 12.5  },
-      { name: "Dark Brown",      family: "browns",  L: 23.5, a: 9.0,   b: 15.5  },
-      { name: "Coffee",          family: "browns",  L: 27.5, a: 10.0,  b: 18.5  },
-      { name: "Chocolate",       family: "browns",  L: 30.5, a: 13.0,  b: 21.0  },
-      { name: "Chestnut",        family: "browns",  L: 34.5, a: 17.5,  b: 24.0  },
-      { name: "Ash Brown",       family: "browns",  L: 35.0, a: 2.0,   b: 8.0   },
-      { name: "Medium Brown",    family: "browns",  L: 37.5, a: 10.0,  b: 19.5  },
-      { name: "Light Brown",     family: "browns",  L: 43.5, a: 11.0,  b: 23.5  },
-      { name: "Caramel",         family: "browns",  L: 49.0, a: 14.0,  b: 30.0  },
+      { name: "Jet Black",       family: "browns",  L: 12.0, a: 0.5,   b: -0.5  },
+      { name: "Blue Black",      family: "browns",  L: 13.5, a: 2.5,   b: -11.0 },
+      { name: "Darkest Brown",   family: "browns",  L: 17.5, a: 5.5,   b: 8.5   },
+      { name: "Espresso",        family: "browns",  L: 20.5, a: 7.5,   b: 12.5  },
+      { name: "Dark Brown",      family: "browns",  L: 24.5, a: 9.0,   b: 16.0  },
+      { name: "Coffee",          family: "browns",  L: 28.5, a: 10.0,  b: 19.0  },
+      { name: "Chocolate",       family: "browns",  L: 31.5, a: 13.0,  b: 21.5  },
+      { name: "Chestnut",        family: "browns",  L: 35.5, a: 17.5,  b: 24.5  },
+      { name: "Ash Brown",       family: "browns",  L: 36.0, a: 2.0,   b: 8.5   },
+      { name: "Medium Brown",    family: "browns",  L: 38.5, a: 10.0,  b: 20.0  },
+      { name: "Light Brown",     family: "browns",  L: 44.5, a: 11.0,  b: 24.0  },
+      { name: "Caramel",         family: "browns",  L: 50.0, a: 13.5,  b: 29.0  },
 
       // BLONDES & HONEY
-      { name: "Dark Blonde",     family: "blondes", L: 53.0, a: 7.0,   b: 24.0  },
-      { name: "Medium Blonde",   family: "blondes", L: 58.0, a: 6.0,   b: 25.0  },
-      { name: "Honey Blonde",    family: "blondes", L: 61.0, a: 8.5,   b: 30.0  },
-      { name: "Golden Honey",    family: "blondes", L: 63.0, a: 10.0,  b: 33.0  },
-      { name: "Golden Blonde",   family: "blondes", L: 66.0, a: 6.5,   b: 30.0  },
-      { name: "Warm Blonde",     family: "blondes", L: 64.0, a: 5.5,   b: 26.0  },
-      { name: "Ash Blonde",      family: "blondes", L: 61.0, a: 1.0,   b: 11.5  },
-      { name: "Sandy Blonde",    family: "blondes", L: 63.5, a: 3.5,   b: 18.5  },
-      { name: "Beige Blonde",    family: "blondes", L: 66.5, a: 3.0,   b: 16.5  },
-      { name: "Light Blonde",    family: "blondes", L: 69.5, a: 3.0,   b: 19.5  },
-      { name: "Pearl Blonde",    family: "blondes", L: 72.0, a: 2.0,   b: 10.5  },
-      { name: "Platinum Blonde", family: "blondes", L: 74.5, a: 1.0,   b: 7.0   },
+      { name: "Dark Blonde",     family: "blondes", L: 54.0, a: 6.5,   b: 23.0  },
+      { name: "Medium Blonde",   family: "blondes", L: 58.5, a: 5.5,   b: 24.0  },
+      { name: "Honey Blonde",    family: "blondes", L: 61.5, a: 8.0,   b: 28.5  },
+      { name: "Golden Honey",    family: "blondes", L: 63.5, a: 9.5,   b: 31.0  },
+      { name: "Golden Blonde",   family: "blondes", L: 66.5, a: 6.0,   b: 28.5  },
+      { name: "Warm Blonde",     family: "blondes", L: 64.5, a: 5.0,   b: 24.5  },
+      { name: "Ash Blonde",      family: "blondes", L: 61.5, a: 1.0,   b: 11.0  },
+      { name: "Sandy Blonde",    family: "blondes", L: 64.0, a: 3.0,   b: 17.5  },
+      { name: "Beige Blonde",    family: "blondes", L: 67.0, a: 2.5,   b: 15.5  },
+      { name: "Light Blonde",    family: "blondes", L: 70.0, a: 2.5,   b: 18.0  },
+      { name: "Pearl Blonde",    family: "blondes", L: 72.5, a: 1.5,   b: 10.0  },
+      { name: "Platinum Blonde", family: "blondes", L: 75.0, a: 1.0,   b: 6.5   },
 
-      // REDS, WINE, BURGUNDY & COPPER (True Deep Merlot/Burgundy with Brown & Plum Undertones)
-      { name: "Wine",            family: "reds",    L: 19.5, a: 31.0,  b: 7.5   },
-      { name: "Burgundy",        family: "reds",    L: 18.0, a: 28.5,  b: 4.5   },
-      { name: "Cherry",          family: "reds",    L: 21.0, a: 34.0,  b: 10.0  },
-      { name: "Mahogany",        family: "reds",    L: 22.5, a: 25.0,  b: 14.5  },
-      { name: "Ruby Red",        family: "reds",    L: 26.0, a: 38.5,  b: 16.0  },
-      { name: "True Red",        family: "reds",    L: 29.5, a: 42.5,  b: 21.5  },
-      { name: "Copper",          family: "reds",    L: 38.0, a: 26.0,  b: 33.0  },
-      { name: "Ginger",          family: "reds",    L: 44.0, a: 20.0,  b: 33.5  },
-      { name: "Rose Gold",       family: "reds",    L: 52.0, a: 19.0,  b: 14.0  },
-      { name: "Peach",           family: "reds",    L: 58.0, a: 17.0,  b: 20.0  },
+      // REDS, WINE, BURGUNDY & COPPER
+      { name: "Wine",            family: "reds",    L: 21.0, a: 33.5,  b: 8.0   },
+      { name: "Burgundy",        family: "reds",    L: 19.5, a: 30.5,  b: 4.5   },
+      { name: "Cherry",          family: "reds",    L: 22.5, a: 36.5,  b: 10.5  },
+      { name: "Mahogany",        family: "reds",    L: 24.0, a: 26.5,  b: 15.0  },
+      { name: "Ruby Red",        family: "reds",    L: 27.5, a: 40.5,  b: 16.5  },
+      { name: "True Red",        family: "reds",    L: 31.0, a: 44.0,  b: 22.0  },
+      { name: "Copper",          family: "reds",    L: 39.0, a: 26.0,  b: 33.0  },
+      { name: "Ginger",          family: "reds",    L: 45.0, a: 20.0,  b: 33.5  },
+      { name: "Rose Gold",       family: "reds",    L: 53.0, a: 18.5,  b: 14.0  },
+      { name: "Peach",           family: "reds",    L: 59.0, a: 16.5,  b: 19.5  },
 
       // PASTEL & FASHION
-      { name: "Plum",            family: "fashion", L: 19.0, a: 27.5,  b: -8.5  },
-      { name: "Berry",           family: "fashion", L: 24.0, a: 35.0,  b: 2.5   },
-      { name: "Violet",          family: "fashion", L: 24.5, a: 27.0,  b: -21.0 },
-      { name: "Denim Blue",      family: "fashion", L: 27.0, a: -2.0,  b: -25.0 },
-      { name: "Turquoise",       family: "fashion", L: 41.0, a: -23.0, b: -11.5 },
-      { name: "Rose Pink",       family: "fashion", L: 47.0, a: 32.0,  b: 6.5   },
-      { name: "Lilac",           family: "fashion", L: 54.0, a: 18.5,  b: -14.5 },
-      { name: "Silver Grey",     family: "fashion", L: 56.0, a: 0.0,   b: -2.0  }
+      { name: "Plum",            family: "fashion", L: 20.5, a: 29.0,  b: -8.5  },
+      { name: "Berry",           family: "fashion", L: 25.0, a: 36.5,  b: 3.0   },
+      { name: "Violet",          family: "fashion", L: 25.5, a: 28.0,  b: -21.0 },
+      { name: "Denim Blue",      family: "fashion", L: 28.0, a: -2.0,  b: -25.0 },
+      { name: "Turquoise",       family: "fashion", L: 42.0, a: -23.0, b: -11.5 },
+      { name: "Rose Pink",       family: "fashion", L: 48.0, a: 32.0,  b: 6.5   },
+      { name: "Lilac",           family: "fashion", L: 55.0, a: 18.5,  b: -14.5 },
+      { name: "Silver Grey",     family: "fashion", L: 57.0, a: 0.0,   b: -2.0  }
     ];
 
     let heicPromise = null;
@@ -1879,7 +1871,7 @@
     }
 
     const WEBP_QUALITY = 0.86;
-    const MAX_WORKING_DIM = 1080; // 1080p working resolution for crisp strand detail & fast inference
+    const MAX_WORKING_DIM = 1080;
 
     const ENCODE_TYPE = (() => {
       try {
@@ -2032,20 +2024,23 @@
     let originalWebpBlob = null;
     let originalDataURL = null;
 
-    // Hair Mask Buffers (Guided Filter Automatic Backup + Live Brush-Editable Mask + Root Shadow Map)
+    // Hair Mask & Multi-Scale Luminance Buffers
     let autoGuidedMask = null;
     let hairConfidenceMask = null;
     let rootShadowMask = null;
-
-    // Fallback CPU Precomputed Buffers
+    let precompBaseL = null; // 5x5 smoothed local base lightness L* (separates macro curls from fine strands)
     let precompLabL = null;
     let precompLabA = null;
     let precompLabB = null;
 
     let hairStats = {
-      meanL: 22.0,
+      meanL: 20.0,
       meanA: 4.5,
-      meanB: 7.5
+      meanB: 7.5,
+      p02: 4.0,
+      p50: 19.0,
+      p75: 28.0,
+      p96: 46.0
     };
 
     let canvasW = 0, canvasH = 0;
@@ -2066,15 +2061,14 @@
     let currentColorApplied = false;
     let currentShadeName = "Natural";
     
-    // Active Target CIE L*a*b* & Lightness Shift Parameter k
-    let targetLabL = 19.5;
-    let targetLabA = 31.0;
-    let targetLabB = 7.5;
-    let lightnessShiftK = 0.85; // k in L_out = L_orig + k * (L_target - mean_L_hair)
+    let targetLabL = 21.0;
+    let targetLabA = 33.5;
+    let targetLabB = 8.0;
+    let lightnessShiftK = 0.90;
 
     // Manual Brush State
     let isBrushMode = false;
-    let brushAction = 'add'; // 'add' | 'erase'
+    let brushAction = 'add';
     let brushRadius = 24;
     let isPaintingMask = false;
 
@@ -2086,10 +2080,12 @@
 
     /* =========================================================================
        REAL-TIME WEBGL GPU FRAGMENT SHADER ENGINE (WITH CANVAS 2D FALLBACK)
-       - Runs sRGB <-> CIE XYZ (D65) <-> CIE L*a*b* per pixel on GPU
-       - Implements L_out = L_orig + k * weight * (L_target - mean_L_hair)
-       - Preserves natural Root Shadow & deep brown/plum shadow undertones
-       - Smoothly rolls off chroma in specular highlights (zero plastic/pink glare)
+       - Packed Mask Texture:
+           R = Color-Unmixed & Guided Hair Confidence [0..1]
+           G = Natural Root Melt Shadow Weight [0..1]
+           B = Smoothed Local Base Lightness baseL / 100.0 [0..1]
+       - Continuous Monotonic Soft-Knee Tone Curve (Zero Black Blotches on Blondes)
+       - Preserves 100% of glossy specular wave highlights on Wine / Dark shades
        ========================================================================= */
     const WebGLHairRenderer = {
       canvas: null,
@@ -2126,6 +2122,7 @@
             uniform sampler2D u_maskTex;
             uniform vec3 u_targetLab;
             uniform vec3 u_hairMeanLab;
+            uniform vec3 u_hairBounds; // x = p02, y = p50/mean, z = p96
             uniform float u_k;
 
             float srgbToLin(float c) {
@@ -2190,6 +2187,7 @@
               vec4 maskData = texture2D(u_maskTex, v_uv);
               float conf = maskData.r;
               float rootShadow = maskData.g;
+              float baseL = maskData.b * 100.0;
 
               if (conf < 0.008) {
                 gl_FragColor = origRgba;
@@ -2204,57 +2202,101 @@
               float targetL = u_targetLab.x;
               float targetA = u_targetLab.y;
               float targetB = u_targetLab.z;
-              float meanL = u_hairMeanLab.x;
 
-              // 1. Keep local lightness detail (strands, flyaways, shine) and shift average lightness:
-              //    L_out = L_orig + k * weight * (L_target - mean_L_hair)
-              //    shadowToe keeps deepest shadow crevices grounded; highlightRoll prevents blown-out glare
-              float dL = targetL - meanL;
-              float shadowToe = smoothstep(2.0, 16.0, origL);
-              float highlightRoll = 1.0 - 0.42 * smoothstep(38.0, 82.0, origL);
-              float shiftWeight = shadowToe * highlightRoll;
+              float pLow = u_hairBounds.x;
+              float pMean = u_hairBounds.y;
+              float pHigh = u_hairBounds.z;
+              float span = max(12.0, pHigh - pLow);
 
-              float outL = origL + u_k * shiftWeight * dL;
+              // 1. Decompose into macro curl illumination (baseL) and fine individual hair strand detail
+              float strandDetail = origL - baseL;
+              float t = clamp((baseL - pLow) / span, 0.0, 1.0);
+              float tMean = clamp((pMean - pLow) / span, 0.20, 0.72);
 
-              // For dark dyes (like Wine, Burgundy, Espresso), gently compress harsh overhead lamp glare
-              // so crown highlights stay rich and silky rather than stark white/pink
-              if (targetL < 34.0 && origL > 36.0) {
-                float glareExcess = origL - 36.0;
-                float glareDamp = clamp((34.0 - targetL) / 20.0, 0.0, 0.42) * clamp(u_k, 0.0, 1.0);
-                outL -= glareExcess * glareDamp;
+              // 2. Continuous Monotonic Soft-Knee Tone Curve:
+              //    - When lifting dark hair to Blonde/Light shades, even the darkest curl (t=0)
+              //      lifts smoothly to a rich dark-blonde/brown lowlight (minL), eliminating black blotches.
+              //    - When applying Dark/Rich shades (Wine, Burgundy, Espresso), shadows stay deep
+              //      and specular wave highlights (maxL) keep 100% of their glossy contrast.
+              float liftAmount = max(0.0, targetL - pMean);
+              float liftBlend = clamp(liftAmount / 30.0, 0.0, 1.0);
+
+              float minL = mix(
+                min(pLow * 0.90, targetL * 0.44),
+                max(pLow + 4.0, targetL * 0.40),
+                liftBlend
+              );
+              float maxL = max(
+                pHigh * 0.98,
+                min(92.0, targetL + 22.0 + 0.16 * targetL)
+              );
+
+              float mappedBaseL;
+              if (t <= tMean) {
+                float u = t / tMean;
+                float uCurve = pow(u, 0.92);
+                mappedBaseL = mix(minL, targetL, uCurve);
+              } else {
+                float u = (t - tMean) / max(0.05, 1.0 - tMean);
+                float uCurve = pow(u, 0.88);
+                mappedBaseL = mix(targetL, maxL, uCurve);
               }
 
-              // Natural Root Shadow at scalp parting & hairline keeps roots naturally darker
-              float rootDarken = rootShadow * 0.55;
-              outL = mix(outL, min(outL, origL * 0.84), rootDarken);
-              outL = clamp(outL, 1.5, 96.0);
+              // Super-highlights above p96 keep natural specular roll-off
+              if (baseL > pHigh) {
+                mappedBaseL += (baseL - pHigh) * 0.75;
+              }
 
-              // 2. Chromatic Transfer (a*, b*):
-              //    - Deep shadows & roots retain a rich dark espresso-brown/plum undertone
-              //    - Midtones express the full salon target color (targetA, targetB)
-              //    - Bright specular reflections roll off chroma smoothly so shine looks natural, never plastic
-              float shadowChromaRamp = smoothstep(3.0, 21.0, outL);
-              float specularRollOff = 1.0 - 0.65 * smoothstep(36.0 + targetL * 0.45, 76.0, outL);
-              float chromaEnvelope = shadowChromaRamp * specularRollOff;
+              // Re-inject authentic individual hair strand detail
+              float detailScale = clamp((maxL - minL) / max(18.0, span), 0.82, 1.22);
+              float targetMappedL = mappedBaseL + strandDetail * detailScale;
 
-              // Deep brown/merlot base undertone in shadows & roots
-              vec2 darkRootBaseAB = vec2(5.5, 4.5);
+              // Blend lightness shift by user intensity slider u_k
+              float outL = mix(origL, targetMappedL, clamp(u_k, 0.0, 1.35));
+
+              // Natural Root Melt at upper hairline/parting when lifting to lighter shades
+              if (liftAmount > 5.0 && rootShadow > 0.01) {
+                float naturalRootL = mix(pMean * 0.88, outL, 0.42);
+                outL = mix(outL, min(outL, naturalRootL), rootShadow * 0.62);
+              }
+              outL = clamp(outL, 2.0, 95.0);
+
+              // 3. Multi-Zone Chromatic Transfer (Shadows -> Midtones -> Lit Wave Highlights):
+              //    - Smooth shadow ramp prevents neon darks
+              //    - Subtle highlight bloom on lit wave ridges (u in [0.55..0.85]) makes Wine/Reds/Browns gleam
+              //    - Smooth specular roll-off at peak glints makes Blondes creamy champagne & dark hair glossy
+              float shadowChromaRamp = smoothstep(3.0, 22.0, outL);
+              float waveHighlightBloom = 1.0 + 0.18 * sin(clamp((t - 0.35) / 0.55, 0.0, 1.0) * 3.14159265);
+              float specStart = max(42.0, targetL + 14.0);
+              float specularRollOff = 1.0 - 0.52 * smoothstep(specStart, 88.0, outL);
+
+              float chromaEnvelope = shadowChromaRamp * waveHighlightBloom * specularRollOff;
+
               vec2 targetAB = vec2(targetA, targetB) * chromaEnvelope;
 
-              // Preserve subtle natural strand chromatic micro-variation
-              vec2 naturalVarAB = (origLab.yz - u_hairMeanLab.yz) * 0.14;
-              vec2 dyedAB = targetAB + naturalVarAB * chromaEnvelope;
+              // Subtle natural strand-to-strand variation without camera noise pollution
+              vec2 naturalVarAB = clamp(origLab.yz - u_hairMeanLab.yz, vec2(-8.0), vec2(8.0)) * 0.10;
+              vec2 dyedAB = targetAB + naturalVarAB * shadowChromaRamp;
 
-              // Blend toward natural dark root undertone in the root shadow zone and deepest crevices
-              float rootColorMix = clamp(rootShadow * 0.68 + (1.0 - shadowChromaRamp) * 0.45, 0.0, 0.88);
-              vec2 finalTargetAB = mix(dyedAB, darkRootBaseAB * shadowChromaRamp, rootColorMix);
+              // Natural espresso-brown root & deep shadow undertone blend
+              vec2 darkRootBaseAB = vec2(5.0, 5.5) * shadowChromaRamp;
+              float rootColorMix = clamp(rootShadow * 0.58 + (1.0 - shadowChromaRamp) * 0.38, 0.0, 0.82);
+              vec2 finalTargetAB = mix(dyedAB, darkRootBaseAB, rootColorMix);
 
-              // Smooth feathered alpha blending against original hair
-              float alpha = smoothstep(0.0, 1.0, conf);
+              // 4. Separate Luma & Chroma Edge Feathering:
+              //    At outer semi-transparent boundary pixels (conf < 0.65), quadratic luma alpha (conf^2)
+              //    prevents darkening/brightening the background wall or forehead skin (zero outer halo!)
+              float lumaAlpha = conf * conf * (3.0 - 2.0 * conf);
+              if (conf < 0.70 && origL > pHigh + 6.0) {
+                float bgProtect = clamp((origL - pHigh - 6.0) / 22.0, 0.0, 1.0);
+                lumaAlpha *= (1.0 - bgProtect * 0.85);
+              }
+              float chromaAlpha = smoothstep(0.0, 0.95, conf);
+
               vec3 finalLab = vec3(
-                mix(origL, outL, alpha),
-                mix(origA, finalTargetAB.x, alpha),
-                mix(origB, finalTargetAB.y, alpha)
+                mix(origL, outL, lumaAlpha),
+                mix(origA, finalTargetAB.x, chromaAlpha),
+                mix(origB, finalTargetAB.y, chromaAlpha)
               );
 
               vec3 outRgb = labToSrgb(finalLab);
@@ -2301,6 +2343,7 @@
             maskTex: gl.getUniformLocation(prog, 'u_maskTex'),
             targetLab: gl.getUniformLocation(prog, 'u_targetLab'),
             hairMeanLab: gl.getUniformLocation(prog, 'u_hairMeanLab'),
+            hairBounds: gl.getUniformLocation(prog, 'u_hairBounds'),
             k: gl.getUniformLocation(prog, 'u_k')
           };
 
@@ -2337,7 +2380,7 @@
         gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, imageData);
       },
 
-      uploadMask(confMask, rootMask, w, h) {
+      uploadMask(confMask, rootMask, baseLArr, w, h) {
         if (!this.ready || !confMask) return;
         const gl = this.gl;
         const len = w * h;
@@ -2349,7 +2392,7 @@
           const idx = i * 4;
           dst[idx]     = Math.max(0, Math.min(255, (confMask[i] * 255.0 + 0.5) | 0));
           dst[idx + 1] = rootMask ? Math.max(0, Math.min(255, (rootMask[i] * 255.0 + 0.5) | 0)) : 0;
-          dst[idx + 2] = 0;
+          dst[idx + 2] = baseLArr ? Math.max(0, Math.min(255, (baseLArr[i] * 2.55 + 0.5) | 0)) : 50;
           dst[idx + 3] = 255;
         }
         gl.activeTexture(gl.TEXTURE1);
@@ -2372,6 +2415,7 @@
 
         gl.uniform3f(this.uniforms.targetLab, targetLabL, targetLabA, targetLabB);
         gl.uniform3f(this.uniforms.hairMeanLab, hairStats.meanL, hairStats.meanA, hairStats.meanB);
+        gl.uniform3f(this.uniforms.hairBounds, hairStats.p02, hairStats.p50, hairStats.p96);
         gl.uniform1f(this.uniforms.k, lightnessShiftK);
 
         gl.drawArrays(gl.TRIANGLES, 0, 6);
@@ -2935,7 +2979,6 @@
     $('logoutBtn').addEventListener('click', logoutClient);
     $('lockLogoutBtn').addEventListener('click', logoutClient);
 
-    /* CROSS-BROWSER SEGMENTER: GPU OPTIONAL BOOST + WASM CPU GUARANTEED FALLBACK */
     async function initModel() {
       try {
         const { ImageSegmenter, FilesetResolver } = await import("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/vision_bundle.mjs");
@@ -3142,7 +3185,7 @@
     brushResetBtn.addEventListener('click', () => {
       if (!autoGuidedMask || !hairConfidenceMask) return;
       hairConfidenceMask.set(autoGuidedMask);
-      WebGLHairRenderer.uploadMask(hairConfidenceMask, rootShadowMask, canvasW, canvasH);
+      WebGLHairRenderer.uploadMask(hairConfidenceMask, rootShadowMask, precompBaseL, canvasW, canvasH);
       scheduleRender();
       showToast("GUIDED MASK RESTORED");
     });
@@ -3152,7 +3195,6 @@
       const rect = hairCanvas.getBoundingClientRect();
       if (!rect.width || !rect.height) return;
 
-      // Update floating visual cursor ring
       brushCursorRing.style.display = 'block';
       brushCursorRing.style.left = `${clientX}px`;
       brushCursorRing.style.top = `${clientY}px`;
@@ -3170,10 +3212,6 @@
       const y0 = Math.max(0, Math.floor(cy - r));
       const y1 = Math.min(canvasH - 1, Math.ceil(cy + r));
 
-      const centerIdx = Math.max(0, Math.min(canvasH - 1, Math.round(cy))) * canvasW +
-                        Math.max(0, Math.min(canvasW - 1, Math.round(cx)));
-      const centerL = precompLabL ? precompLabL[centerIdx] : hairStats.meanL;
-
       for (let y = y0; y <= y1; y++) {
         const dy = y - cy;
         const row = y * canvasW;
@@ -3183,16 +3221,11 @@
           if (dSq > rSq) continue;
 
           const distNorm = Math.sqrt(dSq) / r;
-          // Smooth feathered brush falloff
-          const falloff = Math.pow(1.0 - distNorm, 1.5);
+          const falloff = Math.pow(1.0 - distNorm, 1.4);
           const idx = row + x;
 
           if (brushAction === 'add') {
-            // Edge-aware boost so adding hair respects strand luminance boundaries
-            const lDiff = precompLabL ? Math.abs(precompLabL[idx] - centerL) : 0.0;
-            const edgeGate = Math.exp(-(lDiff * lDiff) / 650.0);
-            const delta = falloff * (0.35 + 0.65 * edgeGate);
-            hairConfidenceMask[idx] = Math.min(1.0, hairConfidenceMask[idx] + delta * 0.45);
+            hairConfidenceMask[idx] = Math.min(1.0, hairConfidenceMask[idx] + falloff * 0.50);
           } else {
             hairConfidenceMask[idx] = Math.max(0.0, hairConfidenceMask[idx] - falloff * 0.55);
           }
@@ -3202,7 +3235,7 @@
       if (!currentColorApplied) {
         applySwatch(SHADE_CATALOG.find(s => s.name === 'Wine') || SHADE_CATALOG[0]);
       } else {
-        WebGLHairRenderer.uploadMask(hairConfidenceMask, rootShadowMask, canvasW, canvasH);
+        WebGLHairRenderer.uploadMask(hairConfidenceMask, rootShadowMask, precompBaseL, canvasW, canvasH);
         scheduleRender();
       }
     }
@@ -3246,7 +3279,6 @@
       let h = source.naturalHeight || source.videoHeight || source.height;
       if (!w || !h) throw new Error('Invalid image dimensions');
 
-      // Downscale before inference to MAX_WORKING_DIM (1080px)
       if (w > MAX_WORKING_DIM || h > MAX_WORKING_DIM) {
         if (w > h) { h = Math.round((h * MAX_WORKING_DIM) / w); w = MAX_WORKING_DIM; }
         else { w = Math.round((w * MAX_WORKING_DIM) / h); h = MAX_WORKING_DIM; }
@@ -3263,7 +3295,6 @@
       workingImageData = hairCtx.createImageData(w, h);
       workingImageData.data.set(originalImageData.data);
 
-      // Upload original 1080p frame to WebGL GPU texture once
       WebGLHairRenderer.uploadBaseImage(originalImageData);
 
       originalDataURL = canvasToDataURL(hairCanvas, WEBP_QUALITY);
@@ -3295,9 +3326,9 @@
     }
 
     /* =========================================================================
-       FAST O(N) FULL-RESOLUTION GUIDED IMAGE FILTER (HE ET AL.) + ROOT SHADOW MAP
-       Refines the upscaled segmenter mask against the full 1080p image so mask
-       edges follow real hair strands and flyaways without blocky boundaries.
+       INTERIOR CORE LOCK + BOUNDARY COLOR-UNMIXING ALPHA MATTE + GUIDED FILTER
+       - Prevents dark curl dropouts inside the hair (100% solid interior core)
+       - Eliminates outer silhouette halo & scalp parting / forehead skin bleed
        ========================================================================= */
     function runSegmentation(token) {
       if (!imageSegmenter || !originalImageData || token !== processToken) {
@@ -3314,19 +3345,20 @@
           return;
         }
 
-        showLoading("3/3 REFINING STRANDS (GUIDED FILTER)...", false, 86);
+        showLoading("3/3 REFINING STRANDS & EDGES...", false, 86);
 
         const maskObj = masks.length > 1 ? masks[1] : masks[0];
         const rawMask = maskObj.getAsFloat32Array();
         const mW = maskObj.width, mH = maskObj.height;
 
         const totalPixels = canvasW * canvasH;
-        const P = new Float32Array(totalPixels); // Coarse input mask P
-        const I = new Float32Array(totalPixels); // Full-res normalized guidance luminance I in [0..1]
+        const P = new Float32Array(totalPixels);
+        const I = new Float32Array(totalPixels);
 
         precompLabL = new Float32Array(totalPixels);
         precompLabA = new Float32Array(totalPixels);
         precompLabB = new Float32Array(totalPixels);
+        precompBaseL = new Float32Array(totalPixels);
         autoGuidedMask = new Float32Array(totalPixels);
         hairConfidenceMask = new Float32Array(totalPixels);
         rootShadowMask = new Float32Array(totalPixels);
@@ -3338,6 +3370,9 @@
         let sumL = 0.0, sumA = 0.0, sumB = 0.0, weightSum = 0.0;
         let skinSumL = 0.0, skinSumA = 0.0, skinSumB = 0.0, skinCount = 0.0;
         let hairMinY = canvasH, hairMaxY = 0;
+
+        const histBins = new Float32Array(201);
+        let histTotal = 0.0;
 
         for (let y = 0; y < canvasH; y++) {
           const fy = y * scaleY;
@@ -3357,7 +3392,8 @@
             const top = rawMask[row0 + x0] * (1 - wx) + rawMask[row0 + x1] * wx;
             const bot = rawMask[row1 + x0] * (1 - wx) + rawMask[row1 + x1] * wx;
             let conf = top * (1 - wy) + bot * wy;
-            conf = Math.max(0.0, Math.min(1.0, (conf - 0.22) / 0.58));
+            // Tighter initial threshold removes outer background halo from coarse segmenter
+            conf = Math.max(0.0, Math.min(1.0, (conf - 0.30) / 0.52));
             P[pIdx] = conf;
 
             const rgbaIdx = pIdx * 4;
@@ -3367,15 +3403,20 @@
             precompLabB[pIdx] = b;
             I[pIdx] = L * 0.01;
 
-            if (conf > 0.65) {
+            if (conf > 0.68) {
               sumL += L * conf;
               sumA += a * conf;
               sumB += b * conf;
               weightSum += conf;
+
+              const bin = Math.max(0, Math.min(200, (L * 2.0 + 0.5) | 0));
+              histBins[bin] += conf;
+              histTotal += conf;
+
               if (y < hairMinY) hairMinY = y;
               if (y > hairMaxY) hairMaxY = y;
             } else if (
-              conf < 0.12 &&
+              conf < 0.10 &&
               x > canvasW * 0.22 && x < canvasW * 0.78 &&
               y > canvasH * 0.15 && y < canvasH * 0.85 &&
               L > 38.0 && L < 86.0 && a > 5.0 && a < 26.0 && b > 10.0 && b < 38.0
@@ -3392,6 +3433,22 @@
           hairStats.meanL = Math.max(8.0, Math.min(72.0, sumL / weightSum));
           hairStats.meanA = sumA / weightSum;
           hairStats.meanB = sumB / weightSum;
+        }
+
+        if (histTotal > 20) {
+          const getPct = (p) => {
+            const target = histTotal * p;
+            let acc = 0.0;
+            for (let b = 0; b <= 200; b++) {
+              acc += histBins[b];
+              if (acc >= target) return b * 0.5;
+            }
+            return 35.0;
+          };
+          hairStats.p02 = Math.max(1.5, getPct(0.02));
+          hairStats.p50 = Math.max(hairStats.p02 + 4.0, getPct(0.50));
+          hairStats.p75 = Math.max(hairStats.p50 + 4.0, getPct(0.75));
+          hairStats.p96 = Math.max(hairStats.p75 + 6.0, getPct(0.96));
         }
 
         const skinL = skinCount > 25 ? (skinSumL / skinCount) : 64.0;
@@ -3428,9 +3485,12 @@
           }
         };
 
-        // Guided Image Filter (radius r = 7, regularization eps = 0.0025)
-        const rGuide = Math.max(5, Math.round(Math.max(canvasW, canvasH) / 140));
-        const eps = 0.0022;
+        // 1. Compute 5x5 smoothed local base lightness precompBaseL (separates macro curls from fine strands)
+        boxFilter(precompLabL, precompBaseL, 2);
+
+        // 2. Guided Image Filter (radius r = 6, regularization eps = 0.004)
+        const rGuide = Math.max(4, Math.round(Math.max(canvasW, canvasH) / 160));
+        const eps = 0.0045;
 
         const meanI = new Float32Array(totalPixels);
         const meanP = new Float32Array(totalPixels);
@@ -3458,16 +3518,17 @@
           bCoeff[i] = meanP[i] - a * meanI[i];
         }
 
-        const meanA = corrI;  // reuse buffer
-        const meanB = corrIP; // reuse buffer
+        const meanA = corrI;
+        const meanB = corrIP;
         boxFilter(aCoeff, meanA, rGuide);
         boxFilter(bCoeff, meanB, rGuide);
 
-        // Compute wider mask average (r = 14) to detect scalp parting & hairline root zone
-        const wideMaskAvg = aCoeff; // reuse buffer
-        boxFilter(P, wideMaskAvg, Math.max(10, rGuide * 2));
+        // Compute wide mask average (r = 14) to distinguish Solid Interior Hair vs Outer Boundary Band
+        const wideMaskAvg = aCoeff;
+        boxFilter(P, wideMaskAvg, Math.max(11, rGuide * 2));
 
         const hairSpanH = Math.max(50, hairMaxY - hairMinY);
+        const isDarkOrMidHair = hairStats.p50 < 48.0;
 
         for (let y = 0; y < canvasH; y++) {
           const row = y * canvasW;
@@ -3475,40 +3536,60 @@
 
           for (let x = 0; x < canvasW; x++) {
             const i = row + x;
-            // Guided filter output: follows exact strand edges of full-res guidance image I
-            let q = Math.max(0.0, Math.min(1.0, meanA[i] * I[i] + meanB[i]));
-
+            const rawP = P[i];
+            const wideM = wideMaskAvg[i];
             const cL = precompLabL[i];
             const cA = precompLabA[i];
             const cB = precompLabB[i];
 
-            // Skin-gap protection for neck/collarbone/forehead/parting skin visible between strands
-            if (q > 0.01 && q < 0.94) {
-              const dSkin = Math.hypot((cL - skinL) * 0.85, (cA - skinA) * 1.35, (cB - skinB) * 1.25);
-              const dHair = Math.hypot((cL - hairStats.meanL) * 1.05, (cA - hairStats.meanA) * 1.35, (cB - hairStats.meanB) * 1.25);
-              if (cL > hairStats.meanL + 10.0 && dSkin < dHair * 0.78 && cA > 5.5 && cB > 10.0) {
-                const skinGate = Math.max(0.0, Math.min(1.0, (dHair - dSkin) / (dHair + 8.0)));
-                q *= Math.max(0.0, 1.0 - skinGate * 0.90);
+            let q = Math.max(0.0, Math.min(1.0, meanA[i] * I[i] + meanB[i]));
+
+            // A. SOLID INTERIOR CORE LOCK:
+            //    Inside the hair body (wideM > 0.78 and rawP > 0.65), NEVER let the guided filter
+            //    create holes on dark shadow curls!
+            if (wideM > 0.76 && rawP > 0.62) {
+              q = Math.max(q, rawP);
+            }
+
+            // B. SKIN, SCALP PARTING & OUTER HALO UNMIXING:
+            //    1) Center scalp parting & forehead hairline skin protection:
+            //       If pixel is much brighter than hair and matches warm skin tone, unmix it out of the mask!
+            const dSkin = Math.hypot((cL - skinL) * 0.85, (cA - skinA) * 1.35, (cB - skinB) * 1.25);
+            const dHair = Math.hypot((cL - hairStats.p50) * 1.05, (cA - hairStats.meanA) * 1.35, (cB - hairStats.meanB) * 1.25);
+
+            if (isDarkOrMidHair && cL > hairStats.p75 + 6.0 && dSkin < dHair * 0.82 && cA > 4.5 && cB > 9.0) {
+              // Scalp parting or forehead/neck skin between wispy hairs
+              const skinProb = Math.max(0.0, Math.min(1.0, (dHair - dSkin) / (dHair + 6.0)));
+              const brightGate = Math.max(0.0, Math.min(1.0, (cL - hairStats.p75 - 4.0) / 18.0));
+              q *= Math.max(0.0, 1.0 - skinProb * brightGate * 0.94);
+            }
+
+            //    2) Outer boundary halo suppression:
+            //       Where wideM < 0.72 (outer silhouette of hair against background), suppress background bleed
+            if (wideM < 0.72 && q < 0.88) {
+              if (isDarkOrMidHair && cL > hairStats.p96 + 4.0) {
+                const bgExcess = Math.max(0.0, Math.min(1.0, (cL - hairStats.p96 - 2.0) / 20.0));
+                q *= Math.max(0.0, 1.0 - bgExcess * 0.90);
               }
+              // Tighten low-alpha fringe (< 0.18) so background wall never gets a tint halo
+              q = Math.max(0.0, Math.min(1.0, (q - 0.12) / 0.88));
             }
 
             autoGuidedMask[i] = q;
             hairConfidenceMask[i] = q;
 
-            // Natural Salon Root Shadow Map at crown parting, scalp crease & upper hairline
+            // C. NATURAL SALON ROOT SHADOW MELT (Only on actual hair roots near crown/parting, not skin)
             let rootW = 0.0;
-            if (relY >= -0.02 && relY < 0.36) {
-              const crownFade = 1.0 - (relY / 0.36);
-              const edgeProximity = Math.max(0.0, 1.0 - wideMaskAvg[i] * 1.08);
-              const scalpGlare = cL > hairStats.meanL + 12.0 ? Math.min(0.65, (cL - hairStats.meanL - 12.0) / 35.0) : 0.0;
-              rootW = Math.min(0.92, crownFade * (edgeProximity * 0.92 + scalpGlare * 0.75 + 0.22));
+            if (relY >= -0.02 && relY < 0.28 && q > 0.15) {
+              const crownZone = 1.0 - (relY / 0.28);
+              const boundaryProximity = Math.max(0.0, 1.0 - wideM * 1.05);
+              rootW = Math.min(0.80, crownZone * (boundaryProximity * 0.85 + 0.18));
             }
             rootShadowMask[i] = rootW;
           }
         }
 
-        // Upload refined guided mask + root shadow map to WebGL GPU
-        WebGLHairRenderer.uploadMask(hairConfidenceMask, rootShadowMask, canvasW, canvasH);
+        WebGLHairRenderer.uploadMask(hairConfidenceMask, rootShadowMask, precompBaseL, canvasW, canvasH);
 
         if (currentColorApplied) {
           scheduleRender();
@@ -3551,21 +3632,29 @@
         return;
       }
 
-      // Fast path: WebGL Fragment Shader on GPU
       if (WebGLHairRenderer.ready && WebGLHairRenderer.renderTo2DContext(hairCtx, canvasW, canvasH)) {
         return;
       }
 
-      // Automatic Fallback: Canvas 2D CPU using identical L_out = L_orig + k*(L_target - mean_L_hair) math
+      // Fallback Canvas 2D CPU using identical Continuous Soft-Knee Tone Curve math
       const src = originalImageData.data;
       const dst = workingImageData.data;
       dst.set(src);
 
       const totalPixels = canvasW * canvasH;
-      const meanL = hairStats.meanL;
-      const meanA = hairStats.meanA;
-      const meanB = hairStats.meanB;
-      const dL = targetLabL - meanL;
+      const pLow = hairStats.p02;
+      const pMean = hairStats.p50;
+      const pHigh = hairStats.p96;
+      const span = Math.max(12.0, pHigh - pLow);
+      const tMean = Math.max(0.20, Math.min(0.72, (pMean - pLow) / span));
+
+      const liftAmount = Math.max(0.0, targetLabL - pMean);
+      const liftBlend = Math.min(1.0, liftAmount / 30.0);
+      const minL = Math.min(pLow * 0.90, targetLabL * 0.44) * (1.0 - liftBlend) +
+                   Math.max(pLow + 4.0, targetLabL * 0.40) * liftBlend;
+      const maxL = Math.max(pHigh * 0.98, Math.min(92.0, targetLabL + 22.0 + 0.16 * targetLabL));
+      const detailScale = Math.max(0.82, Math.min(1.22, (maxL - minL) / Math.max(18.0, span)));
+      const kClamp = Math.max(0.0, Math.min(1.35, lightnessShiftK));
 
       for (let i = 0; i < totalPixels; i++) {
         const conf = hairConfidenceMask[i];
@@ -3574,42 +3663,63 @@
         const origL = precompLabL[i];
         const origA = precompLabA[i];
         const origB = precompLabB[i];
+        const baseL = precompBaseL ? precompBaseL[i] : origL;
         const rootShadow = rootShadowMask ? rootShadowMask[i] : 0.0;
 
-        const shadowToe = Math.max(0.0, Math.min(1.0, (origL - 2.0) / 14.0));
-        const hiT = Math.max(0.0, Math.min(1.0, (origL - 38.0) / 44.0));
-        const highlightRoll = 1.0 - 0.42 * (hiT * hiT * (3.0 - 2.0 * hiT));
+        const strandDetail = origL - baseL;
+        const t = Math.max(0.0, Math.min(1.0, (baseL - pLow) / span));
 
-        let outL = origL + lightnessShiftK * (shadowToe * highlightRoll) * dL;
-
-        if (targetLabL < 34.0 && origL > 36.0) {
-          const glareDamp = Math.max(0.0, Math.min(0.42, (34.0 - targetLabL) / 20.0)) * Math.min(1.0, lightnessShiftK);
-          outL -= (origL - 36.0) * glareDamp;
+        let mappedBaseL;
+        if (t <= tMean) {
+          const u = t / tMean;
+          mappedBaseL = minL + (targetLabL - minL) * Math.pow(u, 0.92);
+        } else {
+          const u = (t - tMean) / Math.max(0.05, 1.0 - tMean);
+          mappedBaseL = targetLabL + (maxL - targetLabL) * Math.pow(u, 0.88);
+        }
+        if (baseL > pHigh) {
+          mappedBaseL += (baseL - pHigh) * 0.75;
         }
 
-        const rootDarken = rootShadow * 0.55;
-        outL = outL * (1.0 - rootDarken) + Math.min(outL, origL * 0.84) * rootDarken;
-        outL = Math.max(1.5, Math.min(96.0, outL));
+        const targetMappedL = mappedBaseL + strandDetail * detailScale;
+        let outL = origL + (targetMappedL - origL) * kClamp;
 
-        const sRampT = Math.max(0.0, Math.min(1.0, (outL - 3.0) / 18.0));
+        if (liftAmount > 5.0 && rootShadow > 0.01) {
+          const naturalRootL = pMean * 0.88 * 0.58 + outL * 0.42;
+          const rMix = rootShadow * 0.62;
+          outL = outL * (1.0 - rMix) + Math.min(outL, naturalRootL) * rMix;
+        }
+        outL = Math.max(2.0, Math.min(95.0, outL));
+
+        const sRampT = Math.max(0.0, Math.min(1.0, (outL - 3.0) / 19.0));
         const shadowChromaRamp = sRampT * sRampT * (3.0 - 2.0 * sRampT);
+        const waveHighlightBloom = 1.0 + 0.18 * Math.sin(Math.max(0.0, Math.min(1.0, (t - 0.35) / 0.55)) * Math.PI);
+        const specStart = Math.max(42.0, targetLabL + 14.0);
+        const specT = Math.max(0.0, Math.min(1.0, (outL - specStart) / Math.max(10.0, 88.0 - specStart)));
+        const specularRollOff = 1.0 - 0.52 * (specT * specT * (3.0 - 2.0 * specT));
 
-        const specStart = 36.0 + targetLabL * 0.45;
-        const specT = Math.max(0.0, Math.min(1.0, (outL - specStart) / Math.max(10.0, 76.0 - specStart)));
-        const specularRollOff = 1.0 - 0.65 * (specT * specT * (3.0 - 2.0 * specT));
-        const chromaEnvelope = shadowChromaRamp * specularRollOff;
+        const chromaEnvelope = shadowChromaRamp * waveHighlightBloom * specularRollOff;
+        const varA = Math.max(-8.0, Math.min(8.0, origA - hairStats.meanA)) * 0.10;
+        const varB = Math.max(-8.0, Math.min(8.0, origB - hairStats.meanB)) * 0.10;
 
-        const dyedA = (targetLabA + (origA - meanA) * 0.14) * chromaEnvelope;
-        const dyedB = (targetLabB + (origB - meanB) * 0.14) * chromaEnvelope;
+        const dyedA = targetLabA * chromaEnvelope + varA * shadowChromaRamp;
+        const dyedB = targetLabB * chromaEnvelope + varB * shadowChromaRamp;
 
-        const rootColorMix = Math.min(0.88, rootShadow * 0.68 + (1.0 - shadowChromaRamp) * 0.45);
-        const finalTargetA = dyedA * (1.0 - rootColorMix) + (5.5 * shadowChromaRamp) * rootColorMix;
-        const finalTargetB = dyedB * (1.0 - rootColorMix) + (4.5 * shadowChromaRamp) * rootColorMix;
+        const rootColorMix = Math.min(0.82, rootShadow * 0.58 + (1.0 - shadowChromaRamp) * 0.38);
+        const finalTargetA = dyedA * (1.0 - rootColorMix) + (5.0 * shadowChromaRamp) * rootColorMix;
+        const finalTargetB = dyedB * (1.0 - rootColorMix) + (5.5 * shadowChromaRamp) * rootColorMix;
 
-        const alpha = conf * conf * (3.0 - 2.0 * conf);
-        const finalL = origL + (outL - origL) * alpha;
-        const finalA = origA + (finalTargetA - origA) * alpha;
-        const finalB = origB + (finalTargetB - origB) * alpha;
+        let lumaAlpha = conf * conf * (3.0 - 2.0 * conf);
+        if (conf < 0.70 && origL > pHigh + 6.0) {
+          const bgProtect = Math.max(0.0, Math.min(1.0, (origL - pHigh - 6.0) / 22.0));
+          lumaAlpha *= (1.0 - bgProtect * 0.85);
+        }
+        const cT = Math.max(0.0, Math.min(1.0, conf / 0.95));
+        const chromaAlpha = cT * cT * (3.0 - 2.0 * cT);
+
+        const finalL = origL + (outL - origL) * lumaAlpha;
+        const finalA = origA + (finalTargetA - origA) * chromaAlpha;
+        const finalB = origB + (finalTargetB - origB) * chromaAlpha;
 
         const [r, g, b] = cieLabToSRGB(finalL, finalA, finalB);
         const idx = i * 4;
@@ -3628,7 +3738,7 @@
       targetLabL = shade.L;
       targetLabA = shade.a;
       targetLabB = shade.b;
-      lightnessShiftK = 0.85;
+      lightnessShiftK = 0.90;
 
       const chroma = Math.hypot(targetLabA, targetLabB);
       let hueDeg = Math.atan2(targetLabB, targetLabA) * (180.0 / Math.PI);
@@ -3636,11 +3746,11 @@
 
       $('oklchHueSlider').value = Math.round(hueDeg);
       $('oklchChromaSlider').value = Math.round(chroma);
-      $('oklchLiftSlider').value = 85;
+      $('oklchLiftSlider').value = 90;
 
       $('hueVal').textContent = `${Math.round(hueDeg)}°`;
       $('chromaVal').textContent = `${Math.round(chroma)}`;
-      $('liftVal').textContent = '0.85';
+      $('liftVal').textContent = '0.90';
       $('currentShadeBadge').textContent = currentShadeName.toUpperCase();
 
       renderSwatches();
@@ -3689,7 +3799,7 @@
       });
     }
 
-    /* FINE TUNE SLIDER CONTROLS (REAL-TIME GPU CIELAB + k SHIFT) */
+    /* FINE TUNE SLIDER CONTROLS */
     $('openFineTuneBtn').addEventListener('click', () => {
       $('fineTuneModal').classList.add('open');
     });
