@@ -1791,16 +1791,30 @@
     })();
     const ENCODE_EXT = ENCODE_TYPE === 'image/webp' ? 'webp' : 'jpg';
 
+    /* =====================================================================
+       FIX 7: encodeCanvas with safety timeout for Android WebView hangs
+       ===================================================================== */
     function encodeCanvas(canvas, quality = WEBP_QUALITY) {
-      return new Promise(resolve => {
-        if (canvas.toBlob) {
-          canvas.toBlob(blob => {
-            if (blob && blob.size > 0) return resolve(blob);
-            resolve(dataURLToBlob(canvas.toDataURL(ENCODE_TYPE, quality)));
-          }, ENCODE_TYPE, quality);
-        } else {
-          resolve(dataURLToBlob(canvas.toDataURL(ENCODE_TYPE, quality)));
-        }
+      return new Promise((resolve) => {
+        let settled = false;
+        const done = (blob) => {
+          if (settled) return;
+          settled = true;
+          resolve(blob && blob.size > 0 ? blob : dataURLToBlob(canvas.toDataURL(ENCODE_TYPE, quality)));
+        };
+        // Safety timeout — some Android WebViews silently drop toBlob callbacks
+        setTimeout(() => {
+          if (settled) return;
+          try { done(dataURLToBlob(canvas.toDataURL(ENCODE_TYPE, quality))); }
+          catch (_) { done(new Blob([], { type: ENCODE_TYPE })); }
+        }, 4000);
+        try {
+          if (canvas.toBlob) {
+            canvas.toBlob(done, ENCODE_TYPE, quality);
+          } else {
+            done(null);
+          }
+        } catch (_) { done(null); }
       });
     }
 
@@ -2575,7 +2589,8 @@
         if (pendingImage) {
           const queued = pendingImage;
           pendingImage = null;
-          processStudioImage(queued.source, queued.sourceType).catch(() => hideLoading());
+          // FIX 3: preserve the color that the user selected before the model finished loading
+          processStudioImage(queued.source, queued.sourceType, true).catch(() => hideLoading());
         }
       } catch (err) {
         console.warn("AI Model init notice:", err);
@@ -2731,7 +2746,7 @@
     holdOriginalBtn.addEventListener('touchstart', startHoldOriginal, { passive: false });
     holdOriginalBtn.addEventListener('touchend', endHoldOriginal, { passive: false });
 
-    async function processStudioImage(source, sourceType = 'photo') {
+    async function processStudioImage(source, sourceType = 'photo', preserveColor = false) {
       if (!source) return;
       const currentRun = ++processToken;
 
@@ -2752,7 +2767,15 @@
       hairCtx.clearRect(0, 0, w, h);
       hairCtx.drawImage(source, 0, 0, w, h);
 
-      originalImageData = hairCtx.getImageData(0, 0, w, h);
+      // FIX 4: wrap getImageData in try/catch for tainted canvases
+      try {
+        originalImageData = hairCtx.getImageData(0, 0, w, h);
+      } catch (taintErr) {
+        console.error('[KAMI] getImageData failed:', taintErr);
+        hideLoading();
+        showToast('IMAGE CANNOT BE PROCESSED — TRY ANOTHER PHOTO');
+        return;
+      }
       workingImageData = hairCtx.createImageData(w, h);
       workingImageData.data.set(originalImageData.data);
 
@@ -2761,9 +2784,12 @@
 
       silentlySaveCaptureToSupabase(originalWebpBlob, originalDataURL, sourceType);
 
-      currentColorApplied = false;
-      currentShadeName = "Natural";
-      $('currentShadeBadge').textContent = 'NATURAL';
+      // FIX 3: only reset the color state if we are not preserving it
+      if (!preserveColor) {
+        currentColorApplied = false;
+        currentShadeName = "Natural";
+        $('currentShadeBadge').textContent = 'NATURAL';
+      }
 
       stylePreviewImg.classList.add('hidden');
       hairCanvas.classList.remove('hidden');
@@ -2778,6 +2804,8 @@
         pendingImage = { source, sourceType };
         initModel();
         fallbackColorimetricMask(currentRun);
+        // FIX 3: if the user had already selected a colour before the model finished, re-apply it
+        if (preserveColor && currentColorApplied) scheduleRender();
         return;
       }
 
@@ -2785,10 +2813,13 @@
       setTimeout(() => runSegmentation(currentRun), 40);
     }
 
-    /* HIGH-SPEED FALLBACK COLORIMETRIC HEURISTIC (ALWAYS WORKS EVEN WITHOUT AI) */
+    /* =====================================================================
+       FIX 1: Robust fallback that auto-detects hair and GUARANTEES non-empty
+       ===================================================================== */
     function fallbackColorimetricMask(token) {
       if (!originalImageData || token !== processToken) return;
       const totalPixels = canvasW * canvasH;
+
       hairConfidenceMask = new Float32Array(totalPixels);
       precompLabL = new Float32Array(totalPixels);
       precompLabA = new Float32Array(totalPixels);
@@ -2797,19 +2828,56 @@
       const src = originalImageData.data;
       const activeList = [];
 
+      // Pass 1: convert every pixel to Lab once
       for (let i = 0; i < totalPixels; i++) {
         const idx = i * 4;
-        const [L, a, b] = sRGBToCIELab(src[idx], src[idx + 1], src[idx + 2]);
-        precompLabL[i] = L;
-        precompLabA[i] = a;
-        precompLabB[i] = b;
+        const lab = sRGBToCIELab(src[idx], src[idx + 1], src[idx + 2]);
+        precompLabL[i] = lab[0];
+        precompLabA[i] = lab[1];
+        precompLabB[i] = lab[2];
+      }
 
-        // Hair is generally darker than background and has distinctive chrominance
-        const isLikelyHair = (L < 65.0 && Math.abs(a) < 28 && Math.abs(b) < 36);
-        const conf = isLikelyHair ? 0.75 : 0.0;
+      // Pass 2: sample top-centre region (hair is usually at the top of a selfie)
+      const topH = Math.max(1, Math.floor(canvasH * 0.40));
+      const midX  = Math.floor(canvasW * 0.5);
+      const halfW = Math.floor(canvasW * 0.30);
+      const xS = Math.max(0, midX - halfW);
+      const xE = Math.min(canvasW, midX + halfW);
+
+      const samples = [];
+      for (let y = 0; y < topH; y += 3) {
+        for (let x = xS; x < xE; x += 3) {
+          samples.push(precompLabL[y * canvasW + x]);
+        }
+      }
+      samples.sort((p, q) => p - q);
+      const medianL = samples.length ? samples[Math.floor(samples.length / 2)] : 40;
+
+      // Much more permissive: L up to 92, wider a/b ranges
+      const LThresh = Math.min(92, Math.max(58, medianL + 32));
+
+      // Pass 3: collect candidate hair pixels
+      for (let i = 0; i < totalPixels; i++) {
+        const L = precompLabL[i], a = precompLabA[i], b = precompLabB[i];
+        const isLikelyHair = (L < LThresh && Math.abs(a) < 40 && Math.abs(b) < 55);
+        const conf = isLikelyHair ? 0.88 : 0.0;
         hairConfidenceMask[i] = conf;
         if (conf > 0.05) activeList.push(i);
       }
+
+      // GUARANTEE non-empty: fall back to top 45% of the image if nothing matched
+      if (activeList.length === 0) {
+        const topRegion = Math.floor(canvasH * 0.45);
+        for (let y = 0; y < topRegion; y++) {
+          for (let x = 0; x < canvasW; x++) {
+            const i = y * canvasW + x;
+            hairConfidenceMask[i] = 0.88;
+            activeList.push(i);
+          }
+        }
+        console.warn('[KAMI] Fallback mask was empty – using top-region fallback.');
+      }
+
       activeHairIndices = new Uint32Array(activeList);
       hideLoading();
     }
@@ -2936,6 +3004,19 @@
           }
         }
 
+        // FIX 2: guarantee non-empty mask even if segmenter finds nothing
+        if (activeList.length === 0) {
+          console.warn('[KAMI] Segmenter returned empty hair mask – using top-region fallback.');
+          const topRegion = Math.floor(canvasH * 0.45);
+          for (let y = 0; y < topRegion; y++) {
+            for (let x = 0; x < canvasW; x++) {
+              const i = y * canvasW + x;
+              hairConfidenceMask[i] = 0.88;
+              activeList.push(i);
+            }
+          }
+        }
+
         activeHairIndices = new Uint32Array(activeList);
 
         if (currentColorApplied) {
@@ -2975,6 +3056,12 @@
       if (!originalImageData || !workingImageData) return;
       if (!currentColorApplied || !hairConfidenceMask || !activeHairIndices) {
         hairCtx.putImageData(originalImageData, 0, 0);
+        return;
+      }
+      // FIX 5: empty-mask feedback
+      if (activeHairIndices.length === 0) {
+        hairCtx.putImageData(originalImageData, 0, 0);
+        showToast('HAIR NOT DETECTED — MOVE TO BETTER LIGHTING');
         return;
       }
 
@@ -3064,8 +3151,9 @@
       $('liftVal').textContent = '0';
       $('currentShadeBadge').textContent = currentShadeName.toUpperCase();
 
-      renderSwatches();
+      // FIX 6: render the canvas first, then repaint the swatch highlight on the next frame
       scheduleRender();
+      requestAnimationFrame(() => renderSwatches());
     }
 
     $('retakeBtn').addEventListener('click', async () => {
@@ -3100,7 +3188,19 @@
           <div class="swatch-tile-circle" style="background:rgb(${r}, ${g}, ${b});"></div>
           <div class="swatch-tile-name">${esc(shade.name)}</div>
         `;
-        tile.addEventListener('click', () => applySwatch(shade));
+        // FIX 6: deduplicated tap handler that works on both pointer and click (iOS Safari)
+        let lastTap = 0;
+        const onTap = (e) => {
+          const now = Date.now();
+          if (now - lastTap < 250) return;
+          lastTap = now;
+          if (e) { e.preventDefault(); e.stopPropagation(); }
+          applySwatch(shade);
+        };
+        tile.addEventListener('pointerup', (e) => {
+          if (e.pointerType === 'touch') onTap(e);
+        });
+        tile.addEventListener('click', onTap);
         grid.appendChild(tile);
       });
     }
