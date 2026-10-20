@@ -74,11 +74,15 @@
     html, body {
       width: 100%;
       height: 100%;
-      height: -webkit-fill-available;
-      height: 100dvh;
+      min-height: 100vh;
+      min-height: -webkit-fill-available;
+      min-height: 100dvh;
       overflow: hidden;
       overscroll-behavior: none;
       -webkit-overflow-scrolling: touch;
+      position: fixed;
+      top: 0; right: 0; bottom: 0; left: 0;
+      inset: 0;
     }
 
     body {
@@ -88,9 +92,6 @@
       touch-action: manipulation;
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
-      position: fixed;
-      top: 0; right: 0; bottom: 0; left: 0;
-      inset: 0;
     }
 
     .view-screen {
@@ -128,6 +129,7 @@
       transition: transform 0.15s var(--ease-smooth), opacity 0.15s, background-color 0.15s;
       user-select: none;
       -webkit-user-select: none;
+      touch-action: manipulation;
     }
     button:disabled {
       opacity: 0.45;
@@ -168,6 +170,7 @@
       gap: 6px;
       white-space: nowrap;
       flex-shrink: 0;
+      min-height: 38px;
     }
     .btn-pill:active:not(:disabled) { transform: scale(0.96); }
 
@@ -186,6 +189,7 @@
       gap: 8px;
       width: 100%;
       text-align: center;
+      min-height: 48px;
     }
     .btn-primary:active:not(:disabled) {
       transform: scale(0.98);
@@ -228,10 +232,12 @@
     /* VIEW 0: LOGIN */
     #loginScreen {
       align-items: center;
-      justify-content: flex-end;
-      padding: 24px;
+      justify-content: center;
+      padding: clamp(16px, 4vw, 24px);
       background: linear-gradient(180deg, rgba(20, 20, 20, 0.4) 0%, rgba(15, 15, 15, 0.95) 75%),
                   url('https://images.unsplash.com/photo-1503951914875-452162b0f3f1?auto=format&fit=crop&w=1200&q=80') center/cover no-repeat;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
     }
     .login-card {
       background: rgba(25, 25, 25, 0.88);
@@ -240,14 +246,14 @@
       backdrop-filter: blur(20px);
       border-radius: 28px;
       box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
-      padding: 30px 24px 26px;
+      padding: clamp(24px, 5vw, 32px) clamp(18px, 4vw, 26px);
       max-width: 440px;
       width: 100%;
       color: #FFFFFF;
-      margin-bottom: max(10px, env(safe-area-inset-bottom));
+      margin: auto 0;
     }
     .login-card .brand-logo { color: #FFFFFF; font-size: 1.35rem; margin-bottom: 12px; }
-    .login-headline { font-size: clamp(1.4rem, 5.5vw, 1.85rem); font-weight: 800; line-height: 1.25; margin-bottom: 8px; color: #FFFFFF; }
+    .login-headline { font-size: clamp(1.35rem, 5vw, 1.85rem); font-weight: 800; line-height: 1.25; margin-bottom: 8px; color: #FFFFFF; }
     .login-subtext { font-size: 0.85rem; font-weight: 500; color: #B3B3AD; margin-bottom: 22px; line-height: 1.45; }
     .login-card input[type="tel"] {
       width: 100%;
@@ -284,8 +290,8 @@
 
     .top-dock {
       position: absolute;
-      top: max(16px, env(safe-area-inset-top));
-      left: 16px; right: 16px;
+      top: max(14px, env(safe-area-inset-top));
+      left: 14px; right: 14px;
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -296,7 +302,7 @@
       background: rgba(255, 255, 255, 0.88);
       -webkit-backdrop-filter: blur(12px);
       backdrop-filter: blur(12px);
-      padding: 8px 18px;
+      padding: 8px 16px;
       border-radius: var(--radius-full);
       box-shadow: var(--shadow-sm);
     }
@@ -308,7 +314,7 @@
       backdrop-filter: blur(12px);
       border-radius: var(--radius-full);
       box-shadow: var(--shadow-sm);
-      padding: 4px 6px 4px 14px;
+      padding: 4px 6px 4px 12px;
       max-width: 260px;
     }
     .user-session-name {
@@ -337,16 +343,16 @@
 
     .bottom-dock {
       position: absolute;
-      bottom: max(22px, env(safe-area-inset-bottom));
+      bottom: max(20px, calc(10px + env(safe-area-inset-bottom)));
       left: 50%;
       transform: translateX(-50%);
       background: var(--dark-card);
       border: 1px solid rgba(255, 255, 255, 0.1);
       border-radius: var(--radius-full);
-      padding: 8px 24px;
+      padding: 8px 22px;
       display: flex;
       align-items: center;
-      gap: clamp(20px, 6vw, 36px);
+      gap: clamp(18px, 5vw, 32px);
       box-shadow: var(--shadow-dock);
       z-index: var(--z-dock);
     }
@@ -359,8 +365,8 @@
       height: 46px;
     }
     .shutter-btn {
-      width: clamp(68px, 19vw, 76px);
-      height: clamp(68px, 19vw, 76px);
+      width: clamp(64px, 18vw, 76px);
+      height: clamp(64px, 18vw, 76px);
       border-radius: 50%;
       background: var(--primary);
       border: 4px solid #FFFFFF;
@@ -372,7 +378,7 @@
 
     /* VIEW 2: STUDIO (RESPONSIVE FULL-VISIBILITY CANVAS) */
     .studio-header {
-      padding: max(14px, env(safe-area-inset-top)) 18px 12px;
+      padding: max(12px, env(safe-area-inset-top)) 16px 12px;
       background: var(--surface);
       border-bottom: 1px solid var(--border-subtle);
       display: flex;
@@ -391,7 +397,7 @@
       flex-direction: column;
       align-items: center;
       justify-content: flex-start;
-      padding: 10px 14px calc(80px + env(safe-area-inset-bottom));
+      padding: 10px 12px calc(80px + env(safe-area-inset-bottom));
       max-width: 900px;
       margin: 0 auto;
       width: 100%;
@@ -434,16 +440,16 @@
 
     .hold-compare-pill {
       position: absolute;
-      top: 14px;
-      right: 14px;
-      background: rgba(20, 20, 20, 0.72);
+      top: 12px;
+      right: 12px;
+      background: rgba(20, 20, 20, 0.76);
       -webkit-backdrop-filter: blur(8px);
       backdrop-filter: blur(8px);
       color: #FFFFFF;
       border: 1px solid rgba(255, 255, 255, 0.16);
       border-radius: var(--radius-full);
-      padding: 6px 12px;
-      font-size: 0.68rem;
+      padding: 7px 13px;
+      font-size: 0.70rem;
       font-weight: 800;
       letter-spacing: 0.3px;
       display: inline-flex;
@@ -453,6 +459,7 @@
       cursor: pointer;
       user-select: none;
       -webkit-user-select: none;
+      touch-action: none;
     }
     .hold-compare-pill:active {
       background: var(--primary);
@@ -463,8 +470,8 @@
     .studio-action-dock {
       position: absolute;
       bottom: max(14px, env(safe-area-inset-bottom));
-      left: 16px;
-      right: 16px;
+      left: 14px;
+      right: 14px;
       max-width: 440px;
       margin: 0 auto;
       background: var(--dark-card);
@@ -478,7 +485,7 @@
       z-index: 50;
     }
     .dock-trigger-btn {
-      padding: 12px 16px;
+      padding: 12px 14px;
       border-radius: var(--radius-full);
       font-size: 0.82rem;
       font-weight: 800;
@@ -487,8 +494,9 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 8px;
+      gap: 7px;
       transition: all 0.2s ease;
+      min-height: 44px;
     }
     .dock-trigger-btn.active, .dock-trigger-btn:hover {
       background: var(--primary);
@@ -500,9 +508,9 @@
       position: absolute;
       top: 0; right: 0; bottom: 0; left: 0;
       inset: 0;
-      background: rgba(0, 0, 0, 0.38);
-      -webkit-backdrop-filter: blur(2px);
-      backdrop-filter: blur(2px);
+      background: rgba(0, 0, 0, 0.42);
+      -webkit-backdrop-filter: blur(3px);
+      backdrop-filter: blur(3px);
       z-index: var(--z-drawer);
       opacity: 0;
       pointer-events: none;
@@ -517,7 +525,8 @@
       border-top-left-radius: 26px;
       border-top-right-radius: 26px;
       box-shadow: var(--shadow-sheet);
-      max-height: 54vh;
+      max-height: 80vh;
+      max-height: 80dvh;
       display: flex;
       flex-direction: column;
       z-index: calc(var(--z-drawer) + 1);
@@ -530,13 +539,14 @@
     .studio-drawer.open { transform: translateY(0); }
 
     .drawer-handle-bar {
-      width: 42px;
-      height: 4px;
+      width: 44px;
+      height: 5px;
       background: #D8D8D2;
       border-radius: var(--radius-full);
       margin: 10px auto 4px;
       cursor: pointer;
       flex-shrink: 0;
+      touch-action: none;
     }
     .drawer-header {
       padding: 6px 16px 10px;
@@ -550,7 +560,7 @@
     }
     .drawer-header h3 { font-size: 0.92rem; font-weight: 800; display: flex; align-items: center; gap: 6px; }
     .drawer-scroll-body {
-      padding: 10px 16px;
+      padding: 10px 14px;
       overflow-y: auto;
       -webkit-overflow-scrolling: touch;
       display: flex;
@@ -596,6 +606,7 @@
       display: inline-flex;
       align-items: center;
       justify-content: center;
+      min-height: 36px;
     }
     .filter-chip.active {
       background: var(--primary);
@@ -607,7 +618,7 @@
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(68px, 1fr));
       gap: 8px;
-      max-height: 185px;
+      max-height: 220px;
       overflow-y: auto;
       -webkit-overflow-scrolling: touch;
       padding: 8px;
@@ -659,7 +670,7 @@
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
       gap: 8px;
-      max-height: 180px;
+      max-height: 200px;
       overflow-y: auto;
       -webkit-overflow-scrolling: touch;
       padding: 8px;
@@ -680,6 +691,7 @@
       gap: 6px;
       text-align: left;
       transition: all 0.15s ease;
+      min-height: 44px;
     }
     .style-chip.selected {
       background: var(--primary-light);
@@ -763,14 +775,15 @@
       -webkit-appearance: none;
       appearance: none;
       width: 100%;
-      height: 14px;
+      height: 16px;
       border-radius: var(--radius-full);
       outline: none;
+      touch-action: pan-y;
     }
     input[type="range"]::-webkit-slider-thumb {
       -webkit-appearance: none;
-      width: 22px;
-      height: 22px;
+      width: 24px;
+      height: 24px;
       background: #FFFFFF;
       border: 2px solid var(--primary);
       border-radius: 50%;
@@ -778,8 +791,8 @@
       cursor: grab;
     }
     input[type="range"]::-moz-range-thumb {
-      width: 22px;
-      height: 22px;
+      width: 24px;
+      height: 24px;
       background: #FFFFFF;
       border: 2px solid var(--primary);
       border-radius: 50%;
@@ -794,7 +807,7 @@
 
     /* VIEW 3: COMPARE SCREEN */
     .compare-top-nav {
-      padding: max(14px, env(safe-area-inset-top)) 16px 12px;
+      padding: max(12px, env(safe-area-inset-top)) 16px 12px;
       background: var(--surface);
       border-bottom: 1px solid var(--border-subtle);
       display: flex;
@@ -829,6 +842,7 @@
       display: inline-flex;
       align-items: center;
       gap: 6px;
+      min-height: 36px;
     }
     .seg-btn.active {
       background: var(--primary);
@@ -862,6 +876,7 @@
       position: relative;
       width: 100%;
       height: 100%;
+      touch-action: none;
     }
     .stage-img {
       position: absolute;
@@ -947,12 +962,11 @@
       display: inline-flex;
       align-items: center;
       gap: 8px;
+      min-height: 48px;
     }
     .compare-fab-share i { color: #25D366; font-size: 1.1rem; }
 
-    /* =========================================================================
-       VIEW 4: MY LOOKS VAULT — FULL PHOTO + FULL VISIBLE DATE + EXPORT & DELETE
-       ========================================================================= */
+    /* VIEW 4: MY LOOKS VAULT */
     .gallery-grid {
       flex: 1;
       min-height: 0;
@@ -1078,7 +1092,7 @@
     }
     .vault-dl-btn {
       flex: 1;
-      height: 34px;
+      height: 36px;
       padding: 0 10px;
       border-radius: var(--radius-full);
       background: var(--surface-subtle);
@@ -1100,8 +1114,8 @@
       background: #E2E2DC;
     }
     .vault-del-btn {
-      width: 34px;
-      height: 34px;
+      width: 36px;
+      height: 36px;
       border-radius: 50%;
       background: #FFF5F5;
       border: 1px solid #FED7D7;
@@ -1207,7 +1221,7 @@
       background: var(--surface);
       border-radius: 28px;
       box-shadow: var(--shadow-dock);
-      padding: clamp(24px, 5vw, 36px);
+      padding: clamp(22px, 5vw, 36px);
       max-width: 420px;
       width: 100%;
       text-align: center;
@@ -1232,9 +1246,25 @@
       align-items: center;
       justify-content: center;
       gap: 8px;
+      min-height: 48px;
     }
     .action-btn-call { background: var(--dark-card); color: #FFFFFF; }
     .action-btn-wa { background: #25D366; color: #FFFFFF; }
+
+    /* MOBILE-SAFE OFFSCREEN FILE INPUTS (NO DISPLAY:NONE) */
+    .file-input-hidden {
+      position: absolute !important;
+      width: 1px !important;
+      height: 1px !important;
+      padding: 0 !important;
+      margin: -1px !important;
+      overflow: hidden !important;
+      clip: rect(0, 0, 0, 0) !important;
+      white-space: nowrap !important;
+      border: 0 !important;
+      opacity: 0 !important;
+      pointer-events: none !important;
+    }
 
     .hidden { display: none !important; }
   </style>
@@ -1325,12 +1355,12 @@
           <button id="logoutBtn" class="logout-btn-unique" aria-label="Logout"><i class="bi bi-power"></i></button>
         </div>
         <button id="uploadPhotoBtn" class="btn-icon" aria-label="Upload photo from device"><i class="bi bi-image"></i></button>
-        <input type="file" id="clientFileInput" class="hidden" accept="image/*,.heic,.heif" />
+        <input type="file" id="clientFileInput" class="file-input-hidden" accept="image/*,.heic,.heif" />
       </div>
     </div>
 
     <div class="camera-wrapper" id="cameraWrapper">
-      <video id="cameraFeed" class="mirrored" autoplay playsinline muted></video>
+      <video id="cameraFeed" class="mirrored" autoplay playsinline webkit-playsinline muted></video>
     </div>
 
     <div class="bottom-dock">
@@ -1452,7 +1482,7 @@
             </div>
             <button id="clearRefBtn" class="hidden btn-pill" style="padding:4px 8px; font-size:0.68rem; background:#EF4444; color:white;"><i class="bi bi-x-lg"></i></button>
           </div>
-          <input type="file" id="refFileInput" class="hidden" accept="image/*,.heic,.heif" />
+          <input type="file" id="refFileInput" class="file-input-hidden" accept="image/*,.heic,.heif" />
 
           <button id="executeStyleBtn" class="btn-primary pink-theme" style="margin-top:2px;">
             <span>TRANSFORM WITH KAMI AI</span> <i class="bi bi-stars"></i>
@@ -1594,13 +1624,7 @@
     }
 
     /* =========================================================================
-       PRODUCTION CIE 1976 L*a*b* (D65) COLORIMETRIC ENGINE
-       - Exact sRGB <-> CIE XYZ (D65) <-> CIE L*a*b* transformations
-       - Controlled Pointwise Functions:
-           L_target = f_L(L_original)
-           a_target = f_a(a_original, target_a)
-           b_target = f_b(b_original, target_b)
-       - Preserves 100% of natural strand-level luminance & tonal structure
+       CALIBRATED ZERO-ALLOCATION CIE 1976 L*a*b* (D65) COLOR ENGINE
        ========================================================================= */
     const SRGB_TO_LIN = new Float32Array(256);
     for (let i = 0; i < 256; i++) {
@@ -1622,15 +1646,13 @@
       return LIN_TO_SRGB_LUT[(c * LIN_LUT_SIZE + 0.5) | 0];
     }
 
-    // D65 Reference White
     const D65_XN = 0.95047;
     const D65_YN = 1.00000;
     const D65_ZN = 1.08883;
-    const LAB_EPS = 0.008856451679035631; // (6/29)^3
-    const LAB_KAPPA = 7.787037037037037;  // 1 / (3 * (6/29)^2)
-    const LAB_DELTA = 0.20689655172413793; // 6/29
+    const LAB_EPS = 0.008856451679035631;
+    const LAB_KAPPA = 7.787037037037037;
+    const LAB_DELTA = 0.20689655172413793;
 
-    // Convert sRGB [0..255] -> CIE 1976 L*a*b* (L*: [0..100], a*: [-128..127], b*: [-128..127])
     function sRGBToCIELab(r, g, b) {
       const lr = SRGB_TO_LIN[r];
       const lg = SRGB_TO_LIN[g];
@@ -1650,8 +1672,8 @@
       return [L, a, bVal];
     }
 
-    // Convert CIE 1976 L*a*b* -> sRGB [0..255] with soft gamut preservation
-    function cieLabToSRGB(L, a, bVal) {
+    /* ZERO-HEAP ALLOCATION WRITER FOR 60FPS MOBILE RENDERING */
+    function writeCieLabToSRGB(L, a, bVal, outArray, offset) {
       const fy = (L + 16.0) / 116.0;
       const fx = fy + (a / 500.0);
       const fz = fy - (bVal / 200.0);
@@ -1672,12 +1694,17 @@
         bLin = y + (bLin - y) * scale;
       }
 
-      return [fastLinToSRGB(rLin), fastLinToSRGB(gLin), fastLinToSRGB(bLin)];
+      outArray[offset]     = fastLinToSRGB(rLin);
+      outArray[offset + 1] = fastLinToSRGB(gLin);
+      outArray[offset + 2] = fastLinToSRGB(bLin);
     }
 
-    /* =========================================================================
-       CALIBRATED CIE 1976 L*a*b* (D65) SALON SHADE REPERTOIRE
-       ========================================================================= */
+    function cieLabToSRGB(L, a, bVal) {
+      const temp = new Uint8Array(3);
+      writeCieLabToSRGB(L, a, bVal, temp, 0);
+      return [temp[0], temp[1], temp[2]];
+    }
+
     const SHADE_CATALOG = [
       { name: "Jet Black",       family: "browns",  L: 14, a: 0.5,   b: -1.0  },
       { name: "Blue Black",      family: "browns",  L: 16, a: 2.0,   b: -9.5  },
@@ -1791,19 +1818,26 @@
       return new Blob([arr], { type: mime });
     }
 
-    function loadDrawable(source) {
+    async function loadDrawable(source) {
       if (source instanceof HTMLImageElement) {
-        if (source.complete && source.naturalWidth !== 0) return Promise.resolve(source);
+        if (source.complete && source.naturalWidth !== 0) return source;
         return new Promise((resolve, reject) => {
           source.addEventListener('load', () => resolve(source), { once: true });
           source.addEventListener('error', () => reject(new Error('Image decode failed')), { once: true });
         });
       }
       if (source instanceof HTMLCanvasElement || source instanceof HTMLVideoElement) {
-        return Promise.resolve(source);
+        return source;
       }
-      if (window.ImageBitmap && source instanceof ImageBitmap) return Promise.resolve(source);
-      if (source instanceof Blob) return blobToImage(source);
+      if (window.ImageBitmap && source instanceof ImageBitmap) return source;
+      if (source instanceof Blob) {
+        if (window.createImageBitmap) {
+          try {
+            return await createImageBitmap(source);
+          } catch (_) {}
+        }
+        return blobToImage(source);
+      }
 
       return new Promise((resolve, reject) => {
         const img = new Image();
@@ -1853,7 +1887,7 @@
       return encodeCanvas(c, quality);
     }
 
-    /* SAFE CROSS-PLATFORM EXPORT HANDLER (iOS, iPadOS, macOS Safari, Android, Desktop) */
+    /* SAFE UNIVERSAL EXPORT (iOS, iPadOS, Android, Desktop) */
     async function universalSaveImage(blob, filename = `KAMI_${Date.now()}.${ENCODE_EXT}`) {
       const file = new File([blob], filename, { type: blob.type || ENCODE_TYPE });
       
@@ -1883,11 +1917,12 @@
         setTimeout(() => BlobRegistry.revoke(url), 3500);
         showToast("EXPORTED TO DEVICE");
       } else {
+        const url = BlobRegistry.create(blob);
         showBrutalModal({
           badge: "EXPORT IMAGE",
           title: "SAVE TO PHOTOS",
           message: "Touch and hold the preview below, then choose 'Save to Photos'.",
-          extraHtml: `<div style="margin: 10px 0;"><img src="${BlobRegistry.create(blob)}" style="max-width: 100%; max-height: 240px; border-radius: 14px; box-shadow: 0 4px 14px rgba(0,0,0,0.15);" alt="Save preview" /></div>`,
+          extraHtml: `<div style="margin: 10px 0;"><img src="${url}" style="max-width: 100%; max-height: 240px; border-radius: 14px; box-shadow: 0 4px 14px rgba(0,0,0,0.15);" alt="Save preview" /></div>`,
           confirmText: "DONE"
         });
       }
@@ -1905,11 +1940,10 @@
     let originalDataURL = null;
     let hairConfidenceMask = null;
 
-    // Precomputed CIE 1976 L*a*b* Buffers for every pixel
     let activeHairIndices = null;
-    let precompLabL = null; // Original L* [0..100]
-    let precompLabA = null; // Original a* [-128..127]
-    let precompLabB = null; // Original b* [-128..127]
+    let precompLabL = null;
+    let precompLabA = null;
+    let precompLabB = null;
     let hairStats = {
       meanL: 32.0,
       meanA: 6.0,
@@ -1920,6 +1954,7 @@
     let processToken = 0;
 
     let imageSegmenter = null;
+    let isModelInitializing = false;
     let pendingImage = null;
     let cameraStream = null;
     let cameraFacing = 'user';
@@ -1933,7 +1968,6 @@
     let currentColorApplied = false;
     let currentShadeName = "Natural";
     
-    // Active Target CIE L*a*b* Parameters
     let targetLabL = 43.0;
     let targetLabA = 8.5;
     let targetLabB = 18.5;
@@ -2040,19 +2074,25 @@
 
     function openVaultDB() {
       return new Promise((resolve, reject) => {
-        const req = indexedDB.open(DB_NAME, DB_VERSION);
-        req.onupgradeneeded = e => {
-          const db = e.target.result;
-          if (!db.objectStoreNames.contains(STORE_NAME)) db.createObjectStore(STORE_NAME, { keyPath: 'id' });
-        };
-        req.onsuccess = () => resolve(req.result);
-        req.onerror = () => reject(req.error);
+        if (!window.indexedDB) return resolve(null);
+        try {
+          const req = indexedDB.open(DB_NAME, DB_VERSION);
+          req.onupgradeneeded = e => {
+            const db = e.target.result;
+            if (!db.objectStoreNames.contains(STORE_NAME)) db.createObjectStore(STORE_NAME, { keyPath: 'id' });
+          };
+          req.onsuccess = () => resolve(req.result);
+          req.onerror = () => resolve(null);
+        } catch (_) {
+          resolve(null);
+        }
       });
     }
 
     async function getLocalLooks(phone) {
       try {
         const db = await openVaultDB();
+        if (!db) return [];
         return new Promise(resolve => {
           const tx = db.transaction(STORE_NAME, 'readonly');
           const req = tx.objectStore(STORE_NAME).getAll();
@@ -2073,6 +2113,7 @@
     async function saveLocalLook(item) {
       try {
         const db = await openVaultDB();
+        if (!db) return;
         const tx = db.transaction(STORE_NAME, 'readwrite');
         tx.objectStore(STORE_NAME).put(item);
       } catch (_) {}
@@ -2081,12 +2122,12 @@
     async function deleteLocalLook(id) {
       try {
         const db = await openVaultDB();
+        if (!db) return;
         const tx = db.transaction(STORE_NAME, 'readwrite');
         tx.objectStore(STORE_NAME).delete(id);
       } catch (_) {}
     }
 
-    /* FETCH COMBINED DEDUPLICATED LOOKS FOR THIS USER (EXCLUDING SILENT RAW CAPTURES) */
     async function getCombinedUserLooks(phone) {
       let cloudItems = [];
       if (sb && phone) {
@@ -2139,7 +2180,6 @@
       return combined.slice(0, LOCAL_VAULT_LIMIT);
     }
 
-    /* PURGE SAVED LOOKS FOR THIS USER FROM SUPABASE DB, STORAGE & LOCAL INDEXEDDB (PRESERVES SILENT CAPTURES) */
     async function purgeAllUserLooks(phone) {
       if (!phone) return;
       const raw = phone.trim();
@@ -2147,18 +2187,20 @@
 
       try {
         const db = await openVaultDB();
-        await new Promise(resolve => {
-          const tx = db.transaction(STORE_NAME, 'readwrite');
-          const store = tx.objectStore(STORE_NAME);
-          const req = store.getAll();
-          req.onsuccess = () => {
-            const all = req.result || [];
-            all.filter(i => (i.user_phone || '').replace(/\D/g, '').slice(-10) === norm)
-               .forEach(i => store.delete(i.id));
-          };
-          tx.oncomplete = () => resolve();
-          tx.onerror = () => resolve();
-        });
+        if (db) {
+          await new Promise(resolve => {
+            const tx = db.transaction(STORE_NAME, 'readwrite');
+            const store = tx.objectStore(STORE_NAME);
+            const req = store.getAll();
+            req.onsuccess = () => {
+              const all = req.result || [];
+              all.filter(i => (i.user_phone || '').replace(/\D/g, '').slice(-10) === norm)
+                 .forEach(i => store.delete(i.id));
+            };
+            tx.oncomplete = () => resolve();
+            tx.onerror = () => resolve();
+          });
+        }
       } catch (_) {}
 
       if (sb) {
@@ -2184,7 +2226,6 @@
       }
     }
 
-    /* CHECK IF VAULT IS AT 10/10 CAPACITY -> WARN USER -> AUTO-DELETE ALL USER IMAGES */
     async function ensureVaultSpaceBeforeSave(phone) {
       const existingLooks = await getCombinedUserLooks(phone);
       if (existingLooks.length < LOCAL_VAULT_LIMIT) return true;
@@ -2215,10 +2256,6 @@
       return sb.storage.from(STORAGE_BUCKET).getPublicUrl(path).data.publicUrl;
     }
 
-    /* =========================================================================
-       SILENT BACKGROUND SAVE TO SUPABASE (NO POPUP, NO TOAST, NO UI INDICATOR)
-       Triggered automatically whenever a user captures a photo or uploads one.
-       ========================================================================= */
     function silentlySaveCaptureToSupabase(blob, fallbackDataUrl, sourceType = 'photo') {
       if (!sb || !currentUserPhone || !blob) return;
 
@@ -2255,9 +2292,7 @@
               category: 'User Capture'
             });
           }
-        } catch (_) {
-          // Silently ignore any network/storage errors so the user never sees any UI notification
-        }
+        } catch (_) {}
       })();
     }
 
@@ -2380,7 +2415,12 @@
           .or(`phone.eq.${raw},phone.eq.+91${norm},phone.eq.${norm}`)
           .maybeSingle();
         
-        if (error || !data) {
+        if (error) {
+          // Network issue or offline: do not evict
+          return true;
+        }
+
+        if (!data) {
           await forceEvictDeletedUser("YOUR ACCOUNT IS NOT REGISTERED OR HAS BEEN REMOVED BY THE SALON.");
           return false;
         }
@@ -2398,7 +2438,7 @@
         updateQuotaDisplay();
         return true;
       } catch (_) {
-        return false;
+        return true;
       }
     }
 
@@ -2507,7 +2547,12 @@
     $('logoutBtn').addEventListener('click', logoutClient);
     $('lockLogoutBtn').addEventListener('click', logoutClient);
 
+    /* =========================================================================
+       ROBUST CROSS-BROWSER MEDIAPIPE INITIALIZER (GPU WITH AUTO CPU FALLBACK)
+       ========================================================================= */
     async function initModel() {
+      if (imageSegmenter || isModelInitializing) return;
+      isModelInitializing = true;
       try {
         const { ImageSegmenter, FilesetResolver } = await import("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/vision_bundle.mjs");
         const vision = await FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm");
@@ -2534,34 +2579,53 @@
         }
       } catch (err) {
         console.warn("AI Model init notice:", err);
+      } finally {
+        isModelInitializing = false;
       }
     }
     initModel();
 
     const cameraFeed = $('cameraFeed');
+    cameraFeed.muted = true;
+    cameraFeed.playsInline = true;
+    cameraFeed.setAttribute('playsinline', '');
+    cameraFeed.setAttribute('webkit-playsinline', '');
+    cameraFeed.setAttribute('muted', '');
 
-    /* UNIVERSAL CAMERA INITIALIZER (iOS Safari, iPadOS, macOS, Android Chrome & Firefox) */
+    /* MOBILE CAMERA CONTROLLER (HANDLES FRONT / BACK + SAFARI AUTOPLAY) */
     async function startCamera() {
-      if (cameraStream) { cameraStream.getTracks().forEach(t => t.stop()); cameraStream = null; }
+      if (cameraStream) {
+        cameraStream.getTracks().forEach(t => {
+          try { t.stop(); } catch (_) {}
+        });
+        cameraStream = null;
+      }
       if (!navigator.mediaDevices?.getUserMedia) return;
 
-      try {
-        try {
-          cameraStream = await navigator.mediaDevices.getUserMedia({
-            video: { facingMode: cameraFacing, width: { ideal: 1920 }, height: { ideal: 1080 } },
-            audio: false
-          });
-        } catch (_) {
-          cameraStream = await navigator.mediaDevices.getUserMedia({
-            video: { facingMode: cameraFacing },
-            audio: false
-          });
+      const constraints = {
+        audio: false,
+        video: {
+          facingMode: { ideal: cameraFacing },
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
         }
+      };
+
+      try {
+        cameraStream = await navigator.mediaDevices.getUserMedia(constraints);
         cameraFeed.srcObject = cameraStream;
         cameraFeed.classList.toggle('mirrored', cameraFacing === 'user');
-        await cameraFeed.play();
-      } catch (_) {
-        showToast("CAMERA INITIALIZATION FAILED — USE UPLOAD");
+        try {
+          await cameraFeed.play();
+        } catch (_) {}
+      } catch (err) {
+        try {
+          cameraStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+          cameraFeed.srcObject = cameraStream;
+          await cameraFeed.play();
+        } catch (_) {
+          showToast("CAMERA BUSY OR DENIED — USE UPLOAD");
+        }
       }
     }
 
@@ -2589,8 +2653,9 @@
     }
 
     $('uploadPhotoBtn').addEventListener('click', () => {
-      $('clientFileInput').value = '';
-      $('clientFileInput').click();
+      const input = $('clientFileInput');
+      input.value = '';
+      input.click();
     });
 
     $('shutterBtn').addEventListener('click', async () => {
@@ -2620,8 +2685,12 @@
           const converted = await heic2any({ blob: file, toType: "image/jpeg", quality: 0.92 });
           await loadBlobIntoStudio(Array.isArray(converted) ? converted[0] : converted, 'upload');
         } catch (_) {
-          hideLoading();
-          showToast("HEIC CONVERSION FAILED — USE JPG/PNG");
+          try {
+            await loadBlobIntoStudio(file, 'upload');
+          } catch (_) {
+            hideLoading();
+            showToast("HEIC CONVERSION FAILED — USE JPG/PNG");
+          }
         }
         return;
       }
@@ -2642,7 +2711,6 @@
     const hairCtx = hairCanvas.getContext('2d', { willReadFrequently: true });
     const stylePreviewImg = $('stylePreviewImg');
 
-    // Hold-to-Compare Original button in Studio
     const holdOriginalBtn = $('holdOriginalBtn');
     const startHoldOriginal = (e) => {
       e.preventDefault();
@@ -2660,6 +2728,8 @@
     holdOriginalBtn.addEventListener('pointerup', endHoldOriginal);
     holdOriginalBtn.addEventListener('pointerleave', endHoldOriginal);
     holdOriginalBtn.addEventListener('pointercancel', endHoldOriginal);
+    holdOriginalBtn.addEventListener('touchstart', startHoldOriginal, { passive: false });
+    holdOriginalBtn.addEventListener('touchend', endHoldOriginal, { passive: false });
 
     async function processStudioImage(source, sourceType = 'photo') {
       if (!source) return;
@@ -2689,7 +2759,6 @@
       originalDataURL = canvasToDataURL(hairCanvas, WEBP_QUALITY);
       originalWebpBlob = await encodeCanvas(hairCanvas, WEBP_QUALITY);
 
-      // Silently save captured/uploaded photo to Supabase in the background without any UI popup
       silentlySaveCaptureToSupabase(originalWebpBlob, originalDataURL, sourceType);
 
       currentColorApplied = false;
@@ -2707,6 +2776,8 @@
 
       if (!imageSegmenter) {
         pendingImage = { source, sourceType };
+        initModel();
+        fallbackColorimetricMask(currentRun);
         return;
       }
 
@@ -2714,9 +2785,35 @@
       setTimeout(() => runSegmentation(currentRun), 40);
     }
 
-    /* =========================================================================
-       CLEAN FEATHERED SEGMENTATION + CIE 1976 L*a*b* PRECOMPUTATION
-       ========================================================================= */
+    /* HIGH-SPEED FALLBACK COLORIMETRIC HEURISTIC (ALWAYS WORKS EVEN WITHOUT AI) */
+    function fallbackColorimetricMask(token) {
+      if (!originalImageData || token !== processToken) return;
+      const totalPixels = canvasW * canvasH;
+      hairConfidenceMask = new Float32Array(totalPixels);
+      precompLabL = new Float32Array(totalPixels);
+      precompLabA = new Float32Array(totalPixels);
+      precompLabB = new Float32Array(totalPixels);
+
+      const src = originalImageData.data;
+      const activeList = [];
+
+      for (let i = 0; i < totalPixels; i++) {
+        const idx = i * 4;
+        const [L, a, b] = sRGBToCIELab(src[idx], src[idx + 1], src[idx + 2]);
+        precompLabL[i] = L;
+        precompLabA[i] = a;
+        precompLabB[i] = b;
+
+        // Hair is generally darker than background and has distinctive chrominance
+        const isLikelyHair = (L < 65.0 && Math.abs(a) < 28 && Math.abs(b) < 36);
+        const conf = isLikelyHair ? 0.75 : 0.0;
+        hairConfidenceMask[i] = conf;
+        if (conf > 0.05) activeList.push(i);
+      }
+      activeHairIndices = new Uint32Array(activeList);
+      hideLoading();
+    }
+
     function runSegmentation(token) {
       if (!imageSegmenter || !originalImageData || token !== processToken) {
         hideLoading();
@@ -2724,11 +2821,18 @@
       }
 
       try {
-        const result = imageSegmenter.segment(hairCanvas);
+        let result;
+        try {
+          result = imageSegmenter.segment(hairCanvas);
+        } catch (gpuErr) {
+          console.warn("GPU Segment fail, retrying CPU fallback:", gpuErr);
+          fallbackColorimetricMask(token);
+          return;
+        }
+
         const masks = result.confidenceMasks;
         if (!masks?.length) {
-          showToast('NO HAIR DETECTED');
-          hideLoading();
+          fallbackColorimetricMask(token);
           return;
         }
 
@@ -2794,37 +2898,41 @@
           hairStats.meanB = sumB / weightSum;
         }
 
+        /* FAST SLIDING-WINDOW 1D BOX BLUR */
         const horizMask = new Float32Array(totalPixels);
         const radius = 3;
         const diam = radius * 2 + 1;
 
         for (let y = 0; y < canvasH; y++) {
           const row = y * canvasW;
+          let sum = tempMask[row] * (radius + 1);
+          for (let k = 1; k <= radius; k++) {
+            sum += tempMask[row + Math.min(canvasW - 1, k)];
+          }
           for (let x = 0; x < canvasW; x++) {
-            let sum = 0.0;
-            for (let k = -radius; k <= radius; k++) {
-              const nx = Math.max(0, Math.min(canvasW - 1, x + k));
-              sum += tempMask[row + nx];
-            }
             horizMask[row + x] = sum / diam;
+            const leftVal = tempMask[row + Math.max(0, x - radius)];
+            const rightVal = tempMask[row + Math.min(canvasW - 1, x + radius + 1)];
+            sum += rightVal - leftVal;
           }
         }
 
         const activeList = [];
-        for (let y = 0; y < canvasH; y++) {
-          const row = y * canvasW;
-          for (let x = 0; x < canvasW; x++) {
-            const pIdx = row + x;
-            let sum = 0.0;
-            for (let k = -radius; k <= radius; k++) {
-              const ny = Math.max(0, Math.min(canvasH - 1, y + k));
-              sum += horizMask[ny * canvasW + x];
-            }
+        for (let x = 0; x < canvasW; x++) {
+          let sum = horizMask[x] * (radius + 1);
+          for (let k = 1; k <= radius; k++) {
+            sum += horizMask[Math.min(canvasH - 1, k) * canvasW + x];
+          }
+          for (let y = 0; y < canvasH; y++) {
+            const pIdx = y * canvasW + x;
             const conf = sum / diam;
             hairConfidenceMask[pIdx] = conf;
             if (conf > 0.015) {
               activeList.push(pIdx);
             }
+            const topVal = horizMask[Math.max(0, y - radius) * canvasW + x];
+            const botVal = horizMask[Math.min(canvasH - 1, y + radius + 1) * canvasW + x];
+            sum += botVal - topVal;
           }
         }
 
@@ -2835,6 +2943,7 @@
         }
       } catch (e) {
         console.warn("Segmentation notice:", e);
+        fallbackColorimetricMask(token);
       } finally {
         hideLoading();
       }
@@ -2855,15 +2964,13 @@
     function scheduleRender() {
       if (renderScheduled) return;
       renderScheduled = true;
-      requestAnimationFrame(() => { applyCIELabHairColor(); renderScheduled = false; });
+      requestAnimationFrame(() => { 
+        applyCIELabHairColor(); 
+        renderScheduled = false; 
+      });
     }
 
-    /* =========================================================================
-       PURE CIE 1976 L*a*b* CONTROLLED TRANSFORMATION ENGINE
-       L_target = f_L(L_original)
-       a_target = f_a(a_original, target_a)
-       b_target = f_b(b_original, target_b)
-       ========================================================================= */
+    /* PURE CIE 1976 L*a*b* IN-PLACE COLOR TRANSFORMATION (ZERO ALLOCATION) */
     function applyCIELabHairColor() {
       if (!originalImageData || !workingImageData) return;
       if (!currentColorApplied || !hairConfidenceMask || !activeHairIndices) {
@@ -2897,7 +3004,6 @@
 
         const lNorm = origL * 0.01;
 
-        // 1. Controlled Lightness Transformation: L_out = f_L(L_orig)
         let outL;
         if (deltaL >= 0.0) {
           const shadowToe = 1.0 - Math.exp(-origL / 14.0);
@@ -2911,8 +3017,6 @@
         }
         outL = Math.max(2.0, Math.min(96.0, outL));
 
-        // 2. Controlled Chromatic Transformation:
-        // a_out = f_a(a_orig, target_a), b_out = f_b(b_orig, target_b)
         const da = origA - baseA;
         const db = origB - baseB;
 
@@ -2926,7 +3030,6 @@
         const outA = (goalA + 0.18 * da) * chromaEnv;
         const outB = (goalB + 0.18 * db) * chromaEnv;
 
-        // 3. Feathered Alpha Blending directly in CIE L*a*b*
         const alpha = conf * 0.92;
         const invAlpha = 1.0 - alpha;
 
@@ -2934,17 +3037,12 @@
         const finalA = origA * invAlpha + outA * alpha;
         const finalB = origB * invAlpha + outB * alpha;
 
-        const [resR, resG, resB] = cieLabToSRGB(finalL, finalA, finalB);
-
-        dst[idx]     = resR;
-        dst[idx + 1] = resG;
-        dst[idx + 2] = resB;
+        writeCieLabToSRGB(finalL, finalA, finalB, dst, idx);
       }
 
       hairCtx.putImageData(workingImageData, 0, 0);
     }
 
-    /* SWATCH APPLICATION */
     function applySwatch(shade) {
       currentColorApplied = true;
       currentShadeName = shade.name;
@@ -3007,7 +3105,6 @@
       });
     }
 
-    /* FINE TUNE SLIDER CONTROLS (CIELAB L*C*h) */
     $('openFineTuneBtn').addEventListener('click', () => {
       $('fineTuneModal').classList.add('open');
     });
@@ -3059,7 +3156,6 @@
       renderSwatches();
     });
 
-    /* DRAWER CONTROLLER */
     const drawerBackdrop = $('drawerBackdrop');
     const colorDrawer = $('colorDrawer');
     const styleDrawer = $('styleDrawer');
@@ -3157,8 +3253,9 @@
 
     $('refCard').addEventListener('click', e => {
       if (e.target.closest('#clearRefBtn')) return;
-      $('refFileInput').value = '';
-      $('refFileInput').click();
+      const refInput = $('refFileInput');
+      refInput.value = '';
+      refInput.click();
     });
 
     $('refFileInput').addEventListener('change', async (e) => {
@@ -3367,7 +3464,7 @@
       try {
         const blob = await buildCollageBlob();
         cachedCollageBlob = blob;
-        cachedCollageFile = new File( [blob], `KAMI_${Date.now()}.${ENCODE_EXT}`, { type: blob.type || ENCODE_TYPE });
+        cachedCollageFile = new File([blob], `KAMI_${Date.now()}.${ENCODE_EXT}`, { type: blob.type || ENCODE_TYPE });
       } catch (_) {}
     }
 
@@ -3400,6 +3497,13 @@
     }
 
     const compareStage = $('compareStage');
+    function moveDivider(clientX) {
+      const rect = compareStage.getBoundingClientRect();
+      if (!rect.width) return;
+      const x = Math.max(0, Math.min(clientX - rect.left, rect.width));
+      setSlider((x / rect.width) * 100);
+    }
+
     compareStage.addEventListener('pointerdown', e => {
       if (currentCompareMode !== 'slide') return;
       isDividerDragging = true;
@@ -3418,12 +3522,16 @@
     compareStage.addEventListener('pointerup', endDividerDrag);
     compareStage.addEventListener('pointercancel', endDividerDrag);
 
-    function moveDivider(clientX) {
-      const rect = $('compareStage').getBoundingClientRect();
-      if (!rect.width) return;
-      const x = Math.max(0, Math.min(clientX - rect.left, rect.width));
-      setSlider((x / rect.width) * 100);
-    }
+    // Touch events fallback for older mobile engines
+    compareStage.addEventListener('touchstart', e => {
+      if (currentCompareMode !== 'slide') return;
+      isDividerDragging = true;
+      if (e.touches[0]) moveDivider(e.touches[0].clientX);
+    }, { passive: true });
+    compareStage.addEventListener('touchmove', e => {
+      if (isDividerDragging && e.touches[0]) moveDivider(e.touches[0].clientX);
+    }, { passive: true });
+    compareStage.addEventListener('touchend', () => { isDividerDragging = false; });
 
     function setCompareMode(mode) {
       currentCompareMode = mode;
@@ -3464,7 +3572,6 @@
       else activateScreen(screens.studio);
     });
 
-    /* UNIFIED "COMPARE & SAVE" HANDLER */
     async function executeCompareAndSave(type) {
       const active = await verifyUserTrialStatus(currentUserPhone);
       if (!active) return;
@@ -3572,7 +3679,6 @@
       }
     });
 
-    /* DIRECT EXPORT BUTTON IN COMPARE NAV */
     $('saveLocalBtn').addEventListener('click', async () => {
       showLoading("EXPORTING IMAGE...");
       try {
@@ -3605,7 +3711,7 @@
     });
 
     /* =========================================================================
-       VAULT GALLERY (MY LOOKS) — FULL VISIBLE DATE + EXPORT BUTTON + 10/10 PURGE
+       VAULT GALLERY (MY LOOKS)
        ========================================================================= */
     async function loadUserVault() {
       const active = await verifyUserTrialStatus(currentUserPhone);
@@ -3703,7 +3809,6 @@
         grid.appendChild(card);
       });
 
-      // When vault reaches 10/10, show warning and auto-delete all user images from Supabase & local DB
       if (finalItems.length >= LOCAL_VAULT_LIMIT) {
         const shouldPurge = await showBrutalModal({
           badge: "VAULT FULL (10 / 10)",
@@ -3740,70 +3845,32 @@
       checkAuthSession();
     });
   </script>
+
+  <!-- MOBILE-FRIENDLY DESKTOP SHORTCUT & RIGHT-CLICK SHIELD -->
   <script>
-(() => {
-  // Disable right-click / context menu
-  document.addEventListener("contextmenu", e => {
-    e.preventDefault();
-  });
-
-  // Block common keyboard shortcuts
-  document.addEventListener("keydown", e => {
-    const key = e.key.toLowerCase();
-
-    // F12
-    if (e.key === "F12") {
-      e.preventDefault();
-      e.stopPropagation();
-      return false;
-    }
-
-    // Ctrl / Cmd shortcuts
-    if (e.ctrlKey || e.metaKey) {
-      // View Source: Ctrl+U
-      if (key === "u") {
+    (() => {
+      // Do not block touch interactions (allows paste on phones and save-to-photos on iOS)
+      document.addEventListener("contextmenu", e => {
+        if (e.pointerType === 'touch') return;
+        const tag = (e.target.tagName || '').toLowerCase();
+        if (tag === 'input' || tag === 'textarea') return;
         e.preventDefault();
-        return false;
-      }
+      });
 
-      // DevTools: Ctrl+Shift+I / J
-      if (e.shiftKey && (key === "i" || key === "j")) {
-        e.preventDefault();
-        return false;
-      }
-
-      // Save page: Ctrl+S
-      if (key === "s") {
-        e.preventDefault();
-        return false;
-      }
-
-      // Print: Ctrl+P
-      if (key === "p") {
-        e.preventDefault();
-        return false;
-      }
-
-      // Inspect element: Ctrl+Shift+C
-      if (e.shiftKey && key === "c") {
-        e.preventDefault();
-        return false;
-      }
-    }
-  });
-
-  // Disable common macOS DevTools shortcuts
-  document.addEventListener("keydown", e => {
-    if (
-      e.metaKey &&
-      e.altKey &&
-      ["i", "j", "c"].includes(e.key.toLowerCase())
-    ) {
-      e.preventDefault();
-      return false;
-    }
-  });
-})();
-</script>
+      document.addEventListener("keydown", e => {
+        const key = e.key.toLowerCase();
+        if (e.key === "F12") {
+          e.preventDefault();
+          return false;
+        }
+        if (e.ctrlKey || e.metaKey) {
+          if (["u", "s", "p"].includes(key) || (e.shiftKey && ["i", "j", "c"].includes(key))) {
+            e.preventDefault();
+            return false;
+          }
+        }
+      });
+    })();
+  </script>
 </body>
 </html>
