@@ -169,6 +169,7 @@
       gap: 6px;
       white-space: nowrap;
       flex-shrink: 0;
+      touch-action: manipulation;
     }
     .btn-pill:active:not(:disabled) { transform: scale(0.96); }
 
@@ -187,6 +188,7 @@
       gap: 8px;
       width: 100%;
       text-align: center;
+      touch-action: manipulation;
     }
     .btn-primary:active:not(:disabled) {
       transform: scale(0.98);
@@ -210,6 +212,7 @@
       color: var(--text-main);
       box-shadow: var(--shadow-sm);
       flex-shrink: 0;
+      touch-action: manipulation;
     }
     .btn-icon:active:not(:disabled) { transform: scale(0.92); }
 
@@ -371,7 +374,7 @@
     }
     .shutter-btn:active { transform: scale(0.92); }
 
-    /* VIEW 2: STUDIO (RESPONSIVE FULL-VISIBILITY CANVAS) */
+    /* VIEW 2: STUDIO */
     .studio-header {
       padding: max(14px, env(safe-area-inset-top)) 18px 12px;
       background: var(--surface);
@@ -454,6 +457,7 @@
       cursor: pointer;
       user-select: none;
       -webkit-user-select: none;
+      touch-action: none;
     }
     .hold-compare-pill:active {
       background: var(--primary);
@@ -490,13 +494,13 @@
       justify-content: center;
       gap: 8px;
       transition: all 0.2s ease;
+      touch-action: manipulation;
     }
     .dock-trigger-btn.active, .dock-trigger-btn:hover {
       background: var(--primary);
       box-shadow: var(--shadow-orange);
     }
 
-    /* ANIMATED COLLAPSIBLE BOTTOM SHEETS (Fix C: will-change removed to preserve GPU texture buffer) */
     .studio-drawer-backdrop {
       position: absolute;
       top: 0; right: 0; bottom: 0; left: 0;
@@ -566,7 +570,6 @@
       flex-shrink: 0;
     }
 
-    /* SAFE UNCLIPPED HORIZONTAL SCROLLER FOR CATEGORIES */
     .scroll-filter-row {
       display: flex;
       gap: 8px;
@@ -618,7 +621,6 @@
     .swatch-grid::-webkit-scrollbar { width: 4px; }
     .swatch-grid::-webkit-scrollbar-thumb { background: #D0D0CA; border-radius: 4px; }
 
-    /* Fix D: touch-action manipulation prevents touch delay & gesture eating */
     .swatch-tile {
       display: flex;
       flex-direction: column;
@@ -705,6 +707,7 @@
       gap: 10px;
       cursor: pointer;
       border: 1px dashed rgba(0,0,0,0.18);
+      touch-action: manipulation;
     }
     .ref-thumb {
       width: 44px;
@@ -722,7 +725,7 @@
     }
     .ref-thumb img { width: 100%; height: 100%; object-fit: cover; }
 
-    /* DEDICATED ANIMATED FINE TUNE POPUP MODAL (Fix C: will-change removed) */
+    /* DEDICATED ANIMATED FINE TUNE POPUP MODAL */
     .fine-tune-modal {
       position: absolute;
       left: 0; right: 0; bottom: 0;
@@ -773,7 +776,7 @@
       height: 14px;
       border-radius: var(--radius-full);
       outline: none;
-      touch-action: pan-y;
+      touch-action: pan-x; /* Allow horizontal slider drags without page jumps */
     }
     input[type="range"]::-webkit-slider-thumb {
       -webkit-appearance: none;
@@ -837,6 +840,7 @@
       display: inline-flex;
       align-items: center;
       gap: 6px;
+      touch-action: manipulation;
     }
     .seg-btn.active {
       background: var(--primary);
@@ -955,10 +959,11 @@
       display: inline-flex;
       align-items: center;
       gap: 8px;
+      touch-action: manipulation;
     }
     .compare-fab-share i { color: #25D366; font-size: 1.1rem; }
 
-    /* VIEW 4: MY LOOKS VAULT */
+    /* VIEW 4: VAULT SCREEN (MY LOOKS) */
     .gallery-grid {
       flex: 1;
       min-height: 0;
@@ -1330,7 +1335,7 @@
           <span class="user-session-name" id="userSessionName">CLIENT</span>
           <button id="logoutBtn" class="logout-btn-unique" aria-label="Logout"><i class="bi bi-power"></i></button>
         </div>
-        <button id="uploadPhotoBtn" class="btn-icon" aria-label="Upload photo from device"><i class="bi bi-image"></i></button>
+        <button id="uploadPhotoBtn" type="button" class="btn-icon" aria-label="Upload photo from device"><i class="bi bi-image"></i></button>
         <input type="file" id="clientFileInput" class="hidden" accept="image/*,.heic,.heif" />
       </div>
     </div>
@@ -1346,7 +1351,7 @@
     </div>
   </section>
 
-  <!-- VIEW 2: STUDIO (LIVE PREVIEW + COMPACT COLLAPSIBLE DRAWERS) -->
+  <!-- VIEW 2: STUDIO -->
   <section id="studioScreen" class="view-screen">
     <header class="studio-header">
       <button id="retakeBtn" class="btn-pill"><i class="bi bi-arrow-left"></i> CAMERA</button>
@@ -1411,7 +1416,7 @@
         </div>
       </div>
 
-      <!-- ANIMATED FINE TUNE POPUP SHEET (CIE L*a*b*) -->
+      <!-- ANIMATED FINE TUNE POPUP SHEET -->
       <div id="fineTuneModal" class="fine-tune-modal">
         <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border-subtle); padding-bottom:8px;">
           <h4 style="font-size:0.92rem; font-weight:800;"><i class="bi bi-sliders" style="color:var(--primary); margin-right:4px;"></i> CIELAB FINE TUNE</h4>
@@ -1598,9 +1603,7 @@
       }
     }
 
-    /* =========================================================================
-       PRODUCTION CIE 1976 L*a*b* (D65) COLORIMETRIC ENGINE
-       ========================================================================= */
+    /* CIE 1976 L*a*b* (D65) COLORIMETRIC ENGINE */
     const SRGB_TO_LIN = new Float32Array(256);
     for (let i = 0; i < 256; i++) {
       const c = i / 255.0;
@@ -1671,7 +1674,6 @@
       return [fastLinToSRGB(rLin), fastLinToSRGB(gLin), fastLinToSRGB(bLin)];
     }
 
-    /* SALON SHADE REPERTOIRE */
     const SHADE_CATALOG = [
       { name: "Jet Black",       family: "browns",  L: 14, a: 0.5,   b: -1.0  },
       { name: "Blue Black",      family: "browns",  L: 16, a: 2.0,   b: -9.5  },
@@ -1785,6 +1787,7 @@
       return new Blob([arr], { type: mime });
     }
 
+    /* INSTANT IMAGE LOADER (Native browser decode via Object URL / ImageBitmap) */
     function loadDrawable(source) {
       if (source instanceof HTMLImageElement) {
         if (source.complete && source.naturalWidth !== 0) return Promise.resolve(source);
@@ -1797,7 +1800,7 @@
         return Promise.resolve(source);
       }
       if (window.ImageBitmap && source instanceof ImageBitmap) return Promise.resolve(source);
-      if (source instanceof Blob) return blobToImage(source);
+      if (source instanceof Blob || source instanceof File) return blobToImage(source);
 
       return new Promise((resolve, reject) => {
         const img = new Image();
@@ -1828,7 +1831,7 @@
       const drawable = await loadDrawable(source);
       const natW = drawable.naturalWidth || drawable.videoWidth || drawable.width;
       const natH = drawable.naturalHeight || drawable.videoHeight || drawable.height;
-      if (!natW || !natH) throw new Error('Invalid image source');
+      if (!natW || !natH) throw new Error('Invalid image dimensions');
 
       const scale = Math.min(1, maxDim / Math.max(natW, natH));
       const w = Math.max(1, Math.round(natW * scale));
@@ -1939,7 +1942,7 @@
     let cachedCollageBlob = null;
     let cachedCollageFile = null;
 
-    /* REUSABLE OFFSCREEN BUFFER FOR FIX C (iOS GPU texture stall fix + 0 GC thrashing) */
+    /* REUSABLE OFFSCREEN BUFFER FOR SMOOTH TEXTURE REPAINTS */
     let offscreenBufferCanvas = null;
     let offscreenBufferCtx = null;
     function getOffscreenBuffer(w, h) {
@@ -2507,9 +2510,7 @@
     $('logoutBtn').addEventListener('click', logoutClient);
     $('lockLogoutBtn').addEventListener('click', logoutClient);
 
-    /* =========================================================================
-       FIX A: RESILIENT MEDIAPIPE INITIALIZER (FORCED CPU ON MOBILE + RETRY BACKOFF)
-       ========================================================================= */
+    /* RESILIENT MEDIAPIPE INITIALIZER */
     async function initModel() {
       if (modelReady) return;
       modelAttempt++;
@@ -2522,7 +2523,6 @@
         const modelAssetPath =
           "https://storage.googleapis.com/mediapipe-models/image_segmenter/hair_segmenter/float32/latest/hair_segmenter.tflite";
 
-        // Prioritize CPU on mobile — mobile GPU delegate is the #1 cause of silent failures on phones
         const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
         const delegateOrder = isMobile ? ["CPU", "GPU"] : ["GPU", "CPU"];
 
@@ -2607,9 +2607,24 @@
       return cvs;
     }
 
-    $('uploadPhotoBtn').addEventListener('click', () => {
-      $('clientFileInput').value = '';
-      $('clientFileInput').click();
+    /* DEBOUNCED FILE TRIGGER (Completely prevents opening dialog twice on mobile) */
+    let isPickerBusy = false;
+    function safeTriggerFileInput(inputEl) {
+      if (isPickerBusy) return;
+      isPickerBusy = true;
+      setTimeout(() => { isPickerBusy = false; }, 800);
+      inputEl.value = '';
+      inputEl.click();
+    }
+
+    $('uploadPhotoBtn').addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      safeTriggerFileInput($('clientFileInput'));
+    });
+
+    $('clientFileInput').addEventListener('click', (e) => {
+      e.stopPropagation();
     });
 
     $('shutterBtn').addEventListener('click', async () => {
@@ -2617,53 +2632,65 @@
       if (!active) return;
       const cvs = captureCamera();
       if (!cvs) {
-        $('clientFileInput').value = '';
-        $('clientFileInput').click();
+        showToast("CAMERA INITIALIZING... PLEASE WAIT OR USE UPLOAD");
         return;
       }
       await processStudioImage(cvs, 'camera');
     });
 
+    /* INSTANT ZERO-LATENCY PHOTO INGESTION */
     $('clientFileInput').addEventListener('change', async (e) => {
-      const active = await verifyUserTrialStatus(currentUserPhone);
-      if (!active) return;
-
       const file = e.target.files?.[0];
       if (!file) return;
 
-      const isHeic = file.type === 'image/heic' || file.type === 'image/heif' || /\.(heic|heif)$/i.test(file.name);
-      if (isHeic) {
-        showLoading("CONVERTING IPHONE PHOTO...");
-        try {
-          const heic2any = await getHeicConverter();
-          const converted = await heic2any({ blob: file, toType: "image/jpeg", quality: 0.92 });
-          await loadBlobIntoStudio(Array.isArray(converted) ? converted[0] : converted, 'upload');
-        } catch (_) {
-          hideLoading();
-          showToast("HEIC CONVERSION FAILED — USE JPG/PNG");
-        }
-        return;
-      }
-      await loadBlobIntoStudio(file, 'upload');
-    });
+      showLoading("OPENING PHOTO...");
 
-    async function loadBlobIntoStudio(blob, sourceType = 'upload') {
+      // Verify trial in background without freezing photo reading
+      verifyUserTrialStatus(currentUserPhone).then(active => {
+        if (!active) hideLoading();
+      });
+
       try {
-        const img = await loadDrawable(blob);
-        await processStudioImage(img, sourceType);
+        let img = null;
+        try {
+          img = await loadDrawable(file);
+        } catch (nativeErr) {
+          const isHeic = file.type === 'image/heic' || file.type === 'image/heif' || /\.(heic|heif)$/i.test(file.name);
+          if (isHeic) {
+            showLoading("CONVERTING IPHONE PHOTO...");
+            const heic2any = await getHeicConverter();
+            const converted = await heic2any({ blob: file, toType: "image/jpeg", quality: 0.90 });
+            const convertedBlob = Array.isArray(converted) ? converted[0] : converted;
+            img = await loadDrawable(convertedBlob);
+          } else {
+            throw nativeErr;
+          }
+        }
+
+        if (img) {
+          await processStudioImage(img, 'upload');
+        } else {
+          throw new Error("Unable to parse image");
+        }
       } catch (_) {
         hideLoading();
-        showToast('COULD NOT READ IMAGE');
+        showToast('COULD NOT READ IMAGE — TRY ANOTHER');
       }
-    }
+    });
 
     const hairCanvas = $('hairCanvas');
     const hairCtx = hairCanvas.getContext('2d', { willReadFrequently: true });
     const stylePreviewImg = $('stylePreviewImg');
 
     const holdOriginalBtn = $('holdOriginalBtn');
+    let isHoldingOriginal = false;
+
     const startHoldOriginal = (e) => {
       e.preventDefault();
+      if (isHoldingOriginal) return;
+      isHoldingOriginal = true;
+      try { holdOriginalBtn.setPointerCapture(e.pointerId); } catch (_) {}
+
       if (originalImageData && currentColorApplied && stylePreviewImg.classList.contains('hidden')) {
         const { canvas: off, ctx: offCtx } = getOffscreenBuffer(canvasW, canvasH);
         offCtx.putImageData(originalImageData, 0, 0);
@@ -2672,14 +2699,17 @@
       }
     };
     const endHoldOriginal = (e) => {
+      if (!isHoldingOriginal) return;
+      isHoldingOriginal = false;
+      try { holdOriginalBtn.releasePointerCapture(e.pointerId); } catch (_) {}
       e.preventDefault();
+
       if (originalImageData && currentColorApplied && stylePreviewImg.classList.contains('hidden')) {
         scheduleRender();
       }
     };
     holdOriginalBtn.addEventListener('pointerdown', startHoldOriginal);
     holdOriginalBtn.addEventListener('pointerup', endHoldOriginal);
-    holdOriginalBtn.addEventListener('pointerleave', endHoldOriginal);
     holdOriginalBtn.addEventListener('pointercancel', endHoldOriginal);
 
     async function processStudioImage(source, sourceType = 'photo') {
@@ -2722,24 +2752,22 @@
       if (cameraStream) { cameraStream.getTracks().forEach(t => t.stop()); cameraStream = null; }
       activateScreen(screens.studio);
       renderSwatches();
-      
       openDrawer('color');
 
-      // Fix A: Kick a retry if not ready instead of silently dropping
+      // INSTANT FALLBACK MASK: Prepares hair mask in ~15ms so colours work immediately
+      buildFallbackHairMask();
+
       if (!imageSegmenter) {
         pendingImage = { source, sourceType };
         if (!modelReady) initModel();
-        showToast("PREPARING HAIR ANALYSER…");
+        hideLoading();
         return;
       }
 
-      showLoading("ANALYSING HAIR...");
-      setTimeout(() => runSegmentation(currentRun), 40);
+      showLoading("REFINING HAIR...");
+      setTimeout(() => runSegmentation(currentRun), 20);
     }
 
-    /* =========================================================================
-       FIX B: RELAXED CONFIDENCE THRESHOLD + LUMA/CHROMA FALLBACK MASK
-       ========================================================================= */
     function buildFallbackHairMask() {
       if (!originalImageData) return;
       const src = originalImageData.data;
@@ -2767,11 +2795,12 @@
           if (L === 0 && a === 0 && b === 0 && src[k + 3] !== 0) {
             const lab = sRGBToCIELab(src[k], src[k + 1], src[k + 2]);
             L = lab[0]; a = lab[1]; b = lab[2];
-            precompLabL[i] = L; precompLabA[i] = a; precompLabB[i] = b;
+            precompLabL[i] = L;
+            precompLabA[i] = a;
+            precompLabB[i] = b;
           }
 
           const chroma = Math.hypot(a, b);
-          // Hair candidate heuristic: upper 70% of frame, darker than background (L < 68), natural chroma (< 52)
           if (inUpper && L > 5 && L < 68 && chroma < 52) {
             const conf = 0.60;
             hairConfidenceMask[i] = conf;
@@ -2847,7 +2876,6 @@
             const bot = rawMask[row1 + x0] * (1 - wx) + rawMask[row1 + x1] * wx;
             let conf = top * (1 - wy) + bot * wy;
 
-            // Fix B: Relaxed linear mapping (conf - 0.15) / 0.70 to avoid zero-length masks on mobile
             conf = Math.max(0.0, Math.min(1.0, (conf - 0.15) / 0.70));
             tempMask[pIdx] = conf;
 
@@ -2908,7 +2936,6 @@
 
         activeHairIndices = new Uint32Array(activeList);
 
-        // Fix B: If weak hair detection on mobile, activate fallback mask
         if (activeHairIndices.length < 500) {
           buildFallbackHairMask();
         }
@@ -2945,9 +2972,6 @@
       requestAnimationFrame(() => { applyCIELabHairColor(); renderScheduled = false; });
     }
 
-    /* =========================================================================
-       FIX C: OFFSCREEN CANVAS REPAINT (Kills iOS Safari compositor texture stall)
-       ========================================================================= */
     function applyCIELabHairColor() {
       if (!originalImageData || !workingImageData) return;
 
@@ -2960,7 +2984,6 @@
         return;
       }
 
-      // If segmentation was skipped or produced no mask, generate fallback now
       if (!hairConfidenceMask || !activeHairIndices || activeHairIndices.length < 500) {
         buildFallbackHairMask();
       }
@@ -2991,7 +3014,6 @@
 
         const lNorm = origL * 0.01;
 
-        // 1. Controlled Lightness
         let outL;
         if (deltaL >= 0.0) {
           const shadowToe = 1.0 - Math.exp(-origL / 14.0);
@@ -3005,7 +3027,6 @@
         }
         outL = Math.max(2.0, Math.min(96.0, outL));
 
-        // 2. Controlled Chrominance
         const da = origA - baseA;
         const db = origB - baseB;
 
@@ -3019,7 +3040,6 @@
         const outA = (goalA + 0.18 * da) * chromaEnv;
         const outB = (goalB + 0.18 * db) * chromaEnv;
 
-        // 3. Feathered Alpha Blending
         const alpha = conf * 0.92;
         const invAlpha = 1.0 - alpha;
 
@@ -3034,7 +3054,6 @@
         dst[idx + 2] = resB;
       }
 
-      // Repaint via offscreen buffer: forces WebKit/Blink to commit GPU texture
       offCtx.putImageData(workingImageData, 0, 0);
       hairCtx.clearRect(0, 0, canvasW, canvasH);
       hairCtx.drawImage(offCanvas, 0, 0);
@@ -3073,9 +3092,6 @@
       startCamera();
     });
 
-    /* =========================================================================
-       FIX D: SCROLL-SAFE SWATCH TAP HANDLER (Prevents touch eating on Android & iOS)
-       ========================================================================= */
     function bindTileTap(element, onSelect) {
       let startX = 0, startY = 0, isDown = false, moved = false;
       element.addEventListener('pointerdown', (e) => {
@@ -3132,7 +3148,7 @@
       });
     }
 
-    /* FINE TUNE SLIDER CONTROLS (CIELAB L*C*h) */
+    /* FINE TUNE SLIDER CONTROLS */
     $('openFineTuneBtn').addEventListener('click', () => {
       $('fineTuneModal').classList.add('open');
     });
@@ -3280,26 +3296,51 @@
       });
     }
 
+    /* REFERENCE UPLOAD (Debounced to prevent double picker) */
     $('refCard').addEventListener('click', e => {
       if (e.target.closest('#clearRefBtn')) return;
-      $('refFileInput').value = '';
-      $('refFileInput').click();
+      e.preventDefault();
+      e.stopPropagation();
+      safeTriggerFileInput($('refFileInput'));
+    });
+
+    $('refFileInput').addEventListener('click', e => {
+      e.stopPropagation();
     });
 
     $('refFileInput').addEventListener('change', async (e) => {
       const file = e.target.files?.[0];
       if (!file) return;
+
+      showLoading("ATTACHING REFERENCE...");
       try {
-        refBlob = await compressToWebP(file, { maxDim: 800, quality: 0.8 });
+        let img = null;
+        try {
+          img = await loadDrawable(file);
+        } catch (_) {
+          const isHeic = file.type === 'image/heic' || file.type === 'image/heif' || /\.(heic|heif)$/i.test(file.name);
+          if (isHeic) {
+            const heic2any = await getHeicConverter();
+            const converted = await heic2any({ blob: file, toType: "image/jpeg", quality: 0.85 });
+            img = await loadDrawable(Array.isArray(converted) ? converted[0] : converted);
+          }
+        }
+        if (img) {
+          refBlob = await compressToWebP(img, { maxDim: 800, quality: 0.8 });
+        } else {
+          refBlob = file;
+        }
+        const url = BlobRegistry.create(refBlob);
+        $('refImg').src = url;
+        $('refImg').classList.remove('hidden');
+        $('refIcon').classList.add('hidden');
+        $('clearRefBtn').classList.remove('hidden');
+        $('refSubtext').textContent = 'Reference cut attached';
       } catch (_) {
-        refBlob = file;
+        showToast("COULD NOT ATTACH REFERENCE");
+      } finally {
+        hideLoading();
       }
-      const url = BlobRegistry.create(refBlob);
-      $('refImg').src = url;
-      $('refImg').classList.remove('hidden');
-      $('refIcon').classList.add('hidden');
-      $('clearRefBtn').classList.remove('hidden');
-      $('refSubtext').textContent = 'Reference cut attached';
     });
 
     $('clearRefBtn').addEventListener('click', e => {
@@ -3855,7 +3896,6 @@
       if (!cameraStream) startCamera();
     });
 
-    /* INSTANT MOBILE DIAGNOSTIC HOOK (Run window.kamiDiag() in mobile console anytime) */
     window.kamiDiag = function() {
       const diag = {
         modelReady: modelReady,
