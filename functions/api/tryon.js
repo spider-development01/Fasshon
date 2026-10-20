@@ -13,45 +13,94 @@ export async function onRequestPost(context) {
     return json({ error: 'Invalid JSON body.' }, 400);
   }
 
-  const { prompt, negative_prompt, image_urls } = body || {};
+  const { prompt, image_urls } = body || {};
 
   if (!prompt || typeof prompt !== 'string') {
-    return json({ error: 'Missing "prompt".' }, 400);
+    return json({ error: 'Missing or invalid "prompt".' }, 400);
   }
   if (!Array.isArray(image_urls) || image_urls.length === 0) {
-    return json({ error: 'Missing "image_urls" array.' }, 400);
+    return json({ error: 'Missing or empty "image_urls" array.' }, 400);
   }
 
-  try {
-    const falRes = await fetch('https://fal.run/google/nano-banana-lite/edit', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Key ${FAL_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        prompt,
-        negative_prompt: negative_prompt || '',
-        image_urls,
-      }),
-    });
+  // Fal Nano Banana accepts only clean prompt, image_urls, and generation options
+  const payload = {
+    prompt: prompt.trim(),
+    image_urls: image_urls.filter(Boolean),
+    num_images: 1,
+    output_format: 'jpeg',
+  };
 
-    const data = await falRes.json().catch(() => ({}));
+  // Primary endpoint + fallback endpoint if route is unavailable
+  const endpoints = [
+    'https://fal.run/fal-ai/gemini-25-flash-image/edit',
+    'https://fal.run/fal-ai/nano-banana/edit',
+  ];
 
-    if (!falRes.ok) {
-      const msg = data?.detail?.[0]?.msg || data?.message || data?.error || `Model error (${falRes.status})`;
-      return json({ error: msg }, falRes.status);
+  let lastError = null;
+
+  for (const endpoint of endpoints) {
+    try {
+      const falRes = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Key ${FAL_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await falRes.json().catch(() => ({}));
+
+      if (!falRes.ok) {
+        lastError = data?.detail?.[0]?.msg || data?.message || data?.error || `Fal error (${falRes.status})`;
+        continue; // Try secondary endpoint if available
+      }
+
+      // CRITICAL FIX: Extract the generated URL into data.output for the frontend
+      const outputUrl = 
+        data?.images?.[0]?.url || 
+        data?.image?.url || 
+        (Array.isArray(data?.output) ? data.output[0] : data?.output) ||
+        data?.result;
+
+      if (!outputUrl) {
+        lastError = 'No image URL returned from AI model';
+        continue;
+      }
+
+      return json({
+        output: outputUrl, // <-- Matches frontend: if (data?.output)
+        ...data,
+      }, 200);
+
+    } catch (err) {
+      lastError = err?.message || 'Network error';
     }
-
-    return json(data, 200);
-  } catch (err) {
-    return json({ error: 'Upstream request failed: ' + (err?.message || 'unknown') }, 502);
   }
+
+  return json({ error: 'Upstream generation failed: ' + lastError }, 502);
+}
+
+// Handle CORS Preflight if called across subdomains
+export async function onRequestOptions() {
+  return new Response(null, {
+    status: 204,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+      'Access-Control-Max-Age': '86400',
+    },
+  });
 }
 
 function json(obj, status = 200) {
   return new Response(JSON.stringify(obj), {
     status,
-    headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' },
+    headers: {
+      'Content-Type': 'application/json',
+      'Cache-Control': 'no-store',
+      'Access-Control-Allow-Origin': '*',
+    },
   });
 }
