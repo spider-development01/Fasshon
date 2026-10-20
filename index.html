@@ -1596,8 +1596,11 @@
     /* =========================================================================
        PRODUCTION CIE 1976 L*a*b* (D65) COLORIMETRIC ENGINE
        - Exact sRGB <-> CIE XYZ (D65) <-> CIE L*a*b* transformations
-       - Quantile-Adaptive Tonal Remapping + Multi-Scale Strand Texture Synthesis
-       -Hue-Preserving Soft Gamut Compression (works on Level 1 Jet Black through Level 10)
+       - Controlled Pointwise Functions:
+           L_target = f_L(L_original)
+           a_target = f_a(a_original, target_a)
+           b_target = f_b(b_original, target_b)
+       - Preserves 100% of natural strand-level luminance & tonal structure
        ========================================================================= */
     const SRGB_TO_LIN = new Float32Array(256);
     for (let i = 0; i < 256; i++) {
@@ -1647,7 +1650,7 @@
       return [L, a, bVal];
     }
 
-    // Convert CIE 1976 L*a*b* -> sRGB [0..255] with hue-preserving luminance-anchored gamut mapping
+    // Convert CIE 1976 L*a*b* -> sRGB [0..255] with soft gamut preservation
     function cieLabToSRGB(L, a, bVal) {
       const fy = (L + 16.0) / 116.0;
       const fx = fy + (a / 500.0);
@@ -1661,22 +1664,12 @@
       let gLin = -0.9692660 * x + 1.8760108 * y + 0.0415560 * z;
       let bLin =  0.0556434 * x - 0.2040259 * y + 1.0572252 * z;
 
-      // Soft hue-preserving gamut compression toward neutral luminance Y
-      const lum = Math.max(0.0001, Math.min(0.9999, y));
-      let scale = 1.0;
-
-      if (rLin < 0.0) scale = Math.min(scale, lum / (lum - rLin + 1e-6));
-      if (gLin < 0.0) scale = Math.min(scale, lum / (lum - gLin + 1e-6));
-      if (bLin < 0.0) scale = Math.min(scale, lum / (lum - bLin + 1e-6));
-
-      if (rLin > 1.0) scale = Math.min(scale, (1.0 - lum) / (rLin - lum + 1e-6));
-      if (gLin > 1.0) scale = Math.min(scale, (1.0 - lum) / (gLin - lum + 1e-6));
-      if (bLin > 1.0) scale = Math.min(scale, (1.0 - lum) / (bLin - lum + 1e-6));
-
-      if (scale < 1.0) {
-        rLin = lum + (rLin - lum) * scale;
-        gLin = lum + (gLin - lum) * scale;
-        bLin = lum + (bLin - lum) * scale;
+      const maxCh = Math.max(rLin, gLin, bLin);
+      if (maxCh > 1.0 && y < 0.99) {
+        const scale = (1.0 - y) / (maxCh - y + 1e-5);
+        rLin = y + (rLin - y) * scale;
+        gLin = y + (gLin - y) * scale;
+        bLin = y + (bLin - y) * scale;
       }
 
       return [fastLinToSRGB(rLin), fastLinToSRGB(gLin), fastLinToSRGB(bLin)];
@@ -1684,54 +1677,53 @@
 
     /* =========================================================================
        CALIBRATED CIE 1976 L*a*b* (D65) SALON SHADE REPERTOIRE
-       Tuned for high-definition visibility on Black, Brown, and Blonde hair
        ========================================================================= */
     const SHADE_CATALOG = [
-      { name: "Jet Black",       family: "browns",  L: 13, a: 0.5,   b: -1.5  },
-      { name: "Blue Black",      family: "browns",  L: 20, a: 5.0,   b: -22.0 },
-      { name: "Darkest Brown",   family: "browns",  L: 24, a: 5.5,   b: 10.5  },
-      { name: "Espresso",        family: "browns",  L: 28, a: 7.5,   b: 14.0  },
-      { name: "Dark Brown",      family: "browns",  L: 33, a: 8.5,   b: 16.5  },
-      { name: "Coffee",          family: "browns",  L: 37, a: 9.5,   b: 19.0  },
-      { name: "Chocolate",       family: "browns",  L: 40, a: 12.0,  b: 21.5  },
-      { name: "Chestnut",        family: "browns",  L: 44, a: 16.5,  b: 24.5  },
-      { name: "Ash Brown",       family: "browns",  L: 43, a: 1.5,   b: 7.5   },
-      { name: "Medium Brown",    family: "browns",  L: 46, a: 9.5,   b: 20.0  },
-      { name: "Light Brown",     family: "browns",  L: 52, a: 10.0,  b: 23.5  },
-      { name: "Caramel",         family: "browns",  L: 57, a: 13.0,  b: 29.5  },
+      { name: "Jet Black",       family: "browns",  L: 14, a: 0.5,   b: -1.0  },
+      { name: "Blue Black",      family: "browns",  L: 16, a: 2.0,   b: -9.5  },
+      { name: "Darkest Brown",   family: "browns",  L: 21, a: 4.0,   b: 7.5   },
+      { name: "Espresso",        family: "browns",  L: 25, a: 5.5,   b: 10.5  },
+      { name: "Dark Brown",      family: "browns",  L: 29, a: 7.0,   b: 14.0  },
+      { name: "Coffee",          family: "browns",  L: 33, a: 8.0,   b: 16.5  },
+      { name: "Chocolate",       family: "browns",  L: 36, a: 10.5,  b: 19.0  },
+      { name: "Chestnut",        family: "browns",  L: 41, a: 15.0,  b: 22.5  },
+      { name: "Ash Brown",       family: "browns",  L: 41, a: 2.0,   b: 8.0   },
+      { name: "Medium Brown",    family: "browns",  L: 43, a: 8.5,   b: 18.5  },
+      { name: "Light Brown",     family: "browns",  L: 49, a: 9.0,   b: 21.5  },
+      { name: "Caramel",         family: "browns",  L: 54, a: 11.5,  b: 27.5  },
 
-      { name: "Dark Blonde",     family: "blondes", L: 59, a: 6.0,   b: 22.5  },
-      { name: "Medium Blonde",   family: "blondes", L: 63, a: 5.0,   b: 23.5  },
-      { name: "Honey Blonde",    family: "blondes", L: 66, a: 7.5,   b: 28.0  },
-      { name: "Golden Honey",    family: "blondes", L: 68, a: 8.5,   b: 31.0  },
-      { name: "Golden Blonde",   family: "blondes", L: 71, a: 5.5,   b: 28.5  },
-      { name: "Warm Blonde",     family: "blondes", L: 69, a: 5.0,   b: 24.0  },
-      { name: "Ash Blonde",      family: "blondes", L: 66, a: 0.8,   b: 10.5  },
-      { name: "Sandy Blonde",    family: "blondes", L: 68, a: 2.5,   b: 17.5  },
-      { name: "Beige Blonde",    family: "blondes", L: 71, a: 2.0,   b: 15.0  },
-      { name: "Light Blonde",    family: "blondes", L: 74, a: 2.0,   b: 17.5  },
-      { name: "Pearl Blonde",    family: "blondes", L: 76, a: 1.5,   b: 9.0   },
-      { name: "Platinum Blonde", family: "blondes", L: 78, a: 0.8,   b: 5.0   },
+      { name: "Dark Blonde",     family: "blondes", L: 57, a: 5.5,   b: 21.0  },
+      { name: "Medium Blonde",   family: "blondes", L: 62, a: 4.5,   b: 22.0  },
+      { name: "Honey Blonde",    family: "blondes", L: 65, a: 6.5,   b: 26.5  },
+      { name: "Golden Honey",    family: "blondes", L: 67, a: 7.5,   b: 29.0  },
+      { name: "Golden Blonde",   family: "blondes", L: 70, a: 5.0,   b: 27.0  },
+      { name: "Warm Blonde",     family: "blondes", L: 68, a: 4.5,   b: 23.0  },
+      { name: "Ash Blonde",      family: "blondes", L: 65, a: 1.0,   b: 11.0  },
+      { name: "Sandy Blonde",    family: "blondes", L: 67, a: 2.5,   b: 16.5  },
+      { name: "Beige Blonde",    family: "blondes", L: 70, a: 2.0,   b: 14.5  },
+      { name: "Light Blonde",    family: "blondes", L: 73, a: 2.0,   b: 17.0  },
+      { name: "Pearl Blonde",    family: "blondes", L: 75, a: 1.5,   b: 9.0   },
+      { name: "Platinum Blonde", family: "blondes", L: 76, a: 1.0,   b: 5.5   },
 
-      { name: "Mahogany",        family: "reds",    L: 34, a: 26.0,  b: 15.0  },
-      { name: "Burgundy",        family: "reds",    L: 31, a: 31.0,  b: 5.5   },
-      { name: "Wine",            family: "reds",    L: 29, a: 29.0,  b: -2.0  },
-      { name: "Ruby Red",        family: "reds",    L: 39, a: 41.0,  b: 17.0  },
-      { name: "Cherry",          family: "reds",    L: 37, a: 39.0,  b: 11.0  },
-      { name: "True Red",        family: "reds",    L: 43, a: 45.0,  b: 23.0  },
-      { name: "Copper",          family: "reds",    L: 53, a: 24.0,  b: 34.0  },
-      { name: "Ginger",          family: "reds",    L: 58, a: 18.5,  b: 32.0  },
-      { name: "Rose Gold",       family: "reds",    L: 63, a: 18.5,  b: 14.5  },
-      { name: "Peach",           family: "reds",    L: 68, a: 16.5,  b: 21.0  },
+      { name: "Mahogany",        family: "reds",    L: 31, a: 23.0,  b: 13.5  },
+      { name: "Burgundy",        family: "reds",    L: 28, a: 27.0,  b: 4.5   },
+      { name: "Wine",            family: "reds",    L: 26, a: 25.0,  b: -1.5  },
+      { name: "Ruby Red",        family: "reds",    L: 37, a: 38.0,  b: 15.5  },
+      { name: "Cherry",          family: "reds",    L: 35, a: 36.0,  b: 10.0  },
+      { name: "True Red",        family: "reds",    L: 41, a: 42.0,  b: 21.0  },
+      { name: "Copper",          family: "reds",    L: 51, a: 22.0,  b: 32.0  },
+      { name: "Ginger",          family: "reds",    L: 56, a: 17.0,  b: 30.0  },
+      { name: "Rose Gold",       family: "reds",    L: 62, a: 17.0,  b: 13.5  },
+      { name: "Peach",           family: "reds",    L: 67, a: 15.0,  b: 19.5  },
 
-      { name: "Plum",            family: "fashion", L: 32, a: 28.0,  b: -17.0 },
-      { name: "Berry",           family: "fashion", L: 38, a: 35.0,  b: -6.5  },
-      { name: "Violet",          family: "fashion", L: 41, a: 29.0,  b: -29.0 },
-      { name: "Denim Blue",      family: "fashion", L: 41, a: -3.5,  b: -27.0 },
-      { name: "Turquoise",       family: "fashion", L: 55, a: -24.0, b: -12.0 },
-      { name: "Rose Pink",       family: "fashion", L: 60, a: 30.0,  b: 2.5   },
-      { name: "Lilac",           family: "fashion", L: 64, a: 17.0,  b: -18.5 },
-      { name: "Silver Grey",     family: "fashion", L: 66, a: 0.0,   b: -2.5  }
+      { name: "Plum",            family: "fashion", L: 29, a: 25.0,  b: -15.0 },
+      { name: "Berry",           family: "fashion", L: 36, a: 32.0,  b: -5.5  },
+      { name: "Violet",          family: "fashion", L: 39, a: 26.0,  b: -26.0 },
+      { name: "Denim Blue",      family: "fashion", L: 39, a: -3.5,  b: -24.0 },
+      { name: "Turquoise",       family: "fashion", L: 53, a: -22.0, b: -11.0 },
+      { name: "Rose Pink",       family: "fashion", L: 58, a: 28.0,  b: 2.5   },
+      { name: "Lilac",           family: "fashion", L: 63, a: 15.0,  b: -16.5 },
+      { name: "Silver Grey",     family: "fashion", L: 65, a: 0.0,   b: -2.0  }
     ];
 
     let heicPromise = null;
@@ -1913,29 +1905,21 @@
     let originalDataURL = null;
     let hairConfidenceMask = null;
 
-    // Precomputed CIE 1976 L*a*b* + Normalized Tonal Quantile + Multi-Scale Strand Detail Buffers
+    // Precomputed CIE 1976 L*a*b* Buffers for every pixel
     let activeHairIndices = null;
-    let precompLabL = null;          // Original L* [0..100]
-    let precompLabA = null;          // Original a* [-128..127]
-    let precompLabB = null;          // Original b* [-128..127]
-    let precompNormT = null;         // Quantile-normalized tonal position t in [0..1]
-    let precompStrandDetail = null;  // High-frequency local strand contrast [-25..+25]
+    let precompLabL = null; // Original L* [0..100]
+    let precompLabA = null; // Original a* [-128..127]
+    let precompLabB = null; // Original b* [-128..127]
     let hairStats = {
-      meanL: 24.0,
-      meanA: 4.0,
-      meanB: 8.0,
-      p02: 5.0,
-      p15: 10.0,
-      p50: 20.0,
-      p85: 36.0,
-      p98: 55.0
+      meanL: 32.0,
+      meanA: 6.0,
+      meanB: 12.0
     };
 
     let canvasW = 0, canvasH = 0;
     let processToken = 0;
 
     let imageSegmenter = null;
-    let multiclassSegmenter = null;
     let pendingImage = null;
     let cameraStream = null;
     let cameraFacing = 'user';
@@ -1950,9 +1934,9 @@
     let currentShadeName = "Natural";
     
     // Active Target CIE L*a*b* Parameters
-    let targetLabL = 46.0;
-    let targetLabA = 9.5;
-    let targetLabB = 20.0;
+    let targetLabL = 43.0;
+    let targetLabA = 8.5;
+    let targetLabB = 18.5;
     let userLiftDelta = 0.0;
 
     let selectedFamily = "all";
@@ -2523,51 +2507,25 @@
     $('logoutBtn').addEventListener('click', logoutClient);
     $('lockLogoutBtn').addEventListener('click', logoutClient);
 
-    /* =========================================================================
-       DUAL-MODEL NEURAL SEGMENTATION INITIALIZATION
-       1. Primary High-Res Hair Model: hair_segmenter.tflite (512x512)
-       2. Auxiliary Semantic Veto Model: selfie_multiclass_256x256.tflite
-          (Explicitly segments: 0=Bg, 1=Hair, 2=BodySkin, 3=FaceSkin, 4=Clothes, 5=Accessories)
-       ========================================================================= */
     async function initModel() {
       try {
         const { ImageSegmenter, FilesetResolver } = await import("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/vision_bundle.mjs");
         const vision = await FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm");
-        const hairModelUrl = "https://storage.googleapis.com/mediapipe-models/image_segmenter/hair_segmenter/float32/latest/hair_segmenter.tflite";
-        const multiModelUrl = "https://storage.googleapis.com/mediapipe-models/image_segmenter/selfie_multiclass_256x256/float32/latest/selfie_multiclass_256x256.tflite";
+        const modelAssetPath = "https://storage.googleapis.com/mediapipe-models/image_segmenter/hair_segmenter/float32/latest/hair_segmenter.tflite";
 
         try {
           imageSegmenter = await ImageSegmenter.createFromOptions(vision, {
-            baseOptions: { modelAssetPath: hairModelUrl, delegate: "GPU" },
+            baseOptions: { modelAssetPath, delegate: "GPU" },
             runningMode: "IMAGE",
             outputConfidenceMasks: true
           });
         } catch (_) {
           imageSegmenter = await ImageSegmenter.createFromOptions(vision, {
-            baseOptions: { modelAssetPath: hairModelUrl, delegate: "CPU" },
+            baseOptions: { modelAssetPath, delegate: "CPU" },
             runningMode: "IMAGE",
             outputConfidenceMasks: true
           });
         }
-
-        // Load auxiliary multiclass segmenter for explicit Face/Skin/Clothes/Background veto
-        (async () => {
-          try {
-            multiclassSegmenter = await ImageSegmenter.createFromOptions(vision, {
-              baseOptions: { modelAssetPath: multiModelUrl, delegate: "GPU" },
-              runningMode: "IMAGE",
-              outputConfidenceMasks: true
-            });
-          } catch (_) {
-            try {
-              multiclassSegmenter = await ImageSegmenter.createFromOptions(vision, {
-                baseOptions: { modelAssetPath: multiModelUrl, delegate: "CPU" },
-                runningMode: "IMAGE",
-                outputConfidenceMasks: true
-              });
-            } catch (_e) {}
-          }
-        })();
 
         if (pendingImage) {
           const queued = pendingImage;
@@ -2757,129 +2715,7 @@
     }
 
     /* =========================================================================
-       FAST O(N) SEPARABLE SLIDING-WINDOW BOX FILTER & GUIDED IMAGE FILTER
-       - Exact O(1) per pixel regardless of radius
-       - Zero Float32 overflow, snaps coarse masks directly onto fine hair strands
-       ========================================================================= */
-    function boxFilterFloat32(src, w, h, radius) {
-      if (radius <= 0) return new Float32Array(src);
-      const total = w * h;
-      const tmp = new Float32Array(total);
-      const dst = new Float32Array(total);
-      const r = Math.min(radius, Math.min(w - 1, h - 1));
-      const invDiam = 1.0 / (2 * r + 1);
-
-      // Horizontal 1D sliding window pass
-      for (let y = 0; y < h; y++) {
-        const rowOffset = y * w;
-        let sum = src[rowOffset] * (r + 1);
-        for (let x = 1; x <= r; x++) {
-          sum += src[rowOffset + x];
-        }
-        for (let x = 0; x <= r; x++) {
-          tmp[rowOffset + x] = sum * invDiam;
-          const addIdx = Math.min(w - 1, x + r + 1);
-          sum += src[rowOffset + addIdx] - src[rowOffset];
-        }
-        for (let x = r + 1; x < w - r; x++) {
-          tmp[rowOffset + x] = sum * invDiam;
-          sum += src[rowOffset + x + r + 1] - src[rowOffset + x - r];
-        }
-        for (let x = Math.max(r + 1, w - r); x < w; x++) {
-          tmp[rowOffset + x] = sum * invDiam;
-          const subIdx = Math.max(0, x - r);
-          sum += src[rowOffset + w - 1] - src[rowOffset + subIdx];
-        }
-      }
-
-      // Vertical 1D sliding window pass
-      for (let x = 0; x < w; x++) {
-        let sum = tmp[x] * (r + 1);
-        for (let y = 1; y <= r; y++) {
-          sum += tmp[y * w + x];
-        }
-        for (let y = 0; y <= r; y++) {
-          dst[y * w + x] = sum * invDiam;
-          const addY = Math.min(h - 1, y + r + 1);
-          sum += tmp[addY * w + x] - tmp[x];
-        }
-        for (let y = r + 1; y < h - r; y++) {
-          dst[y * w + x] = sum * invDiam;
-          sum += tmp[(y + r + 1) * w + x] - tmp[(y - r) * w + x];
-        }
-        for (let y = Math.max(r + 1, h - r); y < h; y++) {
-          dst[y * w + x] = sum * invDiam;
-          const subY = Math.max(0, y - r);
-          sum += tmp[(h - 1) * w + x] - tmp[subY * w + x];
-        }
-      }
-
-      return dst;
-    }
-
-    // He et al. O(N) Edge-Preserving Guided Filter for Sub-Pixel Hair Alpha Matting
-    function guidedFilterAlpha(guideI, maskP, w, h, radius, eps) {
-      const n = w * h;
-      const meanI = boxFilterFloat32(guideI, w, h, radius);
-      const meanP = boxFilterFloat32(maskP, w, h, radius);
-
-      const ip = new Float32Array(n);
-      const ii = new Float32Array(n);
-      for (let i = 0; i < n; i++) {
-        const g = guideI[i];
-        ip[i] = g * maskP[i];
-        ii[i] = g * g;
-      }
-
-      const meanIP = boxFilterFloat32(ip, w, h, radius);
-      const meanII = boxFilterFloat32(ii, w, h, radius);
-
-      const a = new Float32Array(n);
-      const b = new Float32Array(n);
-      for (let i = 0; i < n; i++) {
-        const mI = meanI[i];
-        const mP = meanP[i];
-        const covIP = meanIP[i] - mI * mP;
-        const varI = Math.max(0.0, meanII[i] - mI * mI);
-        const ak = covIP / (varI + eps);
-        a[i] = ak;
-        b[i] = mP - ak * mI;
-      }
-
-      const meanA = boxFilterFloat32(a, w, h, radius);
-      const meanB = boxFilterFloat32(b, w, h, radius);
-
-      const q = new Float32Array(n);
-      for (let i = 0; i < n; i++) {
-        const val = meanA[i] * guideI[i] + meanB[i];
-        q[i] = val <= 0.0 ? 0.0 : (val >= 1.0 ? 1.0 : val);
-      }
-      return q;
-    }
-
-    // Bilinear sampler for MediaPipe float mask
-    function sampleMaskBilinear(rawArr, mW, mH, fx, fy) {
-      const x0 = fx | 0;
-      const y0 = fy | 0;
-      const x1 = x0 + 1 < mW ? x0 + 1 : mW - 1;
-      const y1 = y0 + 1 < mH ? y0 + 1 : mH - 1;
-      const wx = fx - x0;
-      const wy = fy - y0;
-      const r0 = y0 * mW;
-      const r1 = y1 * mW;
-      const top = rawArr[r0 + x0] * (1.0 - wx) + rawArr[r0 + x1] * wx;
-      const bot = rawArr[r1 + x0] * (1.0 - wx) + rawArr[r1 + x1] * wx;
-      return top * (1.0 - wy) + bot * wy;
-    }
-
-    /* =========================================================================
-       PRECISION SALON HAIR SEGMENTATION & STRAND MATTING PIPELINE
-       1. Dual-Model Fusion (Hair Segmenter + Multiclass Clothes/Face/Skin/Bg Veto)
-       2. Vertical Skin-Sandwich Eye, Pupil, Eyelash & Eyebrow Elimination
-       3. 8-Connected Topological Component Filtering (Crown-Anchored Hair Mass Only)
-       4. Local Hair vs. Background/Clothing CIELAB Color Affinity Gating
-       5. Multi-Scale Guided Image Filter + Flyaway Strand Recovery
-       6. Precomputation of Quantile Tonal Ranks & Multi-Scale Strand Texture
+       CLEAN FEATHERED SEGMENTATION + CIE 1976 L*a*b* PRECOMPUTATION
        ========================================================================= */
     function runSegmentation(token) {
       if (!imageSegmenter || !originalImageData || token !== processToken) {
@@ -2897,468 +2733,102 @@
         }
 
         const maskObj = masks.length > 1 ? masks[1] : masks[0];
-        const rawHairMask = maskObj.getAsFloat32Array();
+        const rawMask = maskObj.getAsFloat32Array();
         const mW = maskObj.width, mH = maskObj.height;
 
-        // Optional Multiclass Segmentation (0:Bg, 1:Hair, 2:BodySkin, 3:FaceSkin, 4:Clothes, 5:Others)
-        let mcMasks = null;
-        let mcW = 0, mcH = 0;
-        if (multiclassSegmenter) {
-          try {
-            const mcRes = multiclassSegmenter.segment(hairCanvas);
-            if (mcRes?.confidenceMasks && mcRes.confidenceMasks.length >= 5) {
-              mcW = mcRes.confidenceMasks[0].width;
-              mcH = mcRes.confidenceMasks[0].height;
-              mcMasks = [
-                mcRes.confidenceMasks[0].getAsFloat32Array(), // 0: Background
-                mcRes.confidenceMasks[1].getAsFloat32Array(), // 1: Hair
-                mcRes.confidenceMasks[2].getAsFloat32Array(), // 2: Body Skin
-                mcRes.confidenceMasks[3].getAsFloat32Array(), // 3: Face Skin
-                mcRes.confidenceMasks[4].getAsFloat32Array()  // 4: Clothes
-              ];
-            }
-          } catch (_) {}
-        }
-
         const totalPixels = canvasW * canvasH;
-        const priorMask = new Float32Array(totalPixels);
-        const skinMap = new Uint8Array(totalPixels); // 1 = confident face/body skin
-        const clothesMap = new Float32Array(totalPixels);
-
+        const tempMask = new Float32Array(totalPixels);
         hairConfidenceMask = new Float32Array(totalPixels);
+
         precompLabL = new Float32Array(totalPixels);
         precompLabA = new Float32Array(totalPixels);
         precompLabB = new Float32Array(totalPixels);
-        precompNormT = new Float32Array(totalPixels);
-        precompStrandDetail = new Float32Array(totalPixels);
-        const guideLum = new Float32Array(totalPixels);
 
         const src = originalImageData.data;
+
         const scaleX = (mW - 1) / Math.max(1, canvasW - 1);
         const scaleY = (mH - 1) / Math.max(1, canvasH - 1);
-        const mcScaleX = mcMasks ? (mcW - 1) / Math.max(1, canvasW - 1) : 0;
-        const mcScaleY = mcMasks ? (mcH - 1) / Math.max(1, canvasH - 1) : 0;
 
-        let faceSumX = 0, faceSumY = 0, faceCount = 0;
-        let faceMinX = canvasW, faceMaxX = 0, faceMinY = canvasH, faceMaxY = 0;
+        let sumL = 0.0, sumA = 0.0, sumB = 0.0, weightSum = 0.0;
 
-        // Pass 1: CIE L*a*b* Conversion + Initial Neural Fusion + Skin/Clothes Maps
         for (let y = 0; y < canvasH; y++) {
           const fy = y * scaleY;
-          const mcfy = y * mcScaleY;
+          const y0 = fy | 0;
+          const y1 = Math.min(mH - 1, y0 + 1);
+          const wy = fy - y0;
+          const row0 = y0 * mW, row1 = y1 * mW;
           const dstRow = y * canvasW;
 
           for (let x = 0; x < canvasW; x++) {
             const pIdx = dstRow + x;
-            const rgbaIdx = pIdx * 4;
-            const r = src[rgbaIdx], g = src[rgbaIdx + 1], b = src[rgbaIdx + 2];
+            const fx = x * scaleX;
+            const x0 = fx | 0;
+            const x1 = Math.min(mW - 1, x0 + 1);
+            const wx = fx - x0;
 
-            const [L, a, bVal] = sRGBToCIELab(r, g, b);
+            const top = rawMask[row0 + x0] * (1 - wx) + rawMask[row0 + x1] * wx;
+            const bot = rawMask[row1 + x0] * (1 - wx) + rawMask[row1 + x1] * wx;
+            let conf = top * (1 - wy) + bot * wy;
+
+            conf = Math.max(0.0, Math.min(1.0, (conf - 0.26) / 0.58));
+            tempMask[pIdx] = conf;
+
+            const rgbaIdx = pIdx * 4;
+            const [L, a, b] = sRGBToCIELab(src[rgbaIdx], src[rgbaIdx + 1], src[rgbaIdx + 2]);
             precompLabL[pIdx] = L;
             precompLabA[pIdx] = a;
-            precompLabB[pIdx] = bVal;
-            guideLum[pIdx] = L * 0.01;
+            precompLabB[pIdx] = b;
 
-            let pHair = sampleMaskBilinear(rawHairMask, mW, mH, x * scaleX, fy);
-
-            // Colorimetric skin likelihood (handles fair to deep skin tones)
-            const chroma = Math.hypot(a, bVal);
-            const isColorSkin = (
-              L > 22.0 && L < 89.0 &&
-              a > 3.5 && a < 28.0 &&
-              bVal > 6.0 && bVal < 40.0 &&
-              bVal > a * 0.60 &&
-              chroma > 8.5 && chroma < 43.0 &&
-              r > g && g >= b * 0.88
-            );
-
-            let isFaceSkin = false;
-            if (mcMasks) {
-              const mcfx = x * mcScaleX;
-              const pBg   = sampleMaskBilinear(mcMasks[0], mcW, mcH, mcfx, mcfy);
-              const pMcH  = sampleMaskBilinear(mcMasks[1], mcW, mcH, mcfx, mcfy);
-              const pBody = sampleMaskBilinear(mcMasks[2], mcW, mcH, mcfx, mcfy);
-              const pFace = sampleMaskBilinear(mcMasks[3], mcW, mcH, mcfx, mcfy);
-              const pClo  = sampleMaskBilinear(mcMasks[4], mcW, mcH, mcfx, mcfy);
-
-              clothesMap[pIdx] = pClo;
-
-              // Combine primary hair mask with multiclass hair mask
-              pHair = pHair * 0.72 + pMcH * 0.28;
-
-              // Explicit Clothes Veto (prevents shirts/collars/tops from being dyed)
-              if (pClo > 0.18 && pClo > pMcH * 0.75) {
-                const cloSuppress = Math.max(0.0, 1.0 - (pClo - 0.14) * 2.6);
-                pHair *= cloSuppress;
-              }
-
-              // Explicit Face Skin & Body Skin Veto (eyes/brows sit inside FaceSkin class)
-              if (pFace > 0.26 && pFace > pMcH * 0.85) {
-                const faceSuppress = Math.max(0.0, 1.0 - (pFace - 0.20) * 2.8);
-                pHair *= faceSuppress;
-              }
-              if (pBody > 0.24 && pBody > pMcH * 0.80) {
-                const bodySuppress = Math.max(0.0, 1.0 - (pBody - 0.18) * 2.8);
-                pHair *= bodySuppress;
-              }
-
-              // Explicit Background Veto
-              if (pBg > 0.55 && pMcH < 0.35) {
-                pHair *= Math.max(0.0, 1.0 - (pBg - 0.45) * 2.1);
-              }
-
-              if (pFace > 0.38 || (pFace > 0.20 && isColorSkin && pHair < 0.45)) {
-                isFaceSkin = true;
-              }
-              if (pBody > 0.40 || (isColorSkin && pHair < 0.32)) {
-                skinMap[pIdx] = 1;
-              }
-            } else {
-              // Single-model fallback skin detection
-              if (isColorSkin && pHair < 0.42) {
-                skinMap[pIdx] = 1;
-                if (y > canvasH * 0.12 && y < canvasH * 0.78 && x > canvasW * 0.15 && x < canvasW * 0.85) {
-                  isFaceSkin = true;
-                }
-              }
-            }
-
-            if (isFaceSkin) {
-              skinMap[pIdx] = 2; // 2 = Verified Face Skin
-              faceSumX += x;
-              faceSumY += y;
-              faceCount++;
-              if (x < faceMinX) faceMinX = x;
-              if (x > faceMaxX) faceMaxX = x;
-              if (y < faceMinY) faceMinY = y;
-              if (y > faceMaxY) faceMaxY = y;
-            }
-
-            // Contrast-stretch raw probability
-            priorMask[pIdx] = Math.max(0.0, Math.min(1.0, (pHair - 0.24) / 0.58));
-          }
-        }
-
-        // Pass 2: Vertical Skin-Sandwich Veto for Eyes, Pupils, Eyelashes, Eyebrows & Mouth
-        // Any dark/hair-like region inside the inner facial corridor that has forehead/brow skin
-        // ABOVE it and cheek/face skin BELOW it is an eye, eyebrow, eyelash, or mouth — never scalp hair.
-        if (faceCount > (totalPixels * 0.008)) {
-          const faceW = Math.max(20, faceMaxX - faceMinX);
-          const faceH = Math.max(20, faceMaxY - faceMinY);
-          const innerLeft = Math.max(0, Math.round(faceMinX + faceW * 0.10));
-          const innerRight = Math.min(canvasW - 1, Math.round(faceMaxX - faceW * 0.10));
-          const scanTop = Math.max(0, Math.round(faceMinY));
-          const scanBot = Math.min(canvasH - 1, Math.round(faceMaxY - faceH * 0.04));
-          const minSkinRun = Math.max(4, Math.round(faceH * 0.025));
-          const lookAheadY = Math.max(12, Math.round(faceH * 0.26));
-
-          for (let x = innerLeft; x <= innerRight; x++) {
-            let skinCountAbove = 0;
-            for (let y = scanTop; y <= scanBot; y++) {
-              const pIdx = y * canvasW + x;
-              if (skinMap[pIdx] === 2) {
-                skinCountAbove++;
-                priorMask[pIdx] = 0.0;
-              } else if (skinCountAbove >= minSkinRun && priorMask[pIdx] > 0.0) {
-                // Check if there is face skin below this candidate pixel (sandwich test)
-                let skinBelow = 0;
-                const maxCheckY = Math.min(canvasH - 1, y + lookAheadY);
-                for (let ny = y + 2; ny <= maxCheckY; ny += 2) {
-                  if (skinMap[ny * canvasW + x] === 2) {
-                    skinBelow++;
-                    if (skinBelow >= 3) break;
-                  }
-                }
-                if (skinBelow >= 3) {
-                  // Pixel is sandwiched vertically between upper face skin and lower face skin -> Eye / Eyebrow!
-                  priorMask[pIdx] = 0.0;
-                }
-              }
+            if (conf > 0.60) {
+              sumL += L * conf;
+              sumA += a * conf;
+              sumB += b * conf;
+              weightSum += conf;
             }
           }
         }
 
-        // Pass 3: 8-Connected Topological Component Analysis (CCA)
-        // Isolates the crown-anchored hair mass and eliminates disconnected eyes, eyebrows, logos, collars & background blobs
-        const compLabels = new Int32Array(totalPixels);
-        const bfsQueue = new Int32Array(totalPixels);
-        const compStats = []; // { id, area, minY, maxY, sumL, sumA, sumB }
-        let currentLabel = 0;
-
-        for (let i = 0; i < totalPixels; i++) {
-          if (priorMask[i] > 0.34 && compLabels[i] === 0) {
-            currentLabel++;
-            let head = 0, tail = 0;
-            bfsQueue[tail++] = i;
-            compLabels[i] = currentLabel;
-
-            let area = 0;
-            let minY = canvasH, maxY = 0;
-            let sumL = 0, sumA = 0, sumB = 0;
-
-            while (head < tail) {
-              const curr = bfsQueue[head++];
-              const cy = (curr / canvasW) | 0;
-              const cx = curr - cy * canvasW;
-
-              area++;
-              if (cy < minY) minY = cy;
-              if (cy > maxY) maxY = cy;
-              sumL += precompLabL[curr];
-              sumA += precompLabA[curr];
-              sumB += precompLabB[curr];
-
-              const yStart = cy > 0 ? cy - 1 : 0;
-              const yEnd = cy + 1 < canvasH ? cy + 1 : canvasH - 1;
-              const xStart = cx > 0 ? cx - 1 : 0;
-              const xEnd = cx + 1 < canvasW ? cx + 1 : canvasW - 1;
-
-              for (let ny = yStart; ny <= yEnd; ny++) {
-                const nRow = ny * canvasW;
-                for (let nx = xStart; nx <= xEnd; nx++) {
-                  const nIdx = nRow + nx;
-                  if (compLabels[nIdx] === 0 && priorMask[nIdx] > 0.34) {
-                    compLabels[nIdx] = currentLabel;
-                    bfsQueue[tail++] = nIdx;
-                  }
-                }
-              }
-            }
-
-            compStats.push({
-              id: currentLabel,
-              area,
-              minY,
-              maxY,
-              meanL: sumL / area,
-              meanA: sumA / area,
-              meanB: sumB / area
-            });
-          }
+        if (weightSum > 20) {
+          hairStats.meanL = Math.max(12.0, Math.min(72.0, sumL / weightSum));
+          hairStats.meanA = sumA / weightSum;
+          hairStats.meanB = sumB / weightSum;
         }
 
-        if (compStats.length > 0) {
-          // Find primary crown hair component (largest component anchored in upper 70% of frame)
-          let primaryComp = compStats[0];
-          for (const c of compStats) {
-            if (c.minY < canvasH * 0.72 && c.area > primaryComp.area) {
-              primaryComp = c;
-            }
-          }
-
-          const validLabels = new Uint8Array(currentLabel + 1);
-          validLabels[primaryComp.id] = 1;
-
-          // Allow secondary hair components ONLY if substantial (>3.5% of primary), anchored above chin, and color-matched
-          const chinLimitY = faceCount > 100 ? Math.min(canvasH * 0.80, faceMaxY + (faceMaxY - faceMinY) * 0.15) : canvasH * 0.65;
-          for (const c of compStats) {
-            if (c.id === primaryComp.id) continue;
-            const colorDiff = Math.hypot(
-              (c.meanL - primaryComp.meanL) * 0.8,
-              c.meanA - primaryComp.meanA,
-              c.meanB - primaryComp.meanB
-            );
-            if (c.area >= primaryComp.area * 0.035 && c.minY < chinLimitY && colorDiff < 24.0) {
-              validLabels[c.id] = 1;
-            }
-          }
-
-          // Create binary valid core mask and dilate slightly (r=6) so fine perimeter strands are kept
-          const validCoreFloat = new Float32Array(totalPixels);
-          for (let i = 0; i < totalPixels; i++) {
-            const lbl = compLabels[i];
-            if (lbl > 0 && validLabels[lbl] === 1) {
-              validCoreFloat[i] = 1.0;
-            }
-          }
-          const dilatedSupport = boxFilterFloat32(validCoreFloat, canvasW, canvasH, 6);
-          for (let i = 0; i < totalPixels; i++) {
-            if (dilatedSupport[i] < 0.02) {
-              priorMask[i] = 0.0;
-            } else if (dilatedSupport[i] < 0.25) {
-              priorMask[i] *= (dilatedSupport[i] / 0.25);
-            }
-          }
-        }
-
-        // Pass 4: Sample Crown Core Hair Color vs. Exterior Background/Skin Color
-        // Rejects background gaps between hair strands and lower-frame dark clothing bleed
-        let crownSumL = 0, crownSumA = 0, crownSumB = 0, crownWeight = 0;
-        let bgSumL = 0, bgSumA = 0, bgSumB = 0, bgWeight = 0;
-        const crownLimitY = faceCount > 100 ? Math.round(faceMinY + (faceMaxY - faceMinY) * 0.55) : Math.round(canvasH * 0.50);
+        const horizMask = new Float32Array(totalPixels);
+        const radius = 3;
+        const diam = radius * 2 + 1;
 
         for (let y = 0; y < canvasH; y++) {
           const row = y * canvasW;
           for (let x = 0; x < canvasW; x++) {
-            const pIdx = row + x;
-            const m = priorMask[pIdx];
-            if (m > 0.72 && y <= crownLimitY && skinMap[pIdx] === 0 && clothesMap[pIdx] < 0.15) {
-              crownSumL += precompLabL[pIdx] * m;
-              crownSumA += precompLabA[pIdx] * m;
-              crownSumB += precompLabB[pIdx] * m;
-              crownWeight += m;
-            } else if (m < 0.04 && skinMap[pIdx] === 0 && y < crownLimitY) {
-              bgSumL += precompLabL[pIdx];
-              bgSumA += precompLabA[pIdx];
-              bgSumB += precompLabB[pIdx];
-              bgWeight += 1.0;
+            let sum = 0.0;
+            for (let k = -radius; k <= radius; k++) {
+              const nx = Math.max(0, Math.min(canvasW - 1, x + k));
+              sum += tempMask[row + nx];
             }
+            horizMask[row + x] = sum / diam;
           }
         }
 
-        const coreHairL = crownWeight > 20 ? (crownSumL / crownWeight) : 20.0;
-        const coreHairA = crownWeight > 20 ? (crownSumA / crownWeight) : 4.0;
-        const coreHairB = crownWeight > 20 ? (crownSumB / crownWeight) : 8.0;
-
-        const extBgL = bgWeight > 20 ? (bgSumL / bgWeight) : 75.0;
-        const extBgA = bgWeight > 20 ? (bgSumA / bgWeight) : 0.0;
-        const extBgB = bgWeight > 20 ? (bgSumB / bgWeight) : 0.0;
-        const hairBgContrast = Math.hypot(coreHairL - extBgL, coreHairA - extBgA, coreHairB - extBgB);
-
-        const lowerTorsoY = faceCount > 100 ? Math.round(faceMaxY + (faceMaxY - faceMinY) * 0.06) : Math.round(canvasH * 0.68);
-
-        for (let y = 0; y < canvasH; y++) {
-          const row = y * canvasW;
-          const isLowerTorso = y > lowerTorsoY;
-
-          for (let x = 0; x < canvasW; x++) {
-            const pIdx = row + x;
-            let m = priorMask[pIdx];
-            if (m <= 0.005) continue;
-
-            // Veto verified skin pixels completely
-            if (skinMap[pIdx] > 0 && m < 0.85) {
-              m *= 0.10;
-            }
-
-            const pL = precompLabL[pIdx];
-            const pA = precompLabA[pIdx];
-            const pB = precompLabB[pIdx];
-
-            const distToHair = Math.hypot((pL - coreHairL) * 0.75, (pA - coreHairA) * 1.15, (pB - coreHairB) * 1.15);
-
-            // In lower torso (below chin/shoulders), strictly reject pixels whose color diverges from crown hair or touches clothes
-            if (isLowerTorso) {
-              const cloPenalty = clothesMap[pIdx] > 0.10 ? Math.max(0.0, 1.0 - clothesMap[pIdx] * 2.5) : 1.0;
-              const colorGate = distToHair > 22.0 ? Math.max(0.0, 1.0 - (distToHair - 22.0) / 16.0) : 1.0;
-              m *= cloPenalty * colorGate;
-            }
-
-            // Along the perimeter/feather zone, reject background pixels showing between hair strands
-            if (m < 0.86 && hairBgContrast > 18.0) {
-              const distToBg = Math.hypot((pL - extBgL) * 0.85, pA - extBgA, pB - extBgB);
-              if (distToBg < distToHair * 0.85) {
-                const bgRatio = distToBg / (distToHair + 1e-4);
-                m *= Math.max(0.0, Math.min(1.0, bgRatio * bgRatio));
-              }
-            }
-
-            priorMask[pIdx] = m;
-          }
-        }
-
-        // Pass 5: Multi-Scale Edge-Preserving Guided Filter (Snaps Matte to Individual Hair Strands)
-        const coarseMatte = guidedFilterAlpha(guideLum, priorMask, canvasW, canvasH, 5, 0.0025);
-        const fineMatte = guidedFilterAlpha(guideLum, coarseMatte, canvasW, canvasH, 2, 0.0006);
-
-        // Pass 6: Precompute Multi-Scale Strand Detail + Tonal Quantiles (P02, P15, P50, P85, P98)
-        const smoothL1 = boxFilterFloat32(precompLabL, canvasW, canvasH, 1);
-        const smoothL3 = boxFilterFloat32(precompLabL, canvasW, canvasH, 3);
-        const smoothL9 = boxFilterFloat32(precompLabL, canvasW, canvasH, 9);
-
-        const histBins = new Float32Array(101);
-        let totalHistWeight = 0.0;
-        let sumL = 0.0, sumA = 0.0, sumB = 0.0;
         const activeList = [];
-
-        for (let i = 0; i < totalPixels; i++) {
-          let conf = 0.35 * coarseMatte[i] + 0.65 * fineMatte[i];
-
-          // Strand Ridge Enhancement: boost crisp individual hair strands in boundary zone
-          const origL = precompLabL[i];
-          const d1 = origL - smoothL1[i];
-          const d3 = smoothL1[i] - smoothL3[i];
-          const d9 = smoothL3[i] - smoothL9[i];
-          const strandTex = 0.45 * d1 + 0.65 * d3 + 0.35 * d9;
-          precompStrandDetail[i] = strandTex;
-
-          if (conf > 0.04 && conf < 0.88 && skinMap[i] === 0 && clothesMap[i] < 0.12) {
-            const distH = Math.hypot((origL - coreHairL) * 0.7, precompLabA[i] - coreHairA, precompLabB[i] - coreHairB);
-            if (distH < 18.0 && Math.abs(d3 + d9) > 1.2) {
-              // Matches hair color & forms a local strand ridge/valley -> recover fine strand!
-              conf = Math.min(0.96, conf * 1.38);
+        for (let y = 0; y < canvasH; y++) {
+          const row = y * canvasW;
+          for (let x = 0; x < canvasW; x++) {
+            const pIdx = row + x;
+            let sum = 0.0;
+            for (let k = -radius; k <= radius; k++) {
+              const ny = Math.max(0, Math.min(canvasH - 1, y + k));
+              sum += horizMask[ny * canvasW + x];
             }
-          }
-
-          // Clean cutoff of sub-perceptual noise floor
-          if (conf < 0.035) {
-            conf = 0.0;
-          } else if (conf > 0.92) {
-            conf = 1.0;
-          }
-
-          hairConfidenceMask[i] = conf;
-
-          if (conf > 0.03) {
-            activeList.push(i);
-          }
-
-          if (conf > 0.55) {
-            const bin = Math.max(0, Math.min(100, Math.round(smoothL1[i])));
-            histBins[bin] += conf;
-            totalHistWeight += conf;
-            sumL += origL * conf;
-            sumA += precompLabA[i] * conf;
-            sumB += precompLabB[i] * conf;
+            const conf = sum / diam;
+            hairConfidenceMask[pIdx] = conf;
+            if (conf > 0.015) {
+              activeList.push(pIdx);
+            }
           }
         }
 
         activeHairIndices = new Uint32Array(activeList);
-
-        if (totalHistWeight > 20.0) {
-          hairStats.meanL = sumL / totalHistWeight;
-          hairStats.meanA = sumA / totalHistWeight;
-          hairStats.meanB = sumB / totalHistWeight;
-
-          const getPercentile = (pct) => {
-            const target = totalHistWeight * pct;
-            let acc = 0.0;
-            for (let b = 0; b <= 100; b++) {
-              acc += histBins[b];
-              if (acc >= target) return b;
-            }
-            return 100;
-          };
-
-          hairStats.p02 = Math.max(1.0, getPercentile(0.02));
-          hairStats.p15 = Math.max(hairStats.p02 + 1.5, getPercentile(0.15));
-          hairStats.p50 = Math.max(hairStats.p15 + 2.5, getPercentile(0.50));
-          hairStats.p85 = Math.max(hairStats.p50 + 3.0, getPercentile(0.85));
-          hairStats.p98 = Math.max(hairStats.p85 + 4.0, getPercentile(0.98));
-        }
-
-        // Precompute each active hair pixel's normalized tonal position t in [0..1]
-        // This allows pitch-black hair (e.g., p02=3, p50=9, p98=26) to map cleanly across the full salon tonal curve!
-        const p02 = hairStats.p02;
-        const p50 = hairStats.p50;
-        const p98 = hairStats.p98;
-        const lowSpan = Math.max(3.0, p50 - p02);
-        const highSpan = Math.max(4.0, p98 - p50);
-
-        const activeCount = activeHairIndices.length;
-        for (let k = 0; k < activeCount; k++) {
-          const i = activeHairIndices[k];
-          const macroL = smoothL3[i];
-          let t;
-          if (macroL <= p50) {
-            const u = Math.max(0.0, (macroL - p02) / lowSpan);
-            t = 0.5 * u;
-          } else {
-            const u = Math.min(1.25, (macroL - p50) / highSpan);
-            t = 0.5 + 0.5 * (u / (1.0 + 0.25 * u));
-          }
-          precompNormT[i] = Math.max(0.0, Math.min(1.0, t));
-        }
 
         if (currentColorApplied) {
           scheduleRender();
@@ -3389,11 +2859,10 @@
     }
 
     /* =========================================================================
-       PHOTOREALISTIC SALON CIE 1976 L*a*b* RENDERING ENGINE
-       - Works on Pitch-Black (Level 1) through Platinum (Level 10) hair
-       - 3-Zone Quantile Tonal Curve (Root Depth -> Midtone Body -> Specular Ribbon)
-       - Dynamic Multi-Scale Strand Texture Amplification
-       - Chromatic Sheen Injection for Dark Tints (Blue Black, Burgundy, Espresso, Plum)
+       PURE CIE 1976 L*a*b* CONTROLLED TRANSFORMATION ENGINE
+       L_target = f_L(L_original)
+       a_target = f_a(a_original, target_a)
+       b_target = f_b(b_original, target_b)
        ========================================================================= */
     function applyCIELabHairColor() {
       if (!originalImageData || !workingImageData) return;
@@ -3406,30 +2875,15 @@
       const dst = workingImageData.data;
       dst.set(src);
 
-      const goalL = Math.max(11.0, Math.min(86.0, targetLabL + userLiftDelta));
+      const goalL = Math.max(12.0, Math.min(86.0, targetLabL + userLiftDelta));
       const goalA = targetLabA;
       const goalB = targetLabB;
-      const targetChroma = Math.hypot(goalA, goalB);
 
-      const baseMedianL = hairStats.p50;
-      const liftAmount = Math.max(0.0, goalL - baseMedianL);
+      const baseL = hairStats.meanL;
+      const baseA = hairStats.meanA;
+      const baseB = hairStats.meanB;
 
-      // Compute Salon 3-Zone Target Lightness Envelope: [shadowL, midL, ribbonL, specL]
-      // Even on dark shades (e.g. Blue Black L=20, Burgundy L=31, Espresso L=28),
-      // illuminated hair ribbons lift enough to display rich, unmistakable pigment on black hair!
-      const chromaReflectBoost = targetChroma > 5.0 ? Math.min(10.0, targetChroma * 0.22) : 2.5;
-      const shadowL = Math.max(4.5, Math.min(goalL * 0.36, goalL - 12.0));
-      const midL    = Math.max(14.0, goalL + (goalL < 28.0 ? chromaReflectBoost * 0.45 : 0.0));
-      const ribbonL = Math.min(91.0, midL + 15.0 + chromaReflectBoost * 0.65 + (88.0 - midL) * 0.14);
-      const specL   = Math.min(96.5, ribbonL + 9.5);
-
-      // Dynamic Strand Micro-Contrast Gain:
-      // Black hair has compressed raw L* differences; lifting amplifies physical strand contrast.
-      const strandGain = 1.15 + (liftAmount / 30.0) * 1.45;
-
-      // Dark-shade midtone chroma boost so Blue Black, Burgundy, Wine, Espresso, Plum pop on dark hair
-      const darkChromaBoost = goalL < 36.0 ? (1.0 + (36.0 - goalL) * 0.016) : 1.0;
-
+      const deltaL = goalL - baseL;
       const count = activeHairIndices.length;
 
       for (let k = 0; k < count; k++) {
@@ -3440,62 +2894,40 @@
         const origL = precompLabL[i];
         const origA = precompLabA[i];
         const origB = precompLabB[i];
-        const t = precompNormT[i];
-        const strandTex = precompStrandDetail[i];
 
-        // 1. Evaluate 3-Zone Salon Lightness Curve L_curve(t)
-        let curveL;
-        if (t <= 0.50) {
-          // Root & inner shadow zone -> Midtone body
-          const u = t * 2.0; // [0..1]
-          const smoothU = u * u * (3.0 - 2.0 * u);
-          curveL = shadowL + (midL - shadowL) * (0.45 * u + 0.55 * smoothU);
-        } else if (t <= 0.88) {
-          // Midtone body -> Illuminated hair ribbons
-          const u = (t - 0.50) / 0.38; // [0..1]
-          curveL = midL + (ribbonL - midL) * u;
+        const lNorm = origL * 0.01;
+
+        // 1. Controlled Lightness Transformation: L_out = f_L(L_orig)
+        let outL;
+        if (deltaL >= 0.0) {
+          const shadowToe = 1.0 - Math.exp(-origL / 14.0);
+          const highlightRoll = 1.0 - 0.32 * lNorm * lNorm;
+          const liftWeight = shadowToe * highlightRoll;
+          outL = origL + deltaL * liftWeight * 0.92;
         } else {
-          // Illuminated ribbons -> Glossy cuticle specular peak
-          const u = (t - 0.88) / 0.12; // [0..1]
-          curveL = ribbonL + (specL - ribbonL) * (u * u);
+          const scale = Math.max(0.25, goalL / Math.max(14.0, baseL));
+          const shinePreserve = lNorm * lNorm * 0.22;
+          outL = origL * (scale * (1.0 - shinePreserve) + shinePreserve);
+        }
+        outL = Math.max(2.0, Math.min(96.0, outL));
+
+        // 2. Controlled Chromatic Transformation:
+        // a_out = f_a(a_orig, target_a), b_out = f_b(b_orig, target_b)
+        const da = origA - baseA;
+        const db = origB - baseB;
+
+        let chromaEnv = 1.0;
+        if (outL < 22.0) {
+          chromaEnv = Math.max(0.12, outL / 22.0);
+        } else if (outL > 74.0) {
+          chromaEnv = Math.max(0.38, 1.0 - ((outL - 74.0) / 24.0) * 0.62);
         }
 
-        // 2. Inject Multi-Scale Strand Texture (softly bounded via rational sigmoid)
-        const scaledStrand = strandTex * strandGain;
-        const softStrand = (scaledStrand * 15.0) / (15.0 + Math.abs(scaledStrand));
-        let outL = curveL + softStrand;
-        outL = outL < 3.0 ? 3.0 : (outL > 96.5 ? 96.5 : outL);
+        const outA = (goalA + 0.18 * da) * chromaEnv;
+        const outB = (goalB + 0.18 * db) * chromaEnv;
 
-        // 3. Controlled Chromatic Envelope across Tonal Depth
-        // - Deepest root crevices (< 11 L*) roll off softly to prevent glowing shadows
-        // - Midtones & illuminated ribbons (t in 0.25..0.88) carry full, rich salon pigment
-        // - Specular cuticle peaks (t > 0.88) partially desaturate for natural 3D gloss
-        let shadowRoll = 1.0;
-        if (outL < 14.0) {
-          const s = Math.max(0.0, (outL - 3.5) / 10.5);
-          shadowRoll = 0.25 + 0.75 * (s * s * (3.0 - 2.0 * s));
-        }
-
-        let ribbonProfile = 1.0;
-        if (t > 0.25 && t <= 0.86) {
-          // Peak pigment richness in midtones & illuminated strands
-          const bell = Math.sin(((t - 0.25) / 0.61) * Math.PI);
-          ribbonProfile = 1.0 + 0.18 * bell;
-        } else if (t > 0.86) {
-          // Glossy cuticle highlight desaturation
-          const h = (t - 0.86) / 0.14;
-          ribbonProfile = 1.0 - 0.42 * (h * h);
-        }
-
-        // Subtle strand-synchronized chroma modulation for natural dimensional depth
-        const strandChromaMod = 1.0 + Math.max(-0.14, Math.min(0.16, softStrand * 0.015));
-        const totalChromaScale = shadowRoll * ribbonProfile * darkChromaBoost * strandChromaMod;
-
-        const outA = goalA * totalChromaScale;
-        const outB = goalB * totalChromaScale;
-
-        // 4. Feathered Alpha Blending in CIE L*a*b*
-        const alpha = conf * 0.95;
+        // 3. Feathered Alpha Blending directly in CIE L*a*b*
+        const alpha = conf * 0.92;
         const invAlpha = 1.0 - alpha;
 
         const finalL = origL * invAlpha + outL * alpha;
