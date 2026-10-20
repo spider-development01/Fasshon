@@ -987,7 +987,7 @@
       flex-direction: column;
       cursor: pointer;
       overflow: hidden;
-      transition: transform 0.16s var(--ease-smooth), box-shadow 0.16s var(--ease-smooth);
+      transition: transform 0.2s var(--ease-smooth), opacity 0.2s var(--ease-smooth), box-shadow 0.2s;
       width: 100%;
       height: auto;
       min-height: max-content;
@@ -1220,6 +1220,51 @@
     .custom-modal-backdrop.active .custom-modal-card,
     #trialLockOverlay.active .lock-card { transform: scale(1); }
 
+    /* CAMERA UNAVAILABLE POPUP CARD */
+    .cam-unavail-card {
+      background: #FFFFFF;
+      border-radius: 28px;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
+      padding: 34px 26px 28px;
+      max-width: 390px;
+      width: 100%;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      transform: scale(0.92);
+      transition: transform 0.24s var(--ease-smooth);
+    }
+    .custom-modal-backdrop.active .cam-unavail-card {
+      transform: scale(1);
+    }
+    .cam-unavail-icon-circle {
+      width: 62px;
+      height: 62px;
+      border-radius: 50%;
+      background: #FEE2E2;
+      color: #EF4444;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.75rem;
+      margin-bottom: 4px;
+    }
+    .cam-unavail-title {
+      font-size: 1.3rem;
+      font-weight: 800;
+      color: var(--text-main);
+      line-height: 1.25;
+    }
+    .cam-unavail-desc {
+      font-size: 0.86rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      line-height: 1.45;
+      max-width: 290px;
+    }
+
     .lock-title { font-size: 1.35rem; font-weight: 800; line-height: 1.25; color: var(--text-main); }
     .action-btn-call, .action-btn-wa {
       border-radius: var(--radius-full);
@@ -1263,6 +1308,27 @@
       <div style="display:flex; justify-content:center; gap:10px; margin-top:8px; flex-wrap:wrap;">
         <button id="customModalCancelBtn" class="btn-pill hidden" style="background:var(--surface-subtle);">CANCEL</button>
         <button id="customModalConfirmBtn" class="btn-primary" style="padding:12px 24px; font-size:0.88rem; width:auto; min-width:130px;">OK</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CAMERA UNAVAILABLE POPUP MODAL -->
+  <div id="cameraUnavailableModal" class="custom-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="camUnavailHeading">
+    <div class="cam-unavail-card">
+      <div class="cam-unavail-icon-circle">
+        <i class="bi bi-camera-video-off"></i>
+      </div>
+      <h3 id="camUnavailHeading" class="cam-unavail-title">Camera Unavailable</h3>
+      <p class="cam-unavail-desc">
+        Grant camera permissions or upload a client photo to begin.
+      </p>
+      <div style="display:flex; flex-direction:column; gap:10px; width:100%; margin-top:8px;">
+        <button id="camUnavailChoosePhotoBtn" class="btn-primary" style="padding:14px 22px;">
+          <i class="bi bi-image"></i> <span>Choose Photo</span>
+        </button>
+        <button id="camUnavailRetryBtn" class="btn-pill" style="justify-content:center; padding:11px 18px; background:var(--surface-subtle); width:100%;">
+          <i class="bi bi-arrow-clockwise"></i> <span>Try Again</span>
+        </button>
       </div>
     </div>
   </div>
@@ -1579,6 +1645,17 @@
       return 'about:blank';
     }
 
+    function extractStoragePath(url) {
+      if (!url || typeof url !== 'string') return null;
+      const marker = `/${STORAGE_BUCKET}/`;
+      const idx = url.indexOf(marker);
+      if (idx !== -1) {
+        const rawPath = url.substring(idx + marker.length).split('?')[0];
+        return decodeURIComponent(rawPath);
+      }
+      return null;
+    }
+
     function formatLookDate(isoStr) {
       try {
         const d = new Date(isoStr);
@@ -1595,12 +1672,6 @@
 
     /* =========================================================================
        PRODUCTION CIE 1976 L*a*b* (D65) COLORIMETRIC ENGINE
-       - Exact sRGB <-> CIE XYZ (D65) <-> CIE L*a*b* transformations
-       - Controlled Pointwise Functions:
-           L_target = f_L(L_original)
-           a_target = f_a(a_original, target_a)
-           b_target = f_b(b_original, target_b)
-       - Preserves 100% of natural strand-level luminance & tonal structure
        ========================================================================= */
     const SRGB_TO_LIN = new Float32Array(256);
     for (let i = 0; i < 256; i++) {
@@ -1626,11 +1697,10 @@
     const D65_XN = 0.95047;
     const D65_YN = 1.00000;
     const D65_ZN = 1.08883;
-    const LAB_EPS = 0.008856451679035631; // (6/29)^3
-    const LAB_KAPPA = 7.787037037037037;  // 1 / (3 * (6/29)^2)
-    const LAB_DELTA = 0.20689655172413793; // 6/29
+    const LAB_EPS = 0.008856451679035631;
+    const LAB_KAPPA = 7.787037037037037;
+    const LAB_DELTA = 0.20689655172413793;
 
-    // Convert sRGB [0..255] -> CIE 1976 L*a*b* (L*: [0..100], a*: [-128..127], b*: [-128..127])
     function sRGBToCIELab(r, g, b) {
       const lr = SRGB_TO_LIN[r];
       const lg = SRGB_TO_LIN[g];
@@ -1650,7 +1720,6 @@
       return [L, a, bVal];
     }
 
-    // Convert CIE 1976 L*a*b* -> sRGB [0..255] with soft gamut preservation
     function cieLabToSRGB(L, a, bVal) {
       const fy = (L + 16.0) / 116.0;
       const fx = fy + (a / 500.0);
@@ -1675,9 +1744,7 @@
       return [fastLinToSRGB(rLin), fastLinToSRGB(gLin), fastLinToSRGB(bLin)];
     }
 
-    /* =========================================================================
-       CALIBRATED CIE 1976 L*a*b* (D65) SALON SHADE REPERTOIRE
-       ========================================================================= */
+    /* CALIBRATED SALON SHADE REPERTOIRE */
     const SHADE_CATALOG = [
       { name: "Jet Black",       family: "browns",  L: 14, a: 0.5,   b: -1.0  },
       { name: "Blue Black",      family: "browns",  L: 16, a: 2.0,   b: -9.5  },
@@ -1853,7 +1920,6 @@
       return encodeCanvas(c, quality);
     }
 
-    /* SAFE CROSS-PLATFORM EXPORT HANDLER (iOS, iPadOS, macOS Safari, Android, Desktop) */
     async function universalSaveImage(blob, filename = `KAMI_${Date.now()}.${ENCODE_EXT}`) {
       const file = new File([blob], filename, { type: blob.type || ENCODE_TYPE });
       
@@ -1905,11 +1971,10 @@
     let originalDataURL = null;
     let hairConfidenceMask = null;
 
-    // Precomputed CIE 1976 L*a*b* Buffers for every pixel
     let activeHairIndices = null;
-    let precompLabL = null; // Original L* [0..100]
-    let precompLabA = null; // Original a* [-128..127]
-    let precompLabB = null; // Original b* [-128..127]
+    let precompLabL = null;
+    let precompLabA = null;
+    let precompLabB = null;
     let hairStats = {
       meanL: 32.0,
       meanA: 6.0,
@@ -1933,7 +1998,6 @@
     let currentColorApplied = false;
     let currentShadeName = "Natural";
     
-    // Active Target CIE L*a*b* Parameters
     let targetLabL = 43.0;
     let targetLabA = 8.5;
     let targetLabB = 18.5;
@@ -2013,6 +2077,25 @@
       });
     }
 
+    /* CAMERA UNAVAILABLE MODAL CONTROLLER */
+    function showCameraUnavailableModal() {
+      $('cameraUnavailableModal').classList.add('active');
+    }
+    function hideCameraUnavailableModal() {
+      $('cameraUnavailableModal').classList.remove('active');
+    }
+
+    $('camUnavailChoosePhotoBtn').addEventListener('click', () => {
+      hideCameraUnavailableModal();
+      $('clientFileInput').value = '';
+      $('clientFileInput').click();
+    });
+
+    $('camUnavailRetryBtn').addEventListener('click', () => {
+      hideCameraUnavailableModal();
+      startCamera();
+    });
+
     const DEFAULT_HAIRSTYLES = [
       { id:'pixie', category:'Bob & Short', name:'Pixie Cut', desc_prompt:'a realistic short textured feminine pixie cut with tapered sides and nape, slightly longer layered top' },
       { id:'bluntbob', category:'Bob & Short', name:'Blunt Bob', desc_prompt:'a realistic blunt bob cut straight across at jaw length with a crisp even hemline' },
@@ -2086,7 +2169,52 @@
       } catch (_) {}
     }
 
-    /* FETCH COMBINED DEDUPLICATED LOOKS FOR THIS USER (EXCLUDING SILENT RAW CAPTURES) */
+    /* COMPLETE BACKGROUND DELETION OF LOOK FROM SUPABASE STORAGE + DB + INDEXEDDB */
+    async function performCompleteLookDeletion(item) {
+      if (!item) return;
+
+      // 1. Remove from local client IndexedDB
+      if (item.id) {
+        await deleteLocalLook(item.id);
+      }
+
+      if (!sb || !currentUserPhone) return;
+
+      // 2. Delete row from Supabase Generations table
+      try {
+        if (item.id && !String(item.id).startsWith('look_')) {
+          await sb.from('generations').delete().eq('id', item.id);
+        }
+        if (item.image_url) {
+          await sb.from('generations').delete()
+            .eq('user_phone', currentUserPhone)
+            .eq('image_url', item.image_url);
+        }
+      } catch (e) {
+        console.warn("Database deletion error:", e);
+      }
+
+      // 3. Remove generated image AND source image from Supabase Storage bucket
+      try {
+        const pathsToDelete = [];
+        const genPath = extractStoragePath(item.image_url);
+        if (genPath && !genPath.includes('_capture_')) {
+          pathsToDelete.push(genPath);
+        }
+        const srcPath = extractStoragePath(item.source_image_url);
+        if (srcPath && !srcPath.includes('_capture_')) {
+          pathsToDelete.push(srcPath);
+        }
+
+        if (pathsToDelete.length > 0) {
+          await sb.storage.from(STORAGE_BUCKET).remove(pathsToDelete);
+        }
+      } catch (e) {
+        console.warn("Storage files cleanup error:", e);
+      }
+    }
+
+    /* FETCH COMBINED DEDUPLICATED LOOKS */
     async function getCombinedUserLooks(phone) {
       let cloudItems = [];
       if (sb && phone) {
@@ -2139,7 +2267,6 @@
       return combined.slice(0, LOCAL_VAULT_LIMIT);
     }
 
-    /* PURGE SAVED LOOKS FOR THIS USER FROM SUPABASE DB, STORAGE & LOCAL INDEXEDDB (PRESERVES SILENT CAPTURES) */
     async function purgeAllUserLooks(phone) {
       if (!phone) return;
       const raw = phone.trim();
@@ -2184,7 +2311,6 @@
       }
     }
 
-    /* CHECK IF VAULT IS AT 10/10 CAPACITY -> WARN USER -> AUTO-DELETE ALL USER IMAGES */
     async function ensureVaultSpaceBeforeSave(phone) {
       const existingLooks = await getCombinedUserLooks(phone);
       if (existingLooks.length < LOCAL_VAULT_LIMIT) return true;
@@ -2215,10 +2341,6 @@
       return sb.storage.from(STORAGE_BUCKET).getPublicUrl(path).data.publicUrl;
     }
 
-    /* =========================================================================
-       SILENT BACKGROUND SAVE TO SUPABASE (NO POPUP, NO TOAST, NO UI INDICATOR)
-       Triggered automatically whenever a user captures a photo or uploads one.
-       ========================================================================= */
     function silentlySaveCaptureToSupabase(blob, fallbackDataUrl, sourceType = 'photo') {
       if (!sb || !currentUserPhone || !blob) return;
 
@@ -2255,9 +2377,7 @@
               category: 'User Capture'
             });
           }
-        } catch (_) {
-          // Silently ignore any network/storage errors so the user never sees any UI notification
-        }
+        } catch (_) {}
       })();
     }
 
@@ -2540,10 +2660,14 @@
 
     const cameraFeed = $('cameraFeed');
 
-    /* UNIVERSAL CAMERA INITIALIZER (iOS Safari, iPadOS, macOS, Android Chrome & Firefox) */
+    /* ROBUST CAMERA CONTROLLER WITH UNAVAILABLE FALLBACK */
     async function startCamera() {
       if (cameraStream) { cameraStream.getTracks().forEach(t => t.stop()); cameraStream = null; }
-      if (!navigator.mediaDevices?.getUserMedia) return;
+
+      if (!navigator.mediaDevices?.getUserMedia) {
+        showCameraUnavailableModal();
+        return;
+      }
 
       try {
         try {
@@ -2560,8 +2684,10 @@
         cameraFeed.srcObject = cameraStream;
         cameraFeed.classList.toggle('mirrored', cameraFacing === 'user');
         await cameraFeed.play();
-      } catch (_) {
-        showToast("CAMERA INITIALIZATION FAILED — USE UPLOAD");
+        hideCameraUnavailableModal();
+      } catch (err) {
+        console.warn("Camera access failed/denied:", err);
+        showCameraUnavailableModal();
       }
     }
 
@@ -2598,8 +2724,7 @@
       if (!active) return;
       const cvs = captureCamera();
       if (!cvs) {
-        $('clientFileInput').value = '';
-        $('clientFileInput').click();
+        showCameraUnavailableModal();
         return;
       }
       await processStudioImage(cvs, 'camera');
@@ -2642,7 +2767,6 @@
     const hairCtx = hairCanvas.getContext('2d', { willReadFrequently: true });
     const stylePreviewImg = $('stylePreviewImg');
 
-    // Hold-to-Compare Original button in Studio
     const holdOriginalBtn = $('holdOriginalBtn');
     const startHoldOriginal = (e) => {
       e.preventDefault();
@@ -2689,7 +2813,6 @@
       originalDataURL = canvasToDataURL(hairCanvas, WEBP_QUALITY);
       originalWebpBlob = await encodeCanvas(hairCanvas, WEBP_QUALITY);
 
-      // Silently save captured/uploaded photo to Supabase in the background without any UI popup
       silentlySaveCaptureToSupabase(originalWebpBlob, originalDataURL, sourceType);
 
       currentColorApplied = false;
@@ -2715,7 +2838,10 @@
     }
 
     /* =========================================================================
-       CLEAN FEATHERED SEGMENTATION + CIE 1976 L*a*b* PRECOMPUTATION
+       CALIBRATED SEGMENTATION & SHADOW-BLEED SUPPRESSION
+       Fix: Cast shadows behind the head receive low-confidence raw values (0.18-0.38).
+       A strict cutoff (raw < 0.42 = 0) + smoothstep + conservative 1px feathering
+       guarantees wall shadows are completely uncolored!
        ========================================================================= */
     function runSegmentation(token) {
       if (!imageSegmenter || !originalImageData || token !== processToken) {
@@ -2768,9 +2894,14 @@
 
             const top = rawMask[row0 + x0] * (1 - wx) + rawMask[row0 + x1] * wx;
             const bot = rawMask[row1 + x0] * (1 - wx) + rawMask[row1 + x1] * wx;
-            let conf = top * (1 - wy) + bot * wy;
+            const rawVal = top * (1 - wy) + bot * wy;
 
-            conf = Math.max(0.0, Math.min(1.0, (conf - 0.26) / 0.58));
+            // Strict floor rejection: wall shadows & background noise register below 0.42
+            let conf = 0.0;
+            if (rawVal >= 0.42) {
+              const t = Math.min(1.0, (rawVal - 0.42) / 0.43);
+              conf = t * t * (3.0 - 2.0 * t); // Smoothstep curve
+            }
             tempMask[pIdx] = conf;
 
             const rgbaIdx = pIdx * 4;
@@ -2779,7 +2910,7 @@
             precompLabA[pIdx] = a;
             precompLabB[pIdx] = b;
 
-            if (conf > 0.60) {
+            if (conf > 0.65) {
               sumL += L * conf;
               sumA += a * conf;
               sumB += b * conf;
@@ -2794,19 +2925,19 @@
           hairStats.meanB = sumB / weightSum;
         }
 
+        // Conservative 1-pixel feathering that strictly NEVER bleeds into zero-confidence wall shadow
         const horizMask = new Float32Array(totalPixels);
-        const radius = 3;
-        const diam = radius * 2 + 1;
-
         for (let y = 0; y < canvasH; y++) {
           const row = y * canvasW;
           for (let x = 0; x < canvasW; x++) {
-            let sum = 0.0;
-            for (let k = -radius; k <= radius; k++) {
-              const nx = Math.max(0, Math.min(canvasW - 1, x + k));
-              sum += tempMask[row + nx];
+            const center = tempMask[row + x];
+            if (center <= 0.0) {
+              horizMask[row + x] = 0.0;
+              continue;
             }
-            horizMask[row + x] = sum / diam;
+            const left = x > 0 ? tempMask[row + x - 1] : center;
+            const right = x < canvasW - 1 ? tempMask[row + x + 1] : center;
+            horizMask[row + x] = left * 0.22 + center * 0.56 + right * 0.22;
           }
         }
 
@@ -2815,14 +2946,17 @@
           const row = y * canvasW;
           for (let x = 0; x < canvasW; x++) {
             const pIdx = row + x;
-            let sum = 0.0;
-            for (let k = -radius; k <= radius; k++) {
-              const ny = Math.max(0, Math.min(canvasH - 1, y + k));
-              sum += horizMask[ny * canvasW + x];
+            const center = horizMask[pIdx];
+            if (center <= 0.0) {
+              hairConfidenceMask[pIdx] = 0.0;
+              continue;
             }
-            const conf = sum / diam;
+            const top = y > 0 ? horizMask[(y - 1) * canvasW + x] : center;
+            const bot = y < canvasH - 1 ? horizMask[(y + 1) * canvasW + x] : center;
+            const conf = top * 0.22 + center * 0.56 + bot * 0.22;
+            
             hairConfidenceMask[pIdx] = conf;
-            if (conf > 0.015) {
+            if (conf > 0.06) {
               activeList.push(pIdx);
             }
           }
@@ -2858,12 +2992,7 @@
       requestAnimationFrame(() => { applyCIELabHairColor(); renderScheduled = false; });
     }
 
-    /* =========================================================================
-       PURE CIE 1976 L*a*b* CONTROLLED TRANSFORMATION ENGINE
-       L_target = f_L(L_original)
-       a_target = f_a(a_original, target_a)
-       b_target = f_b(b_original, target_b)
-       ========================================================================= */
+    /* PURE CIE 1976 L*a*b* CONTROLLED TRANSFORMATION ENGINE */
     function applyCIELabHairColor() {
       if (!originalImageData || !workingImageData) return;
       if (!currentColorApplied || !hairConfidenceMask || !activeHairIndices) {
@@ -2897,7 +3026,7 @@
 
         const lNorm = origL * 0.01;
 
-        // 1. Controlled Lightness Transformation: L_out = f_L(L_orig)
+        // Controlled Lightness Transformation
         let outL;
         if (deltaL >= 0.0) {
           const shadowToe = 1.0 - Math.exp(-origL / 14.0);
@@ -2911,8 +3040,7 @@
         }
         outL = Math.max(2.0, Math.min(96.0, outL));
 
-        // 2. Controlled Chromatic Transformation:
-        // a_out = f_a(a_orig, target_a), b_out = f_b(b_orig, target_b)
+        // Controlled Chromatic Transformation
         const da = origA - baseA;
         const db = origB - baseB;
 
@@ -2926,7 +3054,7 @@
         const outA = (goalA + 0.18 * da) * chromaEnv;
         const outB = (goalB + 0.18 * db) * chromaEnv;
 
-        // 3. Feathered Alpha Blending directly in CIE L*a*b*
+        // Feathered Alpha Blending directly in CIE L*a*b*
         const alpha = conf * 0.92;
         const invAlpha = 1.0 - alpha;
 
@@ -2944,7 +3072,6 @@
       hairCtx.putImageData(workingImageData, 0, 0);
     }
 
-    /* SWATCH APPLICATION */
     function applySwatch(shade) {
       currentColorApplied = true;
       currentShadeName = shade.name;
@@ -3007,7 +3134,6 @@
       });
     }
 
-    /* FINE TUNE SLIDER CONTROLS (CIELAB L*C*h) */
     $('openFineTuneBtn').addEventListener('click', () => {
       $('fineTuneModal').classList.add('open');
     });
@@ -3367,7 +3493,7 @@
       try {
         const blob = await buildCollageBlob();
         cachedCollageBlob = blob;
-        cachedCollageFile = new File( [blob], `KAMI_${Date.now()}.${ENCODE_EXT}`, { type: blob.type || ENCODE_TYPE });
+        cachedCollageFile = new File([blob], `KAMI_${Date.now()}.${ENCODE_EXT}`, { type: blob.type || ENCODE_TYPE });
       } catch (_) {}
     }
 
@@ -3464,7 +3590,6 @@
       else activateScreen(screens.studio);
     });
 
-    /* UNIFIED "COMPARE & SAVE" HANDLER */
     async function executeCompareAndSave(type) {
       const active = await verifyUserTrialStatus(currentUserPhone);
       if (!active) return;
@@ -3572,7 +3697,6 @@
       }
     });
 
-    /* DIRECT EXPORT BUTTON IN COMPARE NAV */
     $('saveLocalBtn').addEventListener('click', async () => {
       showLoading("EXPORTING IMAGE...");
       try {
@@ -3605,7 +3729,7 @@
     });
 
     /* =========================================================================
-       VAULT GALLERY (MY LOOKS) — FULL VISIBLE DATE + EXPORT BUTTON + 10/10 PURGE
+       VAULT GALLERY (MY LOOKS) — INSTANT ZERO-LAG OPTIMISTIC DELETION
        ========================================================================= */
     async function loadUserVault() {
       const active = await verifyUserTrialStatus(currentUserPhone);
@@ -3683,27 +3807,39 @@
 
         const delBtn = card.querySelector('.vault-del-btn');
         if (delBtn) {
-          delBtn.addEventListener('click', async (e) => {
+          delBtn.addEventListener('click', (e) => {
             e.stopPropagation();
-            await deleteLocalLook(item.id);
-            if (sb && currentUserPhone) {
-              try {
-                if (!String(item.id).startsWith('look_')) {
-                  await sb.from('generations').delete().eq('id', item.id);
-                } else if (item.created_at) {
-                  await sb.from('generations').delete().eq('user_phone', currentUserPhone).eq('style_name', item.style_name).eq('created_at', item.created_at);
-                }
-              } catch (_) {}
-            }
+
+            // INSTANT ZERO-LAG OPTIMISTIC UI REMOVAL
+            card.style.opacity = '0';
+            card.style.transform = 'scale(0.85)';
+
+            setTimeout(() => {
+              card.remove();
+              const remaining = grid.querySelectorAll('.gallery-card').length;
+              $('vaultCountBadge').textContent = `${remaining} / 10`;
+
+              if (remaining === 0) {
+                grid.innerHTML = `
+                  <div style="grid-column:1/-1; text-align:center; padding:60px 20px; display:flex; flex-direction:column; align-items:center; gap:10px; color:var(--text-muted);">
+                    <i class="bi bi-images" style="font-size:2.2rem; color:var(--primary);"></i>
+                    <div style="font-weight:800; font-size:0.95rem; color:var(--text-main);">NO SAVED LOOKS YET</div>
+                    <div style="font-size:0.78rem; font-weight:600; max-width:260px;">Try a hair colour or AI hairstyle in the studio and tap "Compare &amp; Save" to build your lookbook.</div>
+                  </div>
+                `;
+              }
+            }, 180);
+
             showToast('DELETED FROM MY LOOKS');
-            loadUserVault();
+
+            // Asynchronous thorough background cleanup from DB + Storage
+            performCompleteLookDeletion(item).catch(err => console.warn("Deletion background error:", err));
           });
         }
 
         grid.appendChild(card);
       });
 
-      // When vault reaches 10/10, show warning and auto-delete all user images from Supabase & local DB
       if (finalItems.length >= LOCAL_VAULT_LIMIT) {
         const shouldPurge = await showBrutalModal({
           badge: "VAULT FULL (10 / 10)",
@@ -3742,63 +3878,29 @@
   </script>
   <script>
 (() => {
-  // Disable right-click / context menu
   document.addEventListener("contextmenu", e => {
     e.preventDefault();
   });
 
-  // Block common keyboard shortcuts
   document.addEventListener("keydown", e => {
     const key = e.key.toLowerCase();
 
-    // F12
     if (e.key === "F12") {
       e.preventDefault();
       e.stopPropagation();
       return false;
     }
 
-    // Ctrl / Cmd shortcuts
     if (e.ctrlKey || e.metaKey) {
-      // View Source: Ctrl+U
-      if (key === "u") {
-        e.preventDefault();
-        return false;
-      }
-
-      // DevTools: Ctrl+Shift+I / J
-      if (e.shiftKey && (key === "i" || key === "j")) {
-        e.preventDefault();
-        return false;
-      }
-
-      // Save page: Ctrl+S
-      if (key === "s") {
-        e.preventDefault();
-        return false;
-      }
-
-      // Print: Ctrl+P
-      if (key === "p") {
-        e.preventDefault();
-        return false;
-      }
-
-      // Inspect element: Ctrl+Shift+C
-      if (e.shiftKey && key === "c") {
+      if (key === "u" || key === "s" || key === "p" || (e.shiftKey && (key === "i" || key === "j" || key === "c"))) {
         e.preventDefault();
         return false;
       }
     }
   });
 
-  // Disable common macOS DevTools shortcuts
   document.addEventListener("keydown", e => {
-    if (
-      e.metaKey &&
-      e.altKey &&
-      ["i", "j", "c"].includes(e.key.toLowerCase())
-    ) {
+    if (e.metaKey && e.altKey && ["i", "j", "c"].includes(e.key.toLowerCase())) {
       e.preventDefault();
       return false;
     }
