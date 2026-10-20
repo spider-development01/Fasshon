@@ -1,29 +1,3 @@
-Here is the complete, production-ready index.html with all four mobile fixes
-(Fix A, Fix B, Fix C, and Fix D) fully integrated:
-
-What was fixed for mobile:
-
-1.  Fix A (MediaPipe Mobile Delegate & Auto-Retry): Mobile GPUs (Mali, Adreno,
-    Apple Metal WebGL2) frequently fail silently when initializing MediaPipe
-    with delegate: "GPU". Mobile devices now try ["CPU", "GPU"], implement
-    a 3-attempt exponential backoff retry, and queue images cleanly without
-    silent freezing.
-2.  Fix B (Adaptive Confidence Threshold & Luma Fallback Mask): Mobile selfies
-    are frequently dimmer and wider-angled. The segmentation threshold has been
-    relaxed from (conf - 0.26) / 0.58 to (conf - 0.15) / 0.70. If a dark photo
-    yields fewer than 500 active pixels, a smart luma/chroma fallback mask
-    activates automatically so swatches always respond smoothly.
-3.  Fix C (iOS Safari / WebKit Texture Repaint Stall): iOS Safari (16.4+) has a
-    known compositor texture bug where calling putImageData() on a canvas inside
-    transformed parents fails to repaint. An offscreen buffer canvas is now used
-    with drawImage(), and will-change: transform has been removed from drawer
-    sheets.
-4.  Fix D (Scroll Container Touch Interception): Swatch tiles now use
-    touch-action: manipulation and pointer-drag distance filtering so swiping
-    through shades doesn't get swallowed or delayed by the 300ms click delay.
-5.  Instant Mobile Diagnostic: Added window.kamiDiag() in the console so you can
-    check segmentation health on any mobile device in seconds.
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
