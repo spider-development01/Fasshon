@@ -421,6 +421,7 @@
       border-radius: var(--radius-sm);
       overflow: hidden;
       position: relative;
+      touch-action: none;
     }
     #hairCanvas, #stylePreviewImg {
       max-width: 100%;
@@ -431,12 +432,26 @@
       border-radius: var(--radius-sm);
       display: block;
     }
+    #hairCanvas.brush-active {
+      cursor: crosshair;
+      touch-action: none;
+    }
 
-    .hold-compare-pill {
+    .preview-top-pills {
       position: absolute;
-      top: 14px;
-      right: 14px;
-      background: rgba(20, 20, 20, 0.72);
+      top: 12px;
+      left: 12px;
+      right: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      pointer-events: none;
+      z-index: 15;
+    }
+    .preview-overlay-pill {
+      pointer-events: auto;
+      background: rgba(20, 20, 20, 0.74);
       -webkit-backdrop-filter: blur(8px);
       backdrop-filter: blur(8px);
       color: #FFFFFF;
@@ -449,14 +464,69 @@
       display: inline-flex;
       align-items: center;
       gap: 5px;
-      z-index: 15;
       cursor: pointer;
       user-select: none;
       -webkit-user-select: none;
     }
-    .hold-compare-pill:active {
+    .preview-overlay-pill:active,
+    .preview-overlay-pill.active {
       background: var(--primary);
-      transform: scale(0.95);
+      border-color: var(--primary);
+    }
+
+    /* MANUAL MASK BRUSH TOOLBAR */
+    .brush-toolbar {
+      position: absolute;
+      bottom: 12px;
+      left: 12px;
+      right: 12px;
+      max-width: 480px;
+      margin: 0 auto;
+      background: rgba(20, 20, 20, 0.88);
+      -webkit-backdrop-filter: blur(14px);
+      backdrop-filter: blur(14px);
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      border-radius: 18px;
+      padding: 10px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      color: #FFFFFF;
+      z-index: 25;
+      box-shadow: var(--shadow-dock);
+    }
+    .brush-toolbar-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .brush-mode-btn {
+      padding: 6px 12px;
+      border-radius: var(--radius-full);
+      font-size: 0.70rem;
+      font-weight: 800;
+      background: rgba(255, 255, 255, 0.10);
+      color: #FFFFFF;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .brush-mode-btn.active {
+      background: var(--primary);
+      color: #FFFFFF;
+      box-shadow: var(--shadow-orange);
+    }
+    .brush-cursor-ring {
+      position: fixed;
+      pointer-events: none;
+      border: 2px solid #FFFFFF;
+      box-shadow: 0 0 0 1.5px var(--primary), inset 0 0 8px rgba(255, 100, 34, 0.35);
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 9000;
+      display: none;
     }
 
     /* DOCKED DUAL ACTION TRIGGER BAR */
@@ -789,7 +859,7 @@
     .rainbow-slider {
       background: linear-gradient(to right, hsl(0,75%,50%), hsl(60,75%,50%), hsl(120,75%,50%), hsl(180,75%,50%), hsl(240,75%,50%), hsl(300,75%,50%), hsl(360,75%,50%));
     }
-    .sat-slider { background: linear-gradient(to right, #B5B5B5, #FF6422, #9E142E); }
+    .sat-slider { background: linear-gradient(to right, #B5B5B5, #FF6422, #7A1628); }
     .lift-slider { background: linear-gradient(to right, #2B1D12, #6E4E36, #B98A5B, #E8C69B, #FFFFFF); }
 
     /* VIEW 3: COMPARE SCREEN */
@@ -1141,7 +1211,7 @@
     }
     .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
-    /* LOADING & MODAL OVERLAYS */
+    /* LOADING & PROGRESS OVERLAY */
     .loading-overlay {
       position: absolute;
       top: 0; right: 0; bottom: 0; left: 0;
@@ -1165,16 +1235,37 @@
     .loading-badge {
       background: var(--surface);
       color: var(--text-main);
-      border-radius: var(--radius-full);
-      padding: 14px 28px;
-      font-size: 0.9rem;
+      border-radius: 22px;
+      padding: 16px 26px;
+      font-size: 0.88rem;
       font-weight: 800;
       box-shadow: var(--shadow-dock);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      min-width: 260px;
+    }
+    .loading-badge-row {
       display: inline-flex;
       align-items: center;
-      gap: 12px;
+      gap: 10px;
     }
-    .loading-badge i { color: var(--primary); font-size: 1.15rem; }
+    .loading-badge-row i { color: var(--primary); font-size: 1.15rem; }
+    .progress-track {
+      width: 100%;
+      height: 6px;
+      background: var(--surface-subtle);
+      border-radius: var(--radius-full);
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      width: 20%;
+      background: var(--primary);
+      border-radius: var(--radius-full);
+      transition: width 0.22s ease;
+    }
     .timer-badge {
       background: rgba(255, 255, 255, 0.15);
       color: #FFFFFF;
@@ -1242,11 +1333,17 @@
 <body>
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <div id="brushCursorRing" class="brush-cursor-ring"></div>
 
-  <!-- LOADING OVERLAY -->
+  <!-- LOADING & PROGRESS OVERLAY -->
   <div id="loadingOverlay" class="loading-overlay" role="dialog" aria-modal="true" aria-labelledby="loadingMessage">
     <div class="loading-badge">
-      <i class="bi bi-hourglass-split"></i> <span id="loadingMessage">ANALYSING HAIR...</span>
+      <div class="loading-badge-row">
+        <i class="bi bi-hourglass-split"></i> <span id="loadingMessage">ANALYSING HAIR...</span>
+      </div>
+      <div class="progress-track">
+        <div id="loadingProgressBar" class="progress-fill"></div>
+      </div>
     </div>
     <div id="loadingTimer" class="timer-badge hidden">0S ELAPSED</div>
   </div>
@@ -1340,7 +1437,7 @@
     </div>
   </section>
 
-  <!-- VIEW 2: STUDIO (LIVE PREVIEW + COMPACT COLLAPSIBLE DRAWERS) -->
+  <!-- VIEW 2: STUDIO (WEBGL GPU PREVIEW + MANUAL MASK BRUSH + DRAWERS) -->
   <section id="studioScreen" class="view-screen">
     <header class="studio-header">
       <button id="retakeBtn" class="btn-pill"><i class="bi bi-arrow-left"></i> CAMERA</button>
@@ -1350,12 +1447,43 @@
 
     <main class="studio-content">
       <div class="studio-preview-card">
-        <div class="preview-box">
+        <div class="preview-box" id="studioPreviewBox">
           <canvas id="hairCanvas"></canvas>
           <img id="stylePreviewImg" class="hidden" alt="AI Hairstyle Preview" />
-          <button id="holdOriginalBtn" type="button" class="hold-compare-pill" title="Hold to view original hair">
-            <i class="bi bi-eye"></i> HOLD ORIGINAL
-          </button>
+
+          <div class="preview-top-pills">
+            <button id="toggleBrushBtn" type="button" class="preview-overlay-pill" title="Manually add or erase hair mask">
+              <i class="bi bi-brush"></i> REFINE MASK
+            </button>
+            <button id="holdOriginalBtn" type="button" class="preview-overlay-pill" title="Hold to view original hair">
+              <i class="bi bi-eye"></i> HOLD ORIGINAL
+            </button>
+          </div>
+
+          <!-- INTERACTIVE ADD / ERASE MASK BRUSH BAR -->
+          <div id="brushToolbar" class="brush-toolbar hidden">
+            <div class="brush-toolbar-row">
+              <div style="display:flex; gap:6px; align-items:center;">
+                <button type="button" id="brushAddBtn" class="brush-mode-btn active">
+                  <i class="bi bi-plus-circle-fill"></i> ADD HAIR
+                </button>
+                <button type="button" id="brushEraseBtn" class="brush-mode-btn">
+                  <i class="bi bi-eraser-fill"></i> ERASE
+                </button>
+                <button type="button" id="brushResetBtn" class="brush-mode-btn" title="Restore guided mask">
+                  <i class="bi bi-arrow-counterclockwise"></i> RESET
+                </button>
+              </div>
+              <button type="button" id="brushDoneBtn" class="brush-mode-btn" style="background:#FFFFFF; color:#141414;">
+                DONE
+              </button>
+            </div>
+            <div style="display:flex; align-items:center; gap:10px; font-size:0.70rem; font-weight:800;">
+              <span>SIZE</span>
+              <input type="range" id="brushSizeSlider" min="8" max="64" value="24" style="flex:1; height:8px;" />
+              <span id="brushSizeLabel" style="min-width:32px; text-align:right;">24px</span>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -1372,7 +1500,7 @@
       <!-- BACKDROP -->
       <div id="drawerBackdrop" class="studio-drawer-backdrop"></div>
 
-      <!-- DRAWER A: HAIR COLOUR (MARSCHNER R/TT/TRT + CIE L*a*b* D65 ENGINE) -->
+      <!-- DRAWER A: HAIR COLOUR (WEBGL GPU CIE L*a*b* ENGINE) -->
       <div id="colorDrawer" class="studio-drawer">
         <div class="drawer-handle-bar" id="colorDrawerHandle"></div>
         <div class="drawer-header">
@@ -1405,23 +1533,23 @@
         </div>
       </div>
 
-      <!-- ANIMATED FINE TUNE POPUP SHEET (CIE L*a*b*) -->
+      <!-- ANIMATED FINE TUNE POPUP SHEET (CIE L*a*b* + k SHIFT SLIDER) -->
       <div id="fineTuneModal" class="fine-tune-modal">
         <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border-subtle); padding-bottom:8px;">
-          <h4 style="font-size:0.92rem; font-weight:800;"><i class="bi bi-sliders" style="color:var(--primary); margin-right:4px;"></i> CIELAB FINE TUNE</h4>
+          <h4 style="font-size:0.92rem; font-weight:800;"><i class="bi bi-sliders" style="color:var(--primary); margin-right:4px;"></i> CIELAB FINE TUNE (GPU)</h4>
           <button id="closeFineTuneBtn" class="btn-pill" style="padding:4px 12px; font-size:0.72rem;">DONE</button>
         </div>
         <div class="slider-block">
-          <label for="oklchHueSlider">CIELAB HUE ANGLE (h°ab) <span id="hueVal">20°</span></label>
-          <input type="range" id="oklchHueSlider" min="0" max="360" step="1" value="20" class="rainbow-slider" />
+          <label for="oklchHueSlider">CIELAB HUE ANGLE (h°ab) <span id="hueVal">14°</span></label>
+          <input type="range" id="oklchHueSlider" min="0" max="360" step="1" value="14" class="rainbow-slider" />
         </div>
         <div class="slider-block">
-          <label for="oklchChromaSlider">CIELAB CHROMA (C*ab) <span id="chromaVal">48</span></label>
-          <input type="range" id="oklchChromaSlider" min="0" max="75" step="1" value="48" class="sat-slider" />
+          <label for="oklchChromaSlider">CIELAB CHROMA (C*ab) <span id="chromaVal">32</span></label>
+          <input type="range" id="oklchChromaSlider" min="0" max="60" step="1" value="32" class="sat-slider" />
         </div>
         <div class="slider-block">
-          <label for="oklchLiftSlider">LIGHTNESS LIFT (ΔL*) <span id="liftVal">0</span></label>
-          <input type="range" id="oklchLiftSlider" min="-25" max="30" step="1" value="0" class="lift-slider" />
+          <label for="oklchLiftSlider">LIGHTNESS SHIFT (k · ΔL*) <span id="liftVal">0.85</span></label>
+          <input type="range" id="oklchLiftSlider" min="0" max="150" step="5" value="85" class="lift-slider" />
         </div>
       </div>
 
@@ -1594,14 +1722,10 @@
     }
 
     /* =========================================================================
-       PRODUCTION CIE 1976 L*a*b* (D65) + MARSCHNER R/TT/TRT OPTICAL HAIR ENGINE
-       - Exact sRGB <-> CIE XYZ (D65) <-> CIE L*a*b* transformations
-       - Hue-Preserving Filmic Highlight Gamut Mapping (prevents rich crimson/wine
-         from desaturating into pastel pink/magenta)
-       - 3-Zone Beer-Lambert Absorption & Scattering:
-           1. Deep Root & Shadow Crevice Anchor (multi-scattering absorption)
-           2. Core Cortex Pigment in Midtones
-           3. Transmitted $TRT$ Highlight Bloom on Lit Wave Ridges + $R$ Cuticle Gloss
+       CIE 1976 L*a*b* (D65) COLORIMETRY & CALIBRATED SALON SHADE CATALOG
+       - Lightness formula: L_out = L_orig + k * weight * (L_target - mean_L_hair)
+         Preserves 100% of real local strand texture, flyaways, and soft reflections
+       - Deep brown & subtle merlot/plum shadow undertones + natural Root Shadow
        ========================================================================= */
     const SRGB_TO_LIN = new Float32Array(256);
     for (let i = 0; i < 256; i++) {
@@ -1623,15 +1747,13 @@
       return LIN_TO_SRGB_LUT[(c * LIN_LUT_SIZE + 0.5) | 0];
     }
 
-    // D65 Reference White
     const D65_XN = 0.95047;
     const D65_YN = 1.00000;
     const D65_ZN = 1.08883;
-    const LAB_EPS = 0.008856451679035631; // (6/29)^3
-    const LAB_KAPPA = 7.787037037037037;  // 1 / (3 * (6/29)^2)
-    const LAB_DELTA = 0.20689655172413793; // 6/29
+    const LAB_EPS = 0.008856451679035631;
+    const LAB_KAPPA = 7.787037037037037;
+    const LAB_DELTA = 0.20689655172413793;
 
-    // Convert sRGB [0..255] -> CIE 1976 L*a*b* (L*: [0..100], a*: [-128..127], b*: [-128..127])
     function sRGBToCIELab(r, g, b) {
       const lr = SRGB_TO_LIN[r];
       const lg = SRGB_TO_LIN[g];
@@ -1645,13 +1767,9 @@
       const fy = y > LAB_EPS ? Math.cbrt(y) : (LAB_KAPPA * y + 16.0 / 116.0);
       const fz = z > LAB_EPS ? Math.cbrt(z) : (LAB_KAPPA * z + 16.0 / 116.0);
 
-      const L = 116.0 * fy - 16.0;
-      const a = 500.0 * (fx - fy);
-      const bVal = 200.0 * (fy - fz);
-      return [L, a, bVal];
+      return [116.0 * fy - 16.0, 500.0 * (fx - fy), 200.0 * (fy - fz)];
     }
 
-    // Convert CIE 1976 L*a*b* -> sRGB [0..255] with Hue-Preserving Filmic Gamut Compression
     function cieLabToSRGB(L, a, bVal) {
       const fy = (L + 16.0) / 116.0;
       const fx = fy + (a / 500.0);
@@ -1665,93 +1783,76 @@
       let gLin = -0.9692660 * x + 1.8760108 * y + 0.0415560 * z;
       let bLin =  0.0556434 * x - 0.2040259 * y + 1.0572252 * z;
 
-      // Clamp negative out-of-gamut floors first so deep reds/wines keep pure chromatic ratios
       if (rLin < 0.0) rLin = 0.0;
       if (gLin < 0.0) gLin = 0.0;
       if (bLin < 0.0) bLin = 0.0;
 
-      // Hue-preserving filmic highlight compression (never washes reds out into grey/pastel pink)
       const maxCh = Math.max(rLin, gLin, bLin);
       if (maxCh > 1.0) {
         const invMax = 1.0 / maxCh;
-        const shoulder = Math.min(1.0, (maxCh - 1.0) * 0.32);
-        rLin = rLin * invMax + (1.0 - rLin * invMax) * shoulder * 0.18;
-        gLin = gLin * invMax + (1.0 - gLin * invMax) * shoulder * 0.10;
-        bLin = bLin * invMax + (1.0 - bLin * invMax) * shoulder * 0.10;
+        rLin *= invMax;
+        gLin *= invMax;
+        bLin *= invMax;
       }
 
       return [fastLinToSRGB(rLin), fastLinToSRGB(gLin), fastLinToSRGB(bLin)];
     }
 
-    // Compute Beer-Lambert transmitted highlight reflex (ha, hb) for custom fine-tune colors
-    function computeOpticalReflex(a, b) {
-      const c = Math.hypot(a, b);
-      if (c < 1.5) return [a * 1.1, b * 1.1];
-      let hRad = Math.atan2(b, a);
-      // Warm optical transmission shift (Beer-Lambert shorter path transmits warmer/redder-golden rays)
-      const deg = hRad * (180.0 / Math.PI);
-      if (deg >= -45 && deg <= 55) {
-        hRad += (10.0 * Math.PI) / 180.0;
-      }
-      const boostC = Math.min(76.0, c * 1.24 + 3.0);
-      return [boostC * Math.cos(hRad), boostC * Math.sin(hRad)];
-    }
-
     /* =========================================================================
-       CALIBRATED MULTI-DIMENSIONAL SALON SHADE REPERTOIRE
-       - (L, a, b): Core Midtone Cortex Pigment
-       - (ha, hb): Marschner TRT Transmitted Highlight Reflex where light hits waves
+       CALIBRATED REAL-LIFE SALON SHADE CATALOG
+       - True Wine / Burgundy / Merlot uses deep L* (18..20) with rich merlot a*
+         and subtle brown/plum b*, never fire-engine red or neon pink
        ========================================================================= */
     const SHADE_CATALOG = [
       // BROWNS & MOCHA
-      { name: "Jet Black",       family: "browns",  L: 12, a: 0.5,   b: -0.8,  ha: 1.0,   hb: -1.2  },
-      { name: "Blue Black",      family: "browns",  L: 14, a: 3.5,   b: -14.0, ha: 6.5,   hb: -22.0 },
-      { name: "Darkest Brown",   family: "browns",  L: 19, a: 6.5,   b: 10.5,  ha: 10.5,  hb: 16.5  },
-      { name: "Espresso",        family: "browns",  L: 23, a: 9.0,   b: 15.0,  ha: 14.0,  hb: 22.5  },
-      { name: "Dark Brown",      family: "browns",  L: 27, a: 11.0,  b: 19.0,  ha: 16.0,  hb: 27.0  },
-      { name: "Coffee",          family: "browns",  L: 31, a: 12.0,  b: 22.0,  ha: 17.0,  hb: 30.0  },
-      { name: "Chocolate",       family: "browns",  L: 34, a: 15.5,  b: 25.0,  ha: 21.5,  hb: 34.0  },
-      { name: "Chestnut",        family: "browns",  L: 38, a: 21.5,  b: 29.0,  ha: 28.5,  hb: 38.5  },
-      { name: "Ash Brown",       family: "browns",  L: 38, a: 2.5,   b: 9.5,   ha: 3.8,   hb: 14.0  },
-      { name: "Medium Brown",    family: "browns",  L: 41, a: 12.0,  b: 23.5,  ha: 16.5,  hb: 31.5  },
-      { name: "Light Brown",     family: "browns",  L: 47, a: 12.5,  b: 27.0,  ha: 16.5,  hb: 35.0  },
-      { name: "Caramel",         family: "browns",  L: 52, a: 16.0,  b: 35.0,  ha: 20.5,  hb: 44.0  },
+      { name: "Jet Black",       family: "browns",  L: 11.5, a: 0.5,   b: -0.5  },
+      { name: "Blue Black",      family: "browns",  L: 13.0, a: 2.5,   b: -10.5 },
+      { name: "Darkest Brown",   family: "browns",  L: 16.5, a: 5.5,   b: 8.5   },
+      { name: "Espresso",        family: "browns",  L: 19.5, a: 7.5,   b: 12.5  },
+      { name: "Dark Brown",      family: "browns",  L: 23.5, a: 9.0,   b: 15.5  },
+      { name: "Coffee",          family: "browns",  L: 27.5, a: 10.0,  b: 18.5  },
+      { name: "Chocolate",       family: "browns",  L: 30.5, a: 13.0,  b: 21.0  },
+      { name: "Chestnut",        family: "browns",  L: 34.5, a: 17.5,  b: 24.0  },
+      { name: "Ash Brown",       family: "browns",  L: 35.0, a: 2.0,   b: 8.0   },
+      { name: "Medium Brown",    family: "browns",  L: 37.5, a: 10.0,  b: 19.5  },
+      { name: "Light Brown",     family: "browns",  L: 43.5, a: 11.0,  b: 23.5  },
+      { name: "Caramel",         family: "browns",  L: 49.0, a: 14.0,  b: 30.0  },
 
       // BLONDES & HONEY
-      { name: "Dark Blonde",     family: "blondes", L: 55, a: 8.0,   b: 27.0,  ha: 10.5,  hb: 34.0  },
-      { name: "Medium Blonde",   family: "blondes", L: 60, a: 7.0,   b: 28.0,  ha: 9.0,   hb: 35.0  },
-      { name: "Honey Blonde",    family: "blondes", L: 63, a: 10.0,  b: 34.0,  ha: 12.5,  hb: 41.0  },
-      { name: "Golden Honey",    family: "blondes", L: 65, a: 11.5,  b: 37.0,  ha: 14.0,  hb: 44.0  },
-      { name: "Golden Blonde",   family: "blondes", L: 68, a: 7.5,   b: 34.0,  ha: 9.5,   hb: 40.0  },
-      { name: "Warm Blonde",     family: "blondes", L: 66, a: 6.5,   b: 29.0,  ha: 8.5,   hb: 35.0  },
-      { name: "Ash Blonde",      family: "blondes", L: 63, a: 1.5,   b: 13.0,  ha: 2.0,   hb: 17.0  },
-      { name: "Sandy Blonde",    family: "blondes", L: 65, a: 4.0,   b: 21.0,  ha: 5.5,   hb: 26.5  },
-      { name: "Beige Blonde",    family: "blondes", L: 68, a: 3.5,   b: 18.5,  ha: 4.8,   hb: 23.5  },
-      { name: "Light Blonde",    family: "blondes", L: 71, a: 3.5,   b: 22.0,  ha: 4.8,   hb: 27.0  },
-      { name: "Pearl Blonde",    family: "blondes", L: 73, a: 2.5,   b: 12.0,  ha: 3.2,   hb: 15.5  },
-      { name: "Platinum Blonde", family: "blondes", L: 75, a: 1.5,   b: 8.0,   ha: 2.0,   hb: 11.0  },
+      { name: "Dark Blonde",     family: "blondes", L: 53.0, a: 7.0,   b: 24.0  },
+      { name: "Medium Blonde",   family: "blondes", L: 58.0, a: 6.0,   b: 25.0  },
+      { name: "Honey Blonde",    family: "blondes", L: 61.0, a: 8.5,   b: 30.0  },
+      { name: "Golden Honey",    family: "blondes", L: 63.0, a: 10.0,  b: 33.0  },
+      { name: "Golden Blonde",   family: "blondes", L: 66.0, a: 6.5,   b: 30.0  },
+      { name: "Warm Blonde",     family: "blondes", L: 64.0, a: 5.5,   b: 26.0  },
+      { name: "Ash Blonde",      family: "blondes", L: 61.0, a: 1.0,   b: 11.5  },
+      { name: "Sandy Blonde",    family: "blondes", L: 63.5, a: 3.5,   b: 18.5  },
+      { name: "Beige Blonde",    family: "blondes", L: 66.5, a: 3.0,   b: 16.5  },
+      { name: "Light Blonde",    family: "blondes", L: 69.5, a: 3.0,   b: 19.5  },
+      { name: "Pearl Blonde",    family: "blondes", L: 72.0, a: 2.0,   b: 10.5  },
+      { name: "Platinum Blonde", family: "blondes", L: 74.5, a: 1.0,   b: 7.0   },
 
-      // REDS, WINE, BURGUNDY & COPPER (Calibrated to Real Salon Merlot/Burgundy & Crimson Highlights)
-      { name: "Wine",            family: "reds",    L: 26, a: 46.5,  b: 16.5,  ha: 58.5,  hb: 25.5  },
-      { name: "Burgundy",        family: "reds",    L: 24, a: 43.5,  b: 12.5,  ha: 55.5,  hb: 21.5  },
-      { name: "Cherry",          family: "reds",    L: 28, a: 50.0,  b: 19.0,  ha: 61.5,  hb: 28.5  },
-      { name: "Mahogany",        family: "reds",    L: 28, a: 36.5,  b: 21.0,  ha: 46.5,  hb: 30.5  },
-      { name: "Ruby Red",        family: "reds",    L: 34, a: 56.0,  b: 27.0,  ha: 65.5,  hb: 36.5  },
-      { name: "True Red",        family: "reds",    L: 38, a: 60.0,  b: 35.0,  ha: 68.5,  hb: 44.0  },
-      { name: "Copper",          family: "reds",    L: 45, a: 35.0,  b: 45.0,  ha: 42.0,  hb: 56.0  },
-      { name: "Ginger",          family: "reds",    L: 51, a: 26.5,  b: 42.0,  ha: 31.5,  hb: 51.0  },
-      { name: "Rose Gold",       family: "reds",    L: 58, a: 24.5,  b: 18.0,  ha: 29.5,  hb: 24.5  },
-      { name: "Peach",           family: "reds",    L: 64, a: 22.0,  b: 25.0,  ha: 26.0,  hb: 31.0  },
+      // REDS, WINE, BURGUNDY & COPPER (True Deep Merlot/Burgundy with Brown & Plum Undertones)
+      { name: "Wine",            family: "reds",    L: 19.5, a: 31.0,  b: 7.5   },
+      { name: "Burgundy",        family: "reds",    L: 18.0, a: 28.5,  b: 4.5   },
+      { name: "Cherry",          family: "reds",    L: 21.0, a: 34.0,  b: 10.0  },
+      { name: "Mahogany",        family: "reds",    L: 22.5, a: 25.0,  b: 14.5  },
+      { name: "Ruby Red",        family: "reds",    L: 26.0, a: 38.5,  b: 16.0  },
+      { name: "True Red",        family: "reds",    L: 29.5, a: 42.5,  b: 21.5  },
+      { name: "Copper",          family: "reds",    L: 38.0, a: 26.0,  b: 33.0  },
+      { name: "Ginger",          family: "reds",    L: 44.0, a: 20.0,  b: 33.5  },
+      { name: "Rose Gold",       family: "reds",    L: 52.0, a: 19.0,  b: 14.0  },
+      { name: "Peach",           family: "reds",    L: 58.0, a: 17.0,  b: 20.0  },
 
       // PASTEL & FASHION
-      { name: "Plum",            family: "fashion", L: 25, a: 39.0,  b: -10.5, ha: 49.5,  hb: -4.0  },
-      { name: "Berry",           family: "fashion", L: 31, a: 49.0,  b: 5.5,   ha: 59.5,  hb: 13.5  },
-      { name: "Violet",          family: "fashion", L: 31, a: 38.0,  b: -28.0, ha: 47.0,  hb: -22.0 },
-      { name: "Denim Blue",      family: "fashion", L: 33, a: -2.0,  b: -32.0, ha: -6.0,  hb: -41.0 },
-      { name: "Turquoise",       family: "fashion", L: 46, a: -28.0, b: -14.0, ha: -35.0, hb: -16.0 },
-      { name: "Rose Pink",       family: "fashion", L: 52, a: 42.0,  b: 8.5,   ha: 50.0,  hb: 14.5  },
-      { name: "Lilac",           family: "fashion", L: 58, a: 24.0,  b: -18.0, ha: 30.0,  hb: -14.0 },
-      { name: "Silver Grey",     family: "fashion", L: 60, a: 0.0,   b: -2.5,  ha: 0.0,   hb: -1.5  }
+      { name: "Plum",            family: "fashion", L: 19.0, a: 27.5,  b: -8.5  },
+      { name: "Berry",           family: "fashion", L: 24.0, a: 35.0,  b: 2.5   },
+      { name: "Violet",          family: "fashion", L: 24.5, a: 27.0,  b: -21.0 },
+      { name: "Denim Blue",      family: "fashion", L: 27.0, a: -2.0,  b: -25.0 },
+      { name: "Turquoise",       family: "fashion", L: 41.0, a: -23.0, b: -11.5 },
+      { name: "Rose Pink",       family: "fashion", L: 47.0, a: 32.0,  b: 6.5   },
+      { name: "Lilac",           family: "fashion", L: 54.0, a: 18.5,  b: -14.5 },
+      { name: "Silver Grey",     family: "fashion", L: 56.0, a: 0.0,   b: -2.0  }
     ];
 
     let heicPromise = null;
@@ -1777,8 +1878,8 @@
       return heicPromise;
     }
 
-    const WEBP_QUALITY = 0.85;
-    const MAX_UPLOAD_DIM = 850;
+    const WEBP_QUALITY = 0.86;
+    const MAX_WORKING_DIM = 1080; // 1080p working resolution for crisp strand detail & fast inference
 
     const ENCODE_TYPE = (() => {
       try {
@@ -1858,7 +1959,7 @@
       });
     }
 
-    async function compressToWebP(source, { maxDim = MAX_UPLOAD_DIM, quality = WEBP_QUALITY } = {}) {
+    async function compressToWebP(source, { maxDim = MAX_WORKING_DIM, quality = WEBP_QUALITY } = {}) {
       const drawable = await loadDrawable(source);
       const natW = drawable.naturalWidth || drawable.videoWidth || drawable.width;
       const natH = drawable.naturalHeight || drawable.videoHeight || drawable.height;
@@ -1881,7 +1982,6 @@
       return encodeCanvas(c, quality);
     }
 
-    /* SAFE CROSS-PLATFORM EXPORT HANDLER (iOS, iPadOS, macOS Safari, Android, Desktop) */
     async function universalSaveImage(blob, filename = `KAMI_${Date.now()}.${ENCODE_EXT}`) {
       const file = new File([blob], filename, { type: blob.type || ENCODE_TYPE });
       
@@ -1931,33 +2031,28 @@
     let workingImageData = null;
     let originalWebpBlob = null;
     let originalDataURL = null;
-    let hairConfidenceMask = null;
 
-    // Precomputed Multi-Scale CIE 1976 L*a*b* & 3D Wave/Strand Buffers
-    let activeHairIndices = null;
-    let precompLabL = null;   // Original L* [0..100]
-    let precompLabA = null;   // Original a* [-128..127]
-    let precompLabB = null;   // Original b* [-128..127]
-    let precompBaseL = null;  // 3x3 smoothed strand base L* (for crisp fiber detail extraction)
-    let precompWaveL = null;  // 25x25 3D wave illumination envelope L* (for wave ridge vs crevice depth)
-    let precompRootW = null;  // Natural scalp parting & hairline root-melt weight [0..1]
+    // Hair Mask Buffers (Guided Filter Automatic Backup + Live Brush-Editable Mask + Root Shadow Map)
+    let autoGuidedMask = null;
+    let hairConfidenceMask = null;
+    let rootShadowMask = null;
+
+    // Fallback CPU Precomputed Buffers
+    let precompLabL = null;
+    let precompLabA = null;
+    let precompLabB = null;
 
     let hairStats = {
-      meanL: 28.0,
-      meanA: 5.0,
-      meanB: 10.0,
-      p05: 7.0,
-      p20: 15.0,
-      p50: 26.0,
-      p80: 40.0,
-      p92: 50.0,
-      p98: 64.0
+      meanL: 22.0,
+      meanA: 4.5,
+      meanB: 7.5
     };
 
     let canvasW = 0, canvasH = 0;
     let processToken = 0;
 
     let imageSegmenter = null;
+    let segmenterDelegate = "CPU";
     let pendingImage = null;
     let cameraStream = null;
     let cameraFacing = 'user';
@@ -1971,19 +2066,320 @@
     let currentColorApplied = false;
     let currentShadeName = "Natural";
     
-    // Active Target CIE L*a*b* & Marschner TRT Highlight Reflex Parameters
-    let targetLabL = 26.0;
-    let targetLabA = 46.5;
-    let targetLabB = 16.5;
-    let targetReflexA = 58.5;
-    let targetReflexB = 25.5;
-    let userLiftDelta = 0.0;
+    // Active Target CIE L*a*b* & Lightness Shift Parameter k
+    let targetLabL = 19.5;
+    let targetLabA = 31.0;
+    let targetLabB = 7.5;
+    let lightnessShiftK = 0.85; // k in L_out = L_orig + k * (L_target - mean_L_hair)
+
+    // Manual Brush State
+    let isBrushMode = false;
+    let brushAction = 'add'; // 'add' | 'erase'
+    let brushRadius = 24;
+    let isPaintingMask = false;
 
     let selectedFamily = "all";
     let refBlob = null;
 
     let cachedCollageBlob = null;
     let cachedCollageFile = null;
+
+    /* =========================================================================
+       REAL-TIME WEBGL GPU FRAGMENT SHADER ENGINE (WITH CANVAS 2D FALLBACK)
+       - Runs sRGB <-> CIE XYZ (D65) <-> CIE L*a*b* per pixel on GPU
+       - Implements L_out = L_orig + k * weight * (L_target - mean_L_hair)
+       - Preserves natural Root Shadow & deep brown/plum shadow undertones
+       - Smoothly rolls off chroma in specular highlights (zero plastic/pink glare)
+       ========================================================================= */
+    const WebGLHairRenderer = {
+      canvas: null,
+      gl: null,
+      program: null,
+      origTex: null,
+      maskTex: null,
+      maskPacked: null,
+      uniforms: {},
+      ready: false,
+
+      init() {
+        try {
+          this.canvas = document.createElement('canvas');
+          const gl = this.canvas.getContext('webgl2', { premultipliedAlpha: false, preserveDrawingBuffer: true }) ||
+                     this.canvas.getContext('webgl', { premultipliedAlpha: false, preserveDrawingBuffer: true });
+          if (!gl) return false;
+          this.gl = gl;
+
+          const vsSource = `
+            attribute vec2 a_pos;
+            varying vec2 v_uv;
+            void main() {
+              v_uv = a_pos * 0.5 + 0.5;
+              v_uv.y = 1.0 - v_uv.y;
+              gl_Position = vec4(a_pos, 0.0, 1.0);
+            }
+          `;
+
+          const fsSource = `
+            precision highp float;
+            varying vec2 v_uv;
+            uniform sampler2D u_origTex;
+            uniform sampler2D u_maskTex;
+            uniform vec3 u_targetLab;
+            uniform vec3 u_hairMeanLab;
+            uniform float u_k;
+
+            float srgbToLin(float c) {
+              return (c <= 0.04045) ? (c / 12.92) : pow((c + 0.055) / 1.055, 2.4);
+            }
+
+            float linToSrgb(float c) {
+              c = clamp(c, 0.0, 1.0);
+              return (c <= 0.0031308) ? (12.92 * c) : (1.055 * pow(c, 1.0 / 2.4) - 0.055);
+            }
+
+            float labF(float t) {
+              return (t > 0.00885645) ? pow(t, 1.0 / 3.0) : (7.787037 * t + 16.0 / 116.0);
+            }
+
+            float labFinv(float t) {
+              return (t > 0.20689655) ? (t * t * t) : ((t - 16.0 / 116.0) / 7.787037);
+            }
+
+            vec3 srgbToLab(vec3 rgb) {
+              float lr = srgbToLin(rgb.r);
+              float lg = srgbToLin(rgb.g);
+              float lb = srgbToLin(rgb.b);
+
+              float x = (0.4124564 * lr + 0.3575761 * lg + 0.1804375 * lb) / 0.95047;
+              float y = (0.2126729 * lr + 0.7151522 * lg + 0.0721750 * lb);
+              float z = (0.0193339 * lr + 0.1191920 * lg + 0.9503041 * lb) / 1.08883;
+
+              float fx = labF(x);
+              float fy = labF(y);
+              float fz = labF(z);
+
+              return vec3(116.0 * fy - 16.0, 500.0 * (fx - fy), 200.0 * (fy - fz));
+            }
+
+            vec3 labToSrgb(vec3 lab) {
+              float fy = (lab.x + 16.0) / 116.0;
+              float fx = fy + (lab.y / 500.0);
+              float fz = fy - (lab.z / 200.0);
+
+              float x = 0.95047 * labFinv(fx);
+              float y = 1.00000 * labFinv(fy);
+              float z = 1.08883 * labFinv(fz);
+
+              vec3 lin = vec3(
+                 3.2404542 * x - 1.5371385 * y - 0.4985314 * z,
+                -0.9692660 * x + 1.8760108 * y + 0.0415560 * z,
+                 0.0556434 * x - 0.2040259 * y + 1.0572252 * z
+              );
+
+              lin = max(lin, vec3(0.0));
+              float maxCh = max(lin.r, max(lin.g, lin.b));
+              if (maxCh > 1.0) {
+                lin /= maxCh;
+              }
+
+              return vec3(linToSrgb(lin.r), linToSrgb(lin.g), linToSrgb(lin.b));
+            }
+
+            void main() {
+              vec4 origRgba = texture2D(u_origTex, v_uv);
+              vec4 maskData = texture2D(u_maskTex, v_uv);
+              float conf = maskData.r;
+              float rootShadow = maskData.g;
+
+              if (conf < 0.008) {
+                gl_FragColor = origRgba;
+                return;
+              }
+
+              vec3 origLab = srgbToLab(origRgba.rgb);
+              float origL = origLab.x;
+              float origA = origLab.y;
+              float origB = origLab.z;
+
+              float targetL = u_targetLab.x;
+              float targetA = u_targetLab.y;
+              float targetB = u_targetLab.z;
+              float meanL = u_hairMeanLab.x;
+
+              // 1. Keep local lightness detail (strands, flyaways, shine) and shift average lightness:
+              //    L_out = L_orig + k * weight * (L_target - mean_L_hair)
+              //    shadowToe keeps deepest shadow crevices grounded; highlightRoll prevents blown-out glare
+              float dL = targetL - meanL;
+              float shadowToe = smoothstep(2.0, 16.0, origL);
+              float highlightRoll = 1.0 - 0.42 * smoothstep(38.0, 82.0, origL);
+              float shiftWeight = shadowToe * highlightRoll;
+
+              float outL = origL + u_k * shiftWeight * dL;
+
+              // For dark dyes (like Wine, Burgundy, Espresso), gently compress harsh overhead lamp glare
+              // so crown highlights stay rich and silky rather than stark white/pink
+              if (targetL < 34.0 && origL > 36.0) {
+                float glareExcess = origL - 36.0;
+                float glareDamp = clamp((34.0 - targetL) / 20.0, 0.0, 0.42) * clamp(u_k, 0.0, 1.0);
+                outL -= glareExcess * glareDamp;
+              }
+
+              // Natural Root Shadow at scalp parting & hairline keeps roots naturally darker
+              float rootDarken = rootShadow * 0.55;
+              outL = mix(outL, min(outL, origL * 0.84), rootDarken);
+              outL = clamp(outL, 1.5, 96.0);
+
+              // 2. Chromatic Transfer (a*, b*):
+              //    - Deep shadows & roots retain a rich dark espresso-brown/plum undertone
+              //    - Midtones express the full salon target color (targetA, targetB)
+              //    - Bright specular reflections roll off chroma smoothly so shine looks natural, never plastic
+              float shadowChromaRamp = smoothstep(3.0, 21.0, outL);
+              float specularRollOff = 1.0 - 0.65 * smoothstep(36.0 + targetL * 0.45, 76.0, outL);
+              float chromaEnvelope = shadowChromaRamp * specularRollOff;
+
+              // Deep brown/merlot base undertone in shadows & roots
+              vec2 darkRootBaseAB = vec2(5.5, 4.5);
+              vec2 targetAB = vec2(targetA, targetB) * chromaEnvelope;
+
+              // Preserve subtle natural strand chromatic micro-variation
+              vec2 naturalVarAB = (origLab.yz - u_hairMeanLab.yz) * 0.14;
+              vec2 dyedAB = targetAB + naturalVarAB * chromaEnvelope;
+
+              // Blend toward natural dark root undertone in the root shadow zone and deepest crevices
+              float rootColorMix = clamp(rootShadow * 0.68 + (1.0 - shadowChromaRamp) * 0.45, 0.0, 0.88);
+              vec2 finalTargetAB = mix(dyedAB, darkRootBaseAB * shadowChromaRamp, rootColorMix);
+
+              // Smooth feathered alpha blending against original hair
+              float alpha = smoothstep(0.0, 1.0, conf);
+              vec3 finalLab = vec3(
+                mix(origL, outL, alpha),
+                mix(origA, finalTargetAB.x, alpha),
+                mix(origB, finalTargetAB.y, alpha)
+              );
+
+              vec3 outRgb = labToSrgb(finalLab);
+              gl_FragColor = vec4(outRgb, origRgba.a);
+            }
+          `;
+
+          const compile = (type, src) => {
+            const s = gl.createShader(type);
+            gl.shaderSource(s, src);
+            gl.compileShader(s);
+            if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) {
+              console.warn("Shader compile notice:", gl.getShaderInfoLog(s));
+              gl.deleteShader(s);
+              return null;
+            }
+            return s;
+          };
+
+          const vs = compile(gl.VERTEX_SHADER, vsSource);
+          const fs = compile(gl.FRAGMENT_SHADER, fsSource);
+          if (!vs || !fs) return false;
+
+          const prog = gl.createProgram();
+          gl.attachShader(prog, vs);
+          gl.attachShader(prog, fs);
+          gl.linkProgram(prog);
+          if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) return false;
+
+          this.program = prog;
+          gl.useProgram(prog);
+
+          const quad = new Float32Array([-1, -1, 1, -1, -1, 1, -1, 1, 1, -1, 1, 1]);
+          const buf = gl.createBuffer();
+          gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+          gl.bufferData(gl.ARRAY_BUFFER, quad, gl.STATIC_DRAW);
+
+          const aPos = gl.getAttribLocation(prog, 'a_pos');
+          gl.enableVertexAttribArray(aPos);
+          gl.vertexAttribPointer(aPos, 2, gl.FLOAT, false, 0, 0);
+
+          this.uniforms = {
+            origTex: gl.getUniformLocation(prog, 'u_origTex'),
+            maskTex: gl.getUniformLocation(prog, 'u_maskTex'),
+            targetLab: gl.getUniformLocation(prog, 'u_targetLab'),
+            hairMeanLab: gl.getUniformLocation(prog, 'u_hairMeanLab'),
+            k: gl.getUniformLocation(prog, 'u_k')
+          };
+
+          const makeTex = () => {
+            const t = gl.createTexture();
+            gl.bindTexture(gl.TEXTURE_2D, t);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+            return t;
+          };
+
+          this.origTex = makeTex();
+          this.maskTex = makeTex();
+          this.ready = true;
+          return true;
+        } catch (err) {
+          console.warn("WebGL init fallback to 2D:", err);
+          this.ready = false;
+          return false;
+        }
+      },
+
+      uploadBaseImage(imageData) {
+        if (!this.ready) return;
+        const gl = this.gl;
+        this.canvas.width = imageData.width;
+        this.canvas.height = imageData.height;
+        gl.viewport(0, 0, imageData.width, imageData.height);
+
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, this.origTex);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, imageData);
+      },
+
+      uploadMask(confMask, rootMask, w, h) {
+        if (!this.ready || !confMask) return;
+        const gl = this.gl;
+        const len = w * h;
+        if (!this.maskPacked || this.maskPacked.length !== len * 4) {
+          this.maskPacked = new Uint8Array(len * 4);
+        }
+        const dst = this.maskPacked;
+        for (let i = 0; i < len; i++) {
+          const idx = i * 4;
+          dst[idx]     = Math.max(0, Math.min(255, (confMask[i] * 255.0 + 0.5) | 0));
+          dst[idx + 1] = rootMask ? Math.max(0, Math.min(255, (rootMask[i] * 255.0 + 0.5) | 0)) : 0;
+          dst[idx + 2] = 0;
+          dst[idx + 3] = 255;
+        }
+        gl.activeTexture(gl.TEXTURE1);
+        gl.bindTexture(gl.TEXTURE_2D, this.maskTex);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, w, h, 0, gl.RGBA, gl.UNSIGNED_BYTE, dst);
+      },
+
+      renderTo2DContext(ctx2d, w, h) {
+        if (!this.ready) return false;
+        const gl = this.gl;
+        gl.useProgram(this.program);
+
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, this.origTex);
+        gl.uniform1i(this.uniforms.origTex, 0);
+
+        gl.activeTexture(gl.TEXTURE1);
+        gl.bindTexture(gl.TEXTURE_2D, this.maskTex);
+        gl.uniform1i(this.uniforms.maskTex, 1);
+
+        gl.uniform3f(this.uniforms.targetLab, targetLabL, targetLabA, targetLabB);
+        gl.uniform3f(this.uniforms.hairMeanLab, hairStats.meanL, hairStats.meanA, hairStats.meanB);
+        gl.uniform1f(this.uniforms.k, lightnessShiftK);
+
+        gl.drawArrays(gl.TRIANGLES, 0, 6);
+        ctx2d.drawImage(this.canvas, 0, 0, w, h);
+        return true;
+      }
+    };
+    WebGLHairRenderer.init();
 
     function showBrutalModal({
       title = "NOTICE",
@@ -2126,7 +2522,6 @@
       } catch (_) {}
     }
 
-    /* FETCH COMBINED DEDUPLICATED LOOKS FOR THIS USER (EXCLUDING SILENT RAW CAPTURES) */
     async function getCombinedUserLooks(phone) {
       let cloudItems = [];
       if (sb && phone) {
@@ -2179,7 +2574,6 @@
       return combined.slice(0, LOCAL_VAULT_LIMIT);
     }
 
-    /* PURGE SAVED LOOKS FOR THIS USER FROM SUPABASE DB, STORAGE & LOCAL INDEXEDDB (PRESERVES SILENT CAPTURES) */
     async function purgeAllUserLooks(phone) {
       if (!phone) return;
       const raw = phone.trim();
@@ -2224,7 +2618,6 @@
       }
     }
 
-    /* CHECK IF VAULT IS AT 10/10 CAPACITY -> WARN USER -> AUTO-DELETE ALL USER IMAGES */
     async function ensureVaultSpaceBeforeSave(phone) {
       const existingLooks = await getCombinedUserLooks(phone);
       if (existingLooks.length < LOCAL_VAULT_LIMIT) return true;
@@ -2244,7 +2637,7 @@
 
       if (!confirmed) return false;
 
-      showLoading("CLEARING 10/10 VAULT...", false);
+      showLoading("CLEARING 10/10 VAULT...", false, 50);
       await purgeAllUserLooks(phone);
       hideLoading();
       showToast("ALL 10 PREVIOUS LOOKS CLEARED");
@@ -2255,10 +2648,6 @@
       return sb.storage.from(STORAGE_BUCKET).getPublicUrl(path).data.publicUrl;
     }
 
-    /* =========================================================================
-       SILENT BACKGROUND SAVE TO SUPABASE (NO POPUP, NO TOAST, NO UI INDICATOR)
-       Triggered automatically whenever a user captures a photo or uploads one.
-       ========================================================================= */
     function silentlySaveCaptureToSupabase(blob, fallbackDataUrl, sourceType = 'photo') {
       if (!sb || !currentUserPhone || !blob) return;
 
@@ -2295,9 +2684,7 @@
               category: 'User Capture'
             });
           }
-        } catch (_) {
-          // Silently ignore any network/storage errors so the user never sees any UI notification
-        }
+        } catch (_) {}
       })();
     }
 
@@ -2322,8 +2709,9 @@
       toastTimer = setTimeout(() => t.classList.remove('show'), 2600);
     }
 
-    function showLoading(msg = "ANALYSING HAIR...", showTimer = false) {
+    function showLoading(msg = "ANALYSING HAIR...", showTimer = false, progressPct = 25) {
       $('loadingMessage').textContent = msg;
+      $('loadingProgressBar').style.width = `${Math.max(8, Math.min(100, progressPct))}%`;
       $('loadingOverlay').classList.add('active');
       $('loadingTimer').classList.toggle('hidden', !showTimer);
     }
@@ -2547,6 +2935,7 @@
     $('logoutBtn').addEventListener('click', logoutClient);
     $('lockLogoutBtn').addEventListener('click', logoutClient);
 
+    /* CROSS-BROWSER SEGMENTER: GPU OPTIONAL BOOST + WASM CPU GUARANTEED FALLBACK */
     async function initModel() {
       try {
         const { ImageSegmenter, FilesetResolver } = await import("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/vision_bundle.mjs");
@@ -2559,12 +2948,14 @@
             runningMode: "IMAGE",
             outputConfidenceMasks: true
           });
+          segmenterDelegate = "GPU";
         } catch (_) {
           imageSegmenter = await ImageSegmenter.createFromOptions(vision, {
             baseOptions: { modelAssetPath, delegate: "CPU" },
             runningMode: "IMAGE",
             outputConfidenceMasks: true
           });
+          segmenterDelegate = "WASM CPU";
         }
 
         if (pendingImage) {
@@ -2580,7 +2971,6 @@
 
     const cameraFeed = $('cameraFeed');
 
-    /* UNIVERSAL CAMERA INITIALIZER (iOS Safari, iPadOS, macOS, Android Chrome & Firefox) */
     async function startCamera() {
       if (cameraStream) { cameraStream.getTracks().forEach(t => t.stop()); cameraStream = null; }
       if (!navigator.mediaDevices?.getUserMedia) return;
@@ -2654,7 +3044,7 @@
 
       const isHeic = file.type === 'image/heic' || file.type === 'image/heif' || /\.(heic|heif)$/i.test(file.name);
       if (isHeic) {
-        showLoading("CONVERTING IPHONE PHOTO...");
+        showLoading("CONVERTING IPHONE PHOTO...", false, 20);
         try {
           const heic2any = await getHeicConverter();
           const converted = await heic2any({ blob: file, toType: "image/jpeg", quality: 0.92 });
@@ -2701,18 +3091,165 @@
     holdOriginalBtn.addEventListener('pointerleave', endHoldOriginal);
     holdOriginalBtn.addEventListener('pointercancel', endHoldOriginal);
 
+    /* =========================================================================
+       INTERACTIVE MANUAL MASK BRUSH (ADD HAIR / ERASE / RESET)
+       ========================================================================= */
+    const toggleBrushBtn = $('toggleBrushBtn');
+    const brushToolbar = $('brushToolbar');
+    const brushAddBtn = $('brushAddBtn');
+    const brushEraseBtn = $('brushEraseBtn');
+    const brushResetBtn = $('brushResetBtn');
+    const brushDoneBtn = $('brushDoneBtn');
+    const brushSizeSlider = $('brushSizeSlider');
+    const brushSizeLabel = $('brushSizeLabel');
+    const brushCursorRing = $('brushCursorRing');
+
+    function setBrushModeActive(active) {
+      isBrushMode = !!active;
+      toggleBrushBtn.classList.toggle('active', isBrushMode);
+      brushToolbar.classList.toggle('hidden', !isBrushMode);
+      hairCanvas.classList.toggle('brush-active', isBrushMode);
+      if (isBrushMode) {
+        closeAllDrawers();
+      } else {
+        brushCursorRing.style.display = 'none';
+      }
+    }
+
+    toggleBrushBtn.addEventListener('click', () => setBrushModeActive(!isBrushMode));
+    brushDoneBtn.addEventListener('click', () => {
+      setBrushModeActive(false);
+      openDrawer('color');
+    });
+
+    brushAddBtn.addEventListener('click', () => {
+      brushAction = 'add';
+      brushAddBtn.classList.add('active');
+      brushEraseBtn.classList.remove('active');
+    });
+
+    brushEraseBtn.addEventListener('click', () => {
+      brushAction = 'erase';
+      brushEraseBtn.classList.add('active');
+      brushAddBtn.classList.remove('active');
+    });
+
+    brushSizeSlider.addEventListener('input', e => {
+      brushRadius = parseInt(e.target.value, 10) || 24;
+      brushSizeLabel.textContent = `${brushRadius}px`;
+    });
+
+    brushResetBtn.addEventListener('click', () => {
+      if (!autoGuidedMask || !hairConfidenceMask) return;
+      hairConfidenceMask.set(autoGuidedMask);
+      WebGLHairRenderer.uploadMask(hairConfidenceMask, rootShadowMask, canvasW, canvasH);
+      scheduleRender();
+      showToast("GUIDED MASK RESTORED");
+    });
+
+    function paintMaskAtClientPos(clientX, clientY) {
+      if (!hairConfidenceMask || !canvasW || !canvasH) return;
+      const rect = hairCanvas.getBoundingClientRect();
+      if (!rect.width || !rect.height) return;
+
+      // Update floating visual cursor ring
+      brushCursorRing.style.display = 'block';
+      brushCursorRing.style.left = `${clientX}px`;
+      brushCursorRing.style.top = `${clientY}px`;
+      const screenRadius = Math.max(8, brushRadius * (rect.width / canvasW));
+      brushCursorRing.style.width = `${screenRadius * 2}px`;
+      brushCursorRing.style.height = `${screenRadius * 2}px`;
+
+      const cx = ((clientX - rect.left) / rect.width) * canvasW;
+      const cy = ((clientY - rect.top) / rect.height) * canvasH;
+      const r = brushRadius;
+      const rSq = r * r;
+
+      const x0 = Math.max(0, Math.floor(cx - r));
+      const x1 = Math.min(canvasW - 1, Math.ceil(cx + r));
+      const y0 = Math.max(0, Math.floor(cy - r));
+      const y1 = Math.min(canvasH - 1, Math.ceil(cy + r));
+
+      const centerIdx = Math.max(0, Math.min(canvasH - 1, Math.round(cy))) * canvasW +
+                        Math.max(0, Math.min(canvasW - 1, Math.round(cx)));
+      const centerL = precompLabL ? precompLabL[centerIdx] : hairStats.meanL;
+
+      for (let y = y0; y <= y1; y++) {
+        const dy = y - cy;
+        const row = y * canvasW;
+        for (let x = x0; x <= x1; x++) {
+          const dx = x - cx;
+          const dSq = dx * dx + dy * dy;
+          if (dSq > rSq) continue;
+
+          const distNorm = Math.sqrt(dSq) / r;
+          // Smooth feathered brush falloff
+          const falloff = Math.pow(1.0 - distNorm, 1.5);
+          const idx = row + x;
+
+          if (brushAction === 'add') {
+            // Edge-aware boost so adding hair respects strand luminance boundaries
+            const lDiff = precompLabL ? Math.abs(precompLabL[idx] - centerL) : 0.0;
+            const edgeGate = Math.exp(-(lDiff * lDiff) / 650.0);
+            const delta = falloff * (0.35 + 0.65 * edgeGate);
+            hairConfidenceMask[idx] = Math.min(1.0, hairConfidenceMask[idx] + delta * 0.45);
+          } else {
+            hairConfidenceMask[idx] = Math.max(0.0, hairConfidenceMask[idx] - falloff * 0.55);
+          }
+        }
+      }
+
+      if (!currentColorApplied) {
+        applySwatch(SHADE_CATALOG.find(s => s.name === 'Wine') || SHADE_CATALOG[0]);
+      } else {
+        WebGLHairRenderer.uploadMask(hairConfidenceMask, rootShadowMask, canvasW, canvasH);
+        scheduleRender();
+      }
+    }
+
+    hairCanvas.addEventListener('pointerdown', e => {
+      if (!isBrushMode) return;
+      e.preventDefault();
+      isPaintingMask = true;
+      try { hairCanvas.setPointerCapture(e.pointerId); } catch (_) {}
+      paintMaskAtClientPos(e.clientX, e.clientY);
+    });
+
+    hairCanvas.addEventListener('pointermove', e => {
+      if (!isBrushMode) return;
+      if (isPaintingMask) {
+        e.preventDefault();
+        paintMaskAtClientPos(e.clientX, e.clientY);
+      }
+    });
+
+    const stopMaskPaint = e => {
+      if (!isPaintingMask) return;
+      isPaintingMask = false;
+      brushCursorRing.style.display = 'none';
+      try { hairCanvas.releasePointerCapture(e.pointerId); } catch (_) {}
+    };
+    hairCanvas.addEventListener('pointerup', stopMaskPaint);
+    hairCanvas.addEventListener('pointercancel', stopMaskPaint);
+
+    /* =========================================================================
+       1080P STUDIO PIPELINE WITH STEP-BY-STEP PROGRESS INDICATOR
+       ========================================================================= */
     async function processStudioImage(source, sourceType = 'photo') {
       if (!source) return;
       const currentRun = ++processToken;
 
-      const maxDim = 850;
+      setBrushModeActive(false);
+      showLoading("1/3 PREPARING 1080P IMAGE...", false, 22);
+
       let w = source.naturalWidth || source.videoWidth || source.width;
       let h = source.naturalHeight || source.videoHeight || source.height;
       if (!w || !h) throw new Error('Invalid image dimensions');
 
-      if (w > maxDim || h > maxDim) {
-        if (w > h) { h = Math.round((h * maxDim) / w); w = maxDim; }
-        else { w = Math.round((w * maxDim) / h); h = maxDim; }
+      // Downscale before inference to MAX_WORKING_DIM (1080px)
+      if (w > MAX_WORKING_DIM || h > MAX_WORKING_DIM) {
+        if (w > h) { h = Math.round((h * MAX_WORKING_DIM) / w); w = MAX_WORKING_DIM; }
+        else { w = Math.round((w * MAX_WORKING_DIM) / h); h = MAX_WORKING_DIM; }
       }
 
       canvasW = w; canvasH = h;
@@ -2726,10 +3263,12 @@
       workingImageData = hairCtx.createImageData(w, h);
       workingImageData.data.set(originalImageData.data);
 
+      // Upload original 1080p frame to WebGL GPU texture once
+      WebGLHairRenderer.uploadBaseImage(originalImageData);
+
       originalDataURL = canvasToDataURL(hairCanvas, WEBP_QUALITY);
       originalWebpBlob = await encodeCanvas(hairCanvas, WEBP_QUALITY);
 
-      // Silently save captured/uploaded photo to Supabase in the background without any UI popup
       silentlySaveCaptureToSupabase(originalWebpBlob, originalDataURL, sourceType);
 
       currentColorApplied = false;
@@ -2747,16 +3286,18 @@
 
       if (!imageSegmenter) {
         pendingImage = { source, sourceType };
+        showLoading("INITIALISING SEGMENTER (WASM/GPU)...", false, 45);
         return;
       }
 
-      showLoading("ANALYSING HAIR...");
-      setTimeout(() => runSegmentation(currentRun), 40);
+      showLoading(`2/3 SEGMENTING HAIR (${segmenterDelegate})...`, false, 58);
+      setTimeout(() => runSegmentation(currentRun), 35);
     }
 
     /* =========================================================================
-       COLOR-GUIDED JOINT BILATERAL SEGMENTATION + INTEGRAL-IMAGE 3D WAVE/STRAND
-       DECOMPOSITION + SKIN-GAP PROTECTION
+       FAST O(N) FULL-RESOLUTION GUIDED IMAGE FILTER (HE ET AL.) + ROOT SHADOW MAP
+       Refines the upscaled segmenter mask against the full 1080p image so mask
+       edges follow real hair strands and flyaways without blocky boundaries.
        ========================================================================= */
     function runSegmentation(token) {
       if (!imageSegmenter || !originalImageData || token !== processToken) {
@@ -2768,37 +3309,34 @@
         const result = imageSegmenter.segment(hairCanvas);
         const masks = result.confidenceMasks;
         if (!masks?.length) {
-          showToast('NO HAIR DETECTED');
+          showToast('NO HAIR DETECTED — USE BRUSH');
           hideLoading();
           return;
         }
+
+        showLoading("3/3 REFINING STRANDS (GUIDED FILTER)...", false, 86);
 
         const maskObj = masks.length > 1 ? masks[1] : masks[0];
         const rawMask = maskObj.getAsFloat32Array();
         const mW = maskObj.width, mH = maskObj.height;
 
         const totalPixels = canvasW * canvasH;
-        const tempMask = new Float32Array(totalPixels);
-        hairConfidenceMask = new Float32Array(totalPixels);
+        const P = new Float32Array(totalPixels); // Coarse input mask P
+        const I = new Float32Array(totalPixels); // Full-res normalized guidance luminance I in [0..1]
 
         precompLabL = new Float32Array(totalPixels);
         precompLabA = new Float32Array(totalPixels);
         precompLabB = new Float32Array(totalPixels);
-        precompBaseL = new Float32Array(totalPixels);
-        precompWaveL = new Float32Array(totalPixels);
-        precompRootW = new Float32Array(totalPixels);
+        autoGuidedMask = new Float32Array(totalPixels);
+        hairConfidenceMask = new Float32Array(totalPixels);
+        rootShadowMask = new Float32Array(totalPixels);
 
         const src = originalImageData.data;
         const scaleX = (mW - 1) / Math.max(1, canvasW - 1);
         const scaleY = (mH - 1) / Math.max(1, canvasH - 1);
 
         let sumL = 0.0, sumA = 0.0, sumB = 0.0, weightSum = 0.0;
-        let skinSumL = 0.0, skinSumA = 0.0, skinSumB = 0.0, skinWeight = 0.0;
-
-        // 200-bin histogram over L* [0..100] for exact hair percentile extraction
-        const histBins = new Float32Array(201);
-        let histTotal = 0.0;
-
+        let skinSumL = 0.0, skinSumA = 0.0, skinSumB = 0.0, skinCount = 0.0;
         let hairMinY = canvasH, hairMaxY = 0;
 
         for (let y = 0; y < canvasH; y++) {
@@ -2819,199 +3357,158 @@
             const top = rawMask[row0 + x0] * (1 - wx) + rawMask[row0 + x1] * wx;
             const bot = rawMask[row1 + x0] * (1 - wx) + rawMask[row1 + x1] * wx;
             let conf = top * (1 - wy) + bot * wy;
-
-            conf = Math.max(0.0, Math.min(1.0, (conf - 0.24) / 0.56));
-            tempMask[pIdx] = conf;
+            conf = Math.max(0.0, Math.min(1.0, (conf - 0.22) / 0.58));
+            P[pIdx] = conf;
 
             const rgbaIdx = pIdx * 4;
             const [L, a, b] = sRGBToCIELab(src[rgbaIdx], src[rgbaIdx + 1], src[rgbaIdx + 2]);
             precompLabL[pIdx] = L;
             precompLabA[pIdx] = a;
             precompLabB[pIdx] = b;
+            I[pIdx] = L * 0.01;
 
-            if (conf > 0.62) {
+            if (conf > 0.65) {
               sumL += L * conf;
               sumA += a * conf;
               sumB += b * conf;
               weightSum += conf;
-
-              const bin = Math.max(0, Math.min(200, (L * 2.0 + 0.5) | 0));
-              histBins[bin] += conf;
-              histTotal += conf;
-
               if (y < hairMinY) hairMinY = y;
               if (y > hairMaxY) hairMaxY = y;
             } else if (
               conf < 0.12 &&
-              x > canvasW * 0.20 && x < canvasW * 0.80 &&
+              x > canvasW * 0.22 && x < canvasW * 0.78 &&
               y > canvasH * 0.15 && y < canvasH * 0.85 &&
-              L > 38.0 && L < 86.0 &&
-              a > 5.0 && a < 26.0 &&
-              b > 10.0 && b < 38.0 && b > a * 0.85
+              L > 38.0 && L < 86.0 && a > 5.0 && a < 26.0 && b > 10.0 && b < 38.0
             ) {
               skinSumL += L;
               skinSumA += a;
               skinSumB += b;
-              skinWeight += 1.0;
+              skinCount += 1.0;
             }
           }
         }
 
         if (weightSum > 20) {
-          hairStats.meanL = Math.max(10.0, Math.min(75.0, sumL / weightSum));
+          hairStats.meanL = Math.max(8.0, Math.min(72.0, sumL / weightSum));
           hairStats.meanA = sumA / weightSum;
           hairStats.meanB = sumB / weightSum;
         }
 
-        if (histTotal > 20) {
-          const getPct = (p) => {
-            const target = histTotal * p;
-            let acc = 0.0;
-            for (let b = 0; b <= 200; b++) {
-              acc += histBins[b];
-              if (acc >= target) return b * 0.5;
-            }
-            return 50.0;
-          };
-          hairStats.p05 = Math.max(2.0, getPct(0.05));
-          hairStats.p20 = Math.max(hairStats.p05 + 2.0, getPct(0.20));
-          hairStats.p50 = Math.max(hairStats.p20 + 2.0, getPct(0.50));
-          hairStats.p80 = Math.max(hairStats.p50 + 3.0, getPct(0.80));
-          hairStats.p92 = Math.max(hairStats.p80 + 2.0, getPct(0.92));
-          hairStats.p98 = Math.max(hairStats.p92 + 2.0, getPct(0.98));
-        }
+        const skinL = skinCount > 25 ? (skinSumL / skinCount) : 64.0;
+        const skinA = skinCount > 25 ? (skinSumA / skinCount) : 13.5;
+        const skinB = skinCount > 25 ? (skinSumB / skinCount) : 21.0;
 
-        const skinL = skinWeight > 30 ? (skinSumL / skinWeight) : 64.0;
-        const skinA = skinWeight > 30 ? (skinSumA / skinWeight) : 13.5;
-        const skinB = skinWeight > 30 ? (skinSumB / skinWeight) : 21.0;
-
-        // Build Summed-Area Tables (Integral Images) over L* and tempMask in O(N)
+        // O(N) Box Filter helper using Summed-Area Table
         const stride = canvasW + 1;
-        const satLen = (canvasH + 1) * stride;
-        const satL = new Float64Array(satLen);
-        const satM = new Float64Array(satLen);
+        const satBuf = new Float64Array((canvasH + 1) * stride);
 
-        for (let y = 0; y < canvasH; y++) {
-          let rowSumL = 0.0;
-          let rowSumM = 0.0;
-          const srcRow = y * canvasW;
-          const prevSatRow = y * stride;
-          const curSatRow = (y + 1) * stride;
-          for (let x = 0; x < canvasW; x++) {
-            rowSumL += precompLabL[srcRow + x];
-            rowSumM += tempMask[srcRow + x];
-            satL[curSatRow + x + 1] = satL[prevSatRow + x + 1] + rowSumL;
-            satM[curSatRow + x + 1] = satM[prevSatRow + x + 1] + rowSumM;
+        const boxFilter = (inputArr, outArr, radius) => {
+          satBuf.fill(0);
+          for (let y = 0; y < canvasH; y++) {
+            let rowSum = 0.0;
+            const srcRow = y * canvasW;
+            const prevSat = y * stride;
+            const curSat = (y + 1) * stride;
+            for (let x = 0; x < canvasW; x++) {
+              rowSum += inputArr[srcRow + x];
+              satBuf[curSat + x + 1] = satBuf[prevSat + x + 1] + rowSum;
+            }
           }
-        }
-
-        const boxAvg = (sat, x, y, r) => {
-          const x0 = Math.max(0, x - r);
-          const y0 = Math.max(0, y - r);
-          const x1 = Math.min(canvasW - 1, x + r) + 1;
-          const y1 = Math.min(canvasH - 1, y + r) + 1;
-          const area = (x1 - x0) * (y1 - y0);
-          const s = sat[y1 * stride + x1] - sat[y0 * stride + x1] - sat[y1 * stride + x0] + sat[y0 * stride + x0];
-          return s / area;
+          for (let y = 0; y < canvasH; y++) {
+            const y0 = Math.max(0, y - radius);
+            const y1 = Math.min(canvasH - 1, y + radius) + 1;
+            const row = y * canvasW;
+            for (let x = 0; x < canvasW; x++) {
+              const x0 = Math.max(0, x - radius);
+              const x1 = Math.min(canvasW - 1, x + radius) + 1;
+              const area = (x1 - x0) * (y1 - y0);
+              const sum = satBuf[y1 * stride + x1] - satBuf[y0 * stride + x1] - satBuf[y1 * stride + x0] + satBuf[y0 * stride + x0];
+              outArr[row + x] = sum / area;
+            }
+          }
         };
 
-        const hairSpanH = Math.max(50, hairMaxY - hairMinY);
-        const activeList = [];
+        // Guided Image Filter (radius r = 7, regularization eps = 0.0025)
+        const rGuide = Math.max(5, Math.round(Math.max(canvasW, canvasH) / 140));
+        const eps = 0.0022;
 
-        // Joint Bilateral Color-Guided Matte Refinement + Multi-Scale Wave/Strand Extraction
+        const meanI = new Float32Array(totalPixels);
+        const meanP = new Float32Array(totalPixels);
+        const corrI = new Float32Array(totalPixels);
+        const corrIP = new Float32Array(totalPixels);
+
+        for (let i = 0; i < totalPixels; i++) {
+          corrI[i] = I[i] * I[i];
+          corrIP[i] = I[i] * P[i];
+        }
+
+        boxFilter(I, meanI, rGuide);
+        boxFilter(P, meanP, rGuide);
+        boxFilter(corrI, corrI, rGuide);
+        boxFilter(corrIP, corrIP, rGuide);
+
+        const aCoeff = new Float32Array(totalPixels);
+        const bCoeff = new Float32Array(totalPixels);
+
+        for (let i = 0; i < totalPixels; i++) {
+          const varI = Math.max(0.0, corrI[i] - meanI[i] * meanI[i]);
+          const covIP = corrIP[i] - meanI[i] * meanP[i];
+          const a = covIP / (varI + eps);
+          aCoeff[i] = a;
+          bCoeff[i] = meanP[i] - a * meanI[i];
+        }
+
+        const meanA = corrI;  // reuse buffer
+        const meanB = corrIP; // reuse buffer
+        boxFilter(aCoeff, meanA, rGuide);
+        boxFilter(bCoeff, meanB, rGuide);
+
+        // Compute wider mask average (r = 14) to detect scalp parting & hairline root zone
+        const wideMaskAvg = aCoeff; // reuse buffer
+        boxFilter(P, wideMaskAvg, Math.max(10, rGuide * 2));
+
+        const hairSpanH = Math.max(50, hairMaxY - hairMinY);
+
         for (let y = 0; y < canvasH; y++) {
           const row = y * canvasW;
-          const relHairY = (y - hairMinY) / hairSpanH;
+          const relY = (y - hairMinY) / hairSpanH;
 
           for (let x = 0; x < canvasW; x++) {
-            const pIdx = row + x;
-            const rawC = tempMask[pIdx];
+            const i = row + x;
+            // Guided filter output: follows exact strand edges of full-res guidance image I
+            let q = Math.max(0.0, Math.min(1.0, meanA[i] * I[i] + meanB[i]));
 
-            // Fast skip for pure background
-            if (rawC < 0.008) {
-              const localM = boxAvg(satM, x, y, 3);
-              if (localM < 0.015) {
-                hairConfidenceMask[pIdx] = 0.0;
-                continue;
+            const cL = precompLabL[i];
+            const cA = precompLabA[i];
+            const cB = precompLabB[i];
+
+            // Skin-gap protection for neck/collarbone/forehead/parting skin visible between strands
+            if (q > 0.01 && q < 0.94) {
+              const dSkin = Math.hypot((cL - skinL) * 0.85, (cA - skinA) * 1.35, (cB - skinB) * 1.25);
+              const dHair = Math.hypot((cL - hairStats.meanL) * 1.05, (cA - hairStats.meanA) * 1.35, (cB - hairStats.meanB) * 1.25);
+              if (cL > hairStats.meanL + 10.0 && dSkin < dHair * 0.78 && cA > 5.5 && cB > 10.0) {
+                const skinGate = Math.max(0.0, Math.min(1.0, (dHair - dSkin) / (dHair + 8.0)));
+                q *= Math.max(0.0, 1.0 - skinGate * 0.90);
               }
             }
 
-            // 1. Multi-scale luminance extraction:
-            //    baseL (r=1 -> 3x3) isolates fine individual hair strands (origL - baseL)
-            //    waveL (r=12 -> 25x25) isolates 3D convex wave ridges vs concave folds (baseL - waveL)
-            const baseL = boxAvg(satL, x, y, 1);
-            const waveL = boxAvg(satL, x, y, 12);
-            precompBaseL[pIdx] = baseL;
-            precompWaveL[pIdx] = waveL;
+            autoGuidedMask[i] = q;
+            hairConfidenceMask[i] = q;
 
-            const cL = precompLabL[pIdx];
-            const cA = precompLabA[pIdx];
-            const cB = precompLabB[pIdx];
-
-            // 2. Color-Guided Joint Bilateral Filter along boundaries & semi-transparent regions
-            let conf = rawC;
-            const wideMaskAvg = boxAvg(satM, x, y, 8);
-
-            if (rawC < 0.96 || wideMaskAvg < 0.92) {
-              let wSum = 0.0;
-              let cSum = 0.0;
-              const rBilat = 3;
-              for (let dy = -rBilat; dy <= rBilat; dy++) {
-                const ny = Math.max(0, Math.min(canvasH - 1, y + dy));
-                const nRow = ny * canvasW;
-                for (let dx = -rBilat; dx <= rBilat; dx++) {
-                  const nx = Math.max(0, Math.min(canvasW - 1, x + dx));
-                  const nIdx = nRow + nx;
-                  const dL = cL - precompLabL[nIdx];
-                  const dA = cA - precompLabA[nIdx];
-                  const dB = cB - precompLabB[nIdx];
-                  const colorDistSq = dL * dL + 0.65 * (dA * dA + dB * dB);
-                  const spatialDistSq = dx * dx + dy * dy;
-                  const w = Math.exp(-spatialDistSq * 0.18 - colorDistSq * 0.0075);
-                  wSum += w;
-                  cSum += tempMask[nIdx] * w;
-                }
-              }
-              conf = wSum > 1e-5 ? (cSum / wSum) : rawC;
-            }
-
-            // 3. Skin-Gap & Scalp Parting Protection Gate
-            //    Prevents dye from bleeding onto warm skin visible between hair strands (neck, collarbone, forehead, scalp parting)
-            if (conf > 0.01 && conf < 0.94) {
-              const distToSkinSq =
-                Math.pow((cL - skinL) * 0.9, 2) +
-                Math.pow((cA - skinA) * 1.4, 2) +
-                Math.pow((cB - skinB) * 1.3, 2);
-              const distToHairSq =
-                Math.pow((cL - hairStats.p50) * 1.1, 2) +
-                Math.pow((cA - hairStats.meanA) * 1.4, 2) +
-                Math.pow((cB - hairStats.meanB) * 1.3, 2);
-
-              if (cL > hairStats.p75 && distToSkinSq < distToHairSq * 0.68 && cA > 5.5 && cB > 10.0) {
-                const skinPenalty = Math.max(0.0, Math.min(1.0, (distToHairSq - distToSkinSq) / (distToHairSq + 10.0)));
-                conf *= Math.max(0.0, 1.0 - skinPenalty * 0.92);
-              }
-            }
-
-            // 4. Natural Salon Root-Melt & Parting Depth Map
-            //    Detects the crown/scalp parting boundary and deep root crevices so roots stay naturally dark and dimensional
+            // Natural Salon Root Shadow Map at crown parting, scalp crease & upper hairline
             let rootW = 0.0;
-            if (relHairY >= -0.02 && relHairY < 0.34) {
-              const crownZone = 1.0 - (relHairY / 0.34);
-              const boundaryProximity = Math.max(0.0, 1.0 - wideMaskAvg * 1.12);
-              const partingCrease = Math.max(0.0, (waveL - baseL) / 14.0);
-              rootW = Math.min(0.85, crownZone * (boundaryProximity * 0.95 + partingCrease * 0.65));
+            if (relY >= -0.02 && relY < 0.36) {
+              const crownFade = 1.0 - (relY / 0.36);
+              const edgeProximity = Math.max(0.0, 1.0 - wideMaskAvg[i] * 1.08);
+              const scalpGlare = cL > hairStats.meanL + 12.0 ? Math.min(0.65, (cL - hairStats.meanL - 12.0) / 35.0) : 0.0;
+              rootW = Math.min(0.92, crownFade * (edgeProximity * 0.92 + scalpGlare * 0.75 + 0.22));
             }
-            precompRootW[pIdx] = rootW;
-
-            hairConfidenceMask[pIdx] = conf;
-            if (conf > 0.012) {
-              activeList.push(pIdx);
-            }
+            rootShadowMask[i] = rootW;
           }
         }
 
-        activeHairIndices = new Uint32Array(activeList);
+        // Upload refined guided mask + root shadow map to WebGL GPU
+        WebGLHairRenderer.uploadMask(hairConfidenceMask, rootShadowMask, canvasW, canvasH);
 
         if (currentColorApplied) {
           scheduleRender();
@@ -3038,152 +3535,87 @@
     function scheduleRender() {
       if (renderScheduled) return;
       renderScheduled = true;
-      requestAnimationFrame(() => { applyCIELabHairColor(); renderScheduled = false; });
+      requestAnimationFrame(() => {
+        renderHairColorFrame();
+        renderScheduled = false;
+      });
     }
 
     /* =========================================================================
-       MARSCHNER R / TT / TRT + BEER-LAMBERT MULTI-ZONE OPTICAL HAIR SHADER
-       - Preserves deep dark roots & interior wave shadows (no flat/milky wash)
-       - Applies Core Cortex Pigment in midtones
-       - Blooms into Transmitted Highlight Reflex (ha, hb) on convex 3D wave ridges
-       - Re-injects crisp 1.18x individual hair strand micro-contrast & cuticle shine
+       PRIMARY GPU RENDER DISPATCHER + IDENTICAL CANVAS 2D FALLBACK
        ========================================================================= */
-    function applyCIELabHairColor() {
+    function renderHairColorFrame() {
       if (!originalImageData || !workingImageData) return;
-      if (!currentColorApplied || !hairConfidenceMask || !activeHairIndices) {
+      if (!currentColorApplied || !hairConfidenceMask) {
         hairCtx.putImageData(originalImageData, 0, 0);
         return;
       }
 
+      // Fast path: WebGL Fragment Shader on GPU
+      if (WebGLHairRenderer.ready && WebGLHairRenderer.renderTo2DContext(hairCtx, canvasW, canvasH)) {
+        return;
+      }
+
+      // Automatic Fallback: Canvas 2D CPU using identical L_out = L_orig + k*(L_target - mean_L_hair) math
       const src = originalImageData.data;
       const dst = workingImageData.data;
       dst.set(src);
 
-      const goalL = Math.max(10.0, Math.min(86.0, targetLabL + userLiftDelta));
-      const goalA = targetLabA;
-      const goalB = targetLabB;
-      const reflexA = targetReflexA;
-      const reflexB = targetReflexB;
+      const totalPixels = canvasW * canvasH;
+      const meanL = hairStats.meanL;
+      const meanA = hairStats.meanA;
+      const meanB = hairStats.meanB;
+      const dL = targetLabL - meanL;
 
-      const p05 = hairStats.p05;
-      const p50 = hairStats.p50;
-      const p92 = hairStats.p92;
-      const dynRange = Math.max(14.0, p92 - p05);
-
-      // Shadow anchor stays rich and dark like real dyed hair roots & interior folds
-      const shadowFloorL = Math.min(
-        p05 * 0.92,
-        3.5 + 0.11 * Math.max(0.0, goalL - 18.0)
-      );
-
-      // Peak highlight ceiling scales naturally with target shade while preserving glossy wave contrast
-      const highlightCeilL = Math.max(
-        Math.min(72.0, p92 * 1.04),
-        Math.min(92.0, goalL * 1.46 + 13.5)
-      );
-
-      const count = activeHairIndices.length;
-
-      for (let k = 0; k < count; k++) {
-        const i = activeHairIndices[k];
+      for (let i = 0; i < totalPixels; i++) {
         const conf = hairConfidenceMask[i];
-        const idx = i * 4;
+        if (conf < 0.008) continue;
 
         const origL = precompLabL[i];
         const origA = precompLabA[i];
         const origB = precompLabB[i];
-        const baseL = precompBaseL[i];
-        const waveL = precompWaveL[i];
-        const rootW = precompRootW[i];
+        const rootShadow = rootShadowMask ? rootShadowMask[i] : 0.0;
 
-        // 1. Decompose hair into:
-        //    - strandDetail: individual high-frequency hair fibers & specular glints
-        //    - waveDelta: 3D convex wave ridge (> 0) vs concave fold/crevice (< 0)
-        const strandDetail = origL - baseL;
-        const waveDelta = baseL - waveL;
+        const shadowToe = Math.max(0.0, Math.min(1.0, (origL - 2.0) / 14.0));
+        const hiT = Math.max(0.0, Math.min(1.0, (origL - 38.0) / 44.0));
+        const highlightRoll = 1.0 - 0.42 * (hiT * hiT * (3.0 - 2.0 * hiT));
 
-        // Normalized macro illumination position u in [0 .. 1.25]
-        const uRaw = Math.max(0.0, (baseL - p05) / dynRange);
-        const u = Math.min(1.0, uRaw);
+        let outL = origL + lightnessShiftK * (shadowToe * highlightRoll) * dL;
 
-        // 2. Shadow-Anchored Salon S-Curve for Lightness
-        //    Toe power (>1) keeps roots & crevices deep; shoulder lifts lit waves smoothly
-        const uToe = Math.pow(u, 1.30);
-        const uInv = Math.pow(1.0 - u, 1.16);
-        const sCurve = uToe / (uToe + uInv + 1e-6);
-
-        // Piece-wise smooth interpolation passing through shadowFloorL -> goalL -> highlightCeilL
-        let mappedL;
-        if (sCurve <= 0.5) {
-          const t = sCurve * 2.0;
-          mappedL = shadowFloorL + (goalL - shadowFloorL) * (t * (1.12 - 0.12 * t));
-        } else {
-          const t = (sCurve - 0.5) * 2.0;
-          mappedL = goalL + (highlightCeilL - goalL) * (t * (0.88 + 0.12 * t));
+        if (targetLabL < 34.0 && origL > 36.0) {
+          const glareDamp = Math.max(0.0, Math.min(0.42, (34.0 - targetLabL) / 20.0)) * Math.min(1.0, lightnessShiftK);
+          outL -= (origL - 36.0) * glareDamp;
         }
 
-        // Super-specular glints above 92nd percentile
-        if (uRaw > 1.0) {
-          mappedL += (baseL - p92) * 0.88;
-        }
+        const rootDarken = rootShadow * 0.55;
+        outL = outL * (1.0 - rootDarken) + Math.min(outL, origL * 0.84) * rootDarken;
+        outL = Math.max(1.5, Math.min(96.0, outL));
 
-        // Enhance 3D wave depth (convex wave ridges pop, concave wave folds deepen)
-        mappedL += waveDelta * 0.28;
+        const sRampT = Math.max(0.0, Math.min(1.0, (outL - 3.0) / 18.0));
+        const shadowChromaRamp = sRampT * sRampT * (3.0 - 2.0 * sRampT);
 
-        // Apply natural salon root-melt shadow at crown parting & hairline
-        if (rootW > 0.01) {
-          const naturalRootL = Math.min(mappedL, Math.max(shadowFloorL, origL * 0.82));
-          mappedL = mappedL * (1.0 - rootW * 0.58) + naturalRootL * (rootW * 0.58);
-        }
+        const specStart = 36.0 + targetLabL * 0.45;
+        const specT = Math.max(0.0, Math.min(1.0, (outL - specStart) / Math.max(10.0, 76.0 - specStart)));
+        const specularRollOff = 1.0 - 0.65 * (specT * specT * (3.0 - 2.0 * specT));
+        const chromaEnvelope = shadowChromaRamp * specularRollOff;
 
-        // Re-inject crisp individual hair strand micro-contrast (1.18x fiber definition)
-        let outL = mappedL + strandDetail * 1.18;
-        outL = Math.max(1.5, Math.min(97.0, outL));
+        const dyedA = (targetLabA + (origA - meanA) * 0.14) * chromaEnvelope;
+        const dyedB = (targetLabB + (origB - meanB) * 0.14) * chromaEnvelope;
 
-        // 3. Marschner TRT Highlight Bloom & Beer-Lambert Chromatic Transfer
-        //    On convex lit wave ridges (u in [0.42..0.92] and waveDelta > 0), pigment shifts
-        //    from Core Cortex (goalA, goalB) to Transmitted Highlight Reflex (reflexA, reflexB)
-        const waveRidgeBoost = Math.max(-0.20, Math.min(0.32, waveDelta / 18.0));
-        const trtDrive = Math.max(0.0, Math.min(1.0, (u - 0.30) / 0.56 + waveRidgeBoost));
-        const wTRT = trtDrive * trtDrive * (3.0 - 2.0 * trtDrive);
+        const rootColorMix = Math.min(0.88, rootShadow * 0.68 + (1.0 - shadowChromaRamp) * 0.45);
+        const finalTargetA = dyedA * (1.0 - rootColorMix) + (5.5 * shadowChromaRamp) * rootColorMix;
+        const finalTargetB = dyedB * (1.0 - rootColorMix) + (4.5 * shadowChromaRamp) * rootColorMix;
 
-        // Individual sunlit strands also pick up subtle highlight reflex
-        const strandHighlight = Math.max(0.0, Math.min(0.25, strandDetail / 18.0));
-        const reflexMix = Math.min(1.0, wTRT * 0.88 + strandHighlight);
+        const alpha = conf * conf * (3.0 - 2.0 * conf);
+        const finalL = origL + (outL - origL) * alpha;
+        const finalA = origA + (finalTargetA - origA) * alpha;
+        const finalB = origB + (finalTargetB - origB) * alpha;
 
-        let curA = goalA + (reflexA - goalA) * reflexMix;
-        let curB = goalB + (reflexB - goalB) * reflexMix;
-
-        // Beer-Lambert optical saturation envelope across lightness:
-        // - Deep shadows (< 16 L*) retain rich dark undertint without turning grey/milky
-        // - Midtones & TRT wave highlights (16..68 L*) have peak jewel-toned richness
-        // - Extreme cuticle specular glints (> 76 L*) roll off smoothly for glossy salon shine
-        let chromaScale = 1.0;
-        if (outL < 16.0) {
-          chromaScale = Math.pow(Math.max(0.0, outL / 16.0), 0.78);
-        } else if (outL > 72.0) {
-          const specT = (outL - 72.0) / 25.0;
-          chromaScale = Math.max(0.32, 1.0 - specT * specT * 0.68);
-        }
-
-        // Amplify chromatic vibrancy right on the TRT wave ridge where light refracts through the dye
-        const trtVibrancy = 1.0 + wTRT * 0.14 * (1.0 - rootW * 0.7);
-        const outA = curA * chromaScale * trtVibrancy;
-        const outB = curB * chromaScale * trtVibrancy;
-
-        // 4. Separate Luminance & Chromatic Edge Blending (Zero Halo, Full Interior Saturation)
-        const chromaAlpha = Math.min(1.0, Math.pow(conf, 0.85) * 0.98);
-        const lumaAlpha = Math.min(1.0, conf * 0.96);
-
-        const finalL = origL * (1.0 - lumaAlpha) + outL * lumaAlpha;
-        const finalA = origA * (1.0 - chromaAlpha) + outA * chromaAlpha;
-        const finalB = origB * (1.0 - chromaAlpha) + outB * chromaAlpha;
-
-        const [resR, resG, resB] = cieLabToSRGB(finalL, finalA, finalB);
-
-        dst[idx]     = resR;
-        dst[idx + 1] = resG;
-        dst[idx + 2] = resB;
+        const [r, g, b] = cieLabToSRGB(finalL, finalA, finalB);
+        const idx = i * 4;
+        dst[idx]     = r;
+        dst[idx + 1] = g;
+        dst[idx + 2] = b;
       }
 
       hairCtx.putImageData(workingImageData, 0, 0);
@@ -3196,9 +3628,7 @@
       targetLabL = shade.L;
       targetLabA = shade.a;
       targetLabB = shade.b;
-      targetReflexA = typeof shade.ha === 'number' ? shade.ha : shade.a * 1.22;
-      targetReflexB = typeof shade.hb === 'number' ? shade.hb : shade.b * 1.22;
-      userLiftDelta = 0;
+      lightnessShiftK = 0.85;
 
       const chroma = Math.hypot(targetLabA, targetLabB);
       let hueDeg = Math.atan2(targetLabB, targetLabA) * (180.0 / Math.PI);
@@ -3206,11 +3636,11 @@
 
       $('oklchHueSlider').value = Math.round(hueDeg);
       $('oklchChromaSlider').value = Math.round(chroma);
-      $('oklchLiftSlider').value = 0;
+      $('oklchLiftSlider').value = 85;
 
       $('hueVal').textContent = `${Math.round(hueDeg)}°`;
       $('chromaVal').textContent = `${Math.round(chroma)}`;
-      $('liftVal').textContent = '0';
+      $('liftVal').textContent = '0.85';
       $('currentShadeBadge').textContent = currentShadeName.toUpperCase();
 
       renderSwatches();
@@ -3220,6 +3650,7 @@
     $('retakeBtn').addEventListener('click', async () => {
       const active = await verifyUserTrialStatus(currentUserPhone);
       if (!active) return;
+      setBrushModeActive(false);
       closeAllDrawers();
       activateScreen(screens.camera);
       startCamera();
@@ -3242,14 +3673,10 @@
       grid.appendChild(origTile);
 
       filtered.forEach(shade => {
-        const [rRoot, gRoot, bRoot] = cieLabToSRGB(Math.max(8, shade.L * 0.48), shade.a * 0.55, shade.b * 0.55);
+        const [rRoot, gRoot, bRoot] = cieLabToSRGB(Math.max(7, shade.L * 0.55), shade.a * 0.55, shade.b * 0.55);
         const [rMid, gMid, bMid] = cieLabToSRGB(shade.L, shade.a, shade.b);
-        const [rHi, gHi, bHi] = cieLabToSRGB(
-          Math.min(88, shade.L * 1.38 + 8),
-          typeof shade.ha === 'number' ? shade.ha : shade.a * 1.2,
-          typeof shade.hb === 'number' ? shade.hb : shade.b * 1.2
-        );
-        const swatchGrad = `radial-gradient(circle at 32% 28%, rgb(${rHi}, ${gHi}, ${bHi}) 0%, rgb(${rMid}, ${gMid}, ${bMid}) 52%, rgb(${rRoot}, ${gRoot}, ${bRoot}) 100%)`;
+        const [rHi, gHi, bHi] = cieLabToSRGB(Math.min(82, shade.L + 11), shade.a * 1.08, shade.b * 1.08);
+        const swatchGrad = `radial-gradient(circle at 32% 28%, rgb(${rHi}, ${gHi}, ${bHi}) 0%, rgb(${rMid}, ${gMid}, ${bMid}) 54%, rgb(${rRoot}, ${gRoot}, ${bRoot}) 100%)`;
 
         const tile = document.createElement('div');
         tile.className = 'swatch-tile' + (currentColorApplied && shade.name === currentShadeName ? ' active' : '');
@@ -3262,7 +3689,7 @@
       });
     }
 
-    /* FINE TUNE SLIDER CONTROLS (CIELAB L*C*h) */
+    /* FINE TUNE SLIDER CONTROLS (REAL-TIME GPU CIELAB + k SHIFT) */
     $('openFineTuneBtn').addEventListener('click', () => {
       $('fineTuneModal').classList.add('open');
     });
@@ -3276,9 +3703,6 @@
       const hRad = hDeg * (Math.PI / 180.0);
       targetLabA = cVal * Math.cos(hRad);
       targetLabB = cVal * Math.sin(hRad);
-      const [ra, rb] = computeOpticalReflex(targetLabA, targetLabB);
-      targetReflexA = ra;
-      targetReflexB = rb;
       $('hueVal').textContent = `${Math.round(hDeg)}°`;
       $('chromaVal').textContent = `${Math.round(cVal)}`;
     }
@@ -3303,8 +3727,8 @@
 
     $('oklchLiftSlider').addEventListener('input', e => {
       currentColorApplied = true;
-      userLiftDelta = parseFloat(e.target.value);
-      $('liftVal').textContent = userLiftDelta > 0 ? `+${userLiftDelta}` : `${userLiftDelta}`;
+      lightnessShiftK = parseFloat(e.target.value) / 100.0;
+      $('liftVal').textContent = lightnessShiftK.toFixed(2);
       scheduleRender();
     });
 
@@ -3324,6 +3748,7 @@
     const fineTuneModal = $('fineTuneModal');
 
     function openDrawer(type) {
+      setBrushModeActive(false);
       fineTuneModal.classList.remove('open');
       if (type === 'color') {
         colorDrawer.classList.add('open');
@@ -3333,6 +3758,7 @@
         stylePreviewImg.classList.add('hidden');
         hairCanvas.classList.remove('hidden');
         holdOriginalBtn.classList.remove('hidden');
+        toggleBrushBtn.classList.remove('hidden');
       } else {
         styleDrawer.classList.add('open');
         colorDrawer.classList.remove('open');
@@ -3423,7 +3849,7 @@
       const file = e.target.files?.[0];
       if (!file) return;
       try {
-        refBlob = await compressToWebP(file, { maxDim: 800, quality: 0.8 });
+        refBlob = await compressToWebP(file, { maxDim: 900, quality: 0.82 });
       } catch (_) {
         refBlob = file;
       }
@@ -3458,7 +3884,7 @@
       const canProceed = await ensureVaultSpaceBeforeSave(currentUserPhone);
       if (!canProceed) return;
 
-      showLoading("CHECKING QUOTA...", false);
+      showLoading("CHECKING QUOTA...", false, 30);
 
       try {
         const { data: quotaRes, error: rpcErr } = await sb.rpc('consume_hairstyle_credit', {
@@ -3492,14 +3918,8 @@
         return;
       }
 
-      const sourceCanvas = document.createElement('canvas');
-      sourceCanvas.width = canvasW;
-      sourceCanvas.height = canvasH;
-      const sCtx = sourceCanvas.getContext('2d');
-      sCtx.putImageData(currentColorApplied && workingImageData ? workingImageData : originalImageData, 0, 0);
-
-      const sourceToUpload = await compressToWebP(sourceCanvas, { maxDim: 800, quality: 0.75 });
-      showLoading("STYLING WITH KAMI AI...", true);
+      const sourceToUpload = await compressToWebP(hairCanvas, { maxDim: 900, quality: 0.80 });
+      showLoading("STYLING WITH KAMI AI...", true, 70);
 
       try {
         const safePhone = String(currentUserPhone).replace(/\D/g, '').slice(-10);
@@ -3518,7 +3938,7 @@
         } catch (_) {}
 
         if (!sourcePublicUrl) {
-          sourcePublicUrl = canvasToDataURL(sourceCanvas, 0.75);
+          sourcePublicUrl = canvasToDataURL(hairCanvas, 0.80);
         }
 
         const imageUrls = [sourcePublicUrl];
@@ -3535,8 +3955,8 @@
 
         const promptDesc = selectedHairstyle.desc_prompt || selectedHairstyle.name;
         const colorClause = currentColorApplied && currentShadeName !== 'Natural'
-          ? ` Maintain a rich, multidimensional salon ${currentShadeName} hair dye with natural darker roots, deep dimensional lowlights, and glossy light-reflecting highlights.`
-          : ` Maintain natural multidimensional hair depth, realistic darker roots, and glossy light-reflecting strands.`;
+          ? ` Maintain a rich, multidimensional salon ${currentShadeName} hair dye with natural darker roots, deep dimensional lowlights, and realistic light-reflecting strands.`
+          : ` Maintain natural multidimensional hair depth, realistic darker roots, and natural light-reflecting strands.`;
         const finalPrompt = `Professional salon hair consultation: transform hair to ${promptDesc}.${colorClause} Keep face, identity, lighting, and skin tones 100% identical.`;
 
         let renderedPublicUrl = null;
@@ -3555,12 +3975,7 @@
         } catch (_) {}
 
         if (!renderedPublicUrl) {
-          const simCanvas = document.createElement('canvas');
-          simCanvas.width = canvasW;
-          simCanvas.height = canvasH;
-          const simCtx = simCanvas.getContext('2d');
-          simCtx.drawImage(sourceCanvas, 0, 0);
-          renderedPublicUrl = canvasToDataURL(simCanvas, 0.85);
+          renderedPublicUrl = canvasToDataURL(hairCanvas, 0.85);
           showToast("PREVIEW READY");
         }
 
@@ -3588,6 +4003,7 @@
         hairCanvas.classList.add('hidden');
         stylePreviewImg.classList.remove('hidden');
         holdOriginalBtn.classList.add('hidden');
+        toggleBrushBtn.classList.add('hidden');
 
         closeAllDrawers();
         openCompareWithImages(sourcePublicUrl, renderedPublicUrl, selectedHairstyle.name, false);
@@ -3736,7 +4152,7 @@
         const canProceed = await ensureVaultSpaceBeforeSave(currentUserPhone);
         if (!canProceed) return;
 
-        showLoading("SAVING LOOK...", false);
+        showLoading("SAVING LOOK...", false, 75);
         try {
           const timeKey = Date.now();
           const renderedData = canvasToDataURL(hairCanvas, WEBP_QUALITY);
@@ -3830,9 +4246,8 @@
       }
     });
 
-    /* DIRECT EXPORT BUTTON IN COMPARE NAV */
     $('saveLocalBtn').addEventListener('click', async () => {
-      showLoading("EXPORTING IMAGE...");
+      showLoading("EXPORTING IMAGE...", false, 80);
       try {
         let blobToSave = null;
         let filename = `KAMI_${currentShadeName.replace(/\s+/g, '_')}_${Date.now()}.${ENCODE_EXT}`;
@@ -3862,9 +4277,7 @@
       }
     });
 
-    /* =========================================================================
-       VAULT GALLERY (MY LOOKS) — FULL VISIBLE DATE + EXPORT BUTTON + 10/10 PURGE
-       ========================================================================= */
+    /* VAULT GALLERY (MY LOOKS) */
     async function loadUserVault() {
       const active = await verifyUserTrialStatus(currentUserPhone);
       if (!active) return;
@@ -3927,7 +4340,7 @@
         if (dlBtn) {
           dlBtn.addEventListener('click', async (e) => {
             e.stopPropagation();
-            showLoading("EXPORTING PHOTO...");
+            showLoading("EXPORTING PHOTO...", false, 80);
             try {
               const blob = await compressToWebP(item.image_url, { maxDim: 1200, quality: 0.90 });
               hideLoading();
@@ -3961,7 +4374,6 @@
         grid.appendChild(card);
       });
 
-      // When vault reaches 10/10, show warning and auto-delete all user images from Supabase & local DB
       if (finalItems.length >= LOCAL_VAULT_LIMIT) {
         const shouldPurge = await showBrutalModal({
           badge: "VAULT FULL (10 / 10)",
@@ -3976,7 +4388,7 @@
         });
 
         if (shouldPurge) {
-          showLoading("DELETING ALL SAVED LOOKS...", false);
+          showLoading("DELETING ALL SAVED LOOKS...", false, 60);
           await purgeAllUserLooks(currentUserPhone);
           hideLoading();
           showToast("ALL 10 LOOKS DELETED FROM DATABASE");
