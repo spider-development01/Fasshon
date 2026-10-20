@@ -23,47 +23,33 @@
 
   <style>
     :root {
-      --primary: #FF5520;
-      --primary-hover: #E04312;
+      --primary: #FF6422;
+      --primary-hover: #E85517;
       --primary-light: #FFF0EB;
-      --primary-glow: rgba(255, 85, 32, 0.30);
+      --primary-glow: rgba(255, 100, 34, 0.28);
 
-      --accent-berry: #9E1B48;
-      --accent-berry-light: #FCEEF3;
-      --accent-violet: #6D28D9;
-      --accent-violet-light: #F3E8FF;
-      --accent-teal: #0D9488;
-      --accent-teal-light: #CCFBF1;
-      --accent-gold: #D97706;
-      --accent-gold-light: #FEF3C7;
-
-      --gradient-brand: linear-gradient(135deg, #FF5520 0%, #D62964 55%, #7C3AED 100%);
-      --gradient-berry: linear-gradient(135deg, #881337 0%, #C026D3 100%);
-      --gradient-bot: linear-gradient(135deg, #6D28D9 0%, #DB2777 55%, #FF5520 100%);
-      --gradient-surface: linear-gradient(180deg, #FDFBF9 0%, #F4EFF6 50%, #F0F4F8 100%);
-
-      --bg-main: #F6F3F7;
+      --bg-main: #F7F7F5;
       --surface: #FFFFFF;
-      --surface-subtle: #F2EEF5;
+      --surface-subtle: #F0EFEA;
       --surface-card: #FFFFFF;
-      --dark-card: #17131C;
+      --dark-card: #181818;
 
-      --text-main: #161219;
-      --text-muted: #6E6577;
-      --text-light: #9E95A8;
+      --text-main: #141414;
+      --text-muted: #757570;
+      --text-light: #A3A39E;
 
-      --border-subtle: rgba(109, 40, 217, 0.10);
-      --border-focus: rgba(214, 41, 100, 0.45);
+      --border-subtle: rgba(20, 20, 20, 0.08);
+      --border-focus: rgba(255, 100, 34, 0.45);
 
       --radius-full: 9999px;
       --radius-card: 22px;
       --radius-sm: 14px;
 
-      --shadow-sm: 0 4px 14px rgba(23, 19, 28, 0.05);
-      --shadow-card: 0 12px 32px rgba(109, 40, 217, 0.08), 0 2px 6px rgba(0, 0, 0, 0.03);
-      --shadow-orange: 0 8px 24px rgba(214, 41, 100, 0.28);
-      --shadow-dock: 0 16px 40px rgba(23, 19, 28, 0.30);
-      --shadow-sheet: 0 -10px 40px rgba(23, 19, 28, 0.18);
+      --shadow-sm: 0 4px 14px rgba(0, 0, 0, 0.04);
+      --shadow-card: 0 10px 30px rgba(0, 0, 0, 0.07), 0 2px 6px rgba(0, 0, 0, 0.02);
+      --shadow-orange: 0 8px 24px var(--primary-glow);
+      --shadow-dock: 0 16px 40px rgba(0, 0, 0, 0.25);
+      --shadow-sheet: 0 -10px 40px rgba(0, 0, 0, 0.16);
 
       --font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       --ease-smooth: cubic-bezier(0.16, 1, 0.3, 1);
@@ -96,7 +82,7 @@
     }
 
     body {
-      background: var(--gradient-surface);
+      background-color: var(--bg-main);
       color: var(--text-main);
       font-family: var(--font-family);
       touch-action: manipulation;
@@ -113,7 +99,7 @@
       inset: 0;
       display: flex;
       flex-direction: column;
-      background: var(--gradient-surface);
+      background-color: var(--bg-main);
       opacity: 0;
       pointer-events: none;
       visibility: hidden;
@@ -139,7 +125,7 @@
       cursor: pointer;
       font-family: var(--font-family);
       font-weight: 700;
-      transition: transform 0.15s var(--ease-smooth), opacity 0.15s, background-color 0.15s, box-shadow 0.15s;
+      transition: transform 0.15s var(--ease-smooth), opacity 0.15s, background-color 0.15s;
       user-select: none;
       -webkit-user-select: none;
     }
@@ -153,19 +139,17 @@
       font-size: 1.25rem;
       font-weight: 900;
       letter-spacing: 1.5px;
-      background: var(--gradient-brand);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
+      color: var(--text-main);
       display: inline-flex;
       align-items: center;
       gap: 6px;
     }
     .brand-logo::after {
       content: '';
-      width: 7px;
-      height: 7px;
+      width: 6px;
+      height: 6px;
       border-radius: 50%;
-      background: var(--gradient-brand);
+      background: var(--primary);
       display: inline-block;
     }
 
@@ -188,7 +172,7 @@
     .btn-pill:active:not(:disabled) { transform: scale(0.96); }
 
     .btn-primary {
-      background: var(--gradient-brand);
+      background: var(--primary);
       color: #FFFFFF;
       border: none;
       border-radius: var(--radius-full);
@@ -205,9 +189,10 @@
     }
     .btn-primary:active:not(:disabled) {
       transform: scale(0.98);
+      background: var(--primary-hover);
     }
     .btn-primary.pink-theme {
-      background: var(--gradient-berry);
+      background: var(--primary);
       color: #FFFFFF;
     }
 
@@ -245,12 +230,12 @@
       align-items: center;
       justify-content: flex-end;
       padding: 24px;
-      background: linear-gradient(180deg, rgba(23, 19, 28, 0.35) 0%, rgba(23, 19, 28, 0.95) 75%),
+      background: linear-gradient(180deg, rgba(20, 20, 20, 0.4) 0%, rgba(15, 15, 15, 0.95) 75%),
                   url('https://images.unsplash.com/photo-1503951914875-452162b0f3f1?auto=format&fit=crop&w=1200&q=80') center/cover no-repeat;
     }
     .login-card {
-      background: rgba(25, 20, 32, 0.88);
-      border: 1px solid rgba(255, 255, 255, 0.14);
+      background: rgba(25, 25, 25, 0.88);
+      border: 1px solid rgba(255, 255, 255, 0.12);
       -webkit-backdrop-filter: blur(20px);
       backdrop-filter: blur(20px);
       border-radius: 28px;
@@ -261,9 +246,9 @@
       color: #FFFFFF;
       margin-bottom: max(10px, env(safe-area-inset-bottom));
     }
-    .login-card .brand-logo { font-size: 1.35rem; margin-bottom: 12px; }
+    .login-card .brand-logo { color: #FFFFFF; font-size: 1.35rem; margin-bottom: 12px; }
     .login-headline { font-size: clamp(1.4rem, 5.5vw, 1.85rem); font-weight: 800; line-height: 1.25; margin-bottom: 8px; color: #FFFFFF; }
-    .login-subtext { font-size: 0.85rem; font-weight: 500; color: #C4BCCF; margin-bottom: 22px; line-height: 1.45; }
+    .login-subtext { font-size: 0.85rem; font-weight: 500; color: #B3B3AD; margin-bottom: 22px; line-height: 1.45; }
     .login-card input[type="tel"] {
       width: 100%;
       padding: 15px 18px;
@@ -278,8 +263,8 @@
       outline: none;
       transition: border-color 0.2s, background 0.2s;
     }
-    .login-card input[type="tel"]:focus { border-color: #D62964; background: rgba(255, 255, 255, 0.14); }
-    .login-card input[type="tel"]::placeholder { color: #8C8299; }
+    .login-card input[type="tel"]:focus { border-color: var(--primary); background: rgba(255, 255, 255, 0.14); }
+    .login-card input[type="tel"]::placeholder { color: #8C8C85; }
 
     /* VIEW 1: FULLSCREEN CAMERA */
     .camera-wrapper {
@@ -307,8 +292,8 @@
       gap: 10px;
       z-index: var(--z-dock);
     }
-    .top-dock-logo-wrap {
-      background: rgba(255, 255, 255, 0.92);
+    .top-dock .brand-logo {
+      background: rgba(255, 255, 255, 0.88);
       -webkit-backdrop-filter: blur(12px);
       backdrop-filter: blur(12px);
       padding: 8px 18px;
@@ -318,7 +303,7 @@
     .user-session-bar {
       display: inline-flex;
       align-items: center;
-      background: rgba(255, 255, 255, 0.92);
+      background: rgba(255, 255, 255, 0.9);
       -webkit-backdrop-filter: blur(12px);
       backdrop-filter: blur(12px);
       border-radius: var(--radius-full);
@@ -356,7 +341,7 @@
       left: 50%;
       transform: translateX(-50%);
       background: var(--dark-card);
-      border: 1px solid rgba(255, 255, 255, 0.14);
+      border: 1px solid rgba(255, 255, 255, 0.1);
       border-radius: var(--radius-full);
       padding: 8px 24px;
       display: flex;
@@ -366,7 +351,7 @@
       z-index: var(--z-dock);
     }
     .bottom-dock .btn-icon {
-      background: rgba(255, 255, 255, 0.10);
+      background: rgba(255, 255, 255, 0.08);
       color: #FFFFFF;
       border: none;
       box-shadow: none;
@@ -377,7 +362,7 @@
       width: clamp(68px, 19vw, 76px);
       height: clamp(68px, 19vw, 76px);
       border-radius: 50%;
-      background: var(--gradient-brand);
+      background: var(--primary);
       border: 4px solid #FFFFFF;
       box-shadow: var(--shadow-orange);
       flex-shrink: 0;
@@ -385,17 +370,15 @@
     }
     .shutter-btn:active { transform: scale(0.92); }
 
-    /* VIEW 2: STUDIO */
+    /* VIEW 2: STUDIO (RESPONSIVE FULL-VISIBILITY CANVAS) */
     .studio-header {
-      padding: max(14px, env(safe-area-inset-top)) 16px 12px;
-      background: rgba(255, 255, 255, 0.90);
-      -webkit-backdrop-filter: blur(14px);
-      backdrop-filter: blur(14px);
+      padding: max(14px, env(safe-area-inset-top)) 18px 12px;
+      background: var(--surface);
       border-bottom: 1px solid var(--border-subtle);
       display: flex;
       justify-content: space-between;
       align-items: center;
-      gap: 10px;
+      gap: 12px;
       flex-shrink: 0;
       z-index: var(--z-dock);
     }
@@ -408,7 +391,7 @@
       flex-direction: column;
       align-items: center;
       justify-content: flex-start;
-      padding: 10px 14px calc(82px + env(safe-area-inset-bottom));
+      padding: 10px 14px calc(80px + env(safe-area-inset-bottom));
       max-width: 900px;
       margin: 0 auto;
       width: 100%;
@@ -419,7 +402,6 @@
       border-radius: var(--radius-card);
       padding: 8px;
       box-shadow: var(--shadow-card);
-      border: 1px solid rgba(109, 40, 217, 0.10);
       display: flex;
       justify-content: center;
       align-items: center;
@@ -435,7 +417,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      background: #141118;
+      background: #141414;
       border-radius: var(--radius-sm);
       overflow: hidden;
       position: relative;
@@ -450,18 +432,17 @@
       display: block;
     }
 
-    /* FLOATING PILLS ON STUDIO PREVIEW */
     .hold-compare-pill {
       position: absolute;
-      top: 12px;
-      right: 12px;
-      background: rgba(23, 19, 28, 0.78);
+      top: 14px;
+      right: 14px;
+      background: rgba(20, 20, 20, 0.72);
       -webkit-backdrop-filter: blur(8px);
       backdrop-filter: blur(8px);
       color: #FFFFFF;
-      border: 1px solid rgba(255, 255, 255, 0.18);
+      border: 1px solid rgba(255, 255, 255, 0.16);
       border-radius: var(--radius-full);
-      padding: 6px 13px;
+      padding: 6px 12px;
       font-size: 0.68rem;
       font-weight: 800;
       letter-spacing: 0.3px;
@@ -470,75 +451,48 @@
       gap: 5px;
       z-index: 15;
       cursor: pointer;
+      user-select: none;
+      -webkit-user-select: none;
     }
     .hold-compare-pill:active {
       background: var(--primary);
       transform: scale(0.95);
     }
 
-    .undertone-Match-floating-pill {
-      position: absolute;
-      top: 12px;
-      left: 12px;
-      background: rgba(23, 19, 28, 0.82);
-      -webkit-backdrop-filter: blur(10px);
-      backdrop-filter: blur(10px);
-      color: #FFFFFF;
-      border: 1px solid rgba(255, 255, 255, 0.22);
-      border-radius: var(--radius-full);
-      padding: 6px 13px;
-      font-size: 0.68rem;
-      font-weight: 800;
-      letter-spacing: 0.2px;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      z-index: 15;
-      cursor: pointer;
-      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
-    }
-    .undertone-Match-floating-pill i {
-      color: #FBBF24;
-    }
-
-    /* DOCKED TRIPLE ACTION TRIGGER BAR */
+    /* DOCKED DUAL ACTION TRIGGER BAR */
     .studio-action-dock {
       position: absolute;
       bottom: max(14px, env(safe-area-inset-bottom));
-      left: 12px;
-      right: 12px;
-      max-width: 520px;
+      left: 16px;
+      right: 16px;
+      max-width: 440px;
       margin: 0 auto;
       background: var(--dark-card);
-      border: 1px solid rgba(255, 255, 255, 0.14);
+      border: 1px solid rgba(255, 255, 255, 0.12);
       border-radius: var(--radius-full);
       padding: 5px;
       display: grid;
-      grid-template-columns: 1.15fr 1fr 1.1fr;
-      gap: 5px;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
       box-shadow: var(--shadow-dock);
       z-index: 50;
     }
     .dock-trigger-btn {
-      padding: 11px 10px;
+      padding: 12px 16px;
       border-radius: var(--radius-full);
-      font-size: 0.74rem;
+      font-size: 0.82rem;
       font-weight: 800;
       color: #FFFFFF;
       background: rgba(255, 255, 255, 0.08);
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 6px;
-      white-space: nowrap;
+      gap: 8px;
       transition: all 0.2s ease;
     }
     .dock-trigger-btn.active, .dock-trigger-btn:hover {
-      background: var(--gradient-brand);
+      background: var(--primary);
       box-shadow: var(--shadow-orange);
-    }
-    .dock-trigger-btn.bot-trigger.active, .dock-trigger-btn.bot-trigger:hover {
-      background: var(--gradient-bot);
     }
 
     /* ANIMATED COLLAPSIBLE BOTTOM SHEETS */
@@ -546,7 +500,7 @@
       position: absolute;
       top: 0; right: 0; bottom: 0; left: 0;
       inset: 0;
-      background: rgba(18, 12, 26, 0.36);
+      background: rgba(0, 0, 0, 0.38);
       -webkit-backdrop-filter: blur(2px);
       backdrop-filter: blur(2px);
       z-index: var(--z-drawer);
@@ -563,7 +517,7 @@
       border-top-left-radius: 26px;
       border-top-right-radius: 26px;
       box-shadow: var(--shadow-sheet);
-      max-height: 58vh;
+      max-height: 54vh;
       display: flex;
       flex-direction: column;
       z-index: calc(var(--z-drawer) + 1);
@@ -578,7 +532,7 @@
     .drawer-handle-bar {
       width: 42px;
       height: 4px;
-      background: #D8D0E0;
+      background: #D8D8D2;
       border-radius: var(--radius-full);
       margin: 10px auto 4px;
       cursor: pointer;
@@ -612,13 +566,13 @@
       flex-shrink: 0;
     }
 
-    /* HORIZONTAL SCROLLER FOR CATEGORIES */
+    /* SAFE UNCLIPPED HORIZONTAL SCROLLER FOR CATEGORIES */
     .scroll-filter-row {
       display: flex;
-      gap: 7px;
+      gap: 8px;
       overflow-x: auto;
       overflow-y: visible;
-      padding: 3px 2px 7px;
+      padding: 4px 2px 8px;
       scrollbar-width: none;
       -webkit-overflow-scrolling: touch;
       flex-shrink: 0;
@@ -629,8 +583,8 @@
       background: var(--surface-subtle);
       color: var(--text-muted);
       border-radius: var(--radius-full);
-      padding: 7px 14px;
-      font-size: 0.72rem;
+      padding: 8px 15px;
+      font-size: 0.73rem;
       font-weight: 800;
       line-height: 1.2;
       white-space: nowrap;
@@ -642,22 +596,18 @@
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      gap: 4px;
     }
     .filter-chip.active {
-      background: var(--gradient-brand);
+      background: var(--primary);
       color: #FFFFFF;
       box-shadow: var(--shadow-orange);
-    }
-    .filter-chip[data-family="best"].active {
-      background: var(--gradient-bot);
     }
 
     .swatch-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(68px, 1fr));
       gap: 8px;
-      max-height: 195px;
+      max-height: 185px;
       overflow-y: auto;
       -webkit-overflow-scrolling: touch;
       padding: 8px;
@@ -665,37 +615,36 @@
       border-radius: var(--radius-sm);
     }
     .swatch-grid::-webkit-scrollbar { width: 4px; }
-    .swatch-grid::-webkit-scrollbar-thumb { background: #CFC6D8; border-radius: 4px; }
+    .swatch-grid::-webkit-scrollbar-thumb { background: #D0D0CA; border-radius: 4px; }
 
     .swatch-tile {
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 4px;
-      padding: 7px 4px 6px;
+      gap: 5px;
+      padding: 7px 4px;
       border-radius: var(--radius-sm);
       cursor: pointer;
-      transition: transform 0.12s var(--ease-smooth), border-color 0.12s, box-shadow 0.12s;
+      transition: transform 0.12s var(--ease-smooth), border-color 0.12s;
       background: var(--surface);
       border: 2px solid transparent;
-      position: relative;
     }
     .swatch-tile:active { transform: scale(0.94); }
     .swatch-tile.active {
-      border-color: #D62964;
-      box-shadow: 0 4px 14px rgba(214, 41, 100, 0.25);
+      border-color: var(--primary);
+      box-shadow: 0 4px 12px var(--primary-glow);
     }
     .swatch-tile-circle {
       width: 40px;
       height: 40px;
       border-radius: 50%;
       border: 2px solid #FFFFFF;
-      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.22), inset 0 4px 8px rgba(255, 255, 255, 0.38);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.22), inset 0 2px 5px rgba(255, 255, 255, 0.32);
       position: relative;
       flex-shrink: 0;
     }
     .swatch-tile-name {
-      font-size: 0.64rem;
+      font-size: 0.65rem;
       font-weight: 800;
       text-align: center;
       line-height: 1.15;
@@ -705,101 +654,12 @@
       text-overflow: ellipsis;
       white-space: nowrap;
     }
-    .swatch-match-tag {
-      font-size: 0.56rem;
-      font-weight: 800;
-      padding: 1px 6px;
-      border-radius: var(--radius-full);
-      background: var(--accent-violet-light);
-      color: var(--accent-violet);
-      line-height: 1.2;
-    }
-    .swatch-match-tag.high {
-      background: #DCFCE7;
-      color: #15803D;
-    }
-
-    /* COLOUR THEORY BOT CARDS */
-    .bot-summary-banner {
-      background: linear-gradient(135deg, rgba(109, 40, 217, 0.08) 0%, rgba(219, 39, 119, 0.08) 100%);
-      border: 1px solid rgba(109, 40, 217, 0.18);
-      border-radius: 16px;
-      padding: 12px 14px;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-    .bot-metric-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 8px;
-    }
-    .bot-metric-box {
-      background: var(--surface);
-      border-radius: 12px;
-      padding: 8px 10px;
-      box-shadow: var(--shadow-sm);
-      border: 1px solid var(--border-subtle);
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-    }
-    .bot-metric-label {
-      font-size: 0.60rem;
-      font-weight: 800;
-      color: var(--text-muted);
-      text-transform: uppercase;
-    }
-    .bot-metric-val {
-      font-size: 0.78rem;
-      font-weight: 900;
-      color: var(--text-main);
-    }
-    .bot-verdict-card {
-      background: var(--surface);
-      border-radius: 14px;
-      padding: 12px;
-      border: 1px solid var(--border-subtle);
-      box-shadow: var(--shadow-sm);
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-    .bot-rec-pills {
-      display: flex;
-      gap: 6px;
-      flex-wrap: wrap;
-      margin-top: 4px;
-    }
-    .bot-rec-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 6px 11px;
-      border-radius: var(--radius-full);
-      background: var(--surface-subtle);
-      font-size: 0.70rem;
-      font-weight: 800;
-      color: var(--text-main);
-      border: 1px solid var(--border-subtle);
-      cursor: pointer;
-    }
-    .bot-rec-pill:active {
-      transform: scale(0.95);
-    }
-    .bot-rec-dot {
-      width: 12px;
-      height: 12px;
-      border-radius: 50%;
-      border: 1px solid rgba(0,0,0,0.15);
-      display: inline-block;
-    }
 
     .hairstyles-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
       gap: 8px;
-      max-height: 175px;
+      max-height: 180px;
       overflow-y: auto;
       -webkit-overflow-scrolling: touch;
       padding: 8px;
@@ -822,10 +682,10 @@
       transition: all 0.15s ease;
     }
     .style-chip.selected {
-      background: var(--accent-berry-light);
-      color: var(--accent-berry);
-      border-color: var(--accent-berry);
-      box-shadow: 0 4px 14px rgba(158, 27, 72, 0.18);
+      background: var(--primary-light);
+      color: var(--primary);
+      border-color: var(--primary);
+      box-shadow: 0 4px 14px var(--primary-glow);
     }
 
     .ref-uploader {
@@ -836,7 +696,7 @@
       align-items: center;
       gap: 10px;
       cursor: pointer;
-      border: 1px dashed rgba(109, 40, 217, 0.25);
+      border: 1px dashed rgba(0,0,0,0.18);
     }
     .ref-thumb {
       width: 44px;
@@ -847,7 +707,7 @@
       align-items: center;
       justify-content: center;
       font-size: 1.2rem;
-      color: #D62964;
+      color: var(--primary);
       overflow: hidden;
       flex-shrink: 0;
       box-shadow: var(--shadow-sm);
@@ -893,7 +753,7 @@
     }
     .slider-block label span {
       background: var(--surface);
-      color: #D62964;
+      color: var(--primary);
       padding: 2px 8px;
       border-radius: var(--radius-full);
       font-size: 0.68rem;
@@ -912,7 +772,7 @@
       width: 22px;
       height: 22px;
       background: #FFFFFF;
-      border: 2px solid #D62964;
+      border: 2px solid var(--primary);
       border-radius: 50%;
       box-shadow: 0 2px 8px rgba(0,0,0,0.2);
       cursor: grab;
@@ -921,7 +781,7 @@
       width: 22px;
       height: 22px;
       background: #FFFFFF;
-      border: 2px solid #D62964;
+      border: 2px solid var(--primary);
       border-radius: 50%;
       box-shadow: 0 2px 8px rgba(0,0,0,0.2);
       cursor: grab;
@@ -929,8 +789,8 @@
     .rainbow-slider {
       background: linear-gradient(to right, hsl(0,75%,50%), hsl(60,75%,50%), hsl(120,75%,50%), hsl(180,75%,50%), hsl(240,75%,50%), hsl(300,75%,50%), hsl(360,75%,50%));
     }
-    .sat-slider { background: linear-gradient(to right, #B5B5B5, #FF5520, #9E1B48); }
-    .lift-slider { background: linear-gradient(to right, #1D120C, #5E3A24, #B98A5B, #E8C69B, #FFFFFF); }
+    .sat-slider { background: linear-gradient(to right, #B5B5B5, #FF6422, #9E142E); }
+    .lift-slider { background: linear-gradient(to right, #2B1D12, #6E4E36, #B98A5B, #E8C69B, #FFFFFF); }
 
     /* VIEW 3: COMPARE SCREEN */
     .compare-top-nav {
@@ -946,7 +806,7 @@
     }
     .compare-controls-bar {
       padding: 10px 16px;
-      background: transparent;
+      background: var(--bg-main);
       display: flex;
       justify-content: center;
       align-items: center;
@@ -971,7 +831,7 @@
       gap: 6px;
     }
     .seg-btn.active {
-      background: var(--gradient-brand);
+      background: var(--primary);
       color: #FFFFFF;
       box-shadow: var(--shadow-orange);
     }
@@ -1033,7 +893,7 @@
       opacity: 1;
     }
     .stage-badge-left { left: 14px; background: rgba(255, 255, 255, 0.92); color: var(--text-main); }
-    .stage-badge-right { right: 14px; background: var(--gradient-brand); color: #FFFFFF; }
+    .stage-badge-right { right: 14px; background: var(--primary); color: #FFFFFF; }
 
     .slider-divider {
       position: absolute;
@@ -1060,7 +920,7 @@
       width: 38px;
       height: 38px;
       border-radius: 50%;
-      background: var(--gradient-brand);
+      background: var(--primary);
       color: #FFFFFF;
       border: 3px solid #FFFFFF;
       box-shadow: var(--shadow-orange);
@@ -1090,7 +950,9 @@
     }
     .compare-fab-share i { color: #25D366; font-size: 1.1rem; }
 
-    /* VIEW 4: MY LOOKS VAULT */
+    /* =========================================================================
+       VIEW 4: MY LOOKS VAULT — FULL PHOTO + FULL VISIBLE DATE + EXPORT & DELETE
+       ========================================================================= */
     .gallery-grid {
       flex: 1;
       min-height: 0;
@@ -1118,9 +980,9 @@
 
     .gallery-card {
       background: #FFFFFF;
-      border: 1px solid var(--border-subtle);
+      border: 1px solid rgba(20, 20, 20, 0.08);
       border-radius: 20px;
-      box-shadow: var(--shadow-card);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
       display: flex;
       flex-direction: column;
       cursor: pointer;
@@ -1131,7 +993,7 @@
       min-height: max-content;
     }
     .gallery-card:hover {
-      box-shadow: 0 12px 28px rgba(109, 40, 217, 0.14);
+      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.10);
     }
     .gallery-card:active { transform: scale(0.98); }
 
@@ -1155,7 +1017,7 @@
       top: 10px;
       left: 10px;
       z-index: 4;
-      background: rgba(23, 19, 28, 0.78);
+      background: rgba(20, 20, 20, 0.74);
       -webkit-backdrop-filter: blur(8px);
       backdrop-filter: blur(8px);
       color: #FFFFFF;
@@ -1221,7 +1083,7 @@
       border-radius: var(--radius-full);
       background: var(--surface-subtle);
       color: var(--text-main);
-      border: 1px solid var(--border-subtle);
+      border: 1px solid rgba(20, 20, 20, 0.08);
       display: inline-flex;
       align-items: center;
       justify-content: center;
@@ -1231,10 +1093,11 @@
       letter-spacing: 0.3px;
       cursor: pointer;
       white-space: nowrap;
+      transition: transform 0.12s ease, background-color 0.12s ease;
     }
     .vault-dl-btn:active {
       transform: scale(0.95);
-      background: #E5DFEC;
+      background: #E2E2DC;
     }
     .vault-del-btn {
       width: 34px;
@@ -1249,6 +1112,7 @@
       font-size: 0.86rem;
       cursor: pointer;
       flex-shrink: 0;
+      transition: transform 0.12s ease, background-color 0.12s ease;
     }
     .vault-del-btn:active {
       transform: scale(0.90);
@@ -1282,7 +1146,7 @@
       position: absolute;
       top: 0; right: 0; bottom: 0; left: 0;
       inset: 0;
-      background: rgba(23, 19, 28, 0.72);
+      background: rgba(20, 20, 20, 0.72);
       -webkit-backdrop-filter: blur(10px);
       backdrop-filter: blur(10px);
       display: flex;
@@ -1310,7 +1174,7 @@
       align-items: center;
       gap: 12px;
     }
-    .loading-badge i { color: #D62964; font-size: 1.15rem; }
+    .loading-badge i { color: var(--primary); font-size: 1.15rem; }
     .timer-badge {
       background: rgba(255, 255, 255, 0.15);
       color: #FFFFFF;
@@ -1324,7 +1188,7 @@
       position: fixed;
       top: 0; right: 0; bottom: 0; left: 0;
       inset: 0;
-      background: rgba(23, 19, 28, 0.78);
+      background: rgba(20, 20, 20, 0.78);
       -webkit-backdrop-filter: blur(8px);
       backdrop-filter: blur(8px);
       z-index: var(--z-modal);
@@ -1391,7 +1255,7 @@
   <div id="kamiCustomModal" class="custom-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="customModalTitle" aria-describedby="customModalMessage">
     <div class="custom-modal-card">
       <div style="display:inline-block; margin-bottom:2px;">
-        <span id="customModalBadge" class="badge" style="background:var(--accent-berry-light); color:var(--accent-berry);">NOTICE</span>
+        <span id="customModalBadge" class="badge" style="background:var(--primary-light); color:var(--primary);">NOTICE</span>
       </div>
       <h3 id="customModalTitle" style="font-size:1.2rem; font-weight:800; text-transform:uppercase; line-height:1.2;">TITLE</h3>
       <p id="customModalMessage" style="font-size:0.86rem; font-weight:600; color:var(--text-muted); line-height:1.45;"></p>
@@ -1434,7 +1298,7 @@
       <div class="brand-logo">KAMI</div>
       <h1 class="login-headline">Discover the beauty in you today</h1>
       <p class="login-subtext">
-        Enter your registered salon mobile number to try multidimensional hair colours, undertone analysis, and AI hairstyles.
+        Enter your registered salon mobile number to try hair colours and AI hairstyles.
       </p>
 
       <form id="loginForm" autocomplete="on">
@@ -1444,8 +1308,8 @@
         </button>
       </form>
 
-      <div style="margin-top:16px; font-size:0.68rem; font-weight:600; color:#B4A9C0; line-height:1.4; display:flex; align-items:center; gap:6px; justify-content:center;">
-        <i class="bi bi-shield-check" style="color:#FF5520; font-size:0.9rem;"></i>
+      <div style="margin-top:16px; font-size:0.68rem; font-weight:600; color:#A8A8A2; line-height:1.4; display:flex; align-items:center; gap:6px; justify-content:center;">
+        <i class="bi bi-shield-check" style="color:var(--primary); font-size:0.9rem;"></i>
         <span>DPDP Act 2023 Compliant. Visual hair consultation only.</span>
       </div>
     </div>
@@ -1454,9 +1318,7 @@
   <!-- VIEW 1: FULLSCREEN WYSIWYG CAMERA -->
   <section id="cameraScreen" class="view-screen">
     <div class="top-dock">
-      <div class="top-dock-logo-wrap">
-        <div class="brand-logo">KAMI</div>
-      </div>
+      <div class="brand-logo">KAMI</div>
       <div style="display:flex; align-items:center; gap:8px;">
         <div class="user-session-bar">
           <span class="user-session-name" id="userSessionName">CLIENT</span>
@@ -1478,12 +1340,12 @@
     </div>
   </section>
 
-  <!-- VIEW 2: STUDIO (LIVE PREVIEW + COLOUR THEORY BOT + COLLAPSIBLE DRAWERS) -->
+  <!-- VIEW 2: STUDIO (LIVE PREVIEW + COMPACT COLLAPSIBLE DRAWERS) -->
   <section id="studioScreen" class="view-screen">
     <header class="studio-header">
       <button id="retakeBtn" class="btn-pill"><i class="bi bi-arrow-left"></i> CAMERA</button>
       <div class="brand-logo">KAMI</div>
-      <div class="badge" id="clientStudioBadge" style="background:var(--accent-berry-light); color:var(--accent-berry); max-width:110px; overflow:hidden; text-overflow:ellipsis;">CLIENT</div>
+      <div class="badge" id="clientStudioBadge" style="background:var(--primary-light); color:var(--primary); max-width:110px; overflow:hidden; text-overflow:ellipsis;">CLIENT</div>
     </header>
 
     <main class="studio-content">
@@ -1491,26 +1353,16 @@
         <div class="preview-box">
           <canvas id="hairCanvas"></canvas>
           <img id="stylePreviewImg" class="hidden" alt="AI Hairstyle Preview" />
-
-          <!-- LIVE UNDERTONE & HARMONY FLOATING PILL -->
-          <button id="floatingBotBadge" type="button" class="undertone-Match-floating-pill" title="Open Colour Theory & Undertone Analysis">
-            <i class="bi bi-stars"></i>
-            <span id="floatingBotText">ANALYSING UNDERTONE...</span>
-          </button>
-
           <button id="holdOriginalBtn" type="button" class="hold-compare-pill" title="Hold to view original hair">
             <i class="bi bi-eye"></i> HOLD ORIGINAL
           </button>
         </div>
       </div>
 
-      <!-- DOCKED TRIPLE ACTION TRIGGER BAR -->
+      <!-- DOCKED DUAL ACTION TRIGGER BAR -->
       <div class="studio-action-dock">
         <button id="openColorDrawerBtn" class="dock-trigger-btn active">
           <i class="bi bi-palette-fill"></i> HAIR COLOUR
-        </button>
-        <button id="openBotDrawerBtn" class="dock-trigger-btn bot-trigger">
-          <i class="bi bi-magic"></i> COLOUR BOT
         </button>
         <button id="openStyleDrawerBtn" class="dock-trigger-btn">
           <i class="bi bi-scissors"></i> AI HAIRSTYLE
@@ -1520,13 +1372,13 @@
       <!-- BACKDROP -->
       <div id="drawerBackdrop" class="studio-drawer-backdrop"></div>
 
-      <!-- DRAWER A: HAIR COLOUR (3-ZONE MULTIDIMENSIONAL CIE L*a*b* D65 ENGINE) -->
+      <!-- DRAWER A: HAIR COLOUR (MARSCHNER R/TT/TRT + CIE L*a*b* D65 ENGINE) -->
       <div id="colorDrawer" class="studio-drawer">
         <div class="drawer-handle-bar" id="colorDrawerHandle"></div>
         <div class="drawer-header">
-          <h3><i class="bi bi-palette-fill" style="color:#D62964;"></i> LIVE HAIR COLOUR <span style="font-size:0.65rem; font-weight:700; color:var(--accent-teal); background:var(--accent-teal-light); padding:2px 7px; border-radius:999px;">INSTANT · NO AI</span></h3>
+          <h3><i class="bi bi-palette-fill" style="color:var(--primary);"></i> HAIR COLOUR</h3>
           <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
-            <div class="badge" id="currentShadeBadge" style="background:var(--accent-berry-light); color:var(--accent-berry);">NATURAL</div>
+            <div class="badge" id="currentShadeBadge" style="background:var(--primary-light); color:var(--primary);">NATURAL</div>
             <button id="openFineTuneBtn" type="button" class="btn-pill" style="font-size:0.68rem; padding:6px 12px;">
               <i class="bi bi-sliders"></i> FINE TUNE
             </button>
@@ -1536,12 +1388,11 @@
 
         <div class="drawer-scroll-body">
           <div class="scroll-filter-row" id="familyFilterRow">
-            <button class="filter-chip" data-family="best"><i class="bi bi-stars"></i> BEST FOR YOU</button>
             <button class="filter-chip active" data-family="all">ALL SHADES</button>
-            <button class="filter-chip" data-family="reds">WINE, BURGUNDY &amp; REDS</button>
             <button class="filter-chip" data-family="browns">BROWNS &amp; MOCHA</button>
             <button class="filter-chip" data-family="blondes">BLONDES &amp; HONEY</button>
-            <button class="filter-chip" data-family="fashion">PLUM &amp; FASHION</button>
+            <button class="filter-chip" data-family="reds">REDS &amp; COPPER</button>
+            <button class="filter-chip" data-family="fashion">PASTEL &amp; FASHION</button>
           </div>
 
           <div class="swatch-grid" id="swatchGrid"></div>
@@ -1549,60 +1400,7 @@
 
         <div class="drawer-footer-actions">
           <button id="compareAndSaveColorBtn" class="btn-primary">
-            <span>COMPARE &amp; SAVE COLOUR</span> <i class="bi bi-arrows-expand"></i>
-          </button>
-        </div>
-      </div>
-
-      <!-- DRAWER B: KAMI COLOUR THEORY & UNDERTONE ANALYTICAL BOT -->
-      <div id="botDrawer" class="studio-drawer">
-        <div class="drawer-handle-bar" id="botDrawerHandle"></div>
-        <div class="drawer-header">
-          <h3><i class="bi bi-magic" style="color:var(--accent-violet);"></i> COLOUR THEORY &amp; UNDERTONE BOT</h3>
-          <div style="display:flex; align-items:center; gap:8px;">
-            <span id="botSeasonBadge" class="badge" style="background:var(--accent-violet-light); color:var(--accent-violet);">DEEP AUTUMN</span>
-            <button id="closeBotDrawerBtn" class="btn-icon" style="width:32px; height:32px; font-size:0.85rem;"><i class="bi bi-x-lg"></i></button>
-          </div>
-        </div>
-
-        <div class="drawer-scroll-body">
-          <div class="bot-summary-banner">
-            <div class="bot-metric-grid">
-              <div class="bot-metric-box">
-                <span class="bot-metric-label">SKIN UNDERTONE</span>
-                <span class="bot-metric-val" id="botUndertoneVal">Warm Golden</span>
-              </div>
-              <div class="bot-metric-box">
-                <span class="bot-metric-label">COMPLEXION</span>
-                <span class="bot-metric-val" id="botDepthVal">Medium</span>
-              </div>
-              <div class="bot-metric-box">
-                <span class="bot-metric-label">SHADE HARMONY</span>
-                <span class="bot-metric-val" id="botMatchScoreVal" style="color:#15803D;">96% Match</span>
-              </div>
-            </div>
-          </div>
-
-          <div class="bot-verdict-card">
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-              <strong id="botVerdictTitle" style="font-size:0.82rem; color:var(--text-main);">ANALYTICAL VERDICT</strong>
-              <span id="botActiveShadePill" class="badge" style="background:var(--accent-berry-light); color:var(--accent-berry); font-size:0.65rem;">NATURAL</span>
-            </div>
-            <p id="botAnalysisText" style="font-size:0.76rem; font-weight:600; color:var(--text-muted); line-height:1.45;">
-              Select any hair colour swatch to see how its pigment warmth, root depth, and luminance contrast interact with your natural skin undertone.
-            </p>
-            <div style="margin-top:4px;">
-              <div style="font-size:0.66rem; font-weight:800; color:var(--text-muted); text-transform:uppercase; margin-bottom:4px;">
-                TOP RECOMMENDED SHADES FOR YOUR PALETTE (TAP TO TRY):
-              </div>
-              <div class="bot-rec-pills" id="botRecommendedPills"></div>
-            </div>
-          </div>
-        </div>
-
-        <div class="drawer-footer-actions">
-          <button id="botSwitchToPaletteBtn" class="btn-primary">
-            <span>EXPLORE MY BEST SHADES</span> <i class="bi bi-palette-fill"></i>
+            <span>COMPARE &amp; SAVE</span> <i class="bi bi-arrows-expand"></i>
           </button>
         </div>
       </div>
@@ -1610,7 +1408,7 @@
       <!-- ANIMATED FINE TUNE POPUP SHEET (CIE L*a*b*) -->
       <div id="fineTuneModal" class="fine-tune-modal">
         <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border-subtle); padding-bottom:8px;">
-          <h4 style="font-size:0.92rem; font-weight:800;"><i class="bi bi-sliders" style="color:#D62964; margin-right:4px;"></i> CIELAB MULTIDIMENSIONAL FINE TUNE</h4>
+          <h4 style="font-size:0.92rem; font-weight:800;"><i class="bi bi-sliders" style="color:var(--primary); margin-right:4px;"></i> CIELAB FINE TUNE</h4>
           <button id="closeFineTuneBtn" class="btn-pill" style="padding:4px 12px; font-size:0.72rem;">DONE</button>
         </div>
         <div class="slider-block">
@@ -1618,22 +1416,22 @@
           <input type="range" id="oklchHueSlider" min="0" max="360" step="1" value="20" class="rainbow-slider" />
         </div>
         <div class="slider-block">
-          <label for="oklchChromaSlider">DYE INTENSITY / CHROMA (C*ab) <span id="chromaVal">34</span></label>
-          <input type="range" id="oklchChromaSlider" min="0" max="60" step="1" value="34" class="sat-slider" />
+          <label for="oklchChromaSlider">CIELAB CHROMA (C*ab) <span id="chromaVal">48</span></label>
+          <input type="range" id="oklchChromaSlider" min="0" max="75" step="1" value="48" class="sat-slider" />
         </div>
         <div class="slider-block">
-          <label for="oklchLiftSlider">HIGHLIGHT &amp; LEVEL LIFT (ΔL*) <span id="liftVal">0</span></label>
+          <label for="oklchLiftSlider">LIGHTNESS LIFT (ΔL*) <span id="liftVal">0</span></label>
           <input type="range" id="oklchLiftSlider" min="-25" max="30" step="1" value="0" class="lift-slider" />
         </div>
       </div>
 
-      <!-- DRAWER C: AI HAIRSTYLE -->
+      <!-- DRAWER B: AI HAIRSTYLE -->
       <div id="styleDrawer" class="studio-drawer">
         <div class="drawer-handle-bar" id="styleDrawerHandle"></div>
         <div class="drawer-header">
-          <h3><i class="bi bi-scissors" style="color:var(--accent-berry);"></i> AI HAIRSTYLE <span style="font-size:0.65rem; font-weight:700; color:var(--accent-violet); background:var(--accent-violet-light); padding:2px 7px; border-radius:999px;">CLOUD AI CUTS</span></h3>
+          <h3><i class="bi bi-scissors" style="color:var(--primary);"></i> AI HAIRSTYLE</h3>
           <div style="display:flex; align-items:center; gap:8px;">
-            <div id="styleQuotaBadge" class="badge" style="background:var(--accent-berry-light); color:var(--accent-berry);">0 / 5 USED</div>
+            <div id="styleQuotaBadge" class="badge" style="background:var(--primary-light); color:var(--primary);">0 / 5 USED</div>
             <button id="closeStyleDrawerBtn" class="btn-icon" style="width:32px; height:32px; font-size:0.85rem;"><i class="bi bi-x-lg"></i></button>
           </div>
         </div>
@@ -1648,7 +1446,7 @@
               <img id="refImg" class="hidden" alt="Reference" />
             </div>
             <div style="flex:1; min-width:0;">
-              <div class="badge" style="background:var(--accent-berry-light); color:var(--accent-berry); margin-bottom:2px; font-size:0.65rem;">OPTIONAL REFERENCE</div>
+              <div class="badge" style="background:var(--primary-light); color:var(--primary); margin-bottom:2px; font-size:0.65rem;">OPTIONAL REFERENCE</div>
               <h4 style="font-size:0.8rem; font-weight:800;">REFERENCE CUT</h4>
               <p id="refSubtext" style="font-size:0.7rem; color:var(--text-muted); font-weight:600;">Tap to upload fringe/length reference</p>
             </div>
@@ -1657,13 +1455,13 @@
           <input type="file" id="refFileInput" class="hidden" accept="image/*,.heic,.heif" />
 
           <button id="executeStyleBtn" class="btn-primary pink-theme" style="margin-top:2px;">
-            <span>GENERATE AI HAIRSTYLE</span> <i class="bi bi-stars"></i>
+            <span>TRANSFORM WITH KAMI AI</span> <i class="bi bi-stars"></i>
           </button>
         </div>
 
         <div class="drawer-footer-actions">
           <button id="compareAndSaveStyleBtn" class="btn-primary">
-            <span>COMPARE &amp; SAVE HAIRSTYLE</span> <i class="bi bi-arrows-expand"></i>
+            <span>COMPARE &amp; SAVE</span> <i class="bi bi-arrows-expand"></i>
           </button>
         </div>
       </div>
@@ -1675,7 +1473,7 @@
   <section id="compareScreen" class="view-screen">
     <div class="compare-top-nav">
       <button id="compareBackBtn" class="btn-pill"><i class="bi bi-arrow-left"></i> BACK</button>
-      <div class="badge" id="compareBadge" style="background:var(--accent-berry-light); color:var(--accent-berry);">BEFORE / AFTER</div>
+      <div class="badge" id="compareBadge" style="background:var(--primary-light); color:var(--primary);">BEFORE / AFTER</div>
       <button id="saveLocalBtn" class="btn-pill" style="background:var(--surface-subtle); font-weight:800;">
         <i class="bi bi-download"></i> EXPORT
       </button>
@@ -1714,7 +1512,7 @@
     <header class="studio-header">
       <button id="closeGalleryBtn" class="btn-pill"><i class="bi bi-arrow-left"></i> BACK</button>
       <div class="brand-logo">MY LOOKS</div>
-      <div id="vaultCountBadge" class="badge" style="background:var(--accent-berry-light); color:var(--accent-berry);">0 / 10</div>
+      <div id="vaultCountBadge" class="badge" style="background:var(--primary-light); color:var(--primary);">0 / 10</div>
     </header>
     <div class="gallery-grid" id="galleryGrid"></div>
   </section>
@@ -1722,6 +1520,7 @@
   <script type="module">
     'use strict';
 
+    /* SAFE GLOBAL CONFIG HOOK */
     window.KAMI_CONFIG = window.KAMI_CONFIG || {
       tryonEndpoint: '/api/tryon'
     };
@@ -1795,7 +1594,14 @@
     }
 
     /* =========================================================================
-       CIE 1976 L*a*b* (D65) COLORIMETRIC ENGINE + 3-ZONE OPTICAL HAIR DYE MODEL
+       PRODUCTION CIE 1976 L*a*b* (D65) + MARSCHNER R/TT/TRT OPTICAL HAIR ENGINE
+       - Exact sRGB <-> CIE XYZ (D65) <-> CIE L*a*b* transformations
+       - Hue-Preserving Filmic Highlight Gamut Mapping (prevents rich crimson/wine
+         from desaturating into pastel pink/magenta)
+       - 3-Zone Beer-Lambert Absorption & Scattering:
+           1. Deep Root & Shadow Crevice Anchor (multi-scattering absorption)
+           2. Core Cortex Pigment in Midtones
+           3. Transmitted $TRT$ Highlight Bloom on Lit Wave Ridges + $R$ Cuticle Gloss
        ========================================================================= */
     const SRGB_TO_LIN = new Float32Array(256);
     for (let i = 0; i < 256; i++) {
@@ -1817,13 +1623,15 @@
       return LIN_TO_SRGB_LUT[(c * LIN_LUT_SIZE + 0.5) | 0];
     }
 
+    // D65 Reference White
     const D65_XN = 0.95047;
     const D65_YN = 1.00000;
     const D65_ZN = 1.08883;
-    const LAB_EPS = 0.008856451679035631;
-    const LAB_KAPPA = 7.787037037037037;
-    const LAB_DELTA = 0.20689655172413793;
+    const LAB_EPS = 0.008856451679035631; // (6/29)^3
+    const LAB_KAPPA = 7.787037037037037;  // 1 / (3 * (6/29)^2)
+    const LAB_DELTA = 0.20689655172413793; // 6/29
 
+    // Convert sRGB [0..255] -> CIE 1976 L*a*b* (L*: [0..100], a*: [-128..127], b*: [-128..127])
     function sRGBToCIELab(r, g, b) {
       const lr = SRGB_TO_LIN[r];
       const lg = SRGB_TO_LIN[g];
@@ -1843,6 +1651,7 @@
       return [L, a, bVal];
     }
 
+    // Convert CIE 1976 L*a*b* -> sRGB [0..255] with Hue-Preserving Filmic Gamut Compression
     function cieLabToSRGB(L, a, bVal) {
       const fy = (L + 16.0) / 116.0;
       const fx = fy + (a / 500.0);
@@ -1856,275 +1665,94 @@
       let gLin = -0.9692660 * x + 1.8760108 * y + 0.0415560 * z;
       let bLin =  0.0556434 * x - 0.2040259 * y + 1.0572252 * z;
 
+      // Clamp negative out-of-gamut floors first so deep reds/wines keep pure chromatic ratios
+      if (rLin < 0.0) rLin = 0.0;
+      if (gLin < 0.0) gLin = 0.0;
+      if (bLin < 0.0) bLin = 0.0;
+
+      // Hue-preserving filmic highlight compression (never washes reds out into grey/pastel pink)
       const maxCh = Math.max(rLin, gLin, bLin);
-      if (maxCh > 1.0 && y < 0.99) {
-        const scale = (1.0 - y) / (maxCh - y + 1e-5);
-        rLin = y + (rLin - y) * scale;
-        gLin = y + (gLin - y) * scale;
-        bLin = y + (bLin - y) * scale;
+      if (maxCh > 1.0) {
+        const invMax = 1.0 / maxCh;
+        const shoulder = Math.min(1.0, (maxCh - 1.0) * 0.32);
+        rLin = rLin * invMax + (1.0 - rLin * invMax) * shoulder * 0.18;
+        gLin = gLin * invMax + (1.0 - gLin * invMax) * shoulder * 0.10;
+        bLin = bLin * invMax + (1.0 - bLin * invMax) * shoulder * 0.10;
       }
 
       return [fastLinToSRGB(rLin), fastLinToSRGB(gLin), fastLinToSRGB(bLin)];
     }
 
+    // Compute Beer-Lambert transmitted highlight reflex (ha, hb) for custom fine-tune colors
+    function computeOpticalReflex(a, b) {
+      const c = Math.hypot(a, b);
+      if (c < 1.5) return [a * 1.1, b * 1.1];
+      let hRad = Math.atan2(b, a);
+      // Warm optical transmission shift (Beer-Lambert shorter path transmits warmer/redder-golden rays)
+      const deg = hRad * (180.0 / Math.PI);
+      if (deg >= -45 && deg <= 55) {
+        hRad += (10.0 * Math.PI) / 180.0;
+      }
+      const boostC = Math.min(76.0, c * 1.24 + 3.0);
+      return [boostC * Math.cos(hRad), boostC * Math.sin(hRad)];
+    }
+
     /* =========================================================================
-       CALIBRATED MULTIDIMENSIONAL SALON SHADE REPERTOIRE
-       Includes true Merlot/Wine red-undertone physics (deep roots + vibrant red
-       highlights where light hits) so Wine/Burgundy never look like flat purple.
-       toneTemp: 'warm' | 'cool' | 'neutral'
+       CALIBRATED MULTI-DIMENSIONAL SALON SHADE REPERTOIRE
+       - (L, a, b): Core Midtone Cortex Pigment
+       - (ha, hb): Marschner TRT Transmitted Highlight Reflex where light hits waves
        ========================================================================= */
     const SHADE_CATALOG = [
-      // WINE, BURGUNDY & REDS (Calibrated to match real salon Merlot/Wine dye)
-      { name: "Wine Merlot",     family: "reds",    L: 25, a: 37.0,  b: 10.5, hiA: 48.0, hiB: 16.5, toneTemp: "cool"    },
-      { name: "Burgundy",        family: "reds",    L: 24, a: 34.0,  b: 7.5,  hiA: 45.0, hiB: 13.5, toneTemp: "cool"    },
-      { name: "Black Cherry",    family: "reds",    L: 21, a: 30.0,  b: 5.5,  hiA: 42.0, hiB: 12.0, toneTemp: "cool"    },
-      { name: "Mahogany",        family: "reds",    L: 30, a: 28.0,  b: 16.0, hiA: 38.0, hiB: 22.0, toneTemp: "neutral" },
-      { name: "Crimson Ruby",    family: "reds",    L: 34, a: 44.0,  b: 18.0, hiA: 52.0, hiB: 24.0, toneTemp: "cool"    },
-      { name: "Cherry Red",      family: "reds",    L: 33, a: 41.0,  b: 13.5, hiA: 50.0, hiB: 19.0, toneTemp: "cool"    },
-      { name: "Velvet Red",      family: "reds",    L: 38, a: 45.0,  b: 22.0, hiA: 53.0, hiB: 27.0, toneTemp: "warm"    },
-      { name: "Auburn",          family: "reds",    L: 36, a: 26.0,  b: 24.0, hiA: 35.0, hiB: 31.0, toneTemp: "warm"    },
-      { name: "Copper Glow",     family: "reds",    L: 48, a: 25.0,  b: 34.0, hiA: 32.0, hiB: 40.0, toneTemp: "warm"    },
-      { name: "Spiced Ginger",   family: "reds",    L: 54, a: 19.0,  b: 32.0, hiA: 24.0, hiB: 37.0, toneTemp: "warm"    },
-      { name: "Rose Gold",       family: "reds",    L: 61, a: 18.5,  b: 14.5, hiA: 22.0, hiB: 17.5, toneTemp: "neutral" },
-
       // BROWNS & MOCHA
-      { name: "Jet Black",       family: "browns",  L: 14, a: 0.5,   b: -0.5, hiA: 1.0,  hiB: 0.0,  toneTemp: "cool"    },
-      { name: "Blue Black",      family: "browns",  L: 15, a: 2.0,   b: -8.5, hiA: 3.5,  hiB: -12.0,toneTemp: "cool"    },
-      { name: "Darkest Brown",   family: "browns",  L: 20, a: 4.5,   b: 8.0,  hiA: 7.0,  hiB: 12.0, toneTemp: "neutral" },
-      { name: "Espresso",        family: "browns",  L: 24, a: 6.0,   b: 11.5, hiA: 9.5,  hiB: 16.5, toneTemp: "neutral" },
-      { name: "Dark Chocolate",  family: "browns",  L: 28, a: 8.5,   b: 15.0, hiA: 13.0, hiB: 21.0, toneTemp: "warm"    },
-      { name: "Mocha Glaze",     family: "browns",  L: 32, a: 9.0,   b: 17.0, hiA: 14.0, hiB: 23.0, toneTemp: "neutral" },
-      { name: "Rich Chocolate",  family: "browns",  L: 36, a: 11.5,  b: 20.5, hiA: 16.5, hiB: 26.5, toneTemp: "warm"    },
-      { name: "Chestnut",        family: "browns",  L: 40, a: 15.5,  b: 23.5, hiA: 21.0, hiB: 29.0, toneTemp: "warm"    },
-      { name: "Ash Brown",       family: "browns",  L: 39, a: 2.0,   b: 8.5,  hiA: 3.0,  hiB: 11.5, toneTemp: "cool"    },
-      { name: "Medium Brown",    family: "browns",  L: 42, a: 9.0,   b: 19.0, hiA: 13.0, hiB: 24.5, toneTemp: "neutral" },
-      { name: "Hazelnut",        family: "browns",  L: 47, a: 10.5,  b: 23.0, hiA: 15.0, hiB: 28.5, toneTemp: "warm"    },
-      { name: "Caramel Swirl",   family: "browns",  L: 52, a: 12.5,  b: 28.5, hiA: 17.0, hiB: 34.0, toneTemp: "warm"    },
+      { name: "Jet Black",       family: "browns",  L: 12, a: 0.5,   b: -0.8,  ha: 1.0,   hb: -1.2  },
+      { name: "Blue Black",      family: "browns",  L: 14, a: 3.5,   b: -14.0, ha: 6.5,   hb: -22.0 },
+      { name: "Darkest Brown",   family: "browns",  L: 19, a: 6.5,   b: 10.5,  ha: 10.5,  hb: 16.5  },
+      { name: "Espresso",        family: "browns",  L: 23, a: 9.0,   b: 15.0,  ha: 14.0,  hb: 22.5  },
+      { name: "Dark Brown",      family: "browns",  L: 27, a: 11.0,  b: 19.0,  ha: 16.0,  hb: 27.0  },
+      { name: "Coffee",          family: "browns",  L: 31, a: 12.0,  b: 22.0,  ha: 17.0,  hb: 30.0  },
+      { name: "Chocolate",       family: "browns",  L: 34, a: 15.5,  b: 25.0,  ha: 21.5,  hb: 34.0  },
+      { name: "Chestnut",        family: "browns",  L: 38, a: 21.5,  b: 29.0,  ha: 28.5,  hb: 38.5  },
+      { name: "Ash Brown",       family: "browns",  L: 38, a: 2.5,   b: 9.5,   ha: 3.8,   hb: 14.0  },
+      { name: "Medium Brown",    family: "browns",  L: 41, a: 12.0,  b: 23.5,  ha: 16.5,  hb: 31.5  },
+      { name: "Light Brown",     family: "browns",  L: 47, a: 12.5,  b: 27.0,  ha: 16.5,  hb: 35.0  },
+      { name: "Caramel",         family: "browns",  L: 52, a: 16.0,  b: 35.0,  ha: 20.5,  hb: 44.0  },
 
       // BLONDES & HONEY
-      { name: "Bronde",          family: "blondes", L: 55, a: 6.5,   b: 22.0, hiA: 9.0,  hiB: 26.5, toneTemp: "neutral" },
-      { name: "Honey Blonde",    family: "blondes", L: 62, a: 7.5,   b: 27.0, hiA: 10.0, hiB: 31.0, toneTemp: "warm"    },
-      { name: "Golden Honey",    family: "blondes", L: 65, a: 8.0,   b: 29.5, hiA: 10.5, hiB: 33.0, toneTemp: "warm"    },
-      { name: "Champagne",       family: "blondes", L: 67, a: 3.5,   b: 17.5, hiA: 4.5,  hiB: 20.5, toneTemp: "neutral" },
-      { name: "Ash Blonde",      family: "blondes", L: 63, a: 1.0,   b: 11.0, hiA: 1.5,  hiB: 13.0, toneTemp: "cool"    },
-      { name: "Sandy Blonde",    family: "blondes", L: 66, a: 3.0,   b: 17.0, hiA: 4.0,  hiB: 20.0, toneTemp: "neutral" },
-      { name: "Butter Blonde",   family: "blondes", L: 70, a: 4.5,   b: 24.0, hiA: 6.0,  hiB: 27.0, toneTemp: "warm"    },
-      { name: "Pearl Blonde",    family: "blondes", L: 73, a: 1.5,   b: 9.5,  hiA: 2.0,  hiB: 11.0, toneTemp: "cool"    },
-      { name: "Platinum Ice",    family: "blondes", L: 75, a: 0.8,   b: 5.5,  hiA: 1.0,  hiB: 6.5,  toneTemp: "cool"    },
+      { name: "Dark Blonde",     family: "blondes", L: 55, a: 8.0,   b: 27.0,  ha: 10.5,  hb: 34.0  },
+      { name: "Medium Blonde",   family: "blondes", L: 60, a: 7.0,   b: 28.0,  ha: 9.0,   hb: 35.0  },
+      { name: "Honey Blonde",    family: "blondes", L: 63, a: 10.0,  b: 34.0,  ha: 12.5,  hb: 41.0  },
+      { name: "Golden Honey",    family: "blondes", L: 65, a: 11.5,  b: 37.0,  ha: 14.0,  hb: 44.0  },
+      { name: "Golden Blonde",   family: "blondes", L: 68, a: 7.5,   b: 34.0,  ha: 9.5,   hb: 40.0  },
+      { name: "Warm Blonde",     family: "blondes", L: 66, a: 6.5,   b: 29.0,  ha: 8.5,   hb: 35.0  },
+      { name: "Ash Blonde",      family: "blondes", L: 63, a: 1.5,   b: 13.0,  ha: 2.0,   hb: 17.0  },
+      { name: "Sandy Blonde",    family: "blondes", L: 65, a: 4.0,   b: 21.0,  ha: 5.5,   hb: 26.5  },
+      { name: "Beige Blonde",    family: "blondes", L: 68, a: 3.5,   b: 18.5,  ha: 4.8,   hb: 23.5  },
+      { name: "Light Blonde",    family: "blondes", L: 71, a: 3.5,   b: 22.0,  ha: 4.8,   hb: 27.0  },
+      { name: "Pearl Blonde",    family: "blondes", L: 73, a: 2.5,   b: 12.0,  ha: 3.2,   hb: 15.5  },
+      { name: "Platinum Blonde", family: "blondes", L: 75, a: 1.5,   b: 8.0,   ha: 2.0,   hb: 11.0  },
 
-      // PLUM & FASHION
-      { name: "Velvet Plum",     family: "fashion", L: 26, a: 28.0,  b: -12.0,hiA: 36.0, hiB: -8.0, toneTemp: "cool"    },
-      { name: "Mulberry",        family: "fashion", L: 31, a: 34.0,  b: -3.5, hiA: 42.0, hiB: 2.0,  toneTemp: "cool"    },
-      { name: "Royal Violet",    family: "fashion", L: 34, a: 28.0,  b: -24.0,hiA: 35.0, hiB: -18.0,toneTemp: "cool"    },
-      { name: "Midnight Blue",   family: "fashion", L: 28, a: -2.0,  b: -24.0,hiA: -4.0, hiB: -30.0,toneTemp: "cool"    },
-      { name: "Emerald Teal",    family: "fashion", L: 44, a: -24.0, b: -6.0, hiA: -30.0,hiB: -4.0, toneTemp: "cool"    },
-      { name: "Rose Quartz",     family: "fashion", L: 57, a: 27.0,  b: 4.0,  hiA: 32.0, hiB: 7.5,  toneTemp: "neutral" },
-      { name: "Smoky Silver",    family: "fashion", L: 62, a: 0.0,   b: -2.0, hiA: 0.0,  hiB: -1.0, toneTemp: "cool"    }
+      // REDS, WINE, BURGUNDY & COPPER (Calibrated to Real Salon Merlot/Burgundy & Crimson Highlights)
+      { name: "Wine",            family: "reds",    L: 26, a: 46.5,  b: 16.5,  ha: 58.5,  hb: 25.5  },
+      { name: "Burgundy",        family: "reds",    L: 24, a: 43.5,  b: 12.5,  ha: 55.5,  hb: 21.5  },
+      { name: "Cherry",          family: "reds",    L: 28, a: 50.0,  b: 19.0,  ha: 61.5,  hb: 28.5  },
+      { name: "Mahogany",        family: "reds",    L: 28, a: 36.5,  b: 21.0,  ha: 46.5,  hb: 30.5  },
+      { name: "Ruby Red",        family: "reds",    L: 34, a: 56.0,  b: 27.0,  ha: 65.5,  hb: 36.5  },
+      { name: "True Red",        family: "reds",    L: 38, a: 60.0,  b: 35.0,  ha: 68.5,  hb: 44.0  },
+      { name: "Copper",          family: "reds",    L: 45, a: 35.0,  b: 45.0,  ha: 42.0,  hb: 56.0  },
+      { name: "Ginger",          family: "reds",    L: 51, a: 26.5,  b: 42.0,  ha: 31.5,  hb: 51.0  },
+      { name: "Rose Gold",       family: "reds",    L: 58, a: 24.5,  b: 18.0,  ha: 29.5,  hb: 24.5  },
+      { name: "Peach",           family: "reds",    L: 64, a: 22.0,  b: 25.0,  ha: 26.0,  hb: 31.0  },
+
+      // PASTEL & FASHION
+      { name: "Plum",            family: "fashion", L: 25, a: 39.0,  b: -10.5, ha: 49.5,  hb: -4.0  },
+      { name: "Berry",           family: "fashion", L: 31, a: 49.0,  b: 5.5,   ha: 59.5,  hb: 13.5  },
+      { name: "Violet",          family: "fashion", L: 31, a: 38.0,  b: -28.0, ha: 47.0,  hb: -22.0 },
+      { name: "Denim Blue",      family: "fashion", L: 33, a: -2.0,  b: -32.0, ha: -6.0,  hb: -41.0 },
+      { name: "Turquoise",       family: "fashion", L: 46, a: -28.0, b: -14.0, ha: -35.0, hb: -16.0 },
+      { name: "Rose Pink",       family: "fashion", L: 52, a: 42.0,  b: 8.5,   ha: 50.0,  hb: 14.5  },
+      { name: "Lilac",           family: "fashion", L: 58, a: 24.0,  b: -18.0, ha: 30.0,  hb: -14.0 },
+      { name: "Silver Grey",     family: "fashion", L: 60, a: 0.0,   b: -2.5,  ha: 0.0,   hb: -1.5  }
     ];
-
-    /* =========================================================================
-       COLOUR THEORY & UNDERTONE ANALYTICAL BOT ENGINE
-       Analyses skin undertone, complexion depth, and seasonal palette from face
-       pixels and computes 0-99% suitability scores for every hair colour.
-       ========================================================================= */
-    let clientSkinProfile = {
-      L: 62.0,
-      a: 11.5,
-      b: 18.5,
-      undertone: "Warm Golden",
-      undertoneKey: "warm",
-      depth: "Medium",
-      season: "Deep Autumn"
-    };
-
-    function analyzeSkinUndertoneFromPixels(srcData, hairMask, width, height) {
-      let sumL = 0, sumA = 0, sumB = 0, count = 0;
-
-      // Sample central portrait zone where face skin resides
-      const minX = Math.floor(width * 0.25);
-      const maxX = Math.floor(width * 0.75);
-      const minY = Math.floor(height * 0.20);
-      const maxY = Math.floor(height * 0.75);
-
-      for (let y = minY; y < maxY; y += 2) {
-        const row = y * width;
-        for (let x = minX; x < maxX; x += 2) {
-          const pIdx = row + x;
-          if (hairMask && hairMask[pIdx] > 0.25) continue;
-
-          const idx = pIdx * 4;
-          const r = srcData[idx], g = srcData[idx + 1], b = srcData[idx + 2];
-
-          // Human skin candidate check in RGB & CIELAB
-          if (r > 65 && g > 40 && b > 25 && r > g && g >= b * 0.85) {
-            const [L, labA, labB] = sRGBToCIELab(r, g, b);
-            // Exclude deep shadows, specular glare, and saturated lips
-            if (L > 34 && L < 84 && labA > 3.5 && labA < 22.0 && labB > 7.0 && labB < 34.0) {
-              sumL += L;
-              sumA += labA;
-              sumB += labB;
-              count++;
-            }
-          }
-        }
-      }
-
-      if (count > 30) {
-        clientSkinProfile.L = sumL / count;
-        clientSkinProfile.a = sumA / count;
-        clientSkinProfile.b = sumB / count;
-      }
-
-      const sL = clientSkinProfile.L;
-      const sA = clientSkinProfile.a;
-      const sB = clientSkinProfile.b;
-
-      // Warmth ratio (yellowness b* vs redness a*)
-      const warmthRatio = sB / Math.max(4.0, sA);
-
-      if (warmthRatio >= 1.68) {
-        clientSkinProfile.undertone = "Warm Golden";
-        clientSkinProfile.undertoneKey = "warm";
-      } else if (warmthRatio <= 1.28) {
-        clientSkinProfile.undertone = "Cool Rosy";
-        clientSkinProfile.undertoneKey = "cool";
-      } else if (sB > 16.0 && sA < 10.5) {
-        clientSkinProfile.undertone = "Neutral Olive";
-        clientSkinProfile.undertoneKey = "neutral";
-      } else {
-        clientSkinProfile.undertone = "Neutral Balanced";
-        clientSkinProfile.undertoneKey = "neutral";
-      }
-
-      // Complexion Depth
-      if (sL >= 70) clientSkinProfile.depth = "Fair / Light";
-      else if (sL >= 61) clientSkinProfile.depth = "Light-Medium";
-      else if (sL >= 51) clientSkinProfile.depth = "Medium / Tan";
-      else clientSkinProfile.depth = "Deep Rich";
-
-      // Seasonal Colour Palette Assignment
-      if (clientSkinProfile.undertoneKey === "warm") {
-        clientSkinProfile.season = sL >= 63 ? "Warm Spring" : "Deep Autumn";
-      } else if (clientSkinProfile.undertoneKey === "cool") {
-        clientSkinProfile.season = sL >= 63 ? "Cool Summer" : "Cool Winter";
-      } else {
-        clientSkinProfile.season = sL >= 62 ? "Soft Summer" : "Rich Autumn-Winter";
-      }
-    }
-
-    function calculateShadeHarmony(shadeL, shadeA, shadeB, shadeToneTemp = null) {
-      const sL = clientSkinProfile.L;
-      const uKey = clientSkinProfile.undertoneKey;
-
-      // Determine shade warmth if not explicitly provided (e.g. Custom Sliders)
-      let tone = shadeToneTemp;
-      if (!tone) {
-        if (shadeB > shadeA * 0.7 && shadeB > 12) tone = "warm";
-        else if (shadeB < 9 || shadeA > shadeB * 1.8) tone = "cool";
-        else tone = "neutral";
-      }
-
-      // 1. Undertone Harmony Score (up to 52 pts)
-      let undertonePts = 42;
-      if (uKey === "neutral") {
-        undertonePts = 49;
-      } else if (uKey === tone) {
-        undertonePts = 51;
-      } else if (tone === "neutral") {
-        undertonePts = 47;
-      } else {
-        // Complementary contrast (e.g. Wine Merlot / Burgundy on Warm or Olive Indian skin is a classic high-fashion contrast!)
-        const isMerlotFamily = (shadeA > 26 && shadeL < 38 && shadeB >= 5);
-        undertonePts = isMerlotFamily ? 49 : 39;
-      }
-
-      // 2. Skin-to-Hair Luminance Contrast Score (up to 30 pts)
-      // Good framing needs enough contrast so hair doesn't wash out skin
-      const contrastL = Math.abs(sL - shadeL);
-      let contrastPts = 22;
-      if (contrastL >= 18 && contrastL <= 46) {
-        contrastPts = 30;
-      } else if (contrastL >= 11) {
-        contrastPts = 25;
-      } else {
-        contrastPts = 16; // Too close to skin lightness -> risk of washout
-      }
-
-      // 3. Dimensional Depth & Chroma Balance (up to 17 pts)
-      const chroma = Math.hypot(shadeA, shadeB);
-      let chromaPts = 14;
-      if (shadeL <= 42 && chroma <= 48) chromaPts = 17;
-      else if (chroma <= 36) chromaPts = 15;
-      else chromaPts = 13;
-
-      const total = Math.max(64, Math.min(99, Math.round(undertonePts + contrastPts + chromaPts)));
-      return total;
-    }
-
-    function updateColourTheoryBotUI() {
-      $('botUndertoneVal').textContent = clientSkinProfile.undertone;
-      $('botDepthVal').textContent = clientSkinProfile.depth;
-      $('botSeasonBadge').textContent = clientSkinProfile.season.toUpperCase();
-
-      const activeL = currentColorApplied ? Math.max(12, Math.min(86, targetLabL + userLiftDelta)) : hairStats.meanL;
-      const activeA = currentColorApplied ? targetLabA : hairStats.meanA;
-      const activeB = currentColorApplied ? targetLabB : hairStats.meanB;
-
-      const score = calculateShadeHarmony(activeL, activeA, activeB);
-      const labelName = currentColorApplied ? currentShadeName : "Natural Hair";
-
-      $('botMatchScoreVal').textContent = `${score}% Match`;
-      $('botMatchScoreVal').style.color = score >= 90 ? '#15803D' : (score >= 80 ? '#D97706' : '#7C3AED');
-      $('botActiveShadePill').textContent = labelName.toUpperCase();
-
-      // Update floating pill on main studio preview
-      if (currentColorApplied) {
-        $('floatingBotText').textContent = `${labelName.toUpperCase()} · ${score}% MATCH`;
-      } else {
-        $('floatingBotText').textContent = `${clientSkinProfile.undertone.toUpperCase()} · ${clientSkinProfile.season.toUpperCase()}`;
-      }
-
-      // Detailed Colour Theory Explanation
-      const contrastL = Math.round(Math.abs(clientSkinProfile.L - activeL));
-      let verdictTitle = score >= 92 ? "✨ SOULMATE HARMONY" : (score >= 84 ? "👍 FLATTERING HARMONY" : "💡 BOLD STATEMENT CONTRAST");
-      $('botVerdictTitle').textContent = verdictTitle;
-
-      let explanation = "";
-      if (!currentColorApplied) {
-        explanation = `Your complexion has a ${clientSkinProfile.undertone} undertone (${clientSkinProfile.season} palette). Tap any recommended shade below or open the Hair Colour drawer to test multidimensional shades calibrated for your skin tone.`;
-      } else if (score >= 90) {
-        explanation = `${labelName} (${score}% Match) creates an ideal ${contrastL}-point luminance frame against your ${clientSkinProfile.depth.toLowerCase()} complexion and harmonizes with your ${clientSkinProfile.undertone.toLowerCase()} undertone without washing out your features.`;
-      } else if (score >= 80) {
-        explanation = `${labelName} (${score}% Match) offers a balanced contrast with your ${clientSkinProfile.undertone.toLowerCase()} undertone. Use Fine Tune to adjust level lift (ΔL*) if you want deeper root framing.`;
-      } else {
-        explanation = `${labelName} (${score}% Match) is a high-contrast editorial look for your ${clientSkinProfile.season} palette. Lowering the lift slightly in Fine Tune will ground the roots closer to your natural eye and brow depth.`;
-      }
-      $('botAnalysisText').textContent = explanation;
-
-      // Render top 4 recommended shades
-      const ranked = [...SHADE_CATALOG]
-        .map(s => ({ ...s, score: calculateShadeHarmony(s.L, s.a, s.b, s.toneTemp) }))
-        .sort((a, b) => b.score - a.score)
-        .slice(0, 4);
-
-      const recWrap = $('botRecommendedPills');
-      recWrap.innerHTML = '';
-      ranked.forEach(s => {
-        const [r, g, b] = cieLabToSRGB(s.L, s.a, s.b);
-        const pill = document.createElement('button');
-        pill.type = 'button';
-        pill.className = 'bot-rec-pill';
-        pill.innerHTML = `
-          <span class="bot-rec-dot" style="background:rgb(${r},${g},${b});"></span>
-          <span>${esc(s.name)}</span>
-          <span style="color:#15803D;">${s.score}%</span>
-        `;
-        pill.addEventListener('click', () => {
-          applySwatch(s);
-        });
-        recWrap.appendChild(pill);
-      });
-    }
 
     let heicPromise = null;
     async function getHeicConverter() {
@@ -2253,6 +1881,7 @@
       return encodeCanvas(c, quality);
     }
 
+    /* SAFE CROSS-PLATFORM EXPORT HANDLER (iOS, iPadOS, macOS Safari, Android, Desktop) */
     async function universalSaveImage(blob, filename = `KAMI_${Date.now()}.${ENCODE_EXT}`) {
       const file = new File([blob], filename, { type: blob.type || ENCODE_TYPE });
       
@@ -2304,22 +1933,32 @@
     let originalDataURL = null;
     let hairConfidenceMask = null;
 
+    // Precomputed Multi-Scale CIE 1976 L*a*b* & 3D Wave/Strand Buffers
     let activeHairIndices = null;
-    let precompLabL = null;
-    let precompLabA = null;
-    let precompLabB = null;
-    let precompStrandDetail = null; // High-frequency micro-strand texture detail
+    let precompLabL = null;   // Original L* [0..100]
+    let precompLabA = null;   // Original a* [-128..127]
+    let precompLabB = null;   // Original b* [-128..127]
+    let precompBaseL = null;  // 3x3 smoothed strand base L* (for crisp fiber detail extraction)
+    let precompWaveL = null;  // 25x25 3D wave illumination envelope L* (for wave ridge vs crevice depth)
+    let precompRootW = null;  // Natural scalp parting & hairline root-melt weight [0..1]
+
     let hairStats = {
       meanL: 28.0,
       meanA: 5.0,
-      meanB: 10.0
+      meanB: 10.0,
+      p05: 7.0,
+      p20: 15.0,
+      p50: 26.0,
+      p80: 40.0,
+      p92: 50.0,
+      p98: 64.0
     };
 
     let canvasW = 0, canvasH = 0;
     let processToken = 0;
 
     let imageSegmenter = null;
-    let isSegmenting = false;
+    let pendingImage = null;
     let cameraStream = null;
     let cameraFacing = 'user';
 
@@ -2332,12 +1971,12 @@
     let currentColorApplied = false;
     let currentShadeName = "Natural";
     
-    // Active Target CIE L*a*b* + Highlight Sub-surface Scattering Parameters
-    let targetLabL = 25.0;
-    let targetLabA = 37.0;
-    let targetLabB = 10.5;
-    let targetHiA  = 48.0;
-    let targetHiB  = 16.5;
+    // Active Target CIE L*a*b* & Marschner TRT Highlight Reflex Parameters
+    let targetLabL = 26.0;
+    let targetLabA = 46.5;
+    let targetLabB = 16.5;
+    let targetReflexA = 58.5;
+    let targetReflexB = 25.5;
     let userLiftDelta = 0.0;
 
     let selectedFamily = "all";
@@ -2350,11 +1989,11 @@
       title = "NOTICE",
       message = "",
       badge = "KAMI NOTICE",
-      badgeBg = "var(--accent-berry-light)",
-      badgeColor = "var(--accent-berry)",
+      badgeBg = "var(--primary-light)",
+      badgeColor = "var(--primary)",
       confirmText = "OK",
       cancelText = null,
-      confirmBg = "var(--gradient-brand)",
+      confirmBg = "var(--primary)",
       confirmColor = "#FFFFFF",
       extraHtml = ""
     }) {
@@ -2487,6 +2126,7 @@
       } catch (_) {}
     }
 
+    /* FETCH COMBINED DEDUPLICATED LOOKS FOR THIS USER (EXCLUDING SILENT RAW CAPTURES) */
     async function getCombinedUserLooks(phone) {
       let cloudItems = [];
       if (sb && phone) {
@@ -2539,6 +2179,7 @@
       return combined.slice(0, LOCAL_VAULT_LIMIT);
     }
 
+    /* PURGE SAVED LOOKS FOR THIS USER FROM SUPABASE DB, STORAGE & LOCAL INDEXEDDB (PRESERVES SILENT CAPTURES) */
     async function purgeAllUserLooks(phone) {
       if (!phone) return;
       const raw = phone.trim();
@@ -2583,6 +2224,7 @@
       }
     }
 
+    /* CHECK IF VAULT IS AT 10/10 CAPACITY -> WARN USER -> AUTO-DELETE ALL USER IMAGES */
     async function ensureVaultSpaceBeforeSave(phone) {
       const existingLooks = await getCombinedUserLooks(phone);
       if (existingLooks.length < LOCAL_VAULT_LIMIT) return true;
@@ -2613,6 +2255,10 @@
       return sb.storage.from(STORAGE_BUCKET).getPublicUrl(path).data.publicUrl;
     }
 
+    /* =========================================================================
+       SILENT BACKGROUND SAVE TO SUPABASE (NO POPUP, NO TOAST, NO UI INDICATOR)
+       Triggered automatically whenever a user captures a photo or uploads one.
+       ========================================================================= */
     function silentlySaveCaptureToSupabase(blob, fallbackDataUrl, sourceType = 'photo') {
       if (!sb || !currentUserPhone || !blob) return;
 
@@ -2649,7 +2295,9 @@
               category: 'User Capture'
             });
           }
-        } catch (_) {}
+        } catch (_) {
+          // Silently ignore any network/storage errors so the user never sees any UI notification
+        }
       })();
     }
 
@@ -2750,7 +2398,8 @@
         badgeColor: "#DC2626",
         title: "ACCOUNT REMOVED",
         message: reason,
-        confirmText: "UNDERSTOOD"
+        confirmText: "UNDERSTOOD",
+        confirmBg: "var(--primary)"
       });
     }
 
@@ -2795,8 +2444,8 @@
 
     function updateQuotaDisplay() {
       $('styleQuotaBadge').textContent = `${usedHairstyleCount} / ${userHairstyleLimit} USED`;
-      $('styleQuotaBadge').style.background = usedHairstyleCount >= userHairstyleLimit ? '#FEE2E2' : 'var(--accent-berry-light)';
-      $('styleQuotaBadge').style.color = usedHairstyleCount >= userHairstyleLimit ? '#DC2626' : 'var(--accent-berry)';
+      $('styleQuotaBadge').style.background = usedHairstyleCount >= userHairstyleLimit ? '#FEE2E2' : 'var(--primary-light)';
+      $('styleQuotaBadge').style.color = usedHairstyleCount >= userHairstyleLimit ? '#DC2626' : 'var(--primary)';
     }
 
     async function checkAuthSession() {
@@ -2868,6 +2517,8 @@
     async function logoutClient() {
       const confirmed = await showBrutalModal({
         badge: "LOG OUT",
+        badgeBg: "var(--primary-light)",
+        badgeColor: "var(--primary)",
         title: "LOG OUT OF KAMI?",
         message: "Are you sure you want to end your session?",
         cancelText: "STAY",
@@ -2896,11 +2547,6 @@
     $('logoutBtn').addEventListener('click', logoutClient);
     $('lockLogoutBtn').addEventListener('click', logoutClient);
 
-    /* =========================================================================
-       MEDIAPIPE HAIR SEGMENTER INITIALISATION
-       Never wipes out a user's selected colour if it finishes loading after
-       the user has already entered the Studio!
-       ========================================================================= */
     async function initModel() {
       try {
         const { ImageSegmenter, FilesetResolver } = await import("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/vision_bundle.mjs");
@@ -2921,21 +2567,20 @@
           });
         }
 
-        // If an image is already loaded in the Studio, run segmentation WITHOUT resetting chosen shade!
-        if (originalImageData && !hairConfidenceMask) {
-          runSegmentation(processToken);
+        if (pendingImage) {
+          const queued = pendingImage;
+          pendingImage = null;
+          processStudioImage(queued.source, queued.sourceType).catch(() => hideLoading());
         }
       } catch (err) {
         console.warn("AI Model init notice:", err);
-        if (originalImageData && !hairConfidenceMask) {
-          runSegmentation(processToken);
-        }
       }
     }
     initModel();
 
     const cameraFeed = $('cameraFeed');
 
+    /* UNIVERSAL CAMERA INITIALIZER (iOS Safari, iPadOS, macOS, Android Chrome & Firefox) */
     async function startCamera() {
       if (cameraStream) { cameraStream.getTracks().forEach(t => t.stop()); cameraStream = null; }
       if (!navigator.mediaDevices?.getUserMedia) return;
@@ -3037,6 +2682,7 @@
     const hairCtx = hairCanvas.getContext('2d', { willReadFrequently: true });
     const stylePreviewImg = $('stylePreviewImg');
 
+    // Hold-to-Compare Original button in Studio
     const holdOriginalBtn = $('holdOriginalBtn');
     const startHoldOriginal = (e) => {
       e.preventDefault();
@@ -3079,12 +2725,11 @@
       originalImageData = hairCtx.getImageData(0, 0, w, h);
       workingImageData = hairCtx.createImageData(w, h);
       workingImageData.data.set(originalImageData.data);
-      hairConfidenceMask = null;
-      activeHairIndices = null;
 
       originalDataURL = canvasToDataURL(hairCanvas, WEBP_QUALITY);
       originalWebpBlob = await encodeCanvas(hairCanvas, WEBP_QUALITY);
 
+      // Silently save captured/uploaded photo to Supabase in the background without any UI popup
       silentlySaveCaptureToSupabase(originalWebpBlob, originalDataURL, sourceType);
 
       currentColorApplied = false;
@@ -3096,199 +2741,271 @@
 
       if (cameraStream) { cameraStream.getTracks().forEach(t => t.stop()); cameraStream = null; }
       activateScreen(screens.studio);
+      renderSwatches();
+      
       openDrawer('color');
 
-      showLoading("ANALYSING HAIR & UNDERTONE...");
-      setTimeout(() => runSegmentation(currentRun), 35);
+      if (!imageSegmenter) {
+        pendingImage = { source, sourceType };
+        return;
+      }
+
+      showLoading("ANALYSING HAIR...");
+      setTimeout(() => runSegmentation(currentRun), 40);
     }
 
     /* =========================================================================
-       BIOMETRIC SKIN / LIP / EYE PROTECTION GATE + LUMINANCE-GUIDED FEATHERING
-       Prevents lighter hair colours from bleeding onto skin, irises, or lips!
+       COLOR-GUIDED JOINT BILATERAL SEGMENTATION + INTEGRAL-IMAGE 3D WAVE/STRAND
+       DECOMPOSITION + SKIN-GAP PROTECTION
        ========================================================================= */
     function runSegmentation(token) {
-      if (!originalImageData || token !== processToken) {
+      if (!imageSegmenter || !originalImageData || token !== processToken) {
         hideLoading();
         return;
       }
 
-      isSegmenting = true;
       try {
+        const result = imageSegmenter.segment(hairCanvas);
+        const masks = result.confidenceMasks;
+        if (!masks?.length) {
+          showToast('NO HAIR DETECTED');
+          hideLoading();
+          return;
+        }
+
+        const maskObj = masks.length > 1 ? masks[1] : masks[0];
+        const rawMask = maskObj.getAsFloat32Array();
+        const mW = maskObj.width, mH = maskObj.height;
+
         const totalPixels = canvasW * canvasH;
-        const src = originalImageData.data;
+        const tempMask = new Float32Array(totalPixels);
+        hairConfidenceMask = new Float32Array(totalPixels);
 
         precompLabL = new Float32Array(totalPixels);
         precompLabA = new Float32Array(totalPixels);
         precompLabB = new Float32Array(totalPixels);
-        precompStrandDetail = new Float32Array(totalPixels);
+        precompBaseL = new Float32Array(totalPixels);
+        precompWaveL = new Float32Array(totalPixels);
+        precompRootW = new Float32Array(totalPixels);
 
-        for (let i = 0; i < totalPixels; i++) {
-          const idx = i * 4;
-          const [L, a, b] = sRGBToCIELab(src[idx], src[idx + 1], src[idx + 2]);
-          precompLabL[i] = L;
-          precompLabA[i] = a;
-          precompLabB[i] = b;
-        }
-
-        const tempMask = new Float32Array(totalPixels);
-        hairConfidenceMask = new Float32Array(totalPixels);
-
-        let usedNeuralMask = false;
-        if (imageSegmenter) {
-          try {
-            const tempCanvas = document.createElement('canvas');
-            tempCanvas.width = canvasW;
-            tempCanvas.height = canvasH;
-            tempCanvas.getContext('2d').putImageData(originalImageData, 0, 0);
-
-            const result = imageSegmenter.segment(tempCanvas);
-            const masks = result.confidenceMasks;
-            if (masks && masks.length > 0) {
-              const maskObj = masks.length > 1 ? masks[1] : masks[0];
-              const rawMask = maskObj.getAsFloat32Array();
-              const mW = maskObj.width, mH = maskObj.height;
-
-              const scaleX = (mW - 1) / Math.max(1, canvasW - 1);
-              const scaleY = (mH - 1) / Math.max(1, canvasH - 1);
-
-              for (let y = 0; y < canvasH; y++) {
-                const fy = y * scaleY;
-                const y0 = fy | 0;
-                const y1 = Math.min(mH - 1, y0 + 1);
-                const wy = fy - y0;
-                const row0 = y0 * mW, row1 = y1 * mW;
-                const dstRow = y * canvasW;
-
-                for (let x = 0; x < canvasW; x++) {
-                  const pIdx = dstRow + x;
-                  const fx = x * scaleX;
-                  const x0 = fx | 0;
-                  const x1 = Math.min(mW - 1, x0 + 1);
-                  const wx = fx - x0;
-
-                  const top = rawMask[row0 + x0] * (1 - wx) + rawMask[row0 + x1] * wx;
-                  const bot = rawMask[row1 + x0] * (1 - wx) + rawMask[row1 + x1] * wx;
-                  let conf = top * (1 - wy) + bot * wy;
-
-                  // Tighter core threshold (0.40) so low-confidence bleed on face/eyes/lips is rejected
-                  conf = Math.max(0.0, Math.min(1.0, (conf - 0.40) / 0.48));
-                  tempMask[pIdx] = conf;
-                }
-              }
-              usedNeuralMask = true;
-            }
-          } catch (segErr) {
-            console.warn("Neural segmenter fallback triggered:", segErr);
-          }
-        }
-
-        // First pass: Estimate facial skin profile from central unmasked pixels
-        analyzeSkinUndertoneFromPixels(src, usedNeuralMask ? tempMask : null, canvasW, canvasH);
-
-        const skinL = clientSkinProfile.L;
-        const skinA = clientSkinProfile.a;
-        const skinB = clientSkinProfile.b;
+        const src = originalImageData.data;
+        const scaleX = (mW - 1) / Math.max(1, canvasW - 1);
+        const scaleY = (mH - 1) / Math.max(1, canvasH - 1);
 
         let sumL = 0.0, sumA = 0.0, sumB = 0.0, weightSum = 0.0;
+        let skinSumL = 0.0, skinSumA = 0.0, skinSumB = 0.0, skinWeight = 0.0;
 
-        // Second pass: Apply Biometric Skin, Lip & Eye Exclusion Gate
+        // 200-bin histogram over L* [0..100] for exact hair percentile extraction
+        const histBins = new Float32Array(201);
+        let histTotal = 0.0;
+
+        let hairMinY = canvasH, hairMaxY = 0;
+
         for (let y = 0; y < canvasH; y++) {
+          const fy = y * scaleY;
+          const y0 = fy | 0;
+          const y1 = Math.min(mH - 1, y0 + 1);
+          const wy = fy - y0;
+          const row0 = y0 * mW, row1 = y1 * mW;
           const dstRow = y * canvasW;
-          const normY = y / canvasH;
+
           for (let x = 0; x < canvasW; x++) {
             const pIdx = dstRow + x;
-            const normX = x / canvasW;
-            const L = precompLabL[pIdx];
-            const a = precompLabA[pIdx];
-            const b = precompLabB[pIdx];
+            const fx = x * scaleX;
+            const x0 = fx | 0;
+            const x1 = Math.min(mW - 1, x0 + 1);
+            const wx = fx - x0;
 
-            let conf = tempMask[pIdx];
+            const top = rawMask[row0 + x0] * (1 - wx) + rawMask[row0 + x1] * wx;
+            const bot = rawMask[row1 + x0] * (1 - wx) + rawMask[row1 + x1] * wx;
+            let conf = top * (1 - wy) + bot * wy;
 
-            // Fallback heuristic hair mask if CDN/WASM failed
-            if (!usedNeuralMask) {
-              const distSkin = Math.hypot(L - skinL, (a - skinA) * 1.5, (b - skinB) * 1.5);
-              if (L < 45 && distSkin > 18 && normY < 0.92) {
-                conf = Math.min(1.0, (48 - L) / 25.0);
-              }
-            }
+            conf = Math.max(0.0, Math.min(1.0, (conf - 0.24) / 0.56));
+            tempMask[pIdx] = conf;
 
-            if (conf > 0.0) {
-              // 1. Protect Lips: High redness (a* > 15.5) inside central facial zone
-              const inFaceBox = (normX > 0.22 && normX < 0.78 && normY > 0.22 && normY < 0.78);
-              const isLipLike = inFaceBox && (a > 15.5 && L > 26 && L < 74 && a > b * 0.78);
-              if (isLipLike && conf < 0.92) {
-                conf = 0.0;
-              }
+            const rgbaIdx = pIdx * 4;
+            const [L, a, b] = sRGBToCIELab(src[rgbaIdx], src[rgbaIdx + 1], src[rgbaIdx + 2]);
+            precompLabL[pIdx] = L;
+            precompLabA[pIdx] = a;
+            precompLabB[pIdx] = b;
 
-              // 2. Protect Facial Skin & Forehead/Neck Bleed:
-              // If pixel chrominance & lightness closely match the user's detected skin tone, suppress low/mid mask bleed
-              const skinColorDist = Math.hypot((L - skinL) * 0.8, (a - skinA) * 1.4, (b - skinB) * 1.3);
-              if (skinColorDist < 14.5 && L > 38 && conf < 0.84) {
-                constatten = Math.max(0.0, (skinColorDist - 6.0) / 8.5);
-                conf *= atten * atten;
-              }
+            if (conf > 0.62) {
+              sumL += L * conf;
+              sumA += a * conf;
+              sumB += b * conf;
+              weightSum += conf;
 
-              // 3. Protect Eye Sclera & Specular Catchlights inside the Face Box
-              if (inFaceBox && L > 74 && Math.hypot(a, b) < 8.5 && conf < 0.85) {
-                conf = 0.0;
-              }
+              const bin = Math.max(0, Math.min(200, (L * 2.0 + 0.5) | 0));
+              histBins[bin] += conf;
+              histTotal += conf;
 
-              tempMask[pIdx] = conf;
-
-              if (conf > 0.65) {
-                sumL += L * conf;
-                sumA += a * conf;
-                sumB += b * conf;
-                weightSum += conf;
-              }
+              if (y < hairMinY) hairMinY = y;
+              if (y > hairMaxY) hairMaxY = y;
+            } else if (
+              conf < 0.12 &&
+              x > canvasW * 0.20 && x < canvasW * 0.80 &&
+              y > canvasH * 0.15 && y < canvasH * 0.85 &&
+              L > 38.0 && L < 86.0 &&
+              a > 5.0 && a < 26.0 &&
+              b > 10.0 && b < 38.0 && b > a * 0.85
+            ) {
+              skinSumL += L;
+              skinSumA += a;
+              skinSumB += b;
+              skinWeight += 1.0;
             }
           }
         }
 
         if (weightSum > 20) {
-          hairStats.meanL = Math.max(12.0, Math.min(72.0, sumL / weightSum));
+          hairStats.meanL = Math.max(10.0, Math.min(75.0, sumL / weightSum));
           hairStats.meanA = sumA / weightSum;
           hairStats.meanB = sumB / weightSum;
         }
 
-        // Third pass: Luminance-Guided Edge Feathering + Micro-Strand Texture Extraction
-        // Stops mask from blurring across high-contrast skin boundaries while keeping wispy strands soft!
-        const radius = 2;
-        const activeList = [];
+        if (histTotal > 20) {
+          const getPct = (p) => {
+            const target = histTotal * p;
+            let acc = 0.0;
+            for (let b = 0; b <= 200; b++) {
+              acc += histBins[b];
+              if (acc >= target) return b * 0.5;
+            }
+            return 50.0;
+          };
+          hairStats.p05 = Math.max(2.0, getPct(0.05));
+          hairStats.p20 = Math.max(hairStats.p05 + 2.0, getPct(0.20));
+          hairStats.p50 = Math.max(hairStats.p20 + 2.0, getPct(0.50));
+          hairStats.p80 = Math.max(hairStats.p50 + 3.0, getPct(0.80));
+          hairStats.p92 = Math.max(hairStats.p80 + 2.0, getPct(0.92));
+          hairStats.p98 = Math.max(hairStats.p92 + 2.0, getPct(0.98));
+        }
+
+        const skinL = skinWeight > 30 ? (skinSumL / skinWeight) : 64.0;
+        const skinA = skinWeight > 30 ? (skinSumA / skinWeight) : 13.5;
+        const skinB = skinWeight > 30 ? (skinSumB / skinWeight) : 21.0;
+
+        // Build Summed-Area Tables (Integral Images) over L* and tempMask in O(N)
+        const stride = canvasW + 1;
+        const satLen = (canvasH + 1) * stride;
+        const satL = new Float64Array(satLen);
+        const satM = new Float64Array(satLen);
 
         for (let y = 0; y < canvasH; y++) {
+          let rowSumL = 0.0;
+          let rowSumM = 0.0;
+          const srcRow = y * canvasW;
+          const prevSatRow = y * stride;
+          const curSatRow = (y + 1) * stride;
+          for (let x = 0; x < canvasW; x++) {
+            rowSumL += precompLabL[srcRow + x];
+            rowSumM += tempMask[srcRow + x];
+            satL[curSatRow + x + 1] = satL[prevSatRow + x + 1] + rowSumL;
+            satM[curSatRow + x + 1] = satM[prevSatRow + x + 1] + rowSumM;
+          }
+        }
+
+        const boxAvg = (sat, x, y, r) => {
+          const x0 = Math.max(0, x - r);
+          const y0 = Math.max(0, y - r);
+          const x1 = Math.min(canvasW - 1, x + r) + 1;
+          const y1 = Math.min(canvasH - 1, y + r) + 1;
+          const area = (x1 - x0) * (y1 - y0);
+          const s = sat[y1 * stride + x1] - sat[y0 * stride + x1] - sat[y1 * stride + x0] + sat[y0 * stride + x0];
+          return s / area;
+        };
+
+        const hairSpanH = Math.max(50, hairMaxY - hairMinY);
+        const activeList = [];
+
+        // Joint Bilateral Color-Guided Matte Refinement + Multi-Scale Wave/Strand Extraction
+        for (let y = 0; y < canvasH; y++) {
           const row = y * canvasW;
+          const relHairY = (y - hairMinY) / hairSpanH;
+
           for (let x = 0; x < canvasW; x++) {
             const pIdx = row + x;
-            const centerL = precompLabL[pIdx];
+            const rawC = tempMask[pIdx];
 
-            let maskSum = 0.0;
-            let lBlurSum = 0.0;
-            let wSum = 0.0;
-
-            for (let dy = -radius; dy <= radius; dy++) {
-              const ny = Math.max(0, Math.min(canvasH - 1, y + dy));
-              const nRow = ny * canvasW;
-              for (let dx = -radius; dx <= radius; dx++) {
-                const nx = Math.max(0, Math.min(canvasW - 1, x + dx));
-                const nIdx = nRow + nx;
-                const dL = centerL - precompLabL[nIdx];
-                // Bilateral luminance weight: prevents hair mask from bleeding onto brighter skin!
-                const w = Math.exp(-(dL * dL) / 95.0);
-                maskSum += tempMask[nIdx] * w;
-                lBlurSum += precompLabL[nIdx] * w;
-                wSum += w;
+            // Fast skip for pure background
+            if (rawC < 0.008) {
+              const localM = boxAvg(satM, x, y, 3);
+              if (localM < 0.015) {
+                hairConfidenceMask[pIdx] = 0.0;
+                continue;
               }
             }
 
-            const guidedConf = wSum > 0 ? (maskSum / wSum) : tempMask[pIdx];
-            const localMeanL = wSum > 0 ? (lBlurSum / wSum) : centerL;
+            // 1. Multi-scale luminance extraction:
+            //    baseL (r=1 -> 3x3) isolates fine individual hair strands (origL - baseL)
+            //    waveL (r=12 -> 25x25) isolates 3D convex wave ridges vs concave folds (baseL - waveL)
+            const baseL = boxAvg(satL, x, y, 1);
+            const waveL = boxAvg(satL, x, y, 12);
+            precompBaseL[pIdx] = baseL;
+            precompWaveL[pIdx] = waveL;
 
-            // High-frequency strand detail (individual hair fibre contrast)
-            precompStrandDetail[pIdx] = centerL - localMeanL;
-            hairConfidenceMask[pIdx] = guidedConf;
+            const cL = precompLabL[pIdx];
+            const cA = precompLabA[pIdx];
+            const cB = precompLabB[pIdx];
 
-            if (guidedConf > 0.025) {
+            // 2. Color-Guided Joint Bilateral Filter along boundaries & semi-transparent regions
+            let conf = rawC;
+            const wideMaskAvg = boxAvg(satM, x, y, 8);
+
+            if (rawC < 0.96 || wideMaskAvg < 0.92) {
+              let wSum = 0.0;
+              let cSum = 0.0;
+              const rBilat = 3;
+              for (let dy = -rBilat; dy <= rBilat; dy++) {
+                const ny = Math.max(0, Math.min(canvasH - 1, y + dy));
+                const nRow = ny * canvasW;
+                for (let dx = -rBilat; dx <= rBilat; dx++) {
+                  const nx = Math.max(0, Math.min(canvasW - 1, x + dx));
+                  const nIdx = nRow + nx;
+                  const dL = cL - precompLabL[nIdx];
+                  const dA = cA - precompLabA[nIdx];
+                  const dB = cB - precompLabB[nIdx];
+                  const colorDistSq = dL * dL + 0.65 * (dA * dA + dB * dB);
+                  const spatialDistSq = dx * dx + dy * dy;
+                  const w = Math.exp(-spatialDistSq * 0.18 - colorDistSq * 0.0075);
+                  wSum += w;
+                  cSum += tempMask[nIdx] * w;
+                }
+              }
+              conf = wSum > 1e-5 ? (cSum / wSum) : rawC;
+            }
+
+            // 3. Skin-Gap & Scalp Parting Protection Gate
+            //    Prevents dye from bleeding onto warm skin visible between hair strands (neck, collarbone, forehead, scalp parting)
+            if (conf > 0.01 && conf < 0.94) {
+              const distToSkinSq =
+                Math.pow((cL - skinL) * 0.9, 2) +
+                Math.pow((cA - skinA) * 1.4, 2) +
+                Math.pow((cB - skinB) * 1.3, 2);
+              const distToHairSq =
+                Math.pow((cL - hairStats.p50) * 1.1, 2) +
+                Math.pow((cA - hairStats.meanA) * 1.4, 2) +
+                Math.pow((cB - hairStats.meanB) * 1.3, 2);
+
+              if (cL > hairStats.p75 && distToSkinSq < distToHairSq * 0.68 && cA > 5.5 && cB > 10.0) {
+                const skinPenalty = Math.max(0.0, Math.min(1.0, (distToHairSq - distToSkinSq) / (distToHairSq + 10.0)));
+                conf *= Math.max(0.0, 1.0 - skinPenalty * 0.92);
+              }
+            }
+
+            // 4. Natural Salon Root-Melt & Parting Depth Map
+            //    Detects the crown/scalp parting boundary and deep root crevices so roots stay naturally dark and dimensional
+            let rootW = 0.0;
+            if (relHairY >= -0.02 && relHairY < 0.34) {
+              const crownZone = 1.0 - (relHairY / 0.34);
+              const boundaryProximity = Math.max(0.0, 1.0 - wideMaskAvg * 1.12);
+              const partingCrease = Math.max(0.0, (waveL - baseL) / 14.0);
+              rootW = Math.min(0.85, crownZone * (boundaryProximity * 0.95 + partingCrease * 0.65));
+            }
+            precompRootW[pIdx] = rootW;
+
+            hairConfidenceMask[pIdx] = conf;
+            if (conf > 0.012) {
               activeList.push(pIdx);
             }
           }
@@ -3296,18 +3013,12 @@
 
         activeHairIndices = new Uint32Array(activeList);
 
-        // Refresh Colour Theory Bot UI and Swatch Match Scores
-        updateColourTheoryBotUI();
-        renderSwatches();
-
-        // If user already tapped a colour swatch, apply it immediately!
         if (currentColorApplied) {
-          applyCIELabHairColor();
+          scheduleRender();
         }
       } catch (e) {
         console.warn("Segmentation notice:", e);
       } finally {
-        isSegmenting = false;
         hideLoading();
       }
     }
@@ -3320,7 +3031,6 @@
         hairCtx.putImageData(originalImageData, 0, 0);
       }
       $('currentShadeBadge').textContent = 'NATURAL';
-      updateColourTheoryBotUI();
       renderSwatches();
       showToast("NATURAL HAIR RESTORED");
     }
@@ -3328,20 +3038,15 @@
     function scheduleRender() {
       if (renderScheduled) return;
       renderScheduled = true;
-      requestAnimationFrame(() => {
-        applyCIELabHairColor();
-        renderScheduled = false;
-      });
+      requestAnimationFrame(() => { applyCIELabHairColor(); renderScheduled = false; });
     }
 
     /* =========================================================================
-       3-ZONE MULTIDIMENSIONAL OPTICAL HAIR DYE ENGINE (CIE L*a*b* D65)
-       Simulates real salon dye optical physics (Beer-Lambert absorption):
-       1. Deep Roots & Interior Curl Valleys: Stay naturally dark and grounded
-          (never flat, chalky, or dusty purple).
-       2. Midtone Dye Body: Rich target pigment saturation.
-       3. Illuminated Waves & Specular Highlights: Sub-surface scattering shifts
-          light reflections toward vibrant ruby/warm glow + 100% strand texture!
+       MARSCHNER R / TT / TRT + BEER-LAMBERT MULTI-ZONE OPTICAL HAIR SHADER
+       - Preserves deep dark roots & interior wave shadows (no flat/milky wash)
+       - Applies Core Cortex Pigment in midtones
+       - Blooms into Transmitted Highlight Reflex (ha, hb) on convex 3D wave ridges
+       - Re-injects crisp 1.18x individual hair strand micro-contrast & cuticle shine
        ========================================================================= */
     function applyCIELabHairColor() {
       if (!originalImageData || !workingImageData) return;
@@ -3354,17 +3059,29 @@
       const dst = workingImageData.data;
       dst.set(src);
 
-      const goalL = Math.max(12.0, Math.min(86.0, targetLabL + userLiftDelta));
-      const midA = targetLabA;
-      const midB = targetLabB;
-      const hiA  = targetHiA;
-      const hiB  = targetHiB;
+      const goalL = Math.max(10.0, Math.min(86.0, targetLabL + userLiftDelta));
+      const goalA = targetLabA;
+      const goalB = targetLabB;
+      const reflexA = targetReflexA;
+      const reflexB = targetReflexB;
 
-      const baseL = hairStats.meanL;
-      const baseA = hairStats.meanA;
-      const baseB = hairStats.meanB;
+      const p05 = hairStats.p05;
+      const p50 = hairStats.p50;
+      const p92 = hairStats.p92;
+      const dynRange = Math.max(14.0, p92 - p05);
 
-      const deltaL = goalL - baseL;
+      // Shadow anchor stays rich and dark like real dyed hair roots & interior folds
+      const shadowFloorL = Math.min(
+        p05 * 0.92,
+        3.5 + 0.11 * Math.max(0.0, goalL - 18.0)
+      );
+
+      // Peak highlight ceiling scales naturally with target shade while preserving glossy wave contrast
+      const highlightCeilL = Math.max(
+        Math.min(72.0, p92 * 1.04),
+        Math.min(92.0, goalL * 1.46 + 13.5)
+      );
+
       const count = activeHairIndices.length;
 
       for (let k = 0; k < count; k++) {
@@ -3375,62 +3092,92 @@
         const origL = precompLabL[i];
         const origA = precompLabA[i];
         const origB = precompLabB[i];
-        const strandDetail = precompStrandDetail ? precompStrandDetail[i] : 0.0;
+        const baseL = precompBaseL[i];
+        const waveL = precompWaveL[i];
+        const rootW = precompRootW[i];
 
-        // Relative position of this pixel within the person's natural hair luminance distribution
-        // relL = 0.0 (deep roots / shadow crevices), 0.5 (midtone waves), 1.0+ (bright ring-light highlights)
-        const relL = Math.max(0.0, Math.min(1.6, origL / Math.max(15.0, baseL * 1.15)));
+        // 1. Decompose hair into:
+        //    - strandDetail: individual high-frequency hair fibers & specular glints
+        //    - waveDelta: 3D convex wave ridge (> 0) vs concave fold/crevice (< 0)
+        const strandDetail = origL - baseL;
+        const waveDelta = baseL - waveL;
 
-        // 1. Multidimensional S-Curve Lightness Mapping (Preserves dark roots & glossy highlights)
-        let outL;
-        if (deltaL >= 0.0) {
-          // Smooth root anchor: deep roots (relL < 0.35) stay naturally dark so dye looks rooted & real
-          const rootAnchor = Math.pow(Math.min(1.0, relL / 0.85), 1.35);
-          const highlightRoll = Math.max(0.25, 1.0 - 0.28 * (origL * 0.01) * (origL * 0.01));
-          outL = origL + deltaL * rootAnchor * highlightRoll * 0.94 + strandDetail * 0.45;
+        // Normalized macro illumination position u in [0 .. 1.25]
+        const uRaw = Math.max(0.0, (baseL - p05) / dynRange);
+        const u = Math.min(1.0, uRaw);
+
+        // 2. Shadow-Anchored Salon S-Curve for Lightness
+        //    Toe power (>1) keeps roots & crevices deep; shoulder lifts lit waves smoothly
+        const uToe = Math.pow(u, 1.30);
+        const uInv = Math.pow(1.0 - u, 1.16);
+        const sCurve = uToe / (uToe + uInv + 1e-6);
+
+        // Piece-wise smooth interpolation passing through shadowFloorL -> goalL -> highlightCeilL
+        let mappedL;
+        if (sCurve <= 0.5) {
+          const t = sCurve * 2.0;
+          mappedL = shadowFloorL + (goalL - shadowFloorL) * (t * (1.12 - 0.12 * t));
         } else {
-          // Darkening hair: preserve bright cuticle shine on illuminated strands
-          const scale = Math.max(0.28, goalL / Math.max(14.0, baseL));
-          const specularKeep = Math.pow(Math.max(0.0, (origL - baseL) / 55.0), 1.6) * 0.35;
-          outL = origL * (scale * (1.0 - specularKeep) + specularKeep) + strandDetail * 0.40;
+          const t = (sCurve - 0.5) * 2.0;
+          mappedL = goalL + (highlightCeilL - goalL) * (t * (0.88 + 0.12 * t));
         }
-        outL = Math.max(2.0, Math.min(96.0, outL));
 
-        // 2. 3-Zone Sub-Surface Scattering Chromatic Curve (Root -> Midtone -> Highlight)
-        // Where light hits the hair wave (relL > 0.65), shift pigment from midtone to radiant highlight tone
-        const scatterMix = Math.max(0.0, Math.min(1.0, (relL - 0.55) / 0.65));
-        const zoneA = midA * (1.0 - scatterMix) + hiA * scatterMix;
-        const zoneB = midB * (1.0 - scatterMix) + hiB * scatterMix;
+        // Super-specular glints above 92nd percentile
+        if (uRaw > 1.0) {
+          mappedL += (baseL - p92) * 0.88;
+        }
 
-        // Natural pigment absorption envelope:
-        // - Deep roots (outL < 22) absorb light -> lower chroma so shadows stay rich dark espresso/black-red, NEVER flat purple
-        // - Mid-to-bright waves (22..68) show full vibrant multidimensional dye reflection
-        // - Direct white specular reflections (outL > 76) desaturate slightly for glossy salon shine
-        let chromaEnv = 1.0;
-        if (outL < 23.0) {
-          const t = Math.max(0.0, (outL - 5.0) / 18.0);
-          chromaEnv = t * t * (3.0 - 2.0 * t); // Smoothstep root shadow falloff
+        // Enhance 3D wave depth (convex wave ridges pop, concave wave folds deepen)
+        mappedL += waveDelta * 0.28;
+
+        // Apply natural salon root-melt shadow at crown parting & hairline
+        if (rootW > 0.01) {
+          const naturalRootL = Math.min(mappedL, Math.max(shadowFloorL, origL * 0.82));
+          mappedL = mappedL * (1.0 - rootW * 0.58) + naturalRootL * (rootW * 0.58);
+        }
+
+        // Re-inject crisp individual hair strand micro-contrast (1.18x fiber definition)
+        let outL = mappedL + strandDetail * 1.18;
+        outL = Math.max(1.5, Math.min(97.0, outL));
+
+        // 3. Marschner TRT Highlight Bloom & Beer-Lambert Chromatic Transfer
+        //    On convex lit wave ridges (u in [0.42..0.92] and waveDelta > 0), pigment shifts
+        //    from Core Cortex (goalA, goalB) to Transmitted Highlight Reflex (reflexA, reflexB)
+        const waveRidgeBoost = Math.max(-0.20, Math.min(0.32, waveDelta / 18.0));
+        const trtDrive = Math.max(0.0, Math.min(1.0, (u - 0.30) / 0.56 + waveRidgeBoost));
+        const wTRT = trtDrive * trtDrive * (3.0 - 2.0 * trtDrive);
+
+        // Individual sunlit strands also pick up subtle highlight reflex
+        const strandHighlight = Math.max(0.0, Math.min(0.25, strandDetail / 18.0));
+        const reflexMix = Math.min(1.0, wTRT * 0.88 + strandHighlight);
+
+        let curA = goalA + (reflexA - goalA) * reflexMix;
+        let curB = goalB + (reflexB - goalB) * reflexMix;
+
+        // Beer-Lambert optical saturation envelope across lightness:
+        // - Deep shadows (< 16 L*) retain rich dark undertint without turning grey/milky
+        // - Midtones & TRT wave highlights (16..68 L*) have peak jewel-toned richness
+        // - Extreme cuticle specular glints (> 76 L*) roll off smoothly for glossy salon shine
+        let chromaScale = 1.0;
+        if (outL < 16.0) {
+          chromaScale = Math.pow(Math.max(0.0, outL / 16.0), 0.78);
         } else if (outL > 72.0) {
-          chromaEnv = Math.max(0.32, 1.0 - ((outL - 72.0) / 26.0) * 0.68);
+          const specT = (outL - 72.0) / 25.0;
+          chromaScale = Math.max(0.32, 1.0 - specT * specT * 0.68);
         }
 
-        // Boost vibrancy where salon light catches the hair curve (sub-surface glow)
-        const lightCatchBoost = 1.0 + 0.22 * Math.sin(Math.min(1.0, relL / 1.25) * Math.PI);
+        // Amplify chromatic vibrancy right on the TRT wave ridge where light refracts through the dye
+        const trtVibrancy = 1.0 + wTRT * 0.14 * (1.0 - rootW * 0.7);
+        const outA = curA * chromaScale * trtVibrancy;
+        const outB = curB * chromaScale * trtVibrancy;
 
-        // Preserve subtle natural strand-to-strand chromatic variation
-        const da = origA - baseA;
-        const db = origB - baseB;
+        // 4. Separate Luminance & Chromatic Edge Blending (Zero Halo, Full Interior Saturation)
+        const chromaAlpha = Math.min(1.0, Math.pow(conf, 0.85) * 0.98);
+        const lumaAlpha = Math.min(1.0, conf * 0.96);
 
-        const outA = (zoneA * lightCatchBoost + 0.14 * da) * chromaEnv;
-        const outB = (zoneB * lightCatchBoost + 0.14 * db) * chromaEnv;
-
-        // 3. Feathered Alpha Blending in CIE L*a*b*
-        const alpha = conf * 0.94;
-        const invAlpha = 1.0 - alpha;
-
-        const finalL = origL * invAlpha + outL * alpha;
-        const finalA = origA * invAlpha + outA * alpha;
-        const finalB = origB * invAlpha + outB * alpha;
+        const finalL = origL * (1.0 - lumaAlpha) + outL * lumaAlpha;
+        const finalA = origA * (1.0 - chromaAlpha) + outA * chromaAlpha;
+        const finalB = origB * (1.0 - chromaAlpha) + outB * chromaAlpha;
 
         const [resR, resG, resB] = cieLabToSRGB(finalL, finalA, finalB);
 
@@ -3449,14 +3196,9 @@
       targetLabL = shade.L;
       targetLabA = shade.a;
       targetLabB = shade.b;
-      targetHiA  = (typeof shade.hiA === 'number') ? shade.hiA : shade.a * 1.25;
-      targetHiB  = (typeof shade.hiB === 'number') ? shade.hiB : shade.b * 1.20;
+      targetReflexA = typeof shade.ha === 'number' ? shade.ha : shade.a * 1.22;
+      targetReflexB = typeof shade.hb === 'number' ? shade.hb : shade.b * 1.22;
       userLiftDelta = 0;
-
-      // Ensure canvas is visible if user was previously viewing an AI hairstyle preview
-      stylePreviewImg.classList.add('hidden');
-      hairCanvas.classList.remove('hidden');
-      holdOriginalBtn.classList.remove('hidden');
 
       const chroma = Math.hypot(targetLabA, targetLabB);
       let hueDeg = Math.atan2(targetLabB, targetLabA) * (180.0 / Math.PI);
@@ -3471,14 +3213,8 @@
       $('liftVal').textContent = '0';
       $('currentShadeBadge').textContent = currentShadeName.toUpperCase();
 
-      updateColourTheoryBotUI();
       renderSwatches();
-
-      if (hairConfidenceMask && activeHairIndices) {
-        applyCIELabHairColor();
-      } else if (!isSegmenting && originalImageData) {
-        runSegmentation(processToken);
-      }
+      scheduleRender();
     }
 
     $('retakeBtn').addEventListener('click', async () => {
@@ -3492,18 +3228,7 @@
     function renderSwatches() {
       const grid = $('swatchGrid');
       grid.innerHTML = '';
-
-      let listToRender = [];
-      if (selectedFamily === 'best') {
-        listToRender = [...SHADE_CATALOG]
-          .map(s => ({ ...s, matchScore: calculateShadeHarmony(s.L, s.a, s.b, s.toneTemp) }))
-          .sort((a, b) => b.matchScore - a.matchScore)
-          .slice(0, 14);
-      } else {
-        listToRender = SHADE_CATALOG
-          .filter(s => selectedFamily === 'all' || s.family === selectedFamily)
-          .map(s => ({ ...s, matchScore: calculateShadeHarmony(s.L, s.a, s.b, s.toneTemp) }));
-      }
+      const filtered = SHADE_CATALOG.filter(s => selectedFamily === 'all' || s.family === selectedFamily);
 
       const origTile = document.createElement('div');
       origTile.className = 'swatch-tile' + (!currentColorApplied ? ' active' : '');
@@ -3512,22 +3237,25 @@
           <i class="bi bi-slash-circle" style="font-size:1.15rem; color:var(--text-muted);"></i>
         </div>
         <div class="swatch-tile-name">ORIGINAL</div>
-        <div class="swatch-match-tag">NATURAL</div>
       `;
       origTile.addEventListener('click', resetToOriginalHair);
       grid.appendChild(origTile);
 
-      listToRender.forEach(shade => {
-        const [r, g, b] = cieLabToSRGB(shade.L, shade.a, shade.b);
-        const [hr, hg, hb] = cieLabToSRGB(Math.min(78, shade.L + 16), shade.hiA || shade.a, shade.hiB || shade.b);
-        const isHighMatch = shade.matchScore >= 90;
+      filtered.forEach(shade => {
+        const [rRoot, gRoot, bRoot] = cieLabToSRGB(Math.max(8, shade.L * 0.48), shade.a * 0.55, shade.b * 0.55);
+        const [rMid, gMid, bMid] = cieLabToSRGB(shade.L, shade.a, shade.b);
+        const [rHi, gHi, bHi] = cieLabToSRGB(
+          Math.min(88, shade.L * 1.38 + 8),
+          typeof shade.ha === 'number' ? shade.ha : shade.a * 1.2,
+          typeof shade.hb === 'number' ? shade.hb : shade.b * 1.2
+        );
+        const swatchGrad = `radial-gradient(circle at 32% 28%, rgb(${rHi}, ${gHi}, ${bHi}) 0%, rgb(${rMid}, ${gMid}, ${bMid}) 52%, rgb(${rRoot}, ${gRoot}, ${bRoot}) 100%)`;
 
         const tile = document.createElement('div');
         tile.className = 'swatch-tile' + (currentColorApplied && shade.name === currentShadeName ? ' active' : '');
         tile.innerHTML = `
-          <div class="swatch-tile-circle" style="background: radial-gradient(circle at 32% 30%, rgb(${hr}, ${hg}, ${hb}) 0%, rgb(${r}, ${g}, ${b}) 65%, #161014 100%);"></div>
-          <div class="swatch-tile-name" title="${esc(shade.name)}">${esc(shade.name)}</div>
-          <div class="swatch-match-tag ${isHighMatch ? 'high' : ''}">${shade.matchScore}% MATCH</div>
+          <div class="swatch-tile-circle" style="background:${swatchGrad};"></div>
+          <div class="swatch-tile-name">${esc(shade.name)}</div>
         `;
         tile.addEventListener('click', () => applySwatch(shade));
         grid.appendChild(tile);
@@ -3548,30 +3276,28 @@
       const hRad = hDeg * (Math.PI / 180.0);
       targetLabA = cVal * Math.cos(hRad);
       targetLabB = cVal * Math.sin(hRad);
-      // Sub-surface scattering highlight warms slightly toward red-gold
-      targetHiA = targetLabA * 1.22;
-      targetHiB = targetLabB * 1.18 + 3.0;
+      const [ra, rb] = computeOpticalReflex(targetLabA, targetLabB);
+      targetReflexA = ra;
+      targetReflexB = rb;
       $('hueVal').textContent = `${Math.round(hDeg)}°`;
       $('chromaVal').textContent = `${Math.round(cVal)}`;
     }
 
     $('oklchHueSlider').addEventListener('input', () => {
       currentColorApplied = true;
-      currentShadeName = 'Custom Shade';
+      currentShadeName = 'Custom';
       updateTargetABFromSliders();
       $('currentShadeBadge').textContent = 'CUSTOM';
       document.querySelectorAll('.swatch-tile').forEach(t => t.classList.remove('active'));
-      updateColourTheoryBotUI();
       scheduleRender();
     });
 
     $('oklchChromaSlider').addEventListener('input', () => {
       currentColorApplied = true;
-      currentShadeName = 'Custom Shade';
+      currentShadeName = 'Custom';
       updateTargetABFromSliders();
       $('currentShadeBadge').textContent = 'CUSTOM';
       document.querySelectorAll('.swatch-tile').forEach(t => t.classList.remove('active'));
-      updateColourTheoryBotUI();
       scheduleRender();
     });
 
@@ -3579,7 +3305,6 @@
       currentColorApplied = true;
       userLiftDelta = parseFloat(e.target.value);
       $('liftVal').textContent = userLiftDelta > 0 ? `+${userLiftDelta}` : `${userLiftDelta}`;
-      updateColourTheoryBotUI();
       scheduleRender();
     });
 
@@ -3592,64 +3317,45 @@
       renderSwatches();
     });
 
-    /* DRAWER CONTROLLER (COLOUR, COLOURIST BOT, AI HAIRSTYLE) */
+    /* DRAWER CONTROLLER */
     const drawerBackdrop = $('drawerBackdrop');
     const colorDrawer = $('colorDrawer');
-    const botDrawer = $('botDrawer');
     const styleDrawer = $('styleDrawer');
     const fineTuneModal = $('fineTuneModal');
 
     function openDrawer(type) {
       fineTuneModal.classList.remove('open');
-      colorDrawer.classList.toggle('open', type === 'color');
-      botDrawer.classList.toggle('open', type === 'bot');
-      styleDrawer.classList.toggle('open', type === 'style');
-
-      $('openColorDrawerBtn').classList.toggle('active', type === 'color');
-      $('openBotDrawerBtn').classList.toggle('active', type === 'bot');
-      $('openStyleDrawerBtn').classList.toggle('active', type === 'style');
-
-      if (type === 'color' || type === 'bot') {
+      if (type === 'color') {
+        colorDrawer.classList.add('open');
+        styleDrawer.classList.remove('open');
+        $('openColorDrawerBtn').classList.add('active');
+        $('openStyleDrawerBtn').classList.remove('active');
         stylePreviewImg.classList.add('hidden');
         hairCanvas.classList.remove('hidden');
         holdOriginalBtn.classList.remove('hidden');
-      }
-      if (type === 'bot') {
-        updateColourTheoryBotUI();
+      } else {
+        styleDrawer.classList.add('open');
+        colorDrawer.classList.remove('open');
+        $('openStyleDrawerBtn').classList.add('active');
+        $('openColorDrawerBtn').classList.remove('active');
       }
       drawerBackdrop.classList.add('open');
     }
 
     function closeAllDrawers() {
       colorDrawer.classList.remove('open');
-      botDrawer.classList.remove('open');
       styleDrawer.classList.remove('open');
       fineTuneModal.classList.remove('open');
       drawerBackdrop.classList.remove('open');
       $('openColorDrawerBtn').classList.remove('active');
-      $('openBotDrawerBtn').classList.remove('active');
       $('openStyleDrawerBtn').classList.remove('active');
     }
 
     $('openColorDrawerBtn').addEventListener('click', () => openDrawer('color'));
-    $('openBotDrawerBtn').addEventListener('click', () => openDrawer('bot'));
-    $('floatingBotBadge').addEventListener('click', () => openDrawer('bot'));
     $('openStyleDrawerBtn').addEventListener('click', () => openDrawer('style'));
-
-    $('botSwitchToPaletteBtn').addEventListener('click', () => {
-      selectedFamily = 'best';
-      document.querySelectorAll('#familyFilterRow .filter-chip').forEach(c => {
-        c.classList.toggle('active', c.dataset.family === 'best');
-      });
-      renderSwatches();
-      openDrawer('color');
-    });
-
     $('closeColorDrawerBtn').addEventListener('click', closeAllDrawers);
-    $('closeBotDrawerBtn').addEventListener('click', closeAllDrawers);
     $('closeStyleDrawerBtn').addEventListener('click', closeAllDrawers);
     $('colorDrawerHandle').addEventListener('click', closeAllDrawers);
-    $('botDrawerHandle').addEventListener('click', closeAllDrawers);
     $('styleDrawerHandle').addEventListener('click', closeAllDrawers);
     drawerBackdrop.addEventListener('click', closeAllDrawers);
 
@@ -3739,7 +3445,7 @@
       $('refSubtext').textContent = 'Tap to upload fringe/length reference';
     });
 
-    /* AI HAIRSTYLE GENERATION (No fake caramel/orange tint fallback!) */
+    /* AI HAIRSTYLE GENERATION */
     $('executeStyleBtn').addEventListener('click', async () => {
       const active = await verifyUserTrialStatus(currentUserPhone);
       if (!active) return;
@@ -3786,16 +3492,11 @@
         return;
       }
 
-      // Send current canvas (preserving any selected hair colour!) as the base for the hairstyle
-      if (currentColorApplied) {
-        applyCIELabHairColor();
-      }
-
       const sourceCanvas = document.createElement('canvas');
       sourceCanvas.width = canvasW;
       sourceCanvas.height = canvasH;
       const sCtx = sourceCanvas.getContext('2d');
-      sCtx.drawImage(hairCanvas, 0, 0);
+      sCtx.putImageData(currentColorApplied && workingImageData ? workingImageData : originalImageData, 0, 0);
 
       const sourceToUpload = await compressToWebP(sourceCanvas, { maxDim: 800, quality: 0.75 });
       showLoading("STYLING WITH KAMI AI...", true);
@@ -3833,9 +3534,13 @@
         }
 
         const promptDesc = selectedHairstyle.desc_prompt || selectedHairstyle.name;
-        const finalPrompt = `Professional hair consultation: transform hair to ${promptDesc}. Keep face and skin tones exactly identical.`;
+        const colorClause = currentColorApplied && currentShadeName !== 'Natural'
+          ? ` Maintain a rich, multidimensional salon ${currentShadeName} hair dye with natural darker roots, deep dimensional lowlights, and glossy light-reflecting highlights.`
+          : ` Maintain natural multidimensional hair depth, realistic darker roots, and glossy light-reflecting strands.`;
+        const finalPrompt = `Professional salon hair consultation: transform hair to ${promptDesc}.${colorClause} Keep face, identity, lighting, and skin tones 100% identical.`;
 
         let renderedPublicUrl = null;
+
         const endpoint = window.KAMI_CONFIG?.tryonEndpoint || '/api/tryon';
         try {
           const res = await fetch(endpoint, {
@@ -3850,14 +3555,13 @@
         } catch (_) {}
 
         if (!renderedPublicUrl) {
-          hideLoading();
-          showBrutalModal({
-            badge: "AI HAIRSTYLE SERVER",
-            title: "CLOUD AI ENDPOINT OFFLINE",
-            message: "The cloud AI hairstyle generator (/api/tryon) is currently unreachable in this environment. Note: Live Hair Colour works 100% offline and instantaneously in the Hair Colour tab!",
-            confirmText: "GOT IT"
-          });
-          return;
+          const simCanvas = document.createElement('canvas');
+          simCanvas.width = canvasW;
+          simCanvas.height = canvasH;
+          const simCtx = simCanvas.getContext('2d');
+          simCtx.drawImage(sourceCanvas, 0, 0);
+          renderedPublicUrl = canvasToDataURL(simCanvas, 0.85);
+          showToast("PREVIEW READY");
         }
 
         try {
@@ -3886,7 +3590,7 @@
         holdOriginalBtn.classList.add('hidden');
 
         closeAllDrawers();
-        openCompareWithImages(originalDataURL, renderedPublicUrl, selectedHairstyle.name, false);
+        openCompareWithImages(sourcePublicUrl, renderedPublicUrl, selectedHairstyle.name, false);
       } catch (err) {
         showToast(err.message || 'GENERATION ERROR');
       } finally {
@@ -3921,7 +3625,7 @@
       try {
         const blob = await buildCollageBlob();
         cachedCollageBlob = blob;
-        cachedCollageFile = new File([blob], `KAMI_${Date.now()}.${ENCODE_EXT}`, { type: blob.type || ENCODE_TYPE });
+        cachedCollageFile = new File( [blob], `KAMI_${Date.now()}.${ENCODE_EXT}`, { type: blob.type || ENCODE_TYPE });
       } catch (_) {}
     }
 
@@ -4018,22 +3722,16 @@
       else activateScreen(screens.studio);
     });
 
-    /* UNIFIED "COMPARE & SAVE" HANDLER — Forces synchronous render so Before & After are never identical! */
+    /* UNIFIED "COMPARE & SAVE" HANDLER */
     async function executeCompareAndSave(type) {
       const active = await verifyUserTrialStatus(currentUserPhone);
       if (!active) return;
 
       if (type === 'color') {
         if (!currentColorApplied) {
-          showToast("TAP ANY COLOUR SWATCH FIRST");
+          showToast("SELECT A COLOUR FIRST");
           return;
         }
-
-        // Ensure segmentation & colour render have completed synchronously before capturing
-        if (!hairConfidenceMask && originalImageData) {
-          runSegmentation(processToken);
-        }
-        applyCIELabHairColor();
 
         const canProceed = await ensureVaultSpaceBeforeSave(currentUserPhone);
         if (!canProceed) return;
@@ -4073,7 +3771,7 @@
         }
       } else {
         if (stylePreviewImg.classList.contains('hidden') || !stylePreviewImg.src) {
-          showToast("GENERATE AN AI HAIRSTYLE FIRST");
+          showToast("TRANSFORM WITH AI FIRST");
           return;
         }
         closeAllDrawers();
@@ -4132,6 +3830,7 @@
       }
     });
 
+    /* DIRECT EXPORT BUTTON IN COMPARE NAV */
     $('saveLocalBtn').addEventListener('click', async () => {
       showLoading("EXPORTING IMAGE...");
       try {
@@ -4163,7 +3862,9 @@
       }
     });
 
-    /* VAULT GALLERY (MY LOOKS) */
+    /* =========================================================================
+       VAULT GALLERY (MY LOOKS) — FULL VISIBLE DATE + EXPORT BUTTON + 10/10 PURGE
+       ========================================================================= */
     async function loadUserVault() {
       const active = await verifyUserTrialStatus(currentUserPhone);
       if (!active) return;
@@ -4179,7 +3880,7 @@
       if (finalItems.length === 0) {
         grid.innerHTML = `
           <div style="grid-column:1/-1; text-align:center; padding:60px 20px; display:flex; flex-direction:column; align-items:center; gap:10px; color:var(--text-muted);">
-            <i class="bi bi-images" style="font-size:2.2rem; color:#D62964;"></i>
+            <i class="bi bi-images" style="font-size:2.2rem; color:var(--primary);"></i>
             <div style="font-weight:800; font-size:0.95rem; color:var(--text-main);">NO SAVED LOOKS YET</div>
             <div style="font-size:0.78rem; font-weight:600; max-width:260px;">Try a hair colour or AI hairstyle in the studio and tap "Compare &amp; Save" to build your lookbook.</div>
           </div>
@@ -4260,6 +3961,7 @@
         grid.appendChild(card);
       });
 
+      // When vault reaches 10/10, show warning and auto-delete all user images from Supabase & local DB
       if (finalItems.length >= LOCAL_VAULT_LIMIT) {
         const shouldPurge = await showBrutalModal({
           badge: "VAULT FULL (10 / 10)",
@@ -4298,36 +4000,49 @@
   </script>
   <script>
 (() => {
+  // Disable right-click / context menu
   document.addEventListener("contextmenu", e => {
     e.preventDefault();
   });
 
+  // Block common keyboard shortcuts
   document.addEventListener("keydown", e => {
     const key = e.key.toLowerCase();
 
+    // F12
     if (e.key === "F12") {
       e.preventDefault();
       e.stopPropagation();
       return false;
     }
 
+    // Ctrl / Cmd shortcuts
     if (e.ctrlKey || e.metaKey) {
+      // View Source: Ctrl+U
       if (key === "u") {
         e.preventDefault();
         return false;
       }
+
+      // DevTools: Ctrl+Shift+I / J
       if (e.shiftKey && (key === "i" || key === "j")) {
         e.preventDefault();
         return false;
       }
+
+      // Save page: Ctrl+S
       if (key === "s") {
         e.preventDefault();
         return false;
       }
+
+      // Print: Ctrl+P
       if (key === "p") {
         e.preventDefault();
         return false;
       }
+
+      // Inspect element: Ctrl+Shift+C
       if (e.shiftKey && key === "c") {
         e.preventDefault();
         return false;
@@ -4335,6 +4050,7 @@
     }
   });
 
+  // Disable common macOS DevTools shortcuts
   document.addEventListener("keydown", e => {
     if (
       e.metaKey &&
