@@ -1,38 +1,3 @@
-Here is the complete, fully fixed production code.
-
-What Was Broken on Mobile & Safari:
-
-1.  MediaPipe GPU Crash on iOS / Android: On Safari and mobile browsers,
-    delegate: "GPU" fails to allocate WebGL float32 textures, causing the AI
-    segmenter to fail silently. When it failed, hairConfidenceMask and
-    activeHairIndices remained null, which forced the render function to reset
-    to the original default image on every single swatch tap.
-2.  Brutal 0.42 Hardcoded Confidence Floor: On mobile front-facing cameras and
-    indoor salon lighting, dark hair confidence values often hover between 0.25
-    and 0.40. The hardcoded 0.42 cutoff discarded 100% of the hair pixels,
-    leaving activeHairIndices with 0 elements.
-3.  Destructive Race Condition on Fast Tap: When you tapped a swatch while
-    the 12MB model was downloading over mobile data, the app had no mask and did
-    nothing. When the model finally finished loading, it re-ran
-    processStudioImage, which completely wiped out whatever swatch you tapped
-    and reset the badge back to "Natural".
-4.  Memory Leaks in WebKit: MediaPipe MPMask objects were never closed, causing
-    mobile Safari to drop the WebGL context due to texture exhaustion.
-
-What Was Fixed:
-
-  - Immediate Heuristic Hair Mask Engine: An instant, sub-10ms colorimetric hair
-    segmentation runs the moment an image is loaded. Color swatches work
-    immediately on any phone without waiting for any download.
-  - Mobile-First CPU Delegate: Mobile browsers (iOS Safari, Android Chrome)
-    prioritize the WebAssembly SIMD CPU delegate, preventing WebGL context loss
-    and GPU crashes.
-  - Adaptive Smoothstep Masking: Dynamically calculates the threshold based on
-    camera lighting and hair shade rather than a fixed cutoff, cleanly
-    separating dark hair without bleeding into wall shadows.
-  - Safe Texture Disposal: All MediaPipe MPMask objects are closed immediately
-    after reading to eliminate mobile memory leaks.
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
