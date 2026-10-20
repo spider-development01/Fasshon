@@ -266,7 +266,7 @@
     .login-card input[type="tel"]:focus { border-color: var(--primary); background: rgba(255, 255, 255, 0.14); }
     .login-card input[type="tel"]::placeholder { color: #8C8C85; }
 
-    /* VIEW 1: FULLSCREEN CAMERA */
+    /* VIEW 1: CAMERA */
     .camera-wrapper {
       position: absolute;
       top: 0; right: 0; bottom: 0; left: 0;
@@ -1206,7 +1206,7 @@
     }
     .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
-    /* LOADING & PROGRESS OVERLAY (CLEAN, NO CPU/GPU/FRACTIONS) */
+    /* LOADING & PROGRESS OVERLAY */
     .loading-overlay {
       position: absolute;
       top: 0; right: 0; bottom: 0; left: 0;
@@ -1323,7 +1323,7 @@
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
   <div id="brushCursorRing" class="brush-cursor-ring"></div>
 
-  <!-- SIMPLE, CLEAN CLIENT LOADING OVERLAY -->
+  <!-- LOADING OVERLAY -->
   <div id="loadingOverlay" class="loading-overlay" role="dialog" aria-modal="true" aria-labelledby="loadingMessage">
     <div class="loading-badge">
       <div class="loading-badge-row">
@@ -1399,7 +1399,7 @@
     </div>
   </section>
 
-  <!-- VIEW 1: FULLSCREEN WYSIWYG CAMERA -->
+  <!-- VIEW 1: CAMERA -->
   <section id="cameraScreen" class="view-screen">
     <div class="top-dock">
       <div class="brand-logo">KAMI</div>
@@ -1707,7 +1707,7 @@
       }
     }
 
-    /* COLORIMETRIC CONSTANTS & HIGH-PRECISION LOOKUP TABLES */
+    /* COLORIMETRIC CONSTANTS & HIGH-PRECISION LOOKUP TABLES (D65) */
     const SRGB_TO_LIN = new Float32Array(256);
     for (let i = 0; i < 256; i++) {
       const c = i / 255.0;
@@ -1779,57 +1779,61 @@
       return [fastLinToSRGB(rLin), fastLinToSRGB(gLin), fastLinToSRGB(bLin)];
     }
 
-    /* CALIBRATED SALON SHADE CATALOG */
+    /* =========================================================================
+       CALIBRATED SALON REPERTOIRE (FUSED ACCURACY)
+       - Reds/Burgundies: Code 1's rich depth
+       - Blondes/Honeys: Calibrated higher luminance base to banish muddy khaki
+       ========================================================================= */
     const SHADE_CATALOG = [
       // BROWNS & MOCHA
-      { name: "Jet Black",       family: "browns",  L: 11.5, a: 0.5,   b: -0.5  },
-      { name: "Blue Black",      family: "browns",  L: 13.0, a: 2.5,   b: -10.5 },
-      { name: "Darkest Brown",   family: "browns",  L: 16.5, a: 5.5,   b: 8.5   },
-      { name: "Espresso",        family: "browns",  L: 19.5, a: 7.5,   b: 12.5  },
-      { name: "Dark Brown",      family: "browns",  L: 23.5, a: 9.0,   b: 15.5  },
-      { name: "Coffee",          family: "browns",  L: 27.5, a: 10.0,  b: 18.5  },
-      { name: "Chocolate",       family: "browns",  L: 30.5, a: 13.0,  b: 21.0  },
-      { name: "Chestnut",        family: "browns",  L: 34.5, a: 17.5,  b: 24.0  },
-      { name: "Ash Brown",       family: "browns",  L: 35.0, a: 2.0,   b: 8.0   },
-      { name: "Medium Brown",    family: "browns",  L: 37.5, a: 10.0,  b: 19.5  },
-      { name: "Light Brown",     family: "browns",  L: 43.5, a: 11.0,  b: 23.5  },
-      { name: "Caramel",         family: "browns",  L: 49.0, a: 14.0,  b: 30.0  },
+      { name: "Jet Black",       family: "browns",  L: 13.0, a: 0.5,   b: -0.5  },
+      { name: "Blue Black",      family: "browns",  L: 14.5, a: 2.0,   b: -9.5  },
+      { name: "Darkest Brown",   family: "browns",  L: 18.0, a: 4.5,   b: 7.5   },
+      { name: "Espresso",        family: "browns",  L: 21.5, a: 6.5,   b: 11.5  },
+      { name: "Dark Brown",      family: "browns",  L: 25.0, a: 8.0,   b: 14.5  },
+      { name: "Coffee",          family: "browns",  L: 29.5, a: 9.0,   b: 17.0  },
+      { name: "Chocolate",       family: "browns",  L: 33.0, a: 11.5,  b: 19.5  },
+      { name: "Chestnut",        family: "browns",  L: 37.0, a: 16.0,  b: 23.0  },
+      { name: "Ash Brown",       family: "browns",  L: 38.0, a: 2.0,   b: 8.5   },
+      { name: "Medium Brown",    family: "browns",  L: 40.0, a: 9.5,   b: 19.0  },
+      { name: "Light Brown",     family: "browns",  L: 46.0, a: 10.5,  b: 22.5  },
+      { name: "Caramel",         family: "browns",  L: 52.0, a: 13.5,  b: 29.0  },
 
-      // BLONDES & HONEY (Calibrated for lifelike translucency)
-      { name: "Dark Blonde",     family: "blondes", L: 53.0, a: 7.0,   b: 24.0  },
-      { name: "Medium Blonde",   family: "blondes", L: 58.0, a: 6.0,   b: 25.0  },
-      { name: "Honey Blonde",    family: "blondes", L: 61.0, a: 8.5,   b: 30.0  },
-      { name: "Golden Honey",    family: "blondes", L: 63.0, a: 10.0,  b: 33.0  },
-      { name: "Golden Blonde",   family: "blondes", L: 66.0, a: 6.5,   b: 30.0  },
-      { name: "Warm Blonde",     family: "blondes", L: 64.0, a: 5.5,   b: 26.0  },
-      { name: "Ash Blonde",      family: "blondes", L: 61.0, a: 1.0,   b: 11.5  },
-      { name: "Sandy Blonde",    family: "blondes", L: 63.5, a: 3.5,   b: 18.5  },
-      { name: "Beige Blonde",    family: "blondes", L: 66.5, a: 3.0,   b: 16.5  },
-      { name: "Light Blonde",    family: "blondes", L: 69.5, a: 3.0,   b: 19.5  },
-      { name: "Pearl Blonde",    family: "blondes", L: 72.0, a: 2.0,   b: 10.5  },
-      { name: "Platinum Blonde", family: "blondes", L: 74.5, a: 1.0,   b: 7.0   },
+      // BLONDES & HONEY (Calibrated for clean salon lift - zero mud)
+      { name: "Dark Blonde",     family: "blondes", L: 56.5, a: 6.5,   b: 25.5  },
+      { name: "Medium Blonde",   family: "blondes", L: 61.5, a: 5.5,   b: 26.5  },
+      { name: "Honey Blonde",    family: "blondes", L: 64.0, a: 8.5,   b: 31.0  },
+      { name: "Golden Honey",    family: "blondes", L: 66.0, a: 9.5,   b: 33.5  },
+      { name: "Golden Blonde",   family: "blondes", L: 69.0, a: 6.0,   b: 30.5  },
+      { name: "Warm Blonde",     family: "blondes", L: 67.0, a: 5.5,   b: 26.0  },
+      { name: "Ash Blonde",      family: "blondes", L: 64.5, a: 1.5,   b: 14.0  },
+      { name: "Sandy Blonde",    family: "blondes", L: 66.0, a: 3.5,   b: 19.5  },
+      { name: "Beige Blonde",    family: "blondes", L: 69.0, a: 3.0,   b: 17.5  },
+      { name: "Light Blonde",    family: "blondes", L: 72.0, a: 2.5,   b: 20.0  },
+      { name: "Pearl Blonde",    family: "blondes", L: 74.5, a: 1.8,   b: 11.5  },
+      { name: "Platinum Blonde", family: "blondes", L: 77.0, a: 1.0,   b: 7.5   },
 
-      // REDS, WINE, BURGUNDY & COPPER
-      { name: "Wine",            family: "reds",    L: 19.5, a: 31.0,  b: 7.5   },
-      { name: "Burgundy",        family: "reds",    L: 18.0, a: 28.5,  b: 4.5   },
-      { name: "Cherry",          family: "reds",    L: 21.0, a: 34.0,  b: 10.0  },
-      { name: "Mahogany",        family: "reds",    L: 22.5, a: 25.0,  b: 14.5  },
-      { name: "Ruby Red",        family: "reds",    L: 26.0, a: 38.5,  b: 16.0  },
-      { name: "True Red",        family: "reds",    L: 29.5, a: 42.5,  b: 21.5  },
-      { name: "Copper",          family: "reds",    L: 38.0, a: 26.0,  b: 33.0  },
-      { name: "Ginger",          family: "reds",    L: 44.0, a: 20.0,  b: 33.5  },
-      { name: "Rose Gold",       family: "reds",    L: 52.0, a: 19.0,  b: 14.0  },
-      { name: "Peach",           family: "reds",    L: 58.0, a: 17.0,  b: 20.0  },
+      // REDS, WINE, BURGUNDY & COPPER (Code 1's signature depth)
+      { name: "Wine",            family: "reds",    L: 21.0, a: 32.0,  b: 4.5   },
+      { name: "Burgundy",        family: "reds",    L: 19.5, a: 29.5,  b: 3.5   },
+      { name: "Cherry",          family: "reds",    L: 22.5, a: 35.5,  b: 9.5   },
+      { name: "Mahogany",        family: "reds",    L: 24.5, a: 26.0,  b: 14.0  },
+      { name: "Ruby Red",        family: "reds",    L: 28.5, a: 40.0,  b: 17.0  },
+      { name: "True Red",        family: "reds",    L: 32.0, a: 44.0,  b: 22.0  },
+      { name: "Copper",          family: "reds",    L: 42.0, a: 25.5,  b: 33.5  },
+      { name: "Ginger",          family: "reds",    L: 48.0, a: 19.5,  b: 34.0  },
+      { name: "Rose Gold",       family: "reds",    L: 56.0, a: 18.5,  b: 15.0  },
+      { name: "Peach",           family: "reds",    L: 62.0, a: 16.5,  b: 21.5  },
 
       // PASTEL & FASHION
-      { name: "Plum",            family: "fashion", L: 19.0, a: 27.5,  b: -8.5  },
-      { name: "Berry",           family: "fashion", L: 24.0, a: 35.0,  b: 2.5   },
-      { name: "Violet",          family: "fashion", L: 24.5, a: 27.0,  b: -21.0 },
-      { name: "Denim Blue",      family: "fashion", L: 27.0, a: -2.0,  b: -25.0 },
-      { name: "Turquoise",       family: "fashion", L: 41.0, a: -23.0, b: -11.5 },
-      { name: "Rose Pink",       family: "fashion", L: 47.0, a: 32.0,  b: 6.5   },
-      { name: "Lilac",           family: "fashion", L: 54.0, a: 18.5,  b: -14.5 },
-      { name: "Silver Grey",     family: "fashion", L: 56.0, a: 0.0,   b: -2.0  }
+      { name: "Plum",            family: "fashion", L: 21.0, a: 28.0,  b: -8.0  },
+      { name: "Berry",           family: "fashion", L: 26.5, a: 34.5,  b: 2.0   },
+      { name: "Violet",          family: "fashion", L: 26.5, a: 27.5,  b: -20.0 },
+      { name: "Denim Blue",      family: "fashion", L: 29.0, a: -2.0,  b: -24.5 },
+      { name: "Turquoise",       family: "fashion", L: 43.5, a: -23.0, b: -11.0 },
+      { name: "Rose Pink",       family: "fashion", L: 49.5, a: 31.0,  b: 6.0   },
+      { name: "Lilac",           family: "fashion", L: 56.5, a: 18.0,  b: -14.0 },
+      { name: "Silver Grey",     family: "fashion", L: 58.5, a: 0.0,   b: -1.5  }
     ];
 
     let heicPromise = null;
@@ -1856,7 +1860,7 @@
     }
 
     const WEBP_QUALITY = 0.88;
-    const MAX_WORKING_DIM = 960; // Optimal mobile & desktop balance: 0ms lag, crisp strand definition
+    const MAX_WORKING_DIM = 960;
 
     const ENCODE_TYPE = (() => {
       try {
@@ -2027,7 +2031,6 @@
     let processToken = 0;
 
     let imageSegmenter = null;
-    let segmenterDelegate = "GPU";
     let pendingImage = null;
     let cameraStream = null;
     let cameraFacing = 'user';
@@ -2041,9 +2044,9 @@
     let currentColorApplied = false;
     let currentShadeName = "Natural";
     
-    let targetLabL = 19.5;
-    let targetLabA = 31.0;
-    let targetLabB = 7.5;
+    let targetLabL = 21.0;
+    let targetLabA = 32.0;
+    let targetLabB = 4.5;
     let lightnessShiftK = 0.85;
 
     let isBrushMode = false;
@@ -2058,11 +2061,11 @@
     let cachedCollageFile = null;
 
     /* =========================================================================
-       SALON OPTICS SHADER ENGINE (DEEP SHADOW ANCHORS + TRANSLUCENT LIFT)
-       Fixes the muddy flat mustard effect when trying blonde/caramel on dark hair:
-       - Shadows & crevices retain ambient occlusion depth (no grey/khaki mud)
-       - Lightness lifts via photographic salon-bleach curve
-       - Natural specular highlights roll off to crisp champagne shine
+       FUSED SALON OPTICS SHADER ENGINE
+       - Bleach Lift Knee: Allows dark hair to lift to true blonde without choking
+       - Shadow Anchoring: Keeps deep crevices dark so hair doesn't look like a filter
+       - Specular Highlights: Highlights roll off to champagne/white glints
+       - Melanin Undertone Neutralization: Prevents blonde from turning khaki/green
        ========================================================================= */
     const WebGLHairRenderer = {
       canvas: null,
@@ -2177,53 +2180,58 @@
               float targetB = u_targetLab.z;
               float meanL = max(u_hairMeanLab.x, 12.0);
 
-              // 1. PHOTOMETRIC KERATIN LIFT (Solves flat mustard/khaki on dark hair)
+              // 1. ADVANCED DUAL-PHASE SALON LIFT CURVE
               float dL = targetL - meanL;
               float outL = origL;
 
               if (dL > 0.0) {
-                // Lifting to blonde/caramel: Deep crevice shadows must stay deep!
-                // Crevices below 14L are ambient occlusion; only midtones lift fully
-                float creviceDepth = smoothstep(4.0, 26.0, origL);
-                float highlightRoll = 1.0 - 0.35 * smoothstep(50.0, 90.0, origL);
+                // Anchors deepest crevices (preserves clump separation & depth)
+                float creviceDepth = smoothstep(2.0, 15.0, origL);
                 
-                // Hair cortex transmission lift
-                float liftCurve = pow(origL / 100.0, 0.65) * 1.45;
-                float liftAmount = dL * u_k * creviceDepth * highlightRoll * liftCurve;
+                // Exponential bleach knee: allows true blonde lift without choking
+                float liftToe = 1.0 - exp(-origL / 12.0);
+                float liftWeight = mix(liftToe, 1.0, 0.48);
+
+                // Highlight compression: preserves strand sheen
+                float highlightRoll = 1.0 - 0.28 * smoothstep(55.0, 92.0, origL);
+
+                float liftAmount = dL * u_k * creviceDepth * liftWeight * highlightRoll * 1.15;
                 outL = origL + liftAmount;
 
                 // Scalp parting shadow melt
-                outL = mix(outL, min(outL, origL * 0.90 + 3.0), rootShadow * 0.50);
+                outL = mix(outL, min(outL, origL * 0.92 + 2.0), rootShadow * 0.45);
               } else {
-                // Darkening: Smooth compression preserving highlights
+                // Darkening / Tone down (Reds/Browns)
                 float darkFactor = clamp(targetL / meanL, 0.45, 1.0);
                 float darkWeight = mix(0.75, 1.0, u_k);
                 outL = mix(origL, origL * darkFactor, darkWeight);
               }
 
+              // Retain micro-texture of individual hair strands
+              outL += (origL - meanL) * 0.20;
               outL = clamp(outL, 1.5, 96.0);
 
-              // 2. CHROMATIC DYNAMICS (Toner midtones + Neutral Specular Glints)
-              // Crevices keep warm dark anchor (prevents grey/green undertones)
-              float shadowChroma = smoothstep(5.0, 22.0, outL);
+              // 2. CHROMATIC DYNAMICS (Zero-Mud Toner + Specular Glints)
+              // Shadow anchors keep warm undertone to eliminate green/khaki cast
+              float shadowChroma = smoothstep(4.0, 18.0, outL);
               
-              // Specular highlights on blonde/caramel hair roll off to champagne/white glints
-              float specularRollOff = 1.0 - 0.60 * smoothstep(68.0, 88.0, outL);
+              // Specular highlights on blonde roll off to champagne/white glints (stops filter flatness)
+              float specularRollOff = 1.0 - 0.55 * smoothstep(68.0, 88.0, outL);
               float chromaEnvelope = shadowChroma * specularRollOff;
 
               // Salon toner application
               vec2 hairChroma = vec2(targetA, targetB) * chromaEnvelope;
 
-              // Retain micro-variation of individual hair locks
-              vec2 strandVar = (origLab.yz - u_hairMeanLab.yz) * 0.16 * chromaEnvelope;
+              // Micro strand chroma variation
+              vec2 strandVar = (origLab.yz - u_hairMeanLab.yz) * 0.14 * chromaEnvelope;
               hairChroma += strandVar;
 
-              // Soft natural root undertone
+              // Soft natural root melt
               vec2 rootBaseAB = vec2(4.5, 6.0);
-              float rootMelt = clamp(rootShadow * 0.65 + (1.0 - shadowChroma) * 0.40, 0.0, 0.85);
+              float rootMelt = clamp(rootShadow * 0.60 + (1.0 - shadowChroma) * 0.35, 0.0, 0.80);
               vec2 finalChroma = mix(hairChroma, rootBaseAB, rootMelt);
 
-              // Feathered mask blending against original image
+              // Feathered mask blending
               float alpha = smoothstep(0.02, 0.98, conf);
               vec3 finalLab = vec3(
                 mix(origL, outL, alpha),
@@ -2683,7 +2691,6 @@
       toastTimer = setTimeout(() => t.classList.remove('show'), 2600);
     }
 
-    // Friendly, simple salon loading indicator
     function showLoading(msg = "ANALYSING HAIR...", progressPct = 40) {
       $('loadingMessage').textContent = msg;
       $('loadingProgressBar').style.width = `${Math.max(10, Math.min(100, progressPct))}%`;
@@ -2909,7 +2916,6 @@
     $('logoutBtn').addEventListener('click', logoutClient);
     $('lockLogoutBtn').addEventListener('click', logoutClient);
 
-    /* CROSS-BROWSER ROBUST MODEL INITIALIZATION */
     async function initModel() {
       try {
         const { ImageSegmenter, FilesetResolver } = await import("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/vision_bundle.mjs");
@@ -2922,14 +2928,12 @@
             runningMode: "IMAGE",
             outputConfidenceMasks: true
           });
-          segmenterDelegate = "GPU";
         } catch (_) {
           imageSegmenter = await ImageSegmenter.createFromOptions(vision, {
             baseOptions: { modelAssetPath, delegate: "CPU" },
             runningMode: "IMAGE",
             outputConfidenceMasks: true
           });
-          segmenterDelegate = "CPU";
         }
 
         if (pendingImage) {
@@ -3200,7 +3204,6 @@
     hairCanvas.addEventListener('pointerup', stopMaskPaint);
     hairCanvas.addEventListener('pointercancel', stopMaskPaint);
 
-    /* OPTIMIZED FAST STUDIO IMAGE PIPELINE */
     async function processStudioImage(source, sourceType = 'photo') {
       if (!source) return;
       const currentRun = ++processToken;
@@ -3257,7 +3260,6 @@
       setTimeout(() => runSegmentation(currentRun), 25);
     }
 
-    /* FAST, ZERO-FREEZE HAIR SEGMENTATION & BILATERAL FEATHERING */
     function runSegmentation(token) {
       if (!imageSegmenter || !originalImageData || token !== processToken) {
         hideLoading();
@@ -3292,7 +3294,6 @@
         let sumL = 0.0, sumA = 0.0, sumB = 0.0, weightSum = 0.0;
         let hairMinY = canvasH, hairMaxY = 0;
 
-        // Bilinear mask interpolation & color conversion
         for (let y = 0; y < canvasH; y++) {
           const fy = y * scaleY;
           const y0 = fy | 0;
@@ -3312,7 +3313,6 @@
             const bot = rawMask[row1 + x0] * (1.0 - wx) + rawMask[row1 + x1] * wx;
             let conf = top * (1.0 - wy) + bot * wy;
 
-            // S-curve feathering
             conf = Math.max(0.0, Math.min(1.0, (conf - 0.20) / 0.60));
             conf = conf * conf * (3.0 - 2.0 * conf);
 
@@ -3342,7 +3342,6 @@
           hairStats.meanB = sumB / weightSum;
         }
 
-        // Natural Root Shadow mapping for parting/crown
         const hairSpanH = Math.max(40, hairMaxY - hairMinY);
         for (let y = 0; y < canvasH; y++) {
           const row = y * canvasW;
@@ -3391,7 +3390,7 @@
       });
     }
 
-    /* RENDER HAIR FRAME (GPU PRIMARY WITH IDENTICAL 2D FALLBACK) */
+    /* RENDER HAIR FRAME (WebGL Primary with identical CPU Fallback) */
     function renderHairColorFrame() {
       if (!originalImageData || !workingImageData) return;
       if (!currentColorApplied || !hairConfidenceMask) {
@@ -3403,7 +3402,7 @@
         return;
       }
 
-      // CPU Fallback
+      // CPU Fallback (Identical Fused Physics)
       const src = originalImageData.data;
       const dst = workingImageData.data;
       dst.set(src);
@@ -3423,26 +3422,28 @@
 
         let outL = origL;
         if (dL > 0.0) {
-          const creviceDepth = Math.max(0.0, Math.min(1.0, (origL - 4.0) / 22.0));
-          const highlightRoll = 1.0 - 0.35 * Math.max(0.0, Math.min(1.0, (origL - 50.0) / 40.0));
-          const liftCurve = Math.pow(origL / 100.0, 0.65) * 1.45;
-          outL = origL + dL * lightnessShiftK * creviceDepth * highlightRoll * liftCurve;
-          outL = outL * (1.0 - rootShadow * 0.50) + (origL * 0.90 + 3.0) * (rootShadow * 0.50);
+          const creviceDepth = Math.max(0.0, Math.min(1.0, (origL - 2.0) / 13.0));
+          const liftToe = 1.0 - Math.exp(-origL / 12.0);
+          const liftWeight = liftToe * 0.52 + 0.48;
+          const highlightRoll = 1.0 - 0.28 * Math.max(0.0, Math.min(1.0, (origL - 55.0) / 37.0));
+          outL = origL + dL * lightnessShiftK * creviceDepth * liftWeight * highlightRoll * 1.15;
+          outL = outL * (1.0 - rootShadow * 0.45) + (origL * 0.92 + 2.0) * (rootShadow * 0.45);
         } else {
           const darkFactor = Math.max(0.45, Math.min(1.0, targetLabL / meanL));
           outL = origL * (1.0 - lightnessShiftK) + (origL * darkFactor) * lightnessShiftK;
         }
 
+        outL += (origL - meanL) * 0.20;
         outL = Math.max(1.5, Math.min(96.0, outL));
 
-        const shadowChroma = Math.max(0.0, Math.min(1.0, (outL - 5.0) / 17.0));
-        const specularRollOff = 1.0 - 0.60 * Math.max(0.0, Math.min(1.0, (outL - 68.0) / 20.0));
+        const shadowChroma = Math.max(0.0, Math.min(1.0, (outL - 4.0) / 14.0));
+        const specularRollOff = 1.0 - 0.55 * Math.max(0.0, Math.min(1.0, (outL - 68.0) / 20.0));
         const chromaEnvelope = shadowChroma * specularRollOff;
 
-        const dyedA = targetLabA * chromaEnvelope + (origA - hairStats.meanA) * 0.16 * chromaEnvelope;
-        const dyedB = targetLabB * chromaEnvelope + (origB - hairStats.meanB) * 0.16 * chromaEnvelope;
+        const dyedA = targetLabA * chromaEnvelope + (origA - hairStats.meanA) * 0.14 * chromaEnvelope;
+        const dyedB = targetLabB * chromaEnvelope + (origB - hairStats.meanB) * 0.14 * chromaEnvelope;
 
-        const rootMelt = Math.min(0.85, rootShadow * 0.65 + (1.0 - shadowChroma) * 0.40);
+        const rootMelt = Math.min(0.80, rootShadow * 0.60 + (1.0 - shadowChroma) * 0.35);
         const finalA = dyedA * (1.0 - rootMelt) + 4.5 * rootMelt;
         const finalB = dyedB * (1.0 - rootMelt) + 6.0 * rootMelt;
 
@@ -3515,7 +3516,7 @@
       filtered.forEach(shade => {
         const [rRoot, gRoot, bRoot] = cieLabToSRGB(Math.max(7, shade.L * 0.55), shade.a * 0.55, shade.b * 0.55);
         const [rMid, gMid, bMid] = cieLabToSRGB(shade.L, shade.a, shade.b);
-        const [rHi, gHi, bHi] = cieLabToSRGB(Math.min(82, shade.L + 11), shade.a * 1.08, shade.b * 1.08);
+        const [rHi, gHi, bHi] = cieLabToSRGB(Math.min(84, shade.L + 11), shade.a * 1.05, shade.b * 1.05);
         const swatchGrad = `radial-gradient(circle at 32% 28%, rgb(${rHi}, ${gHi}, ${bHi}) 0%, rgb(${rMid}, ${gMid}, ${bMid}) 54%, rgb(${rRoot}, ${gRoot}, ${bRoot}) 100%)`;
 
         const tile = document.createElement('div');
