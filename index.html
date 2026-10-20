@@ -3917,5 +3917,70 @@
       checkAuthSession();
     });
   </script>
+  <script>
+(() => {
+  // Disable right-click / context menu
+  document.addEventListener("contextmenu", e => {
+    e.preventDefault();
+  });
+
+  // Block common keyboard shortcuts
+  document.addEventListener("keydown", e => {
+    const key = e.key.toLowerCase();
+
+    // F12
+    if (e.key === "F12") {
+      e.preventDefault();
+      e.stopPropagation();
+      return false;
+    }
+
+    // Ctrl / Cmd shortcuts
+    if (e.ctrlKey || e.metaKey) {
+      // View Source: Ctrl+U
+      if (key === "u") {
+        e.preventDefault();
+        return false;
+      }
+
+      // DevTools: Ctrl+Shift+I / J
+      if (e.shiftKey && (key === "i" || key === "j")) {
+        e.preventDefault();
+        return false;
+      }
+
+      // Save page: Ctrl+S
+      if (key === "s") {
+        e.preventDefault();
+        return false;
+      }
+
+      // Print: Ctrl+P
+      if (key === "p") {
+        e.preventDefault();
+        return false;
+      }
+
+      // Inspect element: Ctrl+Shift+C
+      if (e.shiftKey && key === "c") {
+        e.preventDefault();
+        return false;
+      }
+    }
+  });
+
+  // Disable common macOS DevTools shortcuts
+  document.addEventListener("keydown", e => {
+    if (
+      e.metaKey &&
+      e.altKey &&
+      ["i", "j", "c"].includes(e.key.toLowerCase())
+    ) {
+      e.preventDefault();
+      return false;
+    }
+  });
+})();
+</script>
 </body>
 </html>
